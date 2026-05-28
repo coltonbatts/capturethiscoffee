@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Capture This Coffee
 
-## Getting Started
+Mobile-first internal coffee runner app for Capture This production shoots.
 
-First, run the development server:
+## What is in this MVP
+
+- Staff login placeholder at `/login`
+- Production list at `/productions`
+- Production creation at `/productions/new`
+- Runner dashboard at `/productions/[id]`
+- People database at `/people`
+- Client database at `/clients`
+- Supabase-backed data access when env vars are configured
+- Local seeded `localStorage` demo fallback when Supabase env vars are missing
+- Supabase table scaffold and simple RLS policies in `supabase/schema.sql`
+- Copyable coffee shop summaries and browser-printable label cards
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The app redirects `/` to `/productions`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase setup
 
-## Learn More
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL editor.
+3. Copy `.env.example` to `.env.local`.
+4. Fill in:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Restart `npm run dev` after changing `.env.local`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+When both env vars are present, the app reads and writes these Supabase tables:
 
-## Deploy on Vercel
+- `clients`
+- `people`
+- `client_people`
+- `productions`
+- `production_roster`
+- `orders`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+When either env var is missing, the app falls back to seeded demo data in `localStorage`. The reset demo button only appears in this fallback mode.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The included RLS policies are intentionally permissive for the current internal-staff MVP because there is not a real auth flow yet. Tighten these policies when staff authentication is added.
+
+## Seed data
+
+The app does not automatically insert demo rows into Supabase. To test against Supabase, add a client and people from the app, then create a production. To prefill realistic sample rows, adapt the records in `src/lib/seed.ts` into SQL inserts using Supabase-generated UUIDs.
+
+## Verification
+
+```bash
+npm run lint
+npm run build
+```
