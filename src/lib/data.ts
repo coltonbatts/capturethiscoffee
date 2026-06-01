@@ -38,9 +38,23 @@ type NewPersonInput = {
   role?: string;
   department?: string;
   company?: string;
+  photo_url?: string;
   usual_order?: string;
   dietary_notes?: string;
+  notes?: string;
+  active?: boolean;
 };
+
+type CreatePersonAndRosterOptions = {
+  linkToClientId?: string;
+};
+
+type UpdateRosterInput = {
+  group_label?: string;
+  on_set_today?: boolean;
+};
+
+type UpdatePersonInput = NewPersonInput;
 
 type NewProductionInput = {
   name: string;
@@ -175,9 +189,11 @@ export async function createPersonRecord(
         role: blankToNull(input.role),
         department: blankToNull(input.department),
         company: blankToNull(input.company),
+        photo_url: blankToNull(input.photo_url),
         usual_order: blankToNull(input.usual_order),
         dietary_notes: blankToNull(input.dietary_notes),
-        active: true,
+        notes: blankToNull(input.notes),
+        active: input.active ?? true,
       })
       .select("*")
       .single();
@@ -196,15 +212,77 @@ export async function createPersonRecord(
         role: input.role?.trim() || "",
         department: input.department?.trim() || "",
         company: input.company?.trim() || "",
-        photo_url: "",
+        photo_url: input.photo_url?.trim() || "",
         usual_order: input.usual_order?.trim() || "",
         dietary_notes: input.dietary_notes?.trim() || "",
-        notes: "",
-        active: true,
+        notes: input.notes?.trim() || "",
+        active: input.active ?? true,
         created_at: new Date().toISOString(),
       },
       ...current.people,
     ],
+  };
+  saveCoffeeData(next);
+  return next;
+}
+
+export async function updatePersonRecord(
+  current: CoffeeData,
+  personId: string,
+  input: UpdatePersonInput,
+): Promise<CoffeeData> {
+  const name = input.name.trim();
+  if (!name) return current;
+
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("people")
+      .update({
+        name,
+        type: input.type,
+        role: blankToNull(input.role),
+        department: blankToNull(input.department),
+        company: blankToNull(input.company),
+        photo_url: blankToNull(input.photo_url),
+        usual_order: blankToNull(input.usual_order),
+        dietary_notes: blankToNull(input.dietary_notes),
+        notes: blankToNull(input.notes),
+        active: input.active ?? true,
+      })
+      .eq("id", personId)
+      .select("*")
+      .single();
+
+    if (error) throwSupabaseWriteError(error);
+    const updated = mapPerson(data);
+    return {
+      ...current,
+      people: current.people.map((person) =>
+        person.id === updated.id ? updated : person,
+      ),
+    };
+  }
+
+  const next = {
+    ...current,
+    people: current.people.map((person) =>
+      person.id === personId
+        ? {
+            ...person,
+            name,
+            type: input.type,
+            role: input.role?.trim() || "",
+            department: input.department?.trim() || "",
+            company: input.company?.trim() || "",
+            photo_url: input.photo_url?.trim() || "",
+            usual_order: input.usual_order?.trim() || "",
+            dietary_notes: input.dietary_notes?.trim() || "",
+            notes: input.notes?.trim() || "",
+            active: input.active ?? true,
+          }
+        : person,
+    ),
   };
   saveCoffeeData(next);
   return next;
@@ -395,6 +473,7 @@ export async function saveOrderDraft(
   current: CoffeeData,
   orderId: string,
   draft: Partial<Order>,
+  options: { updateUsualOrder?: boolean } = {},
 ): Promise<CoffeeData> {
   const order = current.orders.find((item) => item.id === orderId);
   if (!order) return current;
@@ -406,7 +485,7 @@ export async function saveOrderDraft(
     updated_at: new Date().toISOString(),
   } satisfies Order;
   const usualOrder = formatDrink(updatedOrder);
-  const shouldUpdateUsual = usualOrder !== "No order";
+  const shouldUpdateUsual = options.updateUsualOrder && usualOrder !== "No order";
 
   const supabase = await getWritableSupabase();
   if (supabase) {
@@ -455,6 +534,178 @@ export async function saveOrderDraft(
         ? { ...person, usual_order: usualOrder }
         : person,
     ),
+  };
+  saveCoffeeData(next);
+  return next;
+}
+
+export async function createPersonAndAddToRoster(
+  current: CoffeeData,
+  productionId: string,
+  input: NewPersonInput,
+  options: CreatePersonAndRosterOptions = {},
+): Promise<CoffeeData> {
+  const name = input.name.trim();
+  if (!name) return current;
+
+  const production = current.productions.find((item) => item.id === productionId);
+  if (!production) return current;
+
+  const groupLabel =
+    input.department?.trim() || input.company?.trim() || input.type.replace("_", " ");
+  const shouldLinkToClient =
+    Boolean(options.linkToClientId) &&
+    options.linkToClientId === production.client_id &&
+    (input.type === "client_contact" || input.type === "agency");
+  const sortOrder =
+    current.production_roster.filter((item) => item.production_id === productionId)
+      .length + 1;
+
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { data: personRow, error: personError } = await supabase
+      .from("people")
+      .insert({
+        name,
+        type: input.type,
+        role: blankToNull(input.role),
+        department: blankToNull(input.department),
+        company: blankToNull(input.company),
+        photo_url: blankToNull(input.photo_url),
+        usual_order: blankToNull(input.usual_order),
+        dietary_notes: blankToNull(input.dietary_notes),
+        notes: blankToNull(input.notes),
+        active: true,
+      })
+      .select("*")
+      .single();
+
+    if (personError) throwSupabaseWriteError(personError);
+    const person = mapPerson(personRow);
+
+    const { data: rosterRow, error: rosterError } = await supabase
+      .from("production_roster")
+      .insert({
+        production_id: production.id,
+        person_id: person.id,
+        group_label: blankToNull(groupLabel),
+        on_set_today: true,
+        sort_order: sortOrder,
+      })
+      .select("*")
+      .single();
+
+    if (rosterError) throwSupabaseWriteError(rosterError);
+    const roster = mapRoster(rosterRow);
+
+    const { data: orderRow, error: orderError } = await supabase
+      .from("orders")
+      .insert(toOrderInsert(createEmptyOrder(production, roster, person)))
+      .select("*")
+      .single();
+
+    if (orderError) throwSupabaseWriteError(orderError);
+
+    let clientLink: ClientPerson | null = null;
+    if (shouldLinkToClient && options.linkToClientId) {
+      const existing = current.client_people.find(
+        (item) =>
+          item.client_id === options.linkToClientId && item.person_id === person.id,
+      );
+
+      if (existing) {
+        const { data: linkRow, error: linkError } = await supabase
+          .from("client_people")
+          .update({ active: true })
+          .eq("id", existing.id)
+          .select("*")
+          .single();
+
+        if (linkError) throwSupabaseWriteError(linkError);
+        clientLink = mapClientPerson(linkRow);
+      } else {
+        const { data: linkRow, error: linkError } = await supabase
+          .from("client_people")
+          .insert({
+            client_id: options.linkToClientId,
+            person_id: person.id,
+            relationship_notes: null,
+            active: true,
+          })
+          .select("*")
+          .single();
+
+        if (linkError) throwSupabaseWriteError(linkError);
+        clientLink = mapClientPerson(linkRow);
+      }
+    }
+
+    return {
+      ...current,
+      people: [person, ...current.people],
+      production_roster: [roster, ...current.production_roster],
+      orders: [mapOrder(orderRow), ...current.orders],
+      client_people: clientLink
+        ? current.client_people.some((item) => item.id === clientLink.id)
+          ? current.client_people.map((item) =>
+              item.id === clientLink.id ? clientLink : item,
+            )
+          : [clientLink, ...current.client_people]
+        : current.client_people,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const person: Person = {
+    id: createId("person"),
+    name,
+    type: input.type,
+    role: input.role?.trim() || "",
+    department: input.department?.trim() || "",
+    company: input.company?.trim() || "",
+    photo_url: input.photo_url?.trim() || "",
+    usual_order: input.usual_order?.trim() || "",
+    dietary_notes: input.dietary_notes?.trim() || "",
+    notes: input.notes?.trim() || "",
+    active: true,
+    created_at: now,
+  };
+  const roster: ProductionRoster = {
+    id: createId("roster"),
+    production_id: production.id,
+    person_id: person.id,
+    group_label: groupLabel,
+    on_set_today: true,
+    sort_order: sortOrder,
+  };
+  const clientLink: ClientPerson | null =
+    shouldLinkToClient && options.linkToClientId
+      ? {
+          id: createId("cp"),
+          client_id: options.linkToClientId,
+          person_id: person.id,
+          relationship_notes: "",
+          active: true,
+        }
+      : null;
+
+  const next = {
+    ...current,
+    people: [person, ...current.people],
+    production_roster: [roster, ...current.production_roster],
+    orders: [createEmptyOrder(production, roster, person), ...current.orders],
+    client_people: clientLink
+      ? [
+          clientLink,
+          ...current.client_people.filter(
+            (item) =>
+              !(
+                item.client_id === clientLink.client_id &&
+                item.person_id === clientLink.person_id
+              ),
+          ),
+        ]
+      : current.client_people,
   };
   saveCoffeeData(next);
   return next;
@@ -671,6 +922,100 @@ export async function addRosterPerson(
   };
   saveCoffeeData(next);
   return next;
+}
+
+export async function updateRosterRecord(
+  current: CoffeeData,
+  productionId: string,
+  rosterId: string,
+  input: UpdateRosterInput,
+): Promise<CoffeeData> {
+  const roster = current.production_roster.find(
+    (item) => item.id === rosterId && item.production_id === productionId,
+  );
+  if (!roster) return current;
+
+  const patch = {
+    group_label:
+      input.group_label === undefined ? roster.group_label : input.group_label.trim(),
+    on_set_today: input.on_set_today ?? roster.on_set_today,
+  };
+
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("production_roster")
+      .update({
+        group_label: blankToNull(patch.group_label),
+        on_set_today: patch.on_set_today,
+      })
+      .eq("id", rosterId)
+      .eq("production_id", productionId)
+      .select("*")
+      .single();
+
+    if (error) throwSupabaseWriteError(error);
+    const updated = mapRoster(data);
+    return {
+      ...current,
+      production_roster: current.production_roster.map((item) =>
+        item.id === updated.id ? updated : item,
+      ),
+    };
+  }
+
+  const next = {
+    ...current,
+    production_roster: current.production_roster.map((item) =>
+      item.id === roster.id ? { ...item, ...patch } : item,
+    ),
+  };
+  saveCoffeeData(next);
+  return next;
+}
+
+export async function removeRosterRecord(
+  current: CoffeeData,
+  productionId: string,
+  rosterId: string,
+): Promise<CoffeeData> {
+  const roster = current.production_roster.find(
+    (item) => item.id === rosterId && item.production_id === productionId,
+  );
+  if (!roster) return current;
+
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { error } = await supabase
+      .from("production_roster")
+      .delete()
+      .eq("id", rosterId)
+      .eq("production_id", productionId);
+
+    if (error) throwSupabaseWriteError(error);
+
+    return {
+      ...current,
+      production_roster: current.production_roster.filter(
+        (item) => item.id !== rosterId,
+      ),
+      orders: current.orders.filter((order) => order.roster_id !== rosterId),
+    };
+  }
+
+  const next = withoutRoster(current, rosterId);
+  saveCoffeeData(next);
+  return next;
+}
+
+function withoutRoster(current: CoffeeData, rosterId: string): CoffeeData {
+  return {
+    ...current,
+    production_roster: current.production_roster.filter(
+      (item) => item.id !== rosterId,
+    ),
+    orders: current.orders.filter((order) => order.roster_id !== rosterId),
+  };
 }
 
 function defaultRosterPeople(data: CoffeeData, clientId: string) {

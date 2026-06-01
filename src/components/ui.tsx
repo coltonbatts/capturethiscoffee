@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 import type { OrderStatus, Person } from "@/lib/types";
 
@@ -33,12 +32,13 @@ export function StatusChip({ status }: { status: OrderStatus }) {
 export function Avatar({ person }: { person: Person }) {
   if (person.photo_url) {
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element -- Staff-entered photo URLs can be from any host.
+      <img
         src={person.photo_url}
         alt=""
-        width={48}
-        height={48}
         className="size-12 rounded-full object-cover ring-1 ring-zinc-200"
+        loading="lazy"
+        referrerPolicy="no-referrer"
       />
     );
   }

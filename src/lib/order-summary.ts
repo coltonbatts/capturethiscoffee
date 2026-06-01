@@ -18,7 +18,10 @@ export function formatDrink(order?: Order) {
 
 export function byPersonSummary(items: RosterOrder[]) {
   return items
-    .filter(({ order }) => order && order.status !== "no_order")
+    .filter(
+      ({ roster, order }) =>
+        roster.on_set_today && order && order.status !== "no_order",
+    )
     .map(({ person, roster, order }) => ({
       name: person.name,
       group: roster.group_label || person.department || "Set",
@@ -34,6 +37,7 @@ export function groupedByDrinkSummary(items: RosterOrder[]) {
   >();
 
   for (const item of items) {
+    if (!item.roster.on_set_today) continue;
     if (!item.order || item.order.status === "no_order") continue;
 
     const drink = formatDrink(item.order);
