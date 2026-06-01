@@ -72,6 +72,12 @@ Create staff users in the Supabase dashboard:
 2. Click **Add user**.
 3. Enter a staff email, for example `runner@capturethis.com`.
 4. Set a password and confirm the user if your project requires it.
+5. Grant staff access by setting **app metadata** on each user (RLS checks this claim, not user metadata):
+   - In **Authentication > Users**, open the user and click **Edit user**.
+   - Under **App Metadata**, set `{ "staff": true }` and save.
+   - Or use the [Admin API](https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid) with the service role key from a secure server context only — never in the browser.
+
+Existing users must sign out and sign in again (or wait for JWT refresh) so the updated `app_metadata` appears in their token.
 
 Then open `/login`, sign in, and continue to `/productions`.
 

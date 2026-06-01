@@ -108,13 +108,16 @@ create index if not exists productions_client_idx on productions(client_id);
 create index if not exists production_roster_production_idx on production_roster(production_id);
 create index if not exists orders_production_status_idx on orders(production_id, status);
 
-create or replace function set_updated_at()
-returns trigger as $$
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
 begin
-  new.updated_at = now();
+  new.updated_at = pg_catalog.now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 drop trigger if exists orders_set_updated_at on orders;
 create trigger orders_set_updated_at
@@ -129,44 +132,57 @@ alter table productions enable row level security;
 alter table production_roster enable row level security;
 alter table orders enable row level security;
 
+revoke all on public.clients from anon;
+revoke all on public.people from anon;
+revoke all on public.client_people from anon;
+revoke all on public.productions from anon;
+revoke all on public.production_roster from anon;
+revoke all on public.orders from anon;
+
 drop policy if exists "Internal staff can manage clients" on clients;
-create policy "Internal staff can manage clients"
+drop policy if exists "Staff can manage clients" on clients;
+create policy "Staff can manage clients"
 on clients for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
 
 drop policy if exists "Internal staff can manage people" on people;
-create policy "Internal staff can manage people"
+drop policy if exists "Staff can manage people" on people;
+create policy "Staff can manage people"
 on people for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
 
 drop policy if exists "Internal staff can manage client people" on client_people;
-create policy "Internal staff can manage client people"
+drop policy if exists "Staff can manage client people" on client_people;
+create policy "Staff can manage client people"
 on client_people for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
 
 drop policy if exists "Internal staff can manage productions" on productions;
-create policy "Internal staff can manage productions"
+drop policy if exists "Staff can manage productions" on productions;
+create policy "Staff can manage productions"
 on productions for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
 
 drop policy if exists "Internal staff can manage production roster" on production_roster;
-create policy "Internal staff can manage production roster"
+drop policy if exists "Staff can manage production roster" on production_roster;
+create policy "Staff can manage production roster"
 on production_roster for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
 
 drop policy if exists "Internal staff can manage orders" on orders;
-create policy "Internal staff can manage orders"
+drop policy if exists "Staff can manage orders" on orders;
+create policy "Staff can manage orders"
 on orders for all
 to authenticated
-using (true)
-with check (true);
+using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
+with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
