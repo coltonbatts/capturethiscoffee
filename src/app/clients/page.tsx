@@ -3,7 +3,13 @@
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Field, inputClass, primaryButtonClass } from "@/components/ui";
+import {
+  EmptyState,
+  Field,
+  Panel,
+  inputClass,
+  primaryButtonClass,
+} from "@/components/ui";
 import { createClientRecord, loadCoffeeData } from "@/lib/data";
 import type { CoffeeData } from "@/lib/types";
 
@@ -49,9 +55,15 @@ export default function ClientsPage() {
 
   return (
     <AppShell title="Clients" eyebrow="Database">
+      <Panel className="mb-4 p-4">
+        <h1 className="text-2xl font-black tracking-tight">Clients</h1>
+        <p className="mt-1 text-sm leading-6 text-stone-600">
+          Save client names and notes used when creating a production run.
+        </p>
+      </Panel>
       <form
         onSubmit={addClient}
-        className="mb-4 grid gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+        className="mb-4 grid gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
       >
         <Field label="Add client">
           <input
@@ -76,12 +88,22 @@ export default function ClientsPage() {
       </form>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {!data ? (
+          [0, 1, 2].map((item) => (
+            <Panel key={item} className="h-28 animate-pulse bg-white/70 p-4" />
+          ))
+        ) : !data.clients.length ? (
+          <EmptyState
+            title="No clients yet"
+            description="Add a client to make production setup faster."
+          />
+        ) : null}
         {data?.clients.map((client) => {
           const peopleCount = data.client_people.filter(
             (item) => item.client_id === client.id && item.active,
@@ -90,7 +112,7 @@ export default function ClientsPage() {
           return (
             <article
               key={client.id}
-              className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+              className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

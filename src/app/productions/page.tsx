@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Plus, RotateCcw, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { StatusChip } from "@/components/ui";
+import { EmptyState, Panel, StatusChip } from "@/components/ui";
 import {
   isSupabaseBacked,
   loadCoffeeData,
@@ -66,31 +66,31 @@ export default function ProductionsPage() {
       actions={
         <Link
           href="/productions/new"
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-stone-950 px-3 text-sm font-bold text-white"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-stone-950 px-3 text-sm font-bold text-white shadow-sm"
         >
           <Plus size={18} aria-hidden="true" />
           New
         </Link>
       }
     >
-      <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4">
+      <Panel className="mb-4 flex items-center justify-between gap-3 p-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight">Today&apos;s runs</h1>
           <p className="mt-1 text-sm text-stone-600">
-            Open a production to confirm orders and move delivery status.
+            Confirm orders, group drinks, and track delivery status.
           </p>
         </div>
         {!isSupabaseBacked ? (
           <button
             type="button"
             onClick={resetDemoData}
-            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-stone-300 bg-white text-stone-700"
+            className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
             aria-label="Reset demo data"
           >
             <RotateCcw size={18} aria-hidden="true" />
           </button>
         ) : null}
-      </div>
+      </Panel>
 
       {error ? (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
@@ -98,16 +98,23 @@ export default function ProductionsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-2">
+      {!data ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          {[0, 1, 2, 3].map((item) => (
+            <Panel key={item} className="h-48 animate-pulse bg-white/70 p-4" />
+          ))}
+        </div>
+      ) : cards.length ? (
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {cards.map(({ production, client, orders, done, progress, openStatus }) => (
           <Link
             key={production.id}
             href={`/productions/${production.id}`}
-            className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm transition active:scale-[0.99]"
+            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)] transition hover:border-stone-300 hover:shadow-sm active:scale-[0.99]"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-xl font-black">{production.name}</h2>
+                <h2 className="truncate text-lg font-black">{production.name}</h2>
                 <p className="truncate text-sm font-semibold text-stone-600">
                   {client?.name || "No client"}
                 </p>
@@ -137,7 +144,7 @@ export default function ProductionsPage() {
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-stone-200">
                 <div
-                  className="h-full rounded-full bg-emerald-600"
+                  className="h-full rounded-full bg-teal-700"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -145,6 +152,21 @@ export default function ProductionsPage() {
           </Link>
         ))}
       </div>
+      ) : (
+        <EmptyState
+          title="No productions yet"
+          description="Create the first shoot run to seed a roster and start confirming orders."
+          action={
+            <Link
+              href="/productions/new"
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-stone-950 px-3 text-sm font-bold text-white"
+            >
+              <Plus size={18} aria-hidden="true" />
+              New production
+            </Link>
+          }
+        />
+      )}
     </AppShell>
   );
 }

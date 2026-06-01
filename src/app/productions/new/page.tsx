@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Field, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui";
+import {
+  Field,
+  Panel,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import { createProductionRecord, loadCoffeeData } from "@/lib/data";
 import type { CoffeeData } from "@/lib/types";
 
@@ -64,9 +70,16 @@ export default function NewProductionPage() {
 
   return (
     <AppShell title="New production" eyebrow="Setup">
+      <Panel className="mb-4 p-4">
+        <h1 className="text-2xl font-black tracking-tight">Set up the run</h1>
+        <p className="mt-1 text-sm leading-6 text-stone-600">
+          Start with the shoot basics. The roster is seeded from saved client contacts
+          and core crew.
+        </p>
+      </Panel>
       <form
         onSubmit={submit}
-        className="grid gap-4 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+        className="grid gap-4 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
       >
         <Field label="Production name">
           <input
@@ -79,16 +92,16 @@ export default function NewProductionPage() {
         </Field>
 
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
             {error}
           </div>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-2 rounded-xl bg-stone-200 p-1">
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-100 p-1">
           <button
             type="button"
             onClick={() => setClientMode("existing")}
-            className={`min-h-11 rounded-lg text-sm font-bold ${
+            className={`min-h-11 rounded-md text-sm font-bold ${
               clientMode === "existing" ? "bg-white shadow-sm" : "text-stone-600"
             }`}
           >
@@ -97,7 +110,7 @@ export default function NewProductionPage() {
           <button
             type="button"
             onClick={() => setClientMode("new")}
-            className={`min-h-11 rounded-lg text-sm font-bold ${
+            className={`min-h-11 rounded-md text-sm font-bold ${
               clientMode === "new" ? "bg-white shadow-sm" : "text-stone-600"
             }`}
           >
@@ -175,7 +188,7 @@ export default function NewProductionPage() {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 border-t border-stone-200 pt-4">
           <button type="button" className={secondaryButtonClass} onClick={() => router.back()}>
             Cancel
           </button>

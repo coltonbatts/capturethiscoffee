@@ -1,8 +1,9 @@
 "use client";
 
-import { Coffee } from "lucide-react";
+import { Coffee, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { inputClass, primaryButtonClass } from "@/components/ui";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -59,21 +60,27 @@ export default function LoginPage() {
 
   return (
     <main className="grid min-h-dvh place-items-center px-4 py-8">
-      <section className="w-full max-w-sm rounded-2xl border border-stone-300 bg-stone-50 p-5 shadow-sm">
-        <div className="mb-6 flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-xl bg-stone-950 text-stone-50">
+      <section className="w-full max-w-md overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_18px_60px_rgba(28,25,23,0.12)]">
+        <div className="border-b border-stone-200 bg-stone-950 p-5 text-white">
+          <div className="flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-lg bg-white text-stone-950">
             <Coffee size={21} aria-hidden="true" />
           </span>
           <div>
-            <h1 className="text-xl font-bold">Capture This Coffee</h1>
-            <p className="text-sm text-stone-600">Staff runner login</p>
+            <h1 className="text-xl font-black">Capture This Coffee</h1>
+            <p className="text-sm text-stone-300">Staff runner entry</p>
+          </div>
           </div>
         </div>
-        <form className="grid gap-3" onSubmit={signIn}>
+        <form className="grid gap-3 p-5" onSubmit={signIn}>
+          <div className="mb-1 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm font-semibold text-stone-700">
+            <LockKeyhole size={17} aria-hidden="true" />
+            Internal shoot-day coffee workflow
+          </div>
           <label className="grid gap-1.5 text-sm font-semibold text-stone-700">
             Email
             <input
-              className="min-h-12 rounded-xl border border-stone-300 bg-white px-3 text-base outline-none focus:border-stone-800"
+              className={inputClass}
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -85,7 +92,7 @@ export default function LoginPage() {
           <label className="grid gap-1.5 text-sm font-semibold text-stone-700">
             Password
             <input
-              className="min-h-12 rounded-xl border border-stone-300 bg-white px-3 text-base outline-none focus:border-stone-800"
+              className={inputClass}
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -95,13 +102,13 @@ export default function LoginPage() {
             />
           </label>
           {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
               {error}
             </div>
           ) : null}
           <button
             type="submit"
-            className="mt-2 inline-flex min-h-12 items-center justify-center rounded-xl bg-stone-950 px-4 text-sm font-bold text-white"
+            className={`${primaryButtonClass} mt-2`}
             disabled={submitting}
           >
             {isSupabaseConfigured
@@ -110,12 +117,12 @@ export default function LoginPage() {
                 : "Sign in"
               : "Continue in demo mode"}
           </button>
+          <p className="text-xs leading-5 text-stone-500">
+            {isSupabaseConfigured
+              ? "Use a Supabase Auth staff account for this demo."
+              : "Supabase env vars are missing, so this browser uses seeded local demo data."}
+          </p>
         </form>
-        <p className="mt-4 text-xs leading-5 text-stone-500">
-          {isSupabaseConfigured
-            ? "Use a Supabase Auth demo staff account created for this client-side walkthrough."
-            : "Supabase env vars are missing, so this local run uses seeded demo data in this browser only."}
-        </p>
       </section>
     </main>
   );

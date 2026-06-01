@@ -3,7 +3,14 @@
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Avatar, Field, inputClass, primaryButtonClass } from "@/components/ui";
+import {
+  Avatar,
+  EmptyState,
+  Field,
+  Panel,
+  inputClass,
+  primaryButtonClass,
+} from "@/components/ui";
 import { createPersonRecord, loadCoffeeData } from "@/lib/data";
 import type { CoffeeData, PersonType } from "@/lib/types";
 
@@ -78,9 +85,15 @@ export default function PeoplePage() {
 
   return (
     <AppShell title="People" eyebrow="Roster source">
+      <Panel className="mb-4 p-4">
+        <h1 className="text-2xl font-black tracking-tight">People</h1>
+        <p className="mt-1 text-sm leading-6 text-stone-600">
+          Keep usual drinks and roles close at hand for fast roster setup.
+        </p>
+      </Panel>
       <form
         onSubmit={addPerson}
-        className="mb-4 grid gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+        className="mb-4 grid gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name">
@@ -144,7 +157,7 @@ export default function PeoplePage() {
       </form>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
           {error}
         </div>
       ) : null}
@@ -157,11 +170,21 @@ export default function PeoplePage() {
         aria-label="Search people"
       />
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {!data ? (
+          [0, 1, 2, 3, 4, 5].map((item) => (
+            <Panel key={item} className="h-28 animate-pulse bg-white/70 p-4" />
+          ))
+        ) : !people.length ? (
+          <EmptyState
+            title="No people found"
+            description="Add someone or clear the search to see the saved roster source."
+          />
+        ) : null}
         {people.map((person) => (
           <article
             key={person.id}
-            className="flex gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+            className="flex gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
           >
             <Avatar person={person} />
             <div className="min-w-0">

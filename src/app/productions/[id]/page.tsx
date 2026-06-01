@@ -15,7 +15,9 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   Avatar,
+  EmptyState,
   Field,
+  Panel,
   StatusChip,
   buttonClass,
   dangerButtonClass,
@@ -141,9 +143,14 @@ export default function ProductionDashboardPage() {
   if (!data || !production) {
     return (
       <AppShell title="Production" eyebrow="Loading">
-        <div className="rounded-2xl border border-stone-300 bg-stone-50 p-4">
-          Production not found.
-        </div>
+        {!data ? (
+          <Panel className="h-40 animate-pulse bg-white/70 p-4" />
+        ) : (
+          <EmptyState
+            title="Production not found"
+            description="This run is not available in the current coffee dataset."
+          />
+        )}
       </AppShell>
     );
   }
@@ -217,32 +224,43 @@ export default function ProductionDashboardPage() {
 
   return (
     <AppShell title={activeProduction.name} eyebrow={activeClient?.name || "Production"}>
-      <section className="mb-4 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm no-print">
-        <div className="flex items-start justify-between gap-3">
+      <Panel className="mb-4 overflow-hidden no-print">
+        <div className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-black tracking-tight">
+            <h1 className="break-words text-2xl font-black tracking-tight md:text-3xl">
               {activeProduction.name}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-stone-600">
+            <p className="mt-1 truncate text-sm font-semibold text-stone-600">
               {[activeClient?.name, activeProduction.shoot_date, activeProduction.location]
                 .filter(Boolean)
-                .join(" • ")}
+                .join(" / ")}
             </p>
+            {activeProduction.runner_name ? (
+              <p className="mt-1 text-xs font-bold uppercase text-stone-500">
+                Runner: {activeProduction.runner_name}
+              </p>
+            ) : null}
           </div>
-          <div className="text-right text-sm font-bold">
-            <span className="block text-2xl">{progress.percent}%</span>
-            <span className="text-stone-500">
-              {progress.done}/{progress.total}
+          <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-right text-sm font-bold">
+            <span className="block text-2xl leading-none">{progress.percent}%</span>
+            <span className="text-xs text-stone-500">
+              {progress.done}/{progress.total} touched
             </span>
           </div>
         </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-stone-200">
+        <div className="h-2 overflow-hidden bg-stone-200">
           <div
-            className="h-full rounded-full bg-emerald-600"
+            className="h-full bg-teal-700"
             style={{ width: `${progress.percent}%` }}
           />
         </div>
-      </section>
+      </Panel>
+
+      <div className="mb-4 grid grid-cols-3 gap-2 no-print">
+        <RunMetric label="Roster" value={progress.total} />
+        <RunMetric label="Confirmed" value={items.filter((item) => item.order?.status === "confirmed").length} />
+        <RunMetric label="Delivered" value={items.filter((item) => item.order?.status === "delivered").length} />
+      </div>
 
       {error ? (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 no-print">
@@ -250,7 +268,7 @@ export default function ProductionDashboardPage() {
         </div>
       ) : null}
 
-      <section className="mb-4 grid gap-3 no-print">
+      <Panel className="mb-4 grid gap-3 p-3 no-print">
         <label className="relative block">
           <Search
             size={19}
@@ -301,7 +319,7 @@ export default function ProductionDashboardPage() {
               key={item}
               type="button"
               onClick={() => setTab(item)}
-              className={`min-h-11 shrink-0 rounded-xl px-4 text-sm font-bold ${
+              className={`min-h-11 shrink-0 rounded-lg px-4 text-sm font-bold ${
                 tab === item
                   ? "bg-stone-950 text-white"
                   : "border border-stone-300 bg-white text-stone-700"
@@ -311,7 +329,7 @@ export default function ProductionDashboardPage() {
             </button>
           ))}
         </div>
-      </section>
+      </Panel>
 
       {tab === "People" ? (
         <PeopleTab
@@ -337,7 +355,7 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
 
-      <section className="mt-4 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm no-print">
+      <Panel className="mt-4 p-4 no-print">
         <h2 className="text-lg font-black">Add to roster</h2>
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
           <select
@@ -363,7 +381,7 @@ export default function ProductionDashboardPage() {
             <Plus size={18} aria-hidden="true" />
           </button>
         </div>
-      </section>
+      </Panel>
 
       {editingId ? (
         <OrderEditor
@@ -377,6 +395,15 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
     </AppShell>
+  );
+}
+
+function RunMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white/90 p-3">
+      <p className="text-[11px] font-bold uppercase text-stone-500">{label}</p>
+      <p className="mt-1 text-2xl font-black leading-none text-stone-950">{value}</p>
+    </div>
   );
 }
 
@@ -395,13 +422,19 @@ function PeopleTab({
 }) {
   return (
     <div className="grid gap-3 md:grid-cols-2 no-print">
+      {!items.length ? (
+        <EmptyState
+          title="No matching people"
+          description="Adjust the search or filters to bring roster cards back."
+        />
+      ) : null}
       {items.map((item) => {
         if (!item.order) return null;
 
         return (
           <article
             key={item.roster.id}
-            className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
           >
             <div className="flex gap-3">
               <Avatar person={item.person} />
@@ -418,14 +451,14 @@ function PeopleTab({
                   <StatusChip status={item.order.status} />
                 </div>
                 <div className="mt-3 grid gap-2 text-sm">
-                  <p className="rounded-xl bg-stone-100 p-3 leading-5 text-stone-700">
-                    <span className="block text-xs font-bold uppercase tracking-wide text-stone-500">
+                  <p className="rounded-lg bg-stone-50 p-3 leading-5 text-stone-700">
+                    <span className="block text-xs font-bold uppercase text-stone-500">
                       Usual
                     </span>
                     {item.person.usual_order || "No usual order saved"}
                   </p>
-                  <p className="rounded-xl bg-white p-3 leading-5 text-stone-800">
-                    <span className="block text-xs font-bold uppercase tracking-wide text-stone-500">
+                  <p className="rounded-lg border border-stone-200 bg-white p-3 leading-5 text-stone-800">
+                    <span className="block text-xs font-bold uppercase text-stone-500">
                       Today
                     </span>
                     {formatDrink(item.order)}
@@ -440,7 +473,7 @@ function PeopleTab({
                 className={`${buttonClass} bg-emerald-700 text-white`}
               >
                 <Check size={18} aria-hidden="true" />
-                Confirm usual
+                Confirm
               </button>
               <button
                 type="button"
@@ -490,7 +523,7 @@ function GroupsTab({ items }: { items: RosterOrder[] }) {
       {groups.map(([group, groupItems]) => (
         <section
           key={group}
-          className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+          className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
         >
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-black">{group}</h2>
@@ -502,7 +535,7 @@ function GroupsTab({ items }: { items: RosterOrder[] }) {
             {groupItems.map((item) => (
               <div
                 key={item.roster.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-white p-3"
+                className="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-stone-50 p-3"
               >
                 <span className="min-w-0 truncate text-sm font-bold">
                   {item.person.name}
@@ -522,10 +555,16 @@ function DrinksTab({ items }: { items: RosterOrder[] }) {
 
   return (
     <div className="grid gap-3 no-print">
+      {!drinks.length ? (
+        <EmptyState
+          title="No drink summary yet"
+          description="Confirm or edit orders to build a coffee shop count."
+        />
+      ) : null}
       {drinks.map((drink) => (
         <article
           key={drink.order}
-          className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+          className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
         >
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-black leading-6">{drink.order}</h2>
@@ -558,7 +597,7 @@ function StatusTab({
         return (
           <section
             key={status}
-            className="rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm"
+            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-black">{statusLabels[status]}</h2>
@@ -570,7 +609,7 @@ function StatusTab({
               {statusItems.map((item) => (
                 <div
                   key={item.roster.id}
-                  className="grid gap-2 rounded-xl bg-white p-3"
+                  className="grid gap-2 rounded-lg border border-stone-200 bg-stone-50 p-3"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-bold">{item.person.name}</span>
@@ -631,7 +670,7 @@ function SummaryTab({
 
   return (
     <>
-      <section className="grid gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm no-print">
+      <Panel className="grid gap-3 p-4 no-print">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-black">Coffee shop summary</h2>
@@ -654,14 +693,14 @@ function SummaryTab({
           <Clipboard size={18} aria-hidden="true" />
           {copied ? "Copied" : "Copy summary"}
         </button>
-      </section>
+      </Panel>
 
       <section className="print-only hidden">
         <div className="label-grid">
           {byPerson.map((item) => (
             <article
               key={`${item.name}-${item.order}`}
-              className="break-inside-avoid rounded-xl border-2 border-black p-3"
+              className="break-inside-avoid rounded-lg border-2 border-black p-3"
             >
               <h2 className="text-xl font-black">{item.name}</h2>
               <p className="mt-2 text-base font-bold">{item.order}</p>
@@ -690,7 +729,7 @@ function OrderEditor({
 }) {
   return (
     <div className="fixed inset-0 z-50 grid items-end bg-black/35 p-3 no-print">
-      <section className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-2xl bg-stone-50 p-4 shadow-2xl">
+      <section className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-lg bg-white p-4 shadow-2xl">
         <div>
           <h2 className="text-xl font-black">Edit order</h2>
           <p className="text-sm text-stone-600">
