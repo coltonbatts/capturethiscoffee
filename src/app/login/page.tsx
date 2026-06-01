@@ -1,13 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { Field, inputClass, primaryButtonClass } from "@/components/ui";
+import { isStaffUser, STAFF_ACCESS_MESSAGE } from "@/lib/auth";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8">
+          <CaptureMark invert className="size-11 animate-pulse rounded-xl" />
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const staffDenied = searchParams.get("staff") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,8 +37,16 @@ export default function LoginPage() {
     if (!supabase) return;
 
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) router.replace(nextPath());
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!mounted || !data.session) return;
+
+      if (!isStaffUser(data.session.user)) {
+        await supabase.auth.signOut();
+        if (mounted) setError(STAFF_ACCESS_MESSAGE);
+        return;
+      }
+
+      router.replace(nextPath());
     });
 
     return () => {
@@ -43,13 +68,20 @@ export default function LoginPage() {
     setSubmitting(true);
     setError("");
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
     if (signInError) {
       setError(signInError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    if (!isStaffUser(signInData.user)) {
+      await supabase.auth.signOut();
+      setError(STAFF_ACCESS_MESSAGE);
       setSubmitting(false);
       return;
     }
@@ -88,9 +120,9 @@ export default function LoginPage() {
               required={isSupabaseConfigured}
             />
           </Field>
-          {error ? (
+          {staffDenied || error ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
-              {error}
+              {staffDenied ? STAFF_ACCESS_MESSAGE : error}
             </div>
           ) : null}
           <button

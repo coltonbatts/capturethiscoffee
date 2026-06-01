@@ -2,6 +2,10 @@
 
 import { formatDrink } from "./order-summary";
 import {
+  normalizeSupabaseWriteError,
+  requireFreshStaffSession,
+} from "./auth";
+import {
   buildProductionRoster,
   cloneSeedData,
   createEmptyOrder,
@@ -10,6 +14,8 @@ import {
   saveCoffeeData,
 } from "./storage";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "./supabase";
+import type { Database } from "./supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Client,
   ClientPerson,
@@ -54,6 +60,18 @@ const blankToNull = (value?: string) => {
 const present = (value: string | null | undefined) => value || "";
 
 export const isSupabaseBacked = isSupabaseConfigured;
+
+async function getWritableSupabase(): Promise<SupabaseClient<Database> | null> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  await requireFreshStaffSession(supabase);
+  return supabase;
+}
+
+function throwSupabaseWriteError(error: { message: string }): never {
+  throw normalizeSupabaseWriteError(error.message);
+}
 
 export async function loadCoffeeData(): Promise<CoffeeData> {
   const supabase = getSupabaseBrowserClient();
@@ -111,7 +129,7 @@ export async function createClientRecord(
   const name = input.name.trim();
   if (!name) return current;
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("clients")
@@ -119,7 +137,7 @@ export async function createClientRecord(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throwSupabaseWriteError(error);
     return { ...current, clients: [mapClient(data), ...current.clients] };
   }
 
@@ -147,7 +165,7 @@ export async function createPersonRecord(
   const name = input.name.trim();
   if (!name) return current;
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("people")
@@ -164,7 +182,7 @@ export async function createPersonRecord(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throwSupabaseWriteError(error);
     return { ...current, people: [mapPerson(data), ...current.people] };
   }
 
@@ -199,7 +217,7 @@ export async function createProductionRecord(
   const name = input.name.trim();
   if (!name) throw new Error("Production name is required.");
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     let clientId = input.client_id;
     let client = current.clients.find((item) => item.id === clientId);
@@ -214,7 +232,7 @@ export async function createProductionRecord(
         .select("*")
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throwSupabaseWriteError(error);
       client = mapClient(data);
       clientId = client.id;
     }
@@ -233,7 +251,7 @@ export async function createProductionRecord(
       .select("*")
       .single();
 
-    if (productionError) throw new Error(productionError.message);
+    if (productionError) throwSupabaseWriteError(productionError);
 
     const production = mapProduction(productionRow);
     const rosterPeople = defaultRosterPeople(current, clientId);
@@ -254,7 +272,7 @@ export async function createProductionRecord(
         .insert(rosterInserts)
         .select("*");
 
-      if (rosterError) throw new Error(rosterError.message);
+      if (rosterError) throwSupabaseWriteError(rosterError);
 
       const orderInserts: Array<ReturnType<typeof toOrderInsert>> = [];
       (rosterRows || []).forEach((row) => {
@@ -272,7 +290,7 @@ export async function createProductionRecord(
           .from("orders")
           .insert(orderInserts);
 
-        if (ordersError) throw new Error(ordersError.message);
+        if (ordersError) throwSupabaseWriteError(ordersError);
       }
     }
 
@@ -344,7 +362,7 @@ export async function updateOrderRecord(
 ): Promise<CoffeeData> {
   const updated_at = new Date().toISOString();
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("orders")
@@ -353,7 +371,7 @@ export async function updateOrderRecord(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throwSupabaseWriteError(error);
     const updated = mapOrder(data);
     return {
       ...current,
@@ -390,7 +408,7 @@ export async function saveOrderDraft(
   const usualOrder = formatDrink(updatedOrder);
   const shouldUpdateUsual = usualOrder !== "No order";
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data: orderRow, error: orderError } = await supabase
       .from("orders")
@@ -399,7 +417,7 @@ export async function saveOrderDraft(
       .select("*")
       .single();
 
-    if (orderError) throw new Error(orderError.message);
+    if (orderError) throwSupabaseWriteError(orderError);
 
     let nextPeople = current.people;
     if (shouldUpdateUsual) {
@@ -410,7 +428,7 @@ export async function saveOrderDraft(
         .select("*")
         .single();
 
-      if (personError) throw new Error(personError.message);
+      if (personError) throwSupabaseWriteError(personError);
       const updatedPerson = mapPerson(personRow);
       nextPeople = current.people.map((person) =>
         person.id === updatedPerson.id ? updatedPerson : person,
@@ -483,7 +501,7 @@ export async function linkPersonToClient(
   );
   const notes = relationshipNotes?.trim() ?? existing?.relationship_notes ?? "";
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     if (existing) {
       const { data, error } = await supabase
@@ -496,7 +514,7 @@ export async function linkPersonToClient(
         .select("*")
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throwSupabaseWriteError(error);
       const link = mapClientPerson(data);
       return {
         ...current,
@@ -517,7 +535,7 @@ export async function linkPersonToClient(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throwSupabaseWriteError(error);
     const link = mapClientPerson(data);
     return { ...current, client_people: [link, ...current.client_people] };
   }
@@ -563,7 +581,7 @@ export async function unlinkPersonFromClient(
   );
   if (!existing) return current;
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("client_people")
@@ -572,7 +590,7 @@ export async function unlinkPersonFromClient(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throwSupabaseWriteError(error);
     const link = mapClientPerson(data);
     return {
       ...current,
@@ -605,7 +623,7 @@ export async function addRosterPerson(
     current.production_roster.filter((item) => item.production_id === productionId)
       .length + 1;
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data: rosterRow, error: rosterError } = await supabase
       .from("production_roster")
@@ -619,7 +637,7 @@ export async function addRosterPerson(
       .select("*")
       .single();
 
-    if (rosterError) throw new Error(rosterError.message);
+    if (rosterError) throwSupabaseWriteError(rosterError);
 
     const roster = mapRoster(rosterRow);
     const { data: orderRow, error: orderError } = await supabase
@@ -628,7 +646,7 @@ export async function addRosterPerson(
       .select("*")
       .single();
 
-    if (orderError) throw new Error(orderError.message);
+    if (orderError) throwSupabaseWriteError(orderError);
 
     return {
       ...current,

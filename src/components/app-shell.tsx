@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { CaptureMark } from "@/components/capture-mark";
+import { isStaffUser } from "@/lib/auth";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
@@ -108,11 +109,17 @@ function useShellAuth() {
 
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
 
       if (!data.session) {
         router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
+        return;
+      }
+
+      if (!isStaffUser(data.session.user)) {
+        await supabase.auth.signOut();
+        router.replace("/login?staff=1");
         return;
       }
 
@@ -122,12 +129,18 @@ function useShellAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
 
       if (!session) {
         setReady(false);
         router.replace("/login");
+        return;
+      }
+
+      if (!isStaffUser(session.user)) {
+        await supabase.auth.signOut();
+        router.replace("/login?staff=1");
         return;
       }
 
