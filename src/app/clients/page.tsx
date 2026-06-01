@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
@@ -111,9 +112,10 @@ export default function ClientsPage() {
           ).length;
 
           return (
-            <article
+            <Link
               key={client.id}
-              className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
+              href={`/clients/${client.id}`}
+              className="block border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)] transition hover:border-black"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -129,7 +131,7 @@ export default function ClientsPage() {
               {client.notes ? (
                 <p className="mt-3 text-sm leading-6 text-zinc-700">{client.notes}</p>
               ) : null}
-            </article>
+            </Link>
           );
         })}
       </div>

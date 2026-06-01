@@ -442,6 +442,156 @@ export async function saveOrderDraft(
   return next;
 }
 
+export type ClientLinkedPerson = {
+  link: ClientPerson;
+  person: Person;
+};
+
+export function listClientLinkedPeople(
+  data: CoffeeData,
+  clientId: string,
+  options: { activeOnly?: boolean } = {},
+): ClientLinkedPerson[] {
+  const activeOnly = options.activeOnly ?? true;
+
+  return data.client_people
+    .filter(
+      (link) => link.client_id === clientId && (!activeOnly || link.active),
+    )
+    .map((link) => {
+      const person = data.people.find((item) => item.id === link.person_id);
+      return person ? { link, person } : null;
+    })
+    .filter((item): item is ClientLinkedPerson => item !== null)
+    .sort((a, b) => a.person.name.localeCompare(b.person.name));
+}
+
+export async function linkPersonToClient(
+  current: CoffeeData,
+  clientId: string,
+  personId: string,
+  relationshipNotes?: string,
+): Promise<CoffeeData> {
+  const client = current.clients.find((item) => item.id === clientId);
+  const person = current.people.find((item) => item.id === personId);
+  if (!client || !person) {
+    throw new Error("Client or person not found.");
+  }
+
+  const existing = current.client_people.find(
+    (item) => item.client_id === clientId && item.person_id === personId,
+  );
+  const notes = relationshipNotes?.trim() ?? existing?.relationship_notes ?? "";
+
+  const supabase = getSupabaseBrowserClient();
+  if (supabase) {
+    if (existing) {
+      const { data, error } = await supabase
+        .from("client_people")
+        .update({
+          active: true,
+          relationship_notes: blankToNull(notes),
+        })
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+
+      if (error) throw new Error(error.message);
+      const link = mapClientPerson(data);
+      return {
+        ...current,
+        client_people: current.client_people.map((item) =>
+          item.id === link.id ? link : item,
+        ),
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("client_people")
+      .insert({
+        client_id: clientId,
+        person_id: personId,
+        relationship_notes: blankToNull(notes),
+        active: true,
+      })
+      .select("*")
+      .single();
+
+    if (error) throw new Error(error.message);
+    const link = mapClientPerson(data);
+    return { ...current, client_people: [link, ...current.client_people] };
+  }
+
+  if (existing) {
+    const next = {
+      ...current,
+      client_people: current.client_people.map((item) =>
+        item.id === existing.id
+          ? { ...item, active: true, relationship_notes: notes }
+          : item,
+      ),
+    };
+    saveCoffeeData(next);
+    return next;
+  }
+
+  const next = {
+    ...current,
+    client_people: [
+      {
+        id: createId("cp"),
+        client_id: clientId,
+        person_id: personId,
+        relationship_notes: notes,
+        active: true,
+      },
+      ...current.client_people,
+    ],
+  };
+  saveCoffeeData(next);
+  return next;
+}
+
+export async function unlinkPersonFromClient(
+  current: CoffeeData,
+  clientId: string,
+  personId: string,
+): Promise<CoffeeData> {
+  const existing = current.client_people.find(
+    (item) =>
+      item.client_id === clientId && item.person_id === personId && item.active,
+  );
+  if (!existing) return current;
+
+  const supabase = getSupabaseBrowserClient();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("client_people")
+      .update({ active: false })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+
+    if (error) throw new Error(error.message);
+    const link = mapClientPerson(data);
+    return {
+      ...current,
+      client_people: current.client_people.map((item) =>
+        item.id === link.id ? link : item,
+      ),
+    };
+  }
+
+  const next = {
+    ...current,
+    client_people: current.client_people.map((item) =>
+      item.id === existing.id ? { ...item, active: false } : item,
+    ),
+  };
+  saveCoffeeData(next);
+  return next;
+}
+
 export async function addRosterPerson(
   current: CoffeeData,
   productionId: string,
