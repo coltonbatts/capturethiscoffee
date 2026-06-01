@@ -69,132 +69,123 @@ export default function NewProductionPage() {
   }
 
   return (
-    <AppShell title="New production" eyebrow="Run setup">
-      <Panel className="mb-4 p-4">
-        <p className="production-kicker text-zinc-500">Production paperwork</p>
-        <h1 className="text-2xl font-black uppercase tracking-wider">Set up the run</h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-600">
-          Start with the shoot basics. The roster is seeded from saved client contacts
-          and core crew.
-        </p>
-      </Panel>
-      <form
-        onSubmit={submit}
-        className="grid gap-4 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
-      >
-        <Field label="Production name">
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-            placeholder="Client shoot / campaign name"
-            required
-          />
-        </Field>
-
-        {error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
-            {error}
-          </div>
-        ) : null}
-
-        <div className="grid grid-cols-2 gap-2 bg-zinc-100 p-1">
-          <button
-            type="button"
-            onClick={() => setClientMode("existing")}
-            className={`min-h-11 rounded-md text-sm font-bold ${
-              clientMode === "existing" ? "bg-black text-white shadow-sm" : "text-zinc-600"
-            }`}
-          >
-            Existing client
-          </button>
-          <button
-            type="button"
-            onClick={() => setClientMode("new")}
-            className={`min-h-11 rounded-md text-sm font-bold ${
-              clientMode === "new" ? "bg-black text-white shadow-sm" : "text-zinc-600"
-            }`}
-          >
-            Add client
-          </button>
-        </div>
-
-        {clientMode === "existing" ? (
-          <Field label="Client">
-            <select
+    <AppShell title="New production">
+      <form onSubmit={submit} className="grid gap-4">
+        <Panel className="grid gap-4 p-5">
+          <Field label="Production name">
+            <input
               className={inputClass}
-              value={form.client_id}
-              onChange={(event) =>
-                setForm({ ...form, client_id: event.target.value })
-              }
+              value={form.name}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+              placeholder="Shoot name"
+              required
+            />
+          </Field>
+
+          {error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-zinc-100 p-1">
+            <button
+              type="button"
+              onClick={() => setClientMode("existing")}
+              className={`min-h-11 rounded-lg text-sm font-medium ${
+                clientMode === "existing" ? "bg-black text-white shadow-sm" : "text-zinc-600"
+              }`}
             >
-              {data?.clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        ) : (
-          <Field label="Client name">
+              Existing client
+            </button>
+            <button
+              type="button"
+              onClick={() => setClientMode("new")}
+              className={`min-h-11 rounded-lg text-sm font-medium ${
+                clientMode === "new" ? "bg-black text-white shadow-sm" : "text-zinc-600"
+              }`}
+            >
+              New client
+            </button>
+          </div>
+
+          {clientMode === "existing" ? (
+            <Field label="Client">
+              <select
+                className={inputClass}
+                value={form.client_id}
+                onChange={(event) =>
+                  setForm({ ...form, client_id: event.target.value })
+                }
+              >
+                {data?.clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <Field label="Client name">
+              <input
+                className={inputClass}
+                value={form.new_client_name}
+                onChange={(event) =>
+                  setForm({ ...form, new_client_name: event.target.value })
+                }
+                placeholder="Client name"
+              />
+            </Field>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Shoot date">
+              <input
+                className={inputClass}
+                type="date"
+                value={form.shoot_date}
+                onChange={(event) =>
+                  setForm({ ...form, shoot_date: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Runner">
+              <input
+                className={inputClass}
+                value={form.runner_name}
+                onChange={(event) =>
+                  setForm({ ...form, runner_name: event.target.value })
+                }
+                placeholder="Runner name"
+              />
+            </Field>
+          </div>
+
+          <Field label="Location">
             <input
               className={inputClass}
-              value={form.new_client_name}
-              onChange={(event) =>
-                setForm({ ...form, new_client_name: event.target.value })
-              }
-              placeholder="New client"
+              value={form.location}
+              onChange={(event) => setForm({ ...form, location: event.target.value })}
+              placeholder="Studio or address"
             />
           </Field>
-        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Shoot date">
-            <input
-              className={inputClass}
-              type="date"
-              value={form.shoot_date}
-              onChange={(event) =>
-                setForm({ ...form, shoot_date: event.target.value })
-              }
+          <Field label="Notes">
+            <textarea
+              className={`${inputClass} min-h-24 py-3`}
+              value={form.notes}
+              onChange={(event) => setForm({ ...form, notes: event.target.value })}
+              placeholder="Call time, coffee shop, handoff"
             />
           </Field>
-          <Field label="Runner">
-            <input
-              className={inputClass}
-              value={form.runner_name}
-              onChange={(event) =>
-                setForm({ ...form, runner_name: event.target.value })
-              }
-              placeholder="PA / runner name"
-            />
-          </Field>
-        </div>
+        </Panel>
 
-        <Field label="Location">
-          <input
-            className={inputClass}
-            value={form.location}
-            onChange={(event) => setForm({ ...form, location: event.target.value })}
-            placeholder="Studio, stage, set, or address"
-          />
-        </Field>
-
-        <Field label="Notes">
-          <textarea
-            className={`${inputClass} min-h-24 py-3`}
-            value={form.notes}
-            onChange={(event) => setForm({ ...form, notes: event.target.value })}
-            placeholder="Call time, coffee shop, runner handoff notes"
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-2 border-t border-zinc-300 pt-4">
+        <div className="grid grid-cols-2 gap-2">
           <button type="button" className={secondaryButtonClass} onClick={() => router.back()}>
             Cancel
           </button>
           <button type="submit" className={primaryButtonClass} disabled={saving}>
-            {saving ? "Creating" : "Create"}
+            {saving ? "Creating…" : "Create"}
           </button>
         </div>
       </form>

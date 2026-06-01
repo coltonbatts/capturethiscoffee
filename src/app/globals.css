@@ -21,58 +21,14 @@ html {
 }
 
 body {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.22)),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px),
-    var(--background);
-  background-size: auto, 44px 44px, auto;
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 ::selection {
   background: #1c1917;
   color: #fafaf9;
-}
-
-.ct-mark {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  overflow: hidden;
-  background: #050505;
-  color: #ffffff;
-}
-
-.ct-mark::before {
-  content: "";
-  position: absolute;
-  inset: 9px 8px 8px 10px;
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-  background: currentColor;
-}
-
-.ct-mark::after {
-  content: "CT";
-  position: relative;
-  z-index: 1;
-  margin-left: 1px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0;
-  color: #050505;
-}
-
-.ct-mark.ct-mark-invert::after {
-  color: #ffffff;
-}
-
-.production-kicker {
-  font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 button,
@@ -141,9 +97,13 @@ button {
     width: 8mm;
     height: 8mm;
     border: 0.45mm solid #000000;
-    font-size: 7pt;
-    font-weight: 900;
-    line-height: 1;
+    padding: 1mm;
+    color: #000000;
+  }
+
+  .m2-label-mark svg {
+    width: 100%;
+    height: 100%;
   }
 
   .m2-label h2 {

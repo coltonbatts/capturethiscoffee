@@ -1,9 +1,9 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { inputClass, primaryButtonClass } from "@/components/ui";
+import { CaptureMark } from "@/components/capture-mark";
+import { Field, inputClass, primaryButtonClass } from "@/components/ui";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -59,36 +59,25 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-black px-4 py-8 text-white">
-      <section className="w-full max-w-md overflow-hidden border border-zinc-700 bg-white text-black shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
-        <div className="border-b border-zinc-800 bg-black p-5 text-white">
-          <div className="flex items-center gap-3">
-            <span className="ct-mark ct-mark-invert size-11 rounded-sm bg-white text-black" aria-hidden="true" />
-            <div>
-              <p className="production-kicker text-zinc-400">Production ops</p>
-              <h1 className="text-xl font-black uppercase tracking-wider">Capture This</h1>
-            </div>
-          </div>
+    <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
+      <section className="w-full max-w-md overflow-hidden rounded-2xl border border-zinc-700 bg-white text-black shadow-xl">
+        <div className="flex items-center gap-3 border-b border-zinc-200 bg-black p-5 text-white">
+          <CaptureMark invert className="size-11 rounded-xl" />
+          <h1 className="text-xl font-semibold">Capture This</h1>
         </div>
-        <form className="grid gap-3 p-5" onSubmit={signIn}>
-          <div className="mb-1 flex items-center gap-2 border border-zinc-300 bg-zinc-100 p-3 text-sm font-black uppercase tracking-wide text-zinc-700">
-            <LockKeyhole size={17} aria-hidden="true" />
-            Staff entry / shoot-day coffee
-          </div>
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-600">
-            Email
+        <form className="grid gap-4 p-5" onSubmit={signIn}>
+          <Field label="Email">
             <input
               className={inputClass}
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="runner@capturethis.com"
+              placeholder="you@studio.com"
               autoComplete="email"
               required={isSupabaseConfigured}
             />
-          </label>
-          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-600">
-            Password
+          </Field>
+          <Field label="Password">
             <input
               className={inputClass}
               type="password"
@@ -98,28 +87,23 @@ export default function LoginPage() {
               autoComplete="current-password"
               required={isSupabaseConfigured}
             />
-          </label>
+          </Field>
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
               {error}
             </div>
           ) : null}
           <button
             type="submit"
-            className={`${primaryButtonClass} mt-2`}
+            className={`${primaryButtonClass} mt-1`}
             disabled={submitting}
           >
             {isSupabaseConfigured
               ? submitting
-                ? "Signing in"
+                ? "Signing in…"
                 : "Sign in"
-              : "Continue in demo mode"}
+              : "Continue"}
           </button>
-          <p className="text-xs leading-5 text-zinc-500">
-            {isSupabaseConfigured
-              ? "Use a Supabase Auth staff account for production-day access."
-              : "Supabase env vars are missing, so this browser uses seeded local demo data."}
-          </p>
         </form>
       </section>
     </main>

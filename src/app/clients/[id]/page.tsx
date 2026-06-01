@@ -10,6 +10,7 @@ import {
   EmptyState,
   Field,
   Panel,
+  cardClass,
   dangerButtonClass,
   inputClass,
   primaryButtonClass,
@@ -119,14 +120,13 @@ export default function ClientDetailPage() {
 
   if (data && !client) {
     return (
-      <AppShell title="Client not found" eyebrow="Database">
+      <AppShell title="Client not found">
         <EmptyState
           title="Client not found"
-          description="This client may have been removed or the link is invalid."
           action={
             <Link href="/clients" className={secondaryButtonClass}>
               <ArrowLeft size={18} aria-hidden="true" />
-              Back to clients
+              Back
             </Link>
           }
         />
@@ -137,7 +137,6 @@ export default function ClientDetailPage() {
   return (
     <AppShell
       title={client?.name || "Client"}
-      eyebrow="Client contacts"
       actions={
         <Link href="/clients" className={secondaryButtonClass}>
           <ArrowLeft size={18} aria-hidden="true" />
@@ -145,73 +144,59 @@ export default function ClientDetailPage() {
         </Link>
       }
     >
-      <Panel className="mb-4 p-4">
-        <p className="production-kicker text-zinc-500">Saved contacts</p>
-        <h1 className="text-2xl font-black uppercase tracking-wider">
-          {client?.name || "Loading"}
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-600">
-          People linked here are added to the roster when you start a production
-          for this client, plus up to four crew members.
-        </p>
-        {client?.notes ? (
-          <p className="mt-3 text-sm leading-6 text-zinc-700">{client.notes}</p>
-        ) : null}
-      </Panel>
+      {client?.notes ? (
+        <p className="mb-4 text-sm leading-6 text-zinc-600">{client.notes}</p>
+      ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
           {error}
         </div>
       ) : null}
 
-      <form
-        onSubmit={addContact}
-        className="mb-4 grid gap-3 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
-      >
-        <p className="text-xs font-black uppercase tracking-wider text-zinc-600">
-          Link existing person
-        </p>
-        <Field label="Search people">
-          <input
-            className={inputClass}
-            value={personQuery}
-            onChange={(event) => setPersonQuery(event.target.value)}
-            placeholder="Filter by name, role, department"
-          />
-        </Field>
-        <Field label="Person">
-          <select
-            className={inputClass}
-            value={personId}
-            onChange={(event) => setPersonId(event.target.value)}
-            required
+      <form onSubmit={addContact} className="mb-4 grid gap-3">
+        <Panel className="grid gap-3 p-4">
+          <Field label="Search">
+            <input
+              className={inputClass}
+              value={personQuery}
+              onChange={(event) => setPersonQuery(event.target.value)}
+              placeholder="Name, role, department"
+            />
+          </Field>
+          <Field label="Person">
+            <select
+              className={inputClass}
+              value={personId}
+              onChange={(event) => setPersonId(event.target.value)}
+              required
+            >
+              <option value="">Select a person</option>
+              {availablePeople.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                  {person.role ? ` — ${person.role}` : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Notes">
+            <input
+              className={inputClass}
+              value={relationshipNotes}
+              onChange={(event) => setRelationshipNotes(event.target.value)}
+              placeholder="Optional"
+            />
+          </Field>
+          <button
+            type="submit"
+            className={primaryButtonClass}
+            disabled={!personId || saving}
           >
-            <option value="">Select a person</option>
-            {availablePeople.map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name}
-                {person.role ? ` — ${person.role}` : ""}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Relationship notes (optional)">
-          <input
-            className={inputClass}
-            value={relationshipNotes}
-            onChange={(event) => setRelationshipNotes(event.target.value)}
-            placeholder="Primary approval contact, agency lead"
-          />
-        </Field>
-        <button
-          type="submit"
-          className={primaryButtonClass}
-          disabled={!personId || saving}
-        >
-          <Plus size={18} aria-hidden="true" />
-          {saving ? "Saving" : "Link contact"}
-        </button>
+            <Plus size={18} aria-hidden="true" />
+            {saving ? "Saving…" : "Link contact"}
+          </button>
+        </Panel>
       </form>
 
       <div className="grid gap-3">
@@ -220,23 +205,15 @@ export default function ClientDetailPage() {
             <Panel key={item} className="h-24 animate-pulse bg-white/70 p-4" />
           ))
         ) : !linked.length ? (
-          <EmptyState
-            title="No contacts linked"
-            description="Link people from your roster so they appear on new productions for this client."
-          />
+          <EmptyState title="No contacts" description="Link people from your roster." />
         ) : (
           linked.map(({ link, person }) => (
-            <article
-              key={link.id}
-              className="flex gap-3 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
-            >
+            <article key={link.id} className={`${cardClass} flex gap-3`}>
               <Avatar person={person} />
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide">
-                  {person.name}
-                </h2>
-                <p className="truncate text-sm font-semibold text-zinc-600">
-                  {[person.role, person.department].filter(Boolean).join(" / ") ||
+                <h2 className="truncate text-lg font-semibold">{person.name}</h2>
+                <p className="truncate text-sm text-zinc-600">
+                  {[person.role, person.department].filter(Boolean).join(" · ") ||
                     person.type.replace("_", " ")}
                 </p>
                 {link.relationship_notes ? (

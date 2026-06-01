@@ -1,20 +1,30 @@
 # Capture This Coffee
 
-Mobile-first internal coffee runner app for Capture This production shoots.
+Mobile-first coffee runner app for Capture This production shoots. Built for fast scanning on set—not internal ops docs.
+
+## Design
+
+The UI is intentionally minimal and contemporary:
+
+- **Rounded surfaces** — panels, inputs, buttons, and chips use `rounded-xl` / `rounded-2xl` (print labels stay sharp)
+- **Calm typography** — Geist Sans for UI; sentence case; one clear title per screen
+- **Short copy** — no eyebrow kickers, demo banners, or Supabase jargon in normal use; labels and actions only where they prevent mistakes
+- **Black / white / zinc** — brand mark via `CaptureMark` (`src/components/capture-mark.tsx`); shared tokens in `src/components/ui.tsx`
+
+When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button classes rather than one-off styles.
 
 ## What is in this MVP
 
-- Staff login placeholder at `/login`
+- Staff login at `/login`
 - Production list at `/productions`
 - Production creation at `/productions/new`
 - Runner dashboard at `/productions/[id]`
-- People database at `/people`
-- Client database at `/clients`
-- Supabase Auth email/password staff login at `/login`
-- Supabase-backed data access when env vars are configured
-- Local seeded `localStorage` demo fallback when Supabase env vars are missing
-- Supabase table scaffold and authenticated-user-only RLS policies in `supabase/schema.sql`
-- Copyable coffee shop summaries and browser-printable label cards
+- People at `/people`
+- Clients at `/clients`
+- Supabase Auth email/password when env vars are configured
+- Local seeded `localStorage` fallback when Supabase env vars are missing
+- Supabase schema and RLS in `supabase/schema.sql`
+- Copyable coffee summaries and browser-printable M2 label cards
 
 ## Run locally
 
@@ -52,26 +62,24 @@ When both env vars are present, the app reads and writes these Supabase tables:
 - `production_roster`
 - `orders`
 
-When either env var is missing, the app falls back to seeded demo data in `localStorage`. The reset demo button only appears in this fallback mode.
+When either env var is missing, the app uses seeded demo data in `localStorage`. A reset control is available on the productions list in that mode only (no in-app demo messaging).
 
 ## Demo staff users
 
-Create demo staff users in the Supabase dashboard:
+Create staff users in the Supabase dashboard:
 
 1. Go to **Authentication > Users**.
 2. Click **Add user**.
-3. Enter a demo staff email, for example `runner@capturethis.com`.
-4. Enter a temporary password.
-5. Confirm the user if your Supabase project requires email confirmation.
-6. Share the email and password only with demo staff.
+3. Enter a staff email, for example `runner@capturethis.com`.
+4. Set a password and confirm the user if your project requires it.
 
-Then open `/login`, sign in with that email and password, and continue to `/productions`.
+Then open `/login`, sign in, and continue to `/productions`.
 
 The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table access is controlled by Supabase Auth plus RLS.
 
 ## Seed data
 
-The app does not automatically insert demo rows into Supabase. To test against Supabase, add a client and people from the app, then create a production. To prefill realistic sample rows, adapt the records in `src/lib/seed.ts` into SQL inserts using Supabase-generated UUIDs.
+The app does not automatically insert demo rows into Supabase. To test against Supabase, add a client and people from the app, then create a production. To prefill sample rows, adapt the records in `src/lib/seed.ts` into SQL inserts using Supabase-generated UUIDs.
 
 ## Verification
 

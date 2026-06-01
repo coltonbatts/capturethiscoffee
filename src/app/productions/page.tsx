@@ -4,7 +4,14 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Plus, RotateCcw, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { EmptyState, Panel, StatusChip } from "@/components/ui";
+import {
+  EmptyState,
+  Panel,
+  StatusChip,
+  cardClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import {
   isSupabaseBacked,
   loadCoffeeData,
@@ -62,39 +69,28 @@ export default function ProductionsPage() {
   return (
     <AppShell
       title="Productions"
-      eyebrow="Capture This ops"
       actions={
-        <Link
-          href="/productions/new"
-          className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-black px-3 text-sm font-black uppercase tracking-wide text-white shadow-sm"
-        >
+        <Link href="/productions/new" className={primaryButtonClass}>
           <Plus size={18} aria-hidden="true" />
           New
         </Link>
       }
     >
-      <Panel className="mb-4 flex items-center justify-between gap-3 p-4">
-        <div>
-          <p className="production-kicker text-zinc-500">Shoot board</p>
-          <h1 className="text-2xl font-black uppercase tracking-wider">Coffee runs</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Confirm orders, group drinks, and keep the set moving.
-          </p>
-        </div>
-        {!isSupabaseBacked ? (
+      {!isSupabaseBacked ? (
+        <div className="mb-4 flex justify-end">
           <button
             type="button"
             onClick={resetDemoData}
-            className="grid min-h-11 min-w-11 place-items-center rounded-sm border border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-100"
+            className={`${secondaryButtonClass} min-w-11 px-3`}
             aria-label="Reset demo data"
           >
             <RotateCcw size={18} aria-hidden="true" />
           </button>
-        ) : null}
-      </Panel>
+        </div>
+      ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
           {error}
         </div>
       ) : null}
@@ -106,62 +102,55 @@ export default function ProductionsPage() {
           ))}
         </div>
       ) : cards.length ? (
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {cards.map(({ production, client, orders, done, progress, openStatus }) => (
-          <Link
-            key={production.id}
-            href={`/productions/${production.id}`}
-            className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)] transition hover:border-black hover:shadow-sm active:scale-[0.99]"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide">{production.name}</h2>
-                <p className="truncate text-sm font-semibold text-zinc-600">
-                  {client?.name || "No client"}
-                </p>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {cards.map(({ production, client, orders, done, progress, openStatus }) => (
+            <Link key={production.id} href={`/productions/${production.id}`} className={cardClass}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="truncate text-lg font-semibold">{production.name}</h2>
+                  <p className="truncate text-sm text-zinc-600">
+                    {client?.name || "No client"}
+                  </p>
+                </div>
+                <StatusChip status={openStatus} />
               </div>
-              <StatusChip status={openStatus} />
-            </div>
-            <div className="mt-4 grid gap-2 text-sm text-zinc-700">
-              <span className="flex items-center gap-2">
-                <CalendarDays size={16} aria-hidden="true" />
-                {production.shoot_date || "No shoot date"}
-              </span>
-              <span className="flex items-center gap-2">
-                <MapPin size={16} aria-hidden="true" />
-                {production.location || "Location TBD"}
-              </span>
-              <span className="flex items-center gap-2">
-                <UserRound size={16} aria-hidden="true" />
-                Runner: {production.runner_name || "Unassigned"}
-              </span>
-            </div>
-            <div className="mt-4">
-              <div className="mb-1 flex justify-between text-xs font-black uppercase tracking-wider text-zinc-500">
-                <span>Run progress</span>
-                <span>
-                  {done}/{orders.length}
+              <div className="mt-4 grid gap-2 text-sm text-zinc-700">
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={16} aria-hidden="true" />
+                  {production.shoot_date || "No date"}
+                </span>
+                <span className="flex items-center gap-2">
+                  <MapPin size={16} aria-hidden="true" />
+                  {production.location || "Location TBD"}
+                </span>
+                <span className="flex items-center gap-2">
+                  <UserRound size={16} aria-hidden="true" />
+                  {production.runner_name || "No runner"}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden bg-zinc-200">
-                <div
-                  className="h-full bg-black"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="mt-4">
+                <div className="mb-1.5 flex justify-between text-xs text-zinc-500">
+                  <span>Progress</span>
+                  <span>
+                    {done}/{orders.length}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
+                  <div
+                    className="h-full rounded-full bg-black transition-[width]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
       ) : (
         <EmptyState
           title="No productions yet"
-          description="Create the first shoot run to seed a roster and start confirming orders."
+          description="Create a shoot to start confirming orders."
           action={
-            <Link
-              href="/productions/new"
-              className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-black px-3 text-sm font-black uppercase tracking-wide text-white"
-            >
+            <Link href="/productions/new" className={primaryButtonClass}>
               <Plus size={18} aria-hidden="true" />
               New production
             </Link>
