@@ -56,14 +56,15 @@ export default function ClientsPage() {
   return (
     <AppShell title="Clients" eyebrow="Database">
       <Panel className="mb-4 p-4">
-        <h1 className="text-2xl font-black tracking-tight">Clients</h1>
-        <p className="mt-1 text-sm leading-6 text-stone-600">
+        <p className="production-kicker text-zinc-500">Client file</p>
+        <h1 className="text-2xl font-black uppercase tracking-wider">Clients</h1>
+        <p className="mt-1 text-sm leading-6 text-zinc-600">
           Save client names and notes used when creating a production run.
         </p>
       </Panel>
       <form
         onSubmit={addClient}
-        className="mb-4 grid gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+        className="mb-4 grid gap-3 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
       >
         <Field label="Add client">
           <input
@@ -112,21 +113,21 @@ export default function ClientsPage() {
           return (
             <article
               key={client.id}
-              className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+              className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-black">{client.name}</h2>
-                  <p className="text-sm text-stone-600">
+                  <h2 className="text-lg font-black uppercase tracking-wide">{client.name}</h2>
+                  <p className="text-sm text-zinc-600">
                     {peopleCount} saved contact{peopleCount === 1 ? "" : "s"}
                   </p>
                 </div>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-900">
+                <span className="bg-emerald-100 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-900">
                   {client.active ? "Active" : "Inactive"}
                 </span>
               </div>
               {client.notes ? (
-                <p className="mt-3 text-sm leading-6 text-stone-700">{client.notes}</p>
+                <p className="mt-3 text-sm leading-6 text-zinc-700">{client.notes}</p>
               ) : null}
             </article>
           );

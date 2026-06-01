@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 import type { OrderStatus, Person } from "@/lib/types";
 
 const statusStyles: Record<OrderStatus, string> = {
-  not_asked: "bg-stone-100 text-stone-700 border-stone-300",
-  confirmed: "bg-teal-50 text-teal-900 border-teal-200",
-  ordered: "bg-indigo-50 text-indigo-900 border-indigo-200",
-  picked_up: "bg-amber-50 text-amber-950 border-amber-200",
+  not_asked: "bg-zinc-100 text-zinc-700 border-zinc-300",
+  confirmed: "bg-white text-black border-black",
+  ordered: "bg-black text-white border-black",
+  picked_up: "bg-zinc-800 text-white border-zinc-800",
   delivered: "bg-emerald-100 text-emerald-950 border-emerald-300",
-  no_order: "bg-zinc-100 text-zinc-700 border-zinc-300",
+  no_order: "bg-red-50 text-red-800 border-red-200",
 };
 
 export const statusLabels: Record<OrderStatus, string> = {
@@ -23,7 +23,7 @@ export const statusLabels: Record<OrderStatus, string> = {
 export function StatusChip({ status }: { status: OrderStatus }) {
   return (
     <span
-      className={`inline-flex min-h-7 shrink-0 items-center rounded-full border px-2.5 text-xs font-bold leading-none ${statusStyles[status]}`}
+      className={`inline-flex min-h-7 shrink-0 items-center border px-2.5 text-[11px] font-black uppercase leading-none tracking-wider ${statusStyles[status]}`}
     >
       {statusLabels[status]}
     </span>
@@ -44,7 +44,7 @@ export function Avatar({ person }: { person: Person }) {
   }
 
   return (
-    <div className="grid size-12 place-items-center rounded-lg bg-stone-900 text-sm font-black text-stone-50 ring-1 ring-stone-700/20">
+    <div className="grid size-12 place-items-center rounded-sm bg-black text-sm font-black text-white ring-1 ring-black/20">
       {person.name
         .split(" ")
         .map((part) => part[0])
@@ -62,7 +62,7 @@ export function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5 text-sm font-semibold text-stone-700">
+    <label className="grid gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-600">
       {label}
       {children}
     </label>
@@ -78,7 +78,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`rounded-lg border border-stone-200 bg-white/90 shadow-[0_1px_0_rgba(28,25,23,0.05)] ${className}`}
+      className={`rounded-sm border border-zinc-300 bg-white/95 shadow-[0_1px_0_rgba(0,0,0,0.08)] ${className}`}
     >
       {children}
     </section>
@@ -97,8 +97,8 @@ export function EmptyState({
   return (
     <Panel className="grid gap-3 p-5 text-center">
       <div>
-        <h2 className="text-base font-black text-stone-950">{title}</h2>
-        <p className="mt-1 text-sm leading-6 text-stone-600">{description}</p>
+        <h2 className="text-base font-black uppercase tracking-wide text-black">{title}</h2>
+        <p className="mt-1 text-sm leading-6 text-zinc-600">{description}</p>
       </div>
       {action ? <div className="flex justify-center">{action}</div> : null}
     </Panel>
@@ -106,13 +106,13 @@ export function EmptyState({
 }
 
 export const inputClass =
-  "min-h-12 w-full rounded-lg border border-stone-300 bg-white px-3 text-base text-stone-950 outline-none transition placeholder:text-stone-400 focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10";
+  "min-h-12 w-full rounded-sm border border-zinc-400 bg-white px-3 text-base text-black outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-2 focus:ring-black/10";
 
 export const buttonClass =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-bold leading-tight transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-3.5 text-sm font-black uppercase leading-tight tracking-wide transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50";
 
-export const primaryButtonClass = `${buttonClass} bg-stone-950 text-white shadow-sm hover:bg-stone-800`;
+export const primaryButtonClass = `${buttonClass} bg-black text-white shadow-sm hover:bg-zinc-800`;
 
-export const secondaryButtonClass = `${buttonClass} border border-stone-300 bg-white text-stone-900 hover:bg-stone-50`;
+export const secondaryButtonClass = `${buttonClass} border border-zinc-400 bg-white text-black hover:bg-zinc-100`;
 
 export const dangerButtonClass = `${buttonClass} border border-red-200 bg-red-50 text-red-800 hover:bg-red-100`;

@@ -69,17 +69,18 @@ export default function NewProductionPage() {
   }
 
   return (
-    <AppShell title="New production" eyebrow="Setup">
+    <AppShell title="New production" eyebrow="Run setup">
       <Panel className="mb-4 p-4">
-        <h1 className="text-2xl font-black tracking-tight">Set up the run</h1>
-        <p className="mt-1 text-sm leading-6 text-stone-600">
+        <p className="production-kicker text-zinc-500">Production paperwork</p>
+        <h1 className="text-2xl font-black uppercase tracking-wider">Set up the run</h1>
+        <p className="mt-1 text-sm leading-6 text-zinc-600">
           Start with the shoot basics. The roster is seeded from saved client contacts
           and core crew.
         </p>
       </Panel>
       <form
         onSubmit={submit}
-        className="grid gap-4 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+        className="grid gap-4 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
       >
         <Field label="Production name">
           <input
@@ -97,12 +98,12 @@ export default function NewProductionPage() {
           </div>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-100 p-1">
+        <div className="grid grid-cols-2 gap-2 bg-zinc-100 p-1">
           <button
             type="button"
             onClick={() => setClientMode("existing")}
             className={`min-h-11 rounded-md text-sm font-bold ${
-              clientMode === "existing" ? "bg-white shadow-sm" : "text-stone-600"
+              clientMode === "existing" ? "bg-black text-white shadow-sm" : "text-zinc-600"
             }`}
           >
             Existing client
@@ -111,7 +112,7 @@ export default function NewProductionPage() {
             type="button"
             onClick={() => setClientMode("new")}
             className={`min-h-11 rounded-md text-sm font-bold ${
-              clientMode === "new" ? "bg-white shadow-sm" : "text-stone-600"
+              clientMode === "new" ? "bg-black text-white shadow-sm" : "text-zinc-600"
             }`}
           >
             Add client
@@ -188,7 +189,7 @@ export default function NewProductionPage() {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-2 border-t border-stone-200 pt-4">
+        <div className="grid grid-cols-2 gap-2 border-t border-zinc-300 pt-4">
           <button type="button" className={secondaryButtonClass} onClick={() => router.back()}>
             Cancel
           </button>

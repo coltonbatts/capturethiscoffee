@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { inputClass, primaryButtonClass } from "@/components/ui";
@@ -59,25 +59,23 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center px-4 py-8">
-      <section className="w-full max-w-md overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_18px_60px_rgba(28,25,23,0.12)]">
-        <div className="border-b border-stone-200 bg-stone-950 p-5 text-white">
+    <main className="grid min-h-dvh place-items-center bg-black px-4 py-8 text-white">
+      <section className="w-full max-w-md overflow-hidden border border-zinc-700 bg-white text-black shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
+        <div className="border-b border-zinc-800 bg-black p-5 text-white">
           <div className="flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-lg bg-white text-stone-950">
-            <Coffee size={21} aria-hidden="true" />
-          </span>
-          <div>
-            <h1 className="text-xl font-black">Capture This Coffee</h1>
-            <p className="text-sm text-stone-300">Staff runner entry</p>
-          </div>
+            <span className="ct-mark ct-mark-invert size-11 rounded-sm bg-white text-black" aria-hidden="true" />
+            <div>
+              <p className="production-kicker text-zinc-400">Production ops</p>
+              <h1 className="text-xl font-black uppercase tracking-wider">Capture This</h1>
+            </div>
           </div>
         </div>
         <form className="grid gap-3 p-5" onSubmit={signIn}>
-          <div className="mb-1 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm font-semibold text-stone-700">
+          <div className="mb-1 flex items-center gap-2 border border-zinc-300 bg-zinc-100 p-3 text-sm font-black uppercase tracking-wide text-zinc-700">
             <LockKeyhole size={17} aria-hidden="true" />
-            Internal shoot-day coffee workflow
+            Staff entry / shoot-day coffee
           </div>
-          <label className="grid gap-1.5 text-sm font-semibold text-stone-700">
+          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-600">
             Email
             <input
               className={inputClass}
@@ -89,7 +87,7 @@ export default function LoginPage() {
               required={isSupabaseConfigured}
             />
           </label>
-          <label className="grid gap-1.5 text-sm font-semibold text-stone-700">
+          <label className="grid gap-1.5 text-xs font-black uppercase tracking-wider text-zinc-600">
             Password
             <input
               className={inputClass}
@@ -117,9 +115,9 @@ export default function LoginPage() {
                 : "Sign in"
               : "Continue in demo mode"}
           </button>
-          <p className="text-xs leading-5 text-stone-500">
+          <p className="text-xs leading-5 text-zinc-500">
             {isSupabaseConfigured
-              ? "Use a Supabase Auth staff account for this demo."
+              ? "Use a Supabase Auth staff account for production-day access."
               : "Supabase env vars are missing, so this browser uses seeded local demo data."}
           </p>
         </form>

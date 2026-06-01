@@ -62,11 +62,11 @@ export default function ProductionsPage() {
   return (
     <AppShell
       title="Productions"
-      eyebrow="Coffee runner"
+      eyebrow="Capture This ops"
       actions={
         <Link
           href="/productions/new"
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-stone-950 px-3 text-sm font-bold text-white shadow-sm"
+          className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-black px-3 text-sm font-black uppercase tracking-wide text-white shadow-sm"
         >
           <Plus size={18} aria-hidden="true" />
           New
@@ -75,16 +75,17 @@ export default function ProductionsPage() {
     >
       <Panel className="mb-4 flex items-center justify-between gap-3 p-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Today&apos;s runs</h1>
-          <p className="mt-1 text-sm text-stone-600">
-            Confirm orders, group drinks, and track delivery status.
+          <p className="production-kicker text-zinc-500">Shoot board</p>
+          <h1 className="text-2xl font-black uppercase tracking-wider">Coffee runs</h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            Confirm orders, group drinks, and keep the set moving.
           </p>
         </div>
         {!isSupabaseBacked ? (
           <button
             type="button"
             onClick={resetDemoData}
-            className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+            className="grid min-h-11 min-w-11 place-items-center rounded-sm border border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-100"
             aria-label="Reset demo data"
           >
             <RotateCcw size={18} aria-hidden="true" />
@@ -110,18 +111,18 @@ export default function ProductionsPage() {
           <Link
             key={production.id}
             href={`/productions/${production.id}`}
-            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)] transition hover:border-stone-300 hover:shadow-sm active:scale-[0.99]"
+            className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)] transition hover:border-black hover:shadow-sm active:scale-[0.99]"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black">{production.name}</h2>
-                <p className="truncate text-sm font-semibold text-stone-600">
+                <h2 className="truncate text-lg font-black uppercase tracking-wide">{production.name}</h2>
+                <p className="truncate text-sm font-semibold text-zinc-600">
                   {client?.name || "No client"}
                 </p>
               </div>
               <StatusChip status={openStatus} />
             </div>
-            <div className="mt-4 grid gap-2 text-sm text-stone-700">
+            <div className="mt-4 grid gap-2 text-sm text-zinc-700">
               <span className="flex items-center gap-2">
                 <CalendarDays size={16} aria-hidden="true" />
                 {production.shoot_date || "No shoot date"}
@@ -136,15 +137,15 @@ export default function ProductionsPage() {
               </span>
             </div>
             <div className="mt-4">
-              <div className="mb-1 flex justify-between text-xs font-bold uppercase tracking-wide text-stone-500">
-                <span>Order progress</span>
+              <div className="mb-1 flex justify-between text-xs font-black uppercase tracking-wider text-zinc-500">
+                <span>Run progress</span>
                 <span>
                   {done}/{orders.length}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-stone-200">
+              <div className="h-2 overflow-hidden bg-zinc-200">
                 <div
-                  className="h-full rounded-full bg-teal-700"
+                  className="h-full bg-black"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -159,7 +160,7 @@ export default function ProductionsPage() {
           action={
             <Link
               href="/productions/new"
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-stone-950 px-3 text-sm font-bold text-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-black px-3 text-sm font-black uppercase tracking-wide text-white"
             >
               <Plus size={18} aria-hidden="true" />
               New production

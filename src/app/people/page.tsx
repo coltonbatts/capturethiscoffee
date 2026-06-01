@@ -86,14 +86,15 @@ export default function PeoplePage() {
   return (
     <AppShell title="People" eyebrow="Roster source">
       <Panel className="mb-4 p-4">
-        <h1 className="text-2xl font-black tracking-tight">People</h1>
-        <p className="mt-1 text-sm leading-6 text-stone-600">
+        <p className="production-kicker text-zinc-500">Crew index</p>
+        <h1 className="text-2xl font-black uppercase tracking-wider">People</h1>
+        <p className="mt-1 text-sm leading-6 text-zinc-600">
           Keep usual drinks and roles close at hand for fast roster setup.
         </p>
       </Panel>
       <form
         onSubmit={addPerson}
-        className="mb-4 grid gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+        className="mb-4 grid gap-3 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name">
@@ -184,16 +185,16 @@ export default function PeoplePage() {
         {people.map((person) => (
           <article
             key={person.id}
-            className="flex gap-3 rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+            className="flex gap-3 border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
           >
             <Avatar person={person} />
             <div className="min-w-0">
-              <h2 className="truncate text-lg font-black">{person.name}</h2>
-              <p className="truncate text-sm font-semibold text-stone-600">
+              <h2 className="truncate text-lg font-black uppercase tracking-wide">{person.name}</h2>
+              <p className="truncate text-sm font-semibold text-zinc-600">
                 {[person.role, person.department].filter(Boolean).join(" / ") ||
                   person.type.replace("_", " ")}
               </p>
-              <p className="mt-2 text-sm leading-5 text-stone-700">
+              <p className="mt-2 text-sm leading-5 text-zinc-700">
                 {person.usual_order || "No usual order saved"}
               </p>
             </div>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8f2;
-  --foreground: #1c1917;
+  --background: #f4f4f1;
+  --foreground: #050505;
 }
 
 @theme inline {
@@ -22,17 +22,57 @@ html {
 
 body {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)),
-    linear-gradient(90deg, rgba(12, 10, 9, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.22)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px),
     var(--background);
-  background-size: auto, 48px 48px, auto;
+  background-size: auto, 44px 44px, auto;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
 }
 
 ::selection {
   background: #1c1917;
   color: #fafaf9;
+}
+
+.ct-mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  background: #050505;
+  color: #ffffff;
+}
+
+.ct-mark::before {
+  content: "";
+  position: absolute;
+  inset: 9px 8px 8px 10px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  background: currentColor;
+}
+
+.ct-mark::after {
+  content: "CT";
+  position: relative;
+  z-index: 1;
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: #050505;
+}
+
+.ct-mark.ct-mark-invert::after {
+  color: #ffffff;
+}
+
+.production-kicker {
+  font-family: var(--font-geist-mono), "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 button,
@@ -47,8 +87,17 @@ button {
 }
 
 @media print {
+  @page {
+    size: 50mm 30mm;
+    margin: 0;
+  }
+
+  html,
   body {
     background: white;
+    height: auto;
+    margin: 0;
+    padding: 0;
   }
 
   .no-print {
@@ -59,10 +108,85 @@ button {
     display: block !important;
   }
 
-  .label-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 16px;
+  .m2-label-sheet {
+    display: block !important;
+  }
+
+  .m2-label {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 8mm 1fr;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 2mm;
+    width: 50mm;
+    height: 30mm;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+    padding: 2.5mm 2.5mm 2mm;
+    color: #000000;
+    background: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .m2-label:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .m2-label-mark {
+    grid-row: 1 / 3;
+    display: grid;
+    place-items: center;
+    width: 8mm;
+    height: 8mm;
+    border: 0.45mm solid #000000;
+    font-size: 7pt;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .m2-label h2 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11pt;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .m2-label-order {
+    grid-column: 2;
+    display: -webkit-box;
+    overflow: hidden;
+    margin-top: 1.5mm;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    font-size: 8pt;
+    font-weight: 700;
+    line-height: 1.12;
+  }
+
+  .m2-label-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 2mm;
+    min-width: 0;
+    border-top: 0.3mm solid #000000;
+    padding-top: 1mm;
+    font-size: 5.5pt;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .m2-label-footer span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

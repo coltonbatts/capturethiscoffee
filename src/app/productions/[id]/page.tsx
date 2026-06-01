@@ -227,30 +227,31 @@ export default function ProductionDashboardPage() {
       <Panel className="mb-4 overflow-hidden no-print">
         <div className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
-            <h1 className="break-words text-2xl font-black tracking-tight md:text-3xl">
+            <p className="production-kicker text-zinc-500">Active run</p>
+            <h1 className="break-words text-2xl font-black uppercase tracking-wider md:text-3xl">
               {activeProduction.name}
             </h1>
-            <p className="mt-1 truncate text-sm font-semibold text-stone-600">
+            <p className="mt-1 truncate text-sm font-semibold text-zinc-600">
               {[activeClient?.name, activeProduction.shoot_date, activeProduction.location]
                 .filter(Boolean)
                 .join(" / ")}
             </p>
             {activeProduction.runner_name ? (
-              <p className="mt-1 text-xs font-bold uppercase text-stone-500">
+              <p className="mt-1 text-xs font-black uppercase tracking-wider text-zinc-500">
                 Runner: {activeProduction.runner_name}
               </p>
             ) : null}
           </div>
-          <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-right text-sm font-bold">
+          <div className="border border-black bg-black px-3 py-2 text-right text-sm font-black text-white">
             <span className="block text-2xl leading-none">{progress.percent}%</span>
-            <span className="text-xs text-stone-500">
+            <span className="text-xs uppercase tracking-wider text-zinc-300">
               {progress.done}/{progress.total} touched
             </span>
           </div>
         </div>
-        <div className="h-2 overflow-hidden bg-stone-200">
+        <div className="h-2 overflow-hidden bg-zinc-200">
           <div
-            className="h-full bg-teal-700"
+            className="h-full bg-black"
             style={{ width: `${progress.percent}%` }}
           />
         </div>
@@ -272,7 +273,7 @@ export default function ProductionDashboardPage() {
         <label className="relative block">
           <Search
             size={19}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-500"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
             aria-hidden="true"
           />
           <input
@@ -319,10 +320,10 @@ export default function ProductionDashboardPage() {
               key={item}
               type="button"
               onClick={() => setTab(item)}
-              className={`min-h-11 shrink-0 rounded-lg px-4 text-sm font-bold ${
+              className={`min-h-11 shrink-0 rounded-sm px-4 text-sm font-black uppercase tracking-wide ${
                 tab === item
-                  ? "bg-stone-950 text-white"
-                  : "border border-stone-300 bg-white text-stone-700"
+                  ? "bg-black text-white"
+                  : "border border-zinc-400 bg-white text-zinc-700"
               }`}
             >
               {item}
@@ -356,7 +357,8 @@ export default function ProductionDashboardPage() {
       ) : null}
 
       <Panel className="mt-4 p-4 no-print">
-        <h2 className="text-lg font-black">Add to roster</h2>
+        <p className="production-kicker text-zinc-500">Roster control</p>
+        <h2 className="text-lg font-black uppercase tracking-wide">Add to roster</h2>
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
           <select
             className={inputClass}
@@ -400,9 +402,9 @@ export default function ProductionDashboardPage() {
 
 function RunMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white/90 p-3">
-      <p className="text-[11px] font-bold uppercase text-stone-500">{label}</p>
-      <p className="mt-1 text-2xl font-black leading-none text-stone-950">{value}</p>
+    <div className="border border-zinc-300 bg-white/95 p-3">
+      <p className="text-[11px] font-black uppercase tracking-wider text-zinc-500">{label}</p>
+      <p className="mt-1 text-2xl font-black leading-none text-black">{value}</p>
     </div>
   );
 }
@@ -434,15 +436,15 @@ function PeopleTab({
         return (
           <article
             key={item.roster.id}
-            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+            className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
           >
             <div className="flex gap-3">
               <Avatar person={item.person} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h2 className="truncate text-lg font-black">{item.person.name}</h2>
-                    <p className="truncate text-sm font-semibold text-stone-600">
+                    <h2 className="truncate text-lg font-black uppercase tracking-wide">{item.person.name}</h2>
+                    <p className="truncate text-sm font-semibold text-zinc-600">
                       {[item.person.role, item.roster.group_label || item.person.department]
                         .filter(Boolean)
                         .join(" / ")}
@@ -451,14 +453,14 @@ function PeopleTab({
                   <StatusChip status={item.order.status} />
                 </div>
                 <div className="mt-3 grid gap-2 text-sm">
-                  <p className="rounded-lg bg-stone-50 p-3 leading-5 text-stone-700">
-                    <span className="block text-xs font-bold uppercase text-stone-500">
+                  <p className="bg-zinc-100 p-3 leading-5 text-zinc-700">
+                    <span className="block text-xs font-black uppercase tracking-wider text-zinc-500">
                       Usual
                     </span>
                     {item.person.usual_order || "No usual order saved"}
                   </p>
-                  <p className="rounded-lg border border-stone-200 bg-white p-3 leading-5 text-stone-800">
-                    <span className="block text-xs font-bold uppercase text-stone-500">
+                  <p className="border border-zinc-300 bg-white p-3 leading-5 text-zinc-800">
+                    <span className="block text-xs font-black uppercase tracking-wider text-zinc-500">
                       Today
                     </span>
                     {formatDrink(item.order)}
@@ -470,7 +472,7 @@ function PeopleTab({
               <button
                 type="button"
                 onClick={() => onConfirm(item)}
-                className={`${buttonClass} bg-emerald-700 text-white`}
+                className={`${buttonClass} bg-black text-white`}
               >
                 <Check size={18} aria-hidden="true" />
                 Confirm
@@ -494,7 +496,7 @@ function PeopleTab({
               <button
                 type="button"
                 onClick={() => onDelivered(item.order!)}
-                className={`${buttonClass} bg-stone-800 text-white`}
+                className={`${buttonClass} bg-zinc-800 text-white`}
               >
                 <PackageCheck size={18} aria-hidden="true" />
                 Delivered
@@ -523,11 +525,11 @@ function GroupsTab({ items }: { items: RosterOrder[] }) {
       {groups.map(([group, groupItems]) => (
         <section
           key={group}
-          className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+          className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
         >
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-black">{group}</h2>
-            <span className="text-sm font-bold text-stone-500">
+            <h2 className="text-xl font-black uppercase tracking-wide">{group}</h2>
+            <span className="text-sm font-black uppercase tracking-wider text-zinc-500">
               {groupItems.length} people
             </span>
           </div>
@@ -535,7 +537,7 @@ function GroupsTab({ items }: { items: RosterOrder[] }) {
             {groupItems.map((item) => (
               <div
                 key={item.roster.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-stone-50 p-3"
+                className="flex items-center justify-between gap-3 border border-zinc-300 bg-zinc-100 p-3"
               >
                 <span className="min-w-0 truncate text-sm font-bold">
                   {item.person.name}
@@ -564,15 +566,15 @@ function DrinksTab({ items }: { items: RosterOrder[] }) {
       {drinks.map((drink) => (
         <article
           key={drink.order}
-          className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+          className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
         >
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-lg font-black leading-6">{drink.order}</h2>
-            <span className="rounded-full bg-stone-950 px-3 py-1 text-sm font-black text-white">
+            <h2 className="text-lg font-black uppercase leading-6 tracking-wide">{drink.order}</h2>
+            <span className="bg-black px-3 py-1 text-sm font-black text-white">
               {drink.count}x
             </span>
           </div>
-          <p className="mt-3 text-sm leading-6 text-stone-700">
+          <p className="mt-3 text-sm leading-6 text-zinc-700">
             {drink.people.join(", ")}
           </p>
         </article>
@@ -597,11 +599,11 @@ function StatusTab({
         return (
           <section
             key={status}
-            className="rounded-lg border border-stone-200 bg-white/95 p-4 shadow-[0_1px_0_rgba(28,25,23,0.05)]"
+            className="border border-zinc-300 bg-white/95 p-4 shadow-[0_1px_0_rgba(0,0,0,0.08)]"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black">{statusLabels[status]}</h2>
-              <span className="text-sm font-bold text-stone-500">
+              <h2 className="text-lg font-black uppercase tracking-wide">{statusLabels[status]}</h2>
+              <span className="text-sm font-black uppercase tracking-wider text-zinc-500">
                 {statusItems.length}
               </span>
             </div>
@@ -609,11 +611,11 @@ function StatusTab({
               {statusItems.map((item) => (
                 <div
                   key={item.roster.id}
-                  className="grid gap-2 rounded-lg border border-stone-200 bg-stone-50 p-3"
+                  className="grid gap-2 border border-zinc-300 bg-zinc-100 p-3"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="font-bold">{item.person.name}</span>
-                    <span className="text-sm text-stone-600">
+                    <span className="text-sm text-zinc-600">
                       {item.roster.group_label}
                     </span>
                   </div>
@@ -663,8 +665,6 @@ function SummaryTab({
   const byPerson = byPersonSummary(items);
 
   function printLabels() {
-    // Future: investigate NIIMBOT M2 direct printing via Web Bluetooth,
-    // official SDK support, or reliable community tooling before shipping.
     window.print();
   }
 
@@ -673,14 +673,14 @@ function SummaryTab({
       <Panel className="grid gap-3 p-4 no-print">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black">Coffee shop summary</h2>
-            <p className="text-sm text-stone-600">
+            <h2 className="text-xl font-black uppercase tracking-wide">Coffee shop summary</h2>
+            <p className="text-sm text-zinc-600">
               Plain text for ordering and handoff.
             </p>
           </div>
           <button type="button" onClick={printLabels} className={secondaryButtonClass}>
             <Printer size={18} aria-hidden="true" />
-            Print labels
+            Print M2 labels
           </button>
         </div>
         <textarea
@@ -696,18 +696,19 @@ function SummaryTab({
       </Panel>
 
       <section className="print-only hidden">
-        <div className="label-grid">
+        <div className="m2-label-sheet">
           {byPerson.map((item) => (
             <article
               key={`${item.name}-${item.order}`}
-              className="break-inside-avoid rounded-lg border-2 border-black p-3"
+              className="m2-label"
             >
-              <h2 className="text-xl font-black">{item.name}</h2>
-              <p className="mt-2 text-base font-bold">{item.order}</p>
-              <p className="mt-2 text-sm">{item.group}</p>
-              <p className="mt-1 text-xs">
-                {[productionName, clientName].filter(Boolean).join(" / ")}
-              </p>
+              <div className="m2-label-mark">CT</div>
+              <h2>{item.name}</h2>
+              <p className="m2-label-order">{item.order}</p>
+              <div className="m2-label-footer">
+                <span>{item.group}</span>
+                <span>{[productionName, clientName].filter(Boolean).join(" / ")}</span>
+              </div>
             </article>
           ))}
         </div>
@@ -728,11 +729,12 @@ function OrderEditor({
   onSave: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid items-end bg-black/35 p-3 no-print">
-      <section className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-lg bg-white p-4 shadow-2xl">
+    <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3 no-print">
+      <section className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto border border-zinc-300 bg-white p-4 shadow-2xl">
         <div>
-          <h2 className="text-xl font-black">Edit order</h2>
-          <p className="text-sm text-stone-600">
+          <p className="production-kicker text-zinc-500">Order card</p>
+          <h2 className="text-xl font-black uppercase tracking-wide">Edit order</h2>
+          <p className="text-sm text-zinc-600">
             Changes update today&apos;s order and save as the usual order.
           </p>
         </div>
