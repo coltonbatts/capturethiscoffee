@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Coffee, ContactRound, FolderKanban, Plus } from "lucide-react";
+import { Coffee, ContactRound, FolderKanban, LogOut, Plus, UserRound } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
   title: string;
@@ -12,6 +15,24 @@ type AppShellProps = {
 };
 
 export function AppShell({ title, eyebrow, actions, children }: AppShellProps) {
+  const auth = useShellAuth();
+
+  if (!auth.ready) {
+    return (
+      <div className="grid min-h-dvh place-items-center px-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-stone-300 bg-stone-50 p-4 shadow-sm">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-stone-950 text-stone-50">
+            <Coffee size={20} aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-stone-950">Checking staff session</p>
+            <p className="text-xs text-stone-600">Redirecting to login if needed.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh pb-24">
       <header className="sticky top-0 z-30 border-b border-stone-300/80 bg-stone-100/95 backdrop-blur no-print">
@@ -31,7 +52,28 @@ export function AppShell({ title, eyebrow, actions, children }: AppShellProps) {
               </span>
             </span>
           </Link>
-          {actions ? <div className="shrink-0">{actions}</div> : null}
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex max-w-48 items-center gap-1.5 truncate rounded-xl border border-stone-300 bg-stone-50 px-2.5 py-2 text-xs font-bold text-stone-700">
+              <UserRound size={15} aria-hidden="true" />
+              <span className="hidden truncate sm:inline">
+                {auth.email || (isSupabaseConfigured ? "Signed in" : "Demo mode")}
+              </span>
+              <span className="sm:hidden">
+                {isSupabaseConfigured ? "Staff" : "Demo"}
+              </span>
+            </div>
+            {actions ? <div className="shrink-0">{actions}</div> : null}
+            {isSupabaseConfigured ? (
+              <button
+                type="button"
+                onClick={auth.signOut}
+                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-stone-300 bg-stone-50 text-stone-700"
+                aria-label="Sign out"
+              >
+                <LogOut size={18} aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -46,6 +88,65 @@ export function AppShell({ title, eyebrow, actions, children }: AppShellProps) {
       </nav>
     </div>
   );
+}
+
+function useShellAuth() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [ready, setReady] = useState(!isSupabaseConfigured);
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+
+      if (!data.session) {
+        router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
+        return;
+      }
+
+      setEmail(data.session.user.email || "");
+      setReady(true);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+
+      if (!session) {
+        setReady(false);
+        router.replace("/login");
+        return;
+      }
+
+      setEmail(session.user.email || "");
+      setReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [pathname, router]);
+
+  async function signOut() {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    await supabase.auth.signOut();
+    router.replace("/login");
+    router.refresh();
+  }
+
+  return { ready, email, signOut };
 }
 
 function NavItem({

@@ -132,41 +132,41 @@ alter table orders enable row level security;
 drop policy if exists "Internal staff can manage clients" on clients;
 create policy "Internal staff can manage clients"
 on clients for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Internal staff can manage people" on people;
 create policy "Internal staff can manage people"
 on people for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Internal staff can manage client people" on client_people;
 create policy "Internal staff can manage client people"
 on client_people for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Internal staff can manage productions" on productions;
 create policy "Internal staff can manage productions"
 on productions for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Internal staff can manage production roster" on production_roster;
 create policy "Internal staff can manage production roster"
 on production_roster for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Internal staff can manage orders" on orders;
 create policy "Internal staff can manage orders"
 on orders for all
-to anon, authenticated
+to authenticated
 using (true)
 with check (true);

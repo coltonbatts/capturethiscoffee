@@ -9,7 +9,7 @@ import {
   loadCoffeeData as loadLocalCoffeeData,
   saveCoffeeData,
 } from "./storage";
-import { supabase } from "./supabase";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "./supabase";
 import type {
   Client,
   ClientPerson,
@@ -53,9 +53,10 @@ const blankToNull = (value?: string) => {
 
 const present = (value: string | null | undefined) => value || "";
 
-export const isSupabaseBacked = Boolean(supabase);
+export const isSupabaseBacked = isSupabaseConfigured;
 
 export async function loadCoffeeData(): Promise<CoffeeData> {
+  const supabase = getSupabaseBrowserClient();
   if (!supabase) return loadLocalCoffeeData();
 
   const [
@@ -110,6 +111,7 @@ export async function createClientRecord(
   const name = input.name.trim();
   if (!name) return current;
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { data, error } = await supabase
       .from("clients")
@@ -145,6 +147,7 @@ export async function createPersonRecord(
   const name = input.name.trim();
   if (!name) return current;
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { data, error } = await supabase
       .from("people")
@@ -196,6 +199,7 @@ export async function createProductionRecord(
   const name = input.name.trim();
   if (!name) throw new Error("Production name is required.");
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     let clientId = input.client_id;
     let client = current.clients.find((item) => item.id === clientId);
@@ -340,6 +344,7 @@ export async function updateOrderRecord(
 ): Promise<CoffeeData> {
   const updated_at = new Date().toISOString();
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { data, error } = await supabase
       .from("orders")
@@ -385,6 +390,7 @@ export async function saveOrderDraft(
   const usualOrder = formatDrink(updatedOrder);
   const shouldUpdateUsual = usualOrder !== "No order";
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { data: orderRow, error: orderError } = await supabase
       .from("orders")
@@ -449,6 +455,7 @@ export async function addRosterPerson(
     current.production_roster.filter((item) => item.production_id === productionId)
       .length + 1;
 
+  const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { data: rosterRow, error: rosterError } = await supabase
       .from("production_roster")
