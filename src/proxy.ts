@@ -1,12 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isStaffUser } from "@/lib/auth";
-import type { Database } from "@/lib/supabase";
+import { isDevelopmentAuthBypass, type Database } from "@/lib/supabase";
 
 const protectedPathPattern = /^\/(productions|people|clients)(\/|$)/;
 const staffDeniedParam = "staff";
 
 export async function proxy(request: NextRequest) {
+  if (isDevelopmentAuthBypass) {
+    return NextResponse.next();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

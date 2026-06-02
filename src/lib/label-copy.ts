@@ -75,9 +75,7 @@ export function buildCoffeeLabels(
     const group = item.roster.group_label || item.person.department || "Set";
     const drink = formatDrink(item.order);
     const productionClient = [production.name, client?.name].filter(Boolean).join(" / ");
-    const notesStatus = [item.order.special_notes, statusCopy[item.order.status]]
-      .filter(Boolean)
-      .join(" / ");
+    const notesStatus = statusCopy[item.order.status];
 
     const label: CoffeeLabel = {
       id: item.order?.id || item.roster.id,
