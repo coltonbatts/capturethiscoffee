@@ -52,6 +52,14 @@ export default function NewProductionPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!data || !form.name.trim() || saving) return;
+    if (clientMode === "existing" && !form.client_id) {
+      setError("Choose a client or create a new one.");
+      return;
+    }
+    if (clientMode === "new" && !form.new_client_name.trim()) {
+      setError("Enter a client name.");
+      return;
+    }
 
     setSaving(true);
     setError("");
@@ -117,6 +125,7 @@ export default function NewProductionPage() {
                 onChange={(event) =>
                   setForm({ ...form, client_id: event.target.value })
                 }
+                required={clientMode === "existing"}
               >
                 {data?.clients.map((client) => (
                   <option key={client.id} value={client.id}>
@@ -134,6 +143,7 @@ export default function NewProductionPage() {
                   setForm({ ...form, new_client_name: event.target.value })
                 }
                 placeholder="Client name"
+                required={clientMode === "new"}
               />
             </Field>
           )}

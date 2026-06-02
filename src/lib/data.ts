@@ -294,17 +294,21 @@ export async function createProductionRecord(
 ): Promise<{ data: CoffeeData; production: Production }> {
   const name = input.name.trim();
   if (!name) throw new Error("Production name is required.");
+  const newClientName = input.new_client_name?.trim();
+  if (!input.client_id && !newClientName) {
+    throw new Error("Choose a client or enter a new client name.");
+  }
 
   const supabase = await getWritableSupabase();
   if (supabase) {
     let clientId = input.client_id;
     let client = current.clients.find((item) => item.id === clientId);
 
-    if (input.new_client_name?.trim()) {
+    if (newClientName) {
       const { data, error } = await supabase
         .from("clients")
         .insert({
-          name: input.new_client_name.trim(),
+          name: newClientName,
           active: true,
         })
         .select("*")
@@ -380,10 +384,10 @@ export async function createProductionRecord(
   let clientId = input.client_id;
   let client = nextData.clients.find((item) => item.id === clientId);
 
-  if (input.new_client_name?.trim()) {
+  if (newClientName) {
     client = {
       id: createId("client"),
-      name: input.new_client_name.trim(),
+      name: newClientName,
       notes: "",
       active: true,
       created_at: now,
