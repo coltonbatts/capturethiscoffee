@@ -11,6 +11,13 @@ import type {
 } from "./types";
 
 const storageKey = "capture-this-coffee-data-v1";
+const removedExampleNames = new Set([
+  "Ava Chen",
+  "Marcus Reed",
+  "Jules Rivera",
+  "Sam Patel",
+  "Mia Torres",
+]);
 
 export function createId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -37,12 +44,49 @@ export function loadCoffeeData(): CoffeeData {
   }
 
   try {
-    return JSON.parse(raw) as CoffeeData;
+    const data = removeExamplePeople(JSON.parse(raw) as CoffeeData);
+    if (data.changed) saveCoffeeData(data.value);
+    return data.value;
   } catch {
     const data = cloneSeedData();
     saveCoffeeData(data);
     return data;
   }
+}
+
+function removeExamplePeople(data: CoffeeData): { value: CoffeeData; changed: boolean } {
+  const removedPersonIds = new Set(
+    data.people
+      .filter((person) => removedExampleNames.has(person.name))
+      .map((person) => person.id),
+  );
+
+  if (!removedPersonIds.size) return { value: data, changed: false };
+
+  const removedRosterIds = new Set(
+    data.production_roster
+      .filter((roster) => removedPersonIds.has(roster.person_id))
+      .map((roster) => roster.id),
+  );
+
+  return {
+    changed: true,
+    value: {
+      ...data,
+      people: data.people.filter((person) => !removedPersonIds.has(person.id)),
+      client_people: data.client_people.filter(
+        (link) => !removedPersonIds.has(link.person_id),
+      ),
+      production_roster: data.production_roster.filter(
+        (roster) => !removedPersonIds.has(roster.person_id),
+      ),
+      orders: data.orders.filter(
+        (order) =>
+          !removedPersonIds.has(order.person_id) &&
+          !removedRosterIds.has(order.roster_id),
+      ),
+    },
+  };
 }
 
 export function saveCoffeeData(data: CoffeeData) {
