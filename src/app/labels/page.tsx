@@ -94,6 +94,8 @@ export default function LabelWorkstationPage() {
   const [checkingPrinter, setCheckingPrinter] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const [printLabels, setPrintLabels] = useState<CoffeeLabel[]>([]);
+  const [pendingPrintedOrderId, setPendingPrintedOrderId] = useState("");
+  const [pendingAdvance, setPendingAdvance] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -162,6 +164,8 @@ export default function LabelWorkstationPage() {
 
   function chooseOrder(orderId: string) {
     setSelectedId(orderId);
+    setPendingPrintedOrderId("");
+    setPendingAdvance(false);
 
     if (orderId === "manual") {
       setDraft((current) => ({
@@ -185,15 +189,18 @@ export default function LabelWorkstationPage() {
 
     setPrinting(true);
     setError("");
+    setPendingPrintedOrderId("");
+    setPendingAdvance(false);
 
     try {
       if (data && selectedItem?.order) {
         const next = await updateOrderRecord(data, selectedItem.order.id, {
           ...draftOrderPatch(draft),
           status: selectedItem.order.status === "not_asked" ? "confirmed" : selectedItem.order.status,
-          label_printed: true,
         });
         setData(next);
+        setPendingPrintedOrderId(selectedItem.order.id);
+        setPendingAdvance(advance);
       }
 
       setPrintLabels([currentLabel]);
@@ -203,16 +210,39 @@ export default function LabelWorkstationPage() {
       ].slice(0, 5));
 
       window.setTimeout(() => window.print(), 60);
-
-      if (advance) {
-        const next = nextPrintableOrderId(rosterItems, selectedId);
-        if (next) chooseOrder(next);
-        else chooseOrder("manual");
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not prepare that label.");
     } finally {
       window.setTimeout(() => setPrinting(false), 300);
+    }
+  }
+
+  async function markPendingPrinted() {
+    if (!data || !pendingPrintedOrderId) return;
+
+    setPrinting(true);
+    setError("");
+
+    try {
+      const next = await updateOrderRecord(data, pendingPrintedOrderId, {
+        label_printed: true,
+      });
+      setData(next);
+
+      const shouldAdvance = pendingAdvance;
+      const printedOrderId = pendingPrintedOrderId;
+      setPendingPrintedOrderId("");
+      setPendingAdvance(false);
+
+      if (shouldAdvance) {
+        const nextOrderId = nextPrintableOrderId(rosterItems, printedOrderId);
+        if (nextOrderId) chooseOrder(nextOrderId);
+        else chooseOrder("manual");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not mark label printed.");
+    } finally {
+      window.setTimeout(() => setPrinting(false), 200);
     }
   }
 
@@ -517,6 +547,24 @@ export default function LabelWorkstationPage() {
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
+
+            {pendingPrintedOrderId ? (
+              <div className="grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-semibold leading-5 text-amber-950">
+                  After the browser print dialog finishes, confirm only if the label
+                  came out correctly.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void markPendingPrinted()}
+                  disabled={printing}
+                  className={primaryButtonClass}
+                >
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                  {pendingAdvance ? "Mark printed & next" : "Mark printed"}
+                </button>
+              </div>
+            ) : null}
           </Panel>
 
           <div className="grid gap-4">
@@ -566,6 +614,7 @@ export default function LabelWorkstationPage() {
                 <Printer size={19} aria-hidden="true" />
                 Printer
               </h2>
+              <PrinterCalibrationChecklist />
               <button
                 type="button"
                 onClick={checkPrinter}
@@ -573,7 +622,7 @@ export default function LabelWorkstationPage() {
                 disabled={checkingPrinter}
               >
                 <Printer size={18} aria-hidden="true" />
-                {checkingPrinter ? "Checking..." : "Check NIIMBOT M2"}
+                {checkingPrinter ? "Checking..." : "Experimental M2 check"}
               </button>
               {printerProbe ? (
                 <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
@@ -630,6 +679,24 @@ export default function LabelWorkstationPage() {
         </div>
       </section>
     </AppShell>
+  );
+}
+
+function PrinterCalibrationChecklist() {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
+      <p className="font-bold text-black">Browser print setup</p>
+      <ul className="mt-1 list-disc space-y-1 pl-5">
+        <li>Label stock: 50mm x 30mm.</li>
+        <li>Orientation: landscape if the driver asks.</li>
+        <li>Scale: 100%, not fit to page.</li>
+        <li>Margins: none; default only if none clips.</li>
+        <li>Increase density if text is faint; adjust driver alignment if shifted.</li>
+      </ul>
+      <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-zinc-500">
+        NIIMBOT Bluetooth is an experimental check only.
+      </p>
+    </div>
   );
 }
 

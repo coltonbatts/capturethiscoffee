@@ -5,7 +5,11 @@ import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { Field, inputClass, primaryButtonClass } from "@/components/ui";
 import { isStaffUser, STAFF_ACCESS_MESSAGE } from "@/lib/auth";
-import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  getSupabaseBrowserClient,
+  isSupabaseConfigured,
+  supabaseConfigError,
+} from "@/lib/supabase";
 
 export default function LoginPage() {
   return (
@@ -27,10 +31,14 @@ function LoginForm() {
   const staffDenied = searchParams.get("staff") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(supabaseConfigError);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (supabaseConfigError) {
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       router.replace(nextPath());
       return;
@@ -59,6 +67,11 @@ function LoginForm() {
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (supabaseConfigError) {
+      setError(supabaseConfigError);
+      return;
+    }
 
     if (!isSupabaseConfigured) {
       router.replace("/productions");

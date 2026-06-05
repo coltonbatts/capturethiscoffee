@@ -53,7 +53,13 @@ import {
   personTypes,
   type PersonForm,
 } from "@/lib/people";
-import type { Order, OrderStatus, ProductionRoster, RosterOrder } from "@/lib/types";
+import type {
+  Order,
+  OrderStatus,
+  Production,
+  ProductionRoster,
+  RosterOrder,
+} from "@/lib/types";
 import { groupLabelFor, type RosterStateFilter } from "./use-roster-view";
 
 export const statuses = Object.keys(statusLabels) as OrderStatus[];
@@ -109,10 +115,12 @@ export function RunnerHeader({
   detail,
   runnerName,
   progress,
+  onEditDetails,
 }: {
   detail: string;
   runnerName?: string;
   progress: { percent: number; responded: number; total: number };
+  onEditDetails: () => void;
 }) {
   return (
     <Panel className="mb-4 overflow-hidden no-print">
@@ -123,11 +131,21 @@ export function RunnerHeader({
             <p className="mt-1 text-sm text-zinc-500">Runner: {runnerName}</p>
           ) : null}
         </div>
-        <div className="rounded-xl bg-black px-3 py-2 text-right text-sm font-medium text-white">
-          <span className="block text-2xl leading-none">{progress.percent}%</span>
-          <span className="text-xs text-zinc-300">
-            {progress.responded}/{progress.total} asked
-          </span>
+        <div className="flex shrink-0 items-start gap-2">
+          <button
+            type="button"
+            onClick={onEditDetails}
+            className="grid size-11 place-items-center rounded-xl border border-zinc-300 bg-white text-black hover:bg-zinc-50"
+            aria-label="Edit production details"
+          >
+            <Pencil size={18} aria-hidden="true" />
+          </button>
+          <div className="rounded-xl bg-black px-3 py-2 text-right text-sm font-medium text-white">
+            <span className="block text-2xl leading-none">{progress.percent}%</span>
+            <span className="text-xs text-zinc-300">
+              {progress.responded}/{progress.total} asked
+            </span>
+          </div>
         </div>
       </div>
       <div className="h-2 overflow-hidden rounded-b-2xl bg-zinc-200">
@@ -670,7 +688,7 @@ export function SummaryTab({
               disabled={checkingPrinter}
             >
               <Printer size={18} aria-hidden="true" />
-              {checkingPrinter ? "Checking..." : "Check M2"}
+              {checkingPrinter ? "Checking..." : "Experimental M2 check"}
             </button>
             <button
               type="button"
@@ -687,6 +705,7 @@ export function SummaryTab({
             {printerProbe}
           </div>
         ) : null}
+        <PrinterCalibrationChecklist />
         <textarea
           className={`${inputClass} min-h-80 whitespace-pre-wrap py-3 font-mono text-sm`}
           value={summary}
@@ -854,6 +873,8 @@ export function LabelsTab({
           </div>
         </Panel>
 
+        <PrinterCalibrationChecklist />
+
         {!labels.length ? (
           <EmptyState
             title="No labels ready"
@@ -881,6 +902,24 @@ export function LabelsTab({
         </div>
       </section>
     </>
+  );
+}
+
+function PrinterCalibrationChecklist() {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
+      <p className="font-bold text-black">Browser print setup</p>
+      <ul className="mt-1 list-disc space-y-1 pl-5">
+        <li>Label stock: 50mm x 30mm.</li>
+        <li>Orientation: landscape if the driver asks.</li>
+        <li>Scale: 100%, not fit to page.</li>
+        <li>Margins: none; default only if none clips.</li>
+        <li>Increase density if text is faint; adjust driver alignment if shifted.</li>
+      </ul>
+      <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-zinc-500">
+        NIIMBOT Bluetooth is an experimental check only.
+      </p>
+    </div>
   );
 }
 
@@ -1193,6 +1232,94 @@ export function OrderEditor({
           disabled={saving}
         >
           {saving ? "Saving…" : "Save order"}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+export function ProductionDetailsEditor({
+  draft,
+  onChange,
+  onCancel,
+  onSave,
+  saving,
+}: {
+  draft: Pick<
+    Production,
+    "name" | "shoot_date" | "location" | "runner_name" | "notes"
+  >;
+  onChange: (
+    draft: Pick<
+      Production,
+      "name" | "shoot_date" | "location" | "runner_name" | "notes"
+    >,
+  ) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  return (
+    <Sheet label="Edit production details">
+      <h2 className="text-lg font-semibold">Edit production</h2>
+      <Field label="Production name">
+        <input
+          className={inputClass}
+          value={draft.name}
+          onChange={(event) => onChange({ ...draft, name: event.target.value })}
+          autoFocus
+          required
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Shoot date">
+          <input
+            className={inputClass}
+            type="date"
+            value={draft.shoot_date}
+            onChange={(event) =>
+              onChange({ ...draft, shoot_date: event.target.value })
+            }
+          />
+        </Field>
+        <Field label="Runner">
+          <input
+            className={inputClass}
+            value={draft.runner_name}
+            onChange={(event) =>
+              onChange({ ...draft, runner_name: event.target.value })
+            }
+            placeholder="Runner name"
+          />
+        </Field>
+      </div>
+      <Field label="Location">
+        <input
+          className={inputClass}
+          value={draft.location}
+          onChange={(event) => onChange({ ...draft, location: event.target.value })}
+          placeholder="Studio or address"
+        />
+      </Field>
+      <Field label="Notes">
+        <textarea
+          className={`${inputClass} min-h-24 py-3`}
+          value={draft.notes}
+          onChange={(event) => onChange({ ...draft, notes: event.target.value })}
+          placeholder="Call time, coffee shop, handoff"
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={onCancel} className={secondaryButtonClass}>
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          className={primaryButtonClass}
+          disabled={saving || !draft.name.trim()}
+        >
+          {saving ? "Saving..." : "Save production"}
         </button>
       </div>
     </Sheet>

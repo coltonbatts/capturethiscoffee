@@ -10,12 +10,14 @@ import {
   createPersonAndAddToRoster,
   removeRosterRecord,
   saveOrderDraft,
+  updateProductionRecord,
   updateRosterRecord,
 } from "@/lib/data";
 import { emptyPersonForm, type PersonForm } from "@/lib/people";
 import type {
   Order,
   OrderStatus,
+  Production,
   ProductionRoster,
   RosterOrder,
 } from "@/lib/types";
@@ -28,6 +30,7 @@ import {
   LabelsTab,
   OrderEditor,
   PeopleTab,
+  ProductionDetailsEditor,
   QuickAddPersonSheet,
   RosterEditor,
   RunMetrics,
@@ -58,6 +61,16 @@ export default function ProductionDashboardPage() {
   const [updateUsualOrder, setUpdateUsualOrder] = useState(false);
   const [editingRosterId, setEditingRosterId] = useState<string | null>(null);
   const [rosterDraft, setRosterDraft] = useState<Partial<ProductionRoster>>({});
+  const [editingProduction, setEditingProduction] = useState(false);
+  const [productionDraft, setProductionDraft] = useState<
+    Pick<Production, "name" | "shoot_date" | "location" | "runner_name" | "notes">
+  >({
+    name: "",
+    shoot_date: "",
+    location: "",
+    runner_name: "",
+    notes: "",
+  });
   const [personToAdd, setPersonToAdd] = useState("");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddForm, setQuickAddForm] = useState<PersonForm>(() =>
@@ -115,6 +128,21 @@ export default function ProductionDashboardPage() {
     setRosterDraft({});
   }
 
+  function openProductionEditor() {
+    setProductionDraft({
+      name: production!.name,
+      shoot_date: production!.shoot_date,
+      location: production!.location,
+      runner_name: production!.runner_name,
+      notes: production!.notes,
+    });
+    setEditingProduction(true);
+  }
+
+  function closeProductionEditor() {
+    setEditingProduction(false);
+  }
+
   async function saveDraft() {
     if (!editingId) return;
     const id = editingId;
@@ -152,6 +180,14 @@ export default function ProductionDashboardPage() {
       "Could not update roster.",
     );
     if (ok) closeRosterEditor();
+  }
+
+  async function saveProductionDetails() {
+    const ok = await run(
+      (base) => updateProductionRecord(base, production!.id, productionDraft),
+      "Could not update production.",
+    );
+    if (ok) closeProductionEditor();
   }
 
   async function removeRoster() {
@@ -202,6 +238,7 @@ export default function ProductionDashboardPage() {
         detail={detail}
         runnerName={production.runner_name}
         progress={view.progress}
+        onEditDetails={openProductionEditor}
       />
 
       <RunMetrics
@@ -298,6 +335,16 @@ export default function ProductionDashboardPage() {
           onCancel={closeRosterEditor}
           onRemove={removeRoster}
           onSave={saveRoster}
+          saving={saving}
+        />
+      ) : null}
+
+      {editingProduction ? (
+        <ProductionDetailsEditor
+          draft={productionDraft}
+          onChange={setProductionDraft}
+          onCancel={closeProductionEditor}
+          onSave={saveProductionDetails}
           saving={saving}
         />
       ) : null}

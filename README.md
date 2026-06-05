@@ -22,7 +22,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - People at `/people`
 - Clients at `/clients`
 - Supabase Auth email/password when env vars are configured
-- Local seeded `localStorage` fallback when Supabase env vars are missing
+- Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Copyable coffee summaries and browser-printable M2 label cards
 
@@ -49,7 +49,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` when you want sign-in and Supabase-backed data enabled.
+5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` or leave it unset when you want sign-in and Supabase-backed data enabled.
 6. Restart `npm run dev` after changing `.env.local`.
 7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
 8. For a controlled demo, disable public sign-ups or leave sign-ups unused and create staff users manually.
@@ -64,7 +64,9 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `orders`
 - Supabase Storage bucket `person-photos` for staff-uploaded people photos
 
-When auth is disabled or either env var is missing, the app uses seeded demo data in `localStorage`. A reset control is available on the productions list in that mode only (no in-app demo messaging).
+When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset control is available on the productions list in that mode only (no in-app demo messaging).
+
+If auth is enabled or unset but either Supabase env var is missing, the app shows a configuration error instead of falling back to localStorage.
 
 ## Staff users
 
@@ -86,6 +88,7 @@ Accounts without `staff: true` can sign in to Supabase Auth but are signed out b
 Then open `/login`, sign in, and continue to `/productions`.
 
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
+Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 
 The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table and photo upload access are controlled by Supabase Auth plus RLS/storage policies.
 

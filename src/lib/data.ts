@@ -66,6 +66,15 @@ type NewProductionInput = {
   notes?: string;
 };
 
+type UpdateProductionInput = {
+  name?: string;
+  shoot_date?: string;
+  location?: string;
+  runner_name?: string;
+  notes?: string;
+  status?: Production["status"];
+};
+
 const blankToNull = (value?: string) => {
   const next = value?.trim();
   return next ? next : null;
@@ -435,6 +444,70 @@ export async function createProductionRecord(
 
   saveCoffeeData(nextData);
   return { data: nextData, production };
+}
+
+export async function updateProductionRecord(
+  current: CoffeeData,
+  productionId: string,
+  input: UpdateProductionInput,
+): Promise<CoffeeData> {
+  const production = current.productions.find((item) => item.id === productionId);
+  if (!production) return current;
+
+  const name = input.name === undefined ? production.name : input.name.trim();
+  if (!name) throw new Error("Production name is required.");
+
+  const patch: Production = {
+    ...production,
+    name,
+    shoot_date:
+      input.shoot_date === undefined
+        ? production.shoot_date
+        : input.shoot_date.trim(),
+    location:
+      input.location === undefined ? production.location : input.location.trim(),
+    runner_name:
+      input.runner_name === undefined
+        ? production.runner_name
+        : input.runner_name.trim(),
+    notes: input.notes === undefined ? production.notes : input.notes.trim(),
+    status: input.status ?? production.status,
+  };
+
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("productions")
+      .update({
+        name: patch.name,
+        shoot_date: blankToNull(patch.shoot_date),
+        location: blankToNull(patch.location),
+        runner_name: blankToNull(patch.runner_name),
+        notes: blankToNull(patch.notes),
+        status: patch.status,
+      })
+      .eq("id", productionId)
+      .select("*")
+      .single();
+
+    if (error) throwSupabaseWriteError(error);
+    const updated = mapProduction(data);
+    return {
+      ...current,
+      productions: current.productions.map((item) =>
+        item.id === updated.id ? updated : item,
+      ),
+    };
+  }
+
+  const next = {
+    ...current,
+    productions: current.productions.map((item) =>
+      item.id === productionId ? patch : item,
+    ),
+  };
+  saveCoffeeData(next);
+  return next;
 }
 
 export async function updateOrderRecord(

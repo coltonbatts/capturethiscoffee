@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isStaffUser } from "@/lib/auth";
-import { isAuthDisabled, type Database } from "@/lib/supabase";
+import {
+  isAuthDisabled,
+  supabaseConfigError,
+  type Database,
+} from "@/lib/supabase";
 
 const protectedPathPattern = /^\/(productions|people|clients)(\/|$)/;
 const staffDeniedParam = "staff";
@@ -13,8 +17,16 @@ export async function proxy(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const pathname = request.nextUrl.pathname;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (supabaseConfigError || !supabaseUrl || !supabaseAnonKey) {
+    if (protectedPathPattern.test(pathname)) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+
     return NextResponse.next();
   }
 
@@ -40,7 +52,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
   const staff = isStaffUser(user);
 
   if (!user && protectedPathPattern.test(pathname)) {
