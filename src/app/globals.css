@@ -42,6 +42,145 @@ button {
   touch-action: manipulation;
 }
 
+.screen-label {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  grid-template-rows: 54px minmax(0, 1fr) 34px;
+  column-gap: 12px;
+  width: min(100%, 420px);
+  aspect-ratio: 5 / 3;
+  overflow: hidden;
+  border: 2px solid #000000;
+  padding: 14px;
+  color: #000000;
+  background: #ffffff;
+  box-shadow: 0 18px 32px rgb(0 0 0 / 0.15);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.screen-label-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #000000;
+  padding: 7px;
+}
+
+.screen-label-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.screen-label h3 {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.screen-label-order {
+  grid-column: 1 / -1;
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  margin-top: 7px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1.08;
+}
+
+.screen-label-footer {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+  border-top: 2px solid #000000;
+  padding-top: 8px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.screen-label-footer span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .screen-label {
+    grid-template-columns: 60px minmax(0, 1fr);
+    grid-template-rows: 66px minmax(0, 1fr) 40px;
+    column-gap: 16px;
+    width: min(100%, 460px);
+    border-width: 3px;
+    padding: 18px;
+  }
+
+  .screen-label-mark {
+    width: 58px;
+    height: 58px;
+    border-width: 3px;
+    padding: 8px;
+  }
+
+  .screen-label h3 {
+    font-size: 2rem;
+  }
+
+  .screen-label-order {
+    margin-top: 8px;
+    font-size: 1.22rem;
+  }
+
+  .screen-label-footer {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .screen-label {
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: 48px minmax(0, 1fr) 30px;
+    column-gap: 10px;
+    padding: 12px;
+  }
+
+  .screen-label-mark {
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+  }
+
+  .screen-label h3 {
+    font-size: 1.35rem;
+  }
+
+  .screen-label-order {
+    margin-top: 5px;
+    font-size: 0.92rem;
+    line-height: 1.06;
+  }
+
+  .screen-label-footer {
+    gap: 8px;
+    padding-top: 6px;
+    font-size: 0.58rem;
+  }
+}
+
 @media print {
   @page {
     size: 50mm 30mm;
@@ -71,15 +210,15 @@ button {
   .m2-label {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 8mm 1fr;
-    grid-template-rows: auto 1fr auto;
-    column-gap: 2mm;
+    grid-template-columns: 7.4mm minmax(0, 1fr);
+    grid-template-rows: 8.2mm minmax(0, 1fr) 4.4mm;
+    column-gap: 1.8mm;
     width: 50mm;
     height: 30mm;
     overflow: hidden;
     break-after: page;
     page-break-after: always;
-    padding: 2.5mm 2.5mm 2mm;
+    padding: 2mm 2mm 1.7mm;
     color: #000000;
     background: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
@@ -91,13 +230,12 @@ button {
   }
 
   .m2-label-mark {
-    grid-row: 1 / 3;
     display: grid;
     place-items: center;
-    width: 8mm;
-    height: 8mm;
-    border: 0.45mm solid #000000;
-    padding: 1mm;
+    width: 7.2mm;
+    height: 7.2mm;
+    border: 0.35mm solid #000000;
+    padding: 0.9mm;
     color: #000000;
   }
 
@@ -107,39 +245,40 @@ button {
   }
 
   .m2-label h2 {
+    display: -webkit-box;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 11pt;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 8.6pt;
     font-weight: 900;
-    line-height: 1;
+    line-height: 0.92;
     letter-spacing: 0;
   }
 
   .m2-label-order {
-    grid-column: 2;
+    grid-column: 1 / -1;
     display: -webkit-box;
+    min-width: 0;
     overflow: hidden;
-    margin-top: 1.5mm;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
-    font-size: 8pt;
-    font-weight: 700;
-    line-height: 1.12;
+    font-size: 6.6pt;
+    font-weight: 800;
+    line-height: 1.08;
   }
 
   .m2-label-footer {
     grid-column: 1 / -1;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
     align-items: end;
-    justify-content: space-between;
-    gap: 2mm;
+    gap: 1.6mm;
     min-width: 0;
-    border-top: 0.3mm solid #000000;
-    padding-top: 1mm;
-    font-size: 5.5pt;
-    font-weight: 700;
+    border-top: 0.28mm solid #000000;
+    padding-top: 0.7mm;
+    font-size: 4.1pt;
+    font-weight: 800;
     line-height: 1;
   }
 

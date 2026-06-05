@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import {
-  BadgePlus,
   ContactRound,
   FolderKanban,
   LogOut,
+  Printer,
   UserRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export function AppShell({ title, actions, children }: AppShellProps) {
     <div className="min-h-dvh pb-24 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black text-white backdrop-blur no-print">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex min-w-0 items-center gap-3">
+          <Link href="/productions" className="flex min-w-0 items-center gap-3">
             <CaptureMark invert className="size-10 rounded-xl shadow-sm" />
             <span className="block truncate text-lg font-semibold leading-tight">
               {title}
@@ -167,8 +167,8 @@ function useShellAuth() {
 }
 
 const navItems = [
-  { href: "/", icon: <BadgePlus size={18} />, label: "Labels" },
-  { href: "/productions", icon: <FolderKanban size={18} />, label: "Shoots" },
+  { href: "/productions", icon: <FolderKanban size={18} />, label: "Jobs" },
+  { href: "/labels", icon: <Printer size={18} />, label: "Labels" },
   { href: "/people", icon: <ContactRound size={18} />, label: "People" },
   { href: "/clients", icon: <UserRound size={18} />, label: "Clients" },
 ];
@@ -186,11 +186,8 @@ function NavItem({
 }) {
   const pathname = usePathname();
   const active =
-    href === "/"
-      ? pathname === href
-      : href === "/productions"
-      ? pathname === href ||
-        (pathname.startsWith("/productions/") && pathname !== "/productions/new")
+    href === "/productions"
+      ? pathname === href || pathname.startsWith("/productions/")
       : pathname === href;
 
   return (

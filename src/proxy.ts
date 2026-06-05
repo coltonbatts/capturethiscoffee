@@ -1,13 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isStaffUser } from "@/lib/auth";
-import { isDevelopmentAuthBypass, type Database } from "@/lib/supabase";
+import { isAuthDisabled, type Database } from "@/lib/supabase";
 
 const protectedPathPattern = /^\/(productions|people|clients)(\/|$)/;
 const staffDeniedParam = "staff";
 
 export async function proxy(request: NextRequest) {
-  if (isDevelopmentAuthBypass) {
+  if (isAuthDisabled) {
     return NextResponse.next();
   }
 

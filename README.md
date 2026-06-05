@@ -15,7 +15,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 
 ## What is in this MVP
 
-- Staff login at `/login`
+- Staff login at `/login` when auth is enabled
 - Production list at `/productions`
 - Production creation at `/productions/new`
 - Runner dashboard at `/productions/[id]`
@@ -49,11 +49,12 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-5. Restart `npm run dev` after changing `.env.local`.
-6. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
-7. For a controlled demo, disable public sign-ups or leave sign-ups unused and create staff users manually.
+5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` when you want sign-in and Supabase-backed data enabled.
+6. Restart `npm run dev` after changing `.env.local`.
+7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
+8. For a controlled demo, disable public sign-ups or leave sign-ups unused and create staff users manually.
 
-When both env vars are present, the app reads and writes these Supabase tables:
+When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads and writes these Supabase tables:
 
 - `clients`
 - `people`
@@ -61,8 +62,9 @@ When both env vars are present, the app reads and writes these Supabase tables:
 - `productions`
 - `production_roster`
 - `orders`
+- Supabase Storage bucket `person-photos` for staff-uploaded people photos
 
-When either env var is missing, the app uses seeded demo data in `localStorage`. A reset control is available on the productions list in that mode only (no in-app demo messaging).
+When auth is disabled or either env var is missing, the app uses seeded demo data in `localStorage`. A reset control is available on the productions list in that mode only (no in-app demo messaging).
 
 ## Staff users
 
@@ -85,7 +87,7 @@ Then open `/login`, sign in, and continue to `/productions`.
 
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 
-The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table access is controlled by Supabase Auth plus RLS.
+The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table and photo upload access are controlled by Supabase Auth plus RLS/storage policies.
 
 ## Seed data
 

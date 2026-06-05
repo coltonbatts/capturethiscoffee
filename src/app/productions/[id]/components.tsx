@@ -17,6 +17,7 @@ import {
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { CaptureAngle } from "@/components/capture-mark";
+import { PersonPhotoField } from "@/components/person-photo-field";
 import {
   Avatar,
   EmptyState,
@@ -1350,14 +1351,11 @@ export function QuickAddPersonSheet({
           placeholder="Company"
         />
       </Field>
-      <Field label="Photo URL">
-        <input
-          className={inputClass}
-          value={form.photo_url}
-          onChange={(event) => onChange({ ...form, photo_url: event.target.value })}
-          placeholder="https://..."
-        />
-      </Field>
+      <PersonPhotoField
+        value={form.photo_url}
+        personName={form.name}
+        onChange={(photo_url) => onChange({ ...form, photo_url })}
+      />
       <Field label="Usual order">
         <input
           className={inputClass}

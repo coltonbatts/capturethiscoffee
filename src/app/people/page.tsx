@@ -3,6 +3,7 @@
 import { Pencil, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { PersonPhotoField } from "@/components/person-photo-field";
 import {
   Avatar,
   EmptyState,
@@ -262,14 +263,11 @@ function PersonFields({
           placeholder="Capture This, agency, client"
         />
       </Field>
-      <Field label="Photo URL">
-        <input
-          className={inputClass}
-          value={form.photo_url}
-          onChange={(event) => onChange({ ...form, photo_url: event.target.value })}
-          placeholder="https://..."
-        />
-      </Field>
+      <PersonPhotoField
+        value={form.photo_url}
+        personName={form.name}
+        onChange={(photo_url) => onChange({ ...form, photo_url })}
+      />
       <Field label="Usual order">
         <input
           className={inputClass}

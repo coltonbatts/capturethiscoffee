@@ -68,7 +68,7 @@ export default function ProductionsPage() {
 
   return (
     <AppShell
-      title="Productions"
+      title="Jobs"
       actions={
         <Link href="/productions/new" className={primaryButtonClass}>
           <Plus size={18} aria-hidden="true" />
@@ -147,12 +147,12 @@ export default function ProductionsPage() {
         </div>
       ) : (
         <EmptyState
-          title="No productions yet"
-          description="Create a shoot to start confirming orders."
+          title="No jobs yet"
+          description="Create a production to start confirming orders."
           action={
             <Link href="/productions/new" className={primaryButtonClass}>
               <Plus size={18} aria-hidden="true" />
-              New production
+              New job
             </Link>
           }
         />

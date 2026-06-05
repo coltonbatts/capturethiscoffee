@@ -31,7 +31,10 @@ function LoginForm() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) {
+      router.replace(nextPath());
+      return;
+    }
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;

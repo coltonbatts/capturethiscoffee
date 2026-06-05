@@ -108,6 +108,19 @@ create index if not exists productions_client_idx on productions(client_id);
 create index if not exists production_roster_production_idx on production_roster(production_id);
 create index if not exists orders_production_status_idx on orders(production_id, status);
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'person-photos',
+  'person-photos',
+  true,
+  8388608,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -186,3 +199,22 @@ on orders for all
 to authenticated
 using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
 with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+
+drop policy if exists "Public can read person photos" on storage.objects;
+create policy "Public can read person photos"
+on storage.objects for select
+to public
+using (bucket_id = 'person-photos');
+
+drop policy if exists "Staff can manage person photos" on storage.objects;
+create policy "Staff can manage person photos"
+on storage.objects for all
+to authenticated
+using (
+  bucket_id = 'person-photos'
+  and coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true
+)
+with check (
+  bucket_id = 'person-photos'
+  and coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true
+);
