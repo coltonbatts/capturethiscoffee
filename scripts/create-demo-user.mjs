@@ -1,8 +1,9 @@
 /**
- * Create a staff Auth user (server-only). Requires SUPABASE_SERVICE_ROLE_KEY in env.
+ * Create an authenticated demo Auth user (server-only).
+ * Requires SUPABASE_SERVICE_ROLE_KEY in env.
  *
  * Usage:
- *   STAFF_EMAIL=luke@capturethis.com STAFF_PASSWORD='...' node scripts/create-staff-user.mjs
+ *   DEMO_USER_EMAIL=luke@capturethis.com DEMO_USER_PASSWORD='...' node scripts/create-demo-user.mjs
  *
  * Loads .env.local when present (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).
  */
@@ -36,8 +37,8 @@ loadEnvLocal();
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const email = process.env.STAFF_EMAIL?.trim();
-const password = process.env.STAFF_PASSWORD;
+const email = process.env.DEMO_USER_EMAIL?.trim();
+const password = process.env.DEMO_USER_PASSWORD;
 
 if (!url || !serviceRoleKey) {
   console.error(
@@ -47,7 +48,7 @@ if (!url || !serviceRoleKey) {
 }
 
 if (!email || !password) {
-  console.error("Set STAFF_EMAIL and STAFF_PASSWORD.");
+  console.error("Set DEMO_USER_EMAIL and DEMO_USER_PASSWORD.");
   process.exit(1);
 }
 
@@ -59,7 +60,6 @@ const { data, error } = await supabase.auth.admin.createUser({
   email,
   password,
   email_confirm: true,
-  app_metadata: { staff: true },
 });
 
 if (error) {
@@ -67,4 +67,4 @@ if (error) {
   process.exit(1);
 }
 
-console.log(`Staff user created: ${data.user.email} (${data.user.id})`);
+console.log(`Demo user created: ${data.user.email} (${data.user.id})`);

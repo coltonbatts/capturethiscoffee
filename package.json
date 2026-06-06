@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "create-staff-user": "node scripts/create-staff-user.mjs"
+    "create-demo-user": "node scripts/create-demo-user.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

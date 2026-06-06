@@ -3,7 +3,7 @@
 import { formatDrink } from "./order-summary";
 import {
   normalizeSupabaseWriteError,
-  requireFreshStaffSession,
+  requireFreshAppSession,
 } from "./auth";
 import {
   buildProductionRoster,
@@ -88,7 +88,7 @@ async function getWritableSupabase(): Promise<SupabaseClient<Database> | null> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return null;
 
-  await requireFreshStaffSession(supabase);
+  await requireFreshAppSession(supabase);
   return supabase;
 }
 
@@ -100,7 +100,7 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return loadLocalCoffeeData();
 
-  await requireFreshStaffSession(supabase);
+  await requireFreshAppSession(supabase);
 
   const [
     clientsResult,

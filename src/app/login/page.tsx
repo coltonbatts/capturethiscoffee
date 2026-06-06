@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { Field, inputClass, primaryButtonClass } from "@/components/ui";
-import { useStaffAuth } from "@/components/staff-auth-provider";
-import { STAFF_ACCESS_MESSAGE } from "@/lib/auth";
+import { useAppAuth } from "@/components/app-auth-provider";
+import { AUTH_ACCESS_MESSAGE } from "@/lib/auth";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
@@ -28,9 +28,7 @@ export default function LoginPage() {
 
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { initialized, staffUser, refreshStaffSession } = useStaffAuth();
-  const staffDenied = searchParams.get("staff") === "1";
+  const { initialized, appUser, refreshAppSession } = useAppAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(supabaseConfigError);
@@ -46,11 +44,11 @@ function LoginForm() {
       return;
     }
 
-    if (!initialized || !staffUser) return;
+    if (!initialized || !appUser) return;
 
     router.replace(nextPath());
     router.refresh();
-  }, [initialized, router, staffUser]);
+  }, [appUser, initialized, router]);
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,10 +80,10 @@ function LoginForm() {
         return;
       }
 
-      const user = await refreshStaffSession();
+      const user = await refreshAppSession();
       if (!user) {
         await supabase.auth.signOut();
-        setError(STAFF_ACCESS_MESSAGE);
+        setError(AUTH_ACCESS_MESSAGE);
         return;
       }
 
@@ -126,9 +124,9 @@ function LoginForm() {
               required={isSupabaseConfigured}
             />
           </Field>
-          {staffDenied || error ? (
+          {error ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
-              {staffDenied ? STAFF_ACCESS_MESSAGE : error}
+              {error}
             </div>
           ) : null}
           <button

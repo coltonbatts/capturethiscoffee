@@ -2,6 +2,7 @@
 -- Anonymous users stay blocked by RLS and revoked grants.
 
 drop policy if exists "Staff can manage clients" on public.clients;
+drop policy if exists "Authenticated users can manage clients" on public.clients;
 create policy "Authenticated users can manage clients"
 on public.clients for all
 to authenticated
@@ -9,6 +10,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage people" on public.people;
+drop policy if exists "Authenticated users can manage people" on public.people;
 create policy "Authenticated users can manage people"
 on public.people for all
 to authenticated
@@ -16,6 +18,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage client people" on public.client_people;
+drop policy if exists "Authenticated users can manage client people" on public.client_people;
 create policy "Authenticated users can manage client people"
 on public.client_people for all
 to authenticated
@@ -23,6 +26,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage productions" on public.productions;
+drop policy if exists "Authenticated users can manage productions" on public.productions;
 create policy "Authenticated users can manage productions"
 on public.productions for all
 to authenticated
@@ -30,6 +34,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage production roster" on public.production_roster;
+drop policy if exists "Authenticated users can manage production roster" on public.production_roster;
 create policy "Authenticated users can manage production roster"
 on public.production_roster for all
 to authenticated
@@ -37,6 +42,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage orders" on public.orders;
+drop policy if exists "Authenticated users can manage orders" on public.orders;
 create policy "Authenticated users can manage orders"
 on public.orders for all
 to authenticated
@@ -44,6 +50,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage person photos" on storage.objects;
+drop policy if exists "Authenticated users can manage person photos" on storage.objects;
 create policy "Authenticated users can manage person photos"
 on storage.objects for all
 to authenticated
@@ -51,6 +58,7 @@ using (bucket_id = 'person-photos')
 with check (bucket_id = 'person-photos');
 
 drop policy if exists "Staff can manage printer devices" on public.printer_devices;
+drop policy if exists "Authenticated users can manage printer devices" on public.printer_devices;
 create policy "Authenticated users can manage printer devices"
 on public.printer_devices for all
 to authenticated
@@ -58,6 +66,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage label print jobs" on public.label_print_jobs;
+drop policy if exists "Authenticated users can manage label print jobs" on public.label_print_jobs;
 create policy "Authenticated users can manage label print jobs"
 on public.label_print_jobs for all
 to authenticated
@@ -65,6 +74,7 @@ using (true)
 with check (true);
 
 drop policy if exists "Staff can manage label print attempts" on public.label_print_attempts;
+drop policy if exists "Authenticated users can manage label print attempts" on public.label_print_attempts;
 create policy "Authenticated users can manage label print attempts"
 on public.label_print_attempts for all
 to authenticated

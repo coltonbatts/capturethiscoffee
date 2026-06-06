@@ -1,12 +1,12 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
-import { isStaffUser, STAFF_ACCESS_MESSAGE } from "./auth";
+import { AUTH_ACCESS_MESSAGE, isAuthenticatedAppUser } from "./auth";
 import {
   isAuthDisabled,
   supabaseConfigError,
   type Database,
 } from "./supabase";
 
-type StaffRouteContext = {
+type AuthenticatedRouteContext = {
   supabase: SupabaseClient<Database>;
   user: User;
 };
@@ -20,9 +20,9 @@ export class ApiError extends Error {
   }
 }
 
-export async function requireStaffBearerToken(
+export async function requireAuthenticatedBearerToken(
   request: Request,
-): Promise<StaffRouteContext> {
+): Promise<AuthenticatedRouteContext> {
   if (isAuthDisabled) {
     throw new ApiError("Print job APIs require Supabase auth.", 501);
   }
@@ -37,7 +37,7 @@ export async function requireStaffBearerToken(
   } = await supabase.auth.getUser(token);
 
   if (error || !user) throw new ApiError("Invalid bearer token.", 401);
-  if (!isStaffUser(user)) throw new ApiError(STAFF_ACCESS_MESSAGE, 403);
+  if (!isAuthenticatedAppUser(user)) throw new ApiError(AUTH_ACCESS_MESSAGE, 403);
 
   return { supabase, user };
 }

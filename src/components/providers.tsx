@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { StaffAuthProvider } from "@/components/staff-auth-provider";
+import { AppAuthProvider } from "@/components/app-auth-provider";
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <StaffAuthProvider>{children}</StaffAuthProvider>;
+  return <AppAuthProvider>{children}</AppAuthProvider>;
 }

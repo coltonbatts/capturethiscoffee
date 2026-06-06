@@ -1,11 +1,11 @@
-import { ApiError, jsonError, parsePositiveInteger, requireStaffBearerToken } from "@/lib/supabase-server";
+import { ApiError, jsonError, parsePositiveInteger, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { supabase } = await requireStaffBearerToken(request);
+    const { supabase } = await requireAuthenticatedBearerToken(request);
     const { id } = await context.params;
     const limit = parsePositiveInteger(
       new URL(request.url).searchParams.get("limit"),

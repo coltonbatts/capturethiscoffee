@@ -41,7 +41,7 @@ import {
   type PrintCalibration,
 } from "@/lib/label-calibration";
 import { buildLabelPrintJobPayload } from "@/lib/print-jobs";
-import { getStaffAccessToken } from "@/lib/auth";
+import { getAppAccessToken } from "@/lib/auth";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
@@ -846,7 +846,7 @@ function PrinterCalibrationChecklist() {
 async function getAccessToken() {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) throw new Error("Supabase auth is not available.");
-  return getStaffAccessToken(supabase);
+  return getAppAccessToken(supabase);
 }
 
 function PrinterCalibrationControls({

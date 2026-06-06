@@ -1,35 +1,34 @@
 import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const STAFF_ACCESS_MESSAGE =
-  "Sign in to continue.";
+const AUTH_ACCESS_MESSAGE = "Sign in to continue.";
 
-export function isStaffUser(user: User | null | undefined): boolean {
+export function isAuthenticatedAppUser(user: User | null | undefined): boolean {
   return Boolean(user);
 }
 
-export async function getVerifiedStaffUser(supabase: SupabaseClient) {
+export async function getVerifiedAppUser(supabase: SupabaseClient) {
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser();
 
-  if (error || !user || !isStaffUser(user)) {
+  if (error || !user || !isAuthenticatedAppUser(user)) {
     return null;
   }
 
   return user;
 }
 
-export async function requireFreshStaffSession(supabase: SupabaseClient) {
-  const user = await getVerifiedStaffUser(supabase);
+export async function requireFreshAppSession(supabase: SupabaseClient) {
+  const user = await getVerifiedAppUser(supabase);
   if (!user) {
-    throw new Error(STAFF_ACCESS_MESSAGE);
+    throw new Error(AUTH_ACCESS_MESSAGE);
   }
 }
 
-export async function getStaffAccessToken(supabase: SupabaseClient) {
-  await requireFreshStaffSession(supabase);
+export async function getAppAccessToken(supabase: SupabaseClient) {
+  await requireFreshAppSession(supabase);
 
   const {
     data: { session },
@@ -47,11 +46,11 @@ export async function getStaffAccessToken(supabase: SupabaseClient) {
 export function normalizeSupabaseWriteError(message: string): Error {
   if (message.includes("violates row-level security policy")) {
     return new Error(
-      `${STAFF_ACCESS_MESSAGE} If you are already signed in, sign out and sign back in.`,
+      `${AUTH_ACCESS_MESSAGE} If you are already signed in, sign out and sign back in.`,
     );
   }
 
   return new Error(message);
 }
 
-export { STAFF_ACCESS_MESSAGE };
+export { AUTH_ACCESS_MESSAGE };

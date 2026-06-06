@@ -1,6 +1,6 @@
 "use client";
 
-import { normalizeSupabaseWriteError, requireFreshStaffSession } from "./auth";
+import { normalizeSupabaseWriteError, requireFreshAppSession } from "./auth";
 import { getSupabaseBrowserClient } from "./supabase";
 
 const personPhotoBucket = "person-photos";
@@ -21,7 +21,7 @@ export async function uploadPersonPhoto(
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return fileToDataUrl(file);
 
-  await requireFreshStaffSession(supabase);
+  await requireFreshAppSession(supabase);
 
   const extension = extensionForFile(file);
   const slug = slugify(personName || "person");

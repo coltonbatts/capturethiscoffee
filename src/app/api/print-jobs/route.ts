@@ -1,4 +1,4 @@
-import { ApiError, jsonError, parsePositiveInteger, requireStaffBearerToken } from "@/lib/supabase-server";
+import { ApiError, jsonError, parsePositiveInteger, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
 import {
   isLabelPrintJobPayloadV1,
   type LabelPrintJobPayloadV1,
@@ -16,7 +16,7 @@ type IncomingPrintJob = {
 
 export async function GET(request: Request) {
   try {
-    const { supabase } = await requireStaffBearerToken(request);
+    const { supabase } = await requireAuthenticatedBearerToken(request);
     const url = new URL(request.url);
     const status = url.searchParams.get("status") as LabelPrintJobStatus | null;
     const productionId = url.searchParams.get("production_id");
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { supabase, user } = await requireStaffBearerToken(request);
+    const { supabase, user } = await requireAuthenticatedBearerToken(request);
     const body = (await request.json()) as IncomingPrintJob & {
       jobs?: IncomingPrintJob[];
     };

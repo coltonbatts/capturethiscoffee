@@ -12,7 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { CaptureMark } from "@/components/capture-mark";
-import { useStaffAuth } from "@/components/staff-auth-provider";
+import { useAppAuth } from "@/components/app-auth-provider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
@@ -98,16 +98,16 @@ export function AppShell({ title, actions, children }: AppShellProps) {
 function useProtectedShellAuth() {
   const router = useRouter();
   const pathname = usePathname();
-  const { initialized, staffUser, email, signOut } = useStaffAuth();
-  const ready = !isSupabaseConfigured || (initialized && Boolean(staffUser));
+  const { initialized, appUser, email, signOut } = useAppAuth();
+  const ready = !isSupabaseConfigured || (initialized && Boolean(appUser));
 
   useEffect(() => {
     if (!isSupabaseConfigured || !initialized) return;
 
-    if (!staffUser) {
+    if (!appUser) {
       router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
     }
-  }, [initialized, pathname, router, staffUser]);
+  }, [appUser, initialized, pathname, router]);
 
   return { ready, email, signOut };
 }

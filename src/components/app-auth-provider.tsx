@@ -11,36 +11,36 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getVerifiedStaffUser } from "@/lib/auth";
+import { getVerifiedAppUser } from "@/lib/auth";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
-type StaffAuthContextValue = {
+type AppAuthContextValue = {
   initialized: boolean;
-  staffUser: User | null;
+  appUser: User | null;
   email: string;
   signOut: () => Promise<void>;
-  refreshStaffSession: () => Promise<User | null>;
+  refreshAppSession: () => Promise<User | null>;
 };
 
-const StaffAuthContext = createContext<StaffAuthContextValue | null>(null);
+const AppAuthContext = createContext<AppAuthContextValue | null>(null);
 
-async function syncStaffSessionFromClient(supabase: SupabaseClient) {
-  return getVerifiedStaffUser(supabase);
+async function syncAppSessionFromClient(supabase: SupabaseClient) {
+  return getVerifiedAppUser(supabase);
 }
 
-export function StaffAuthProvider({ children }: { children: ReactNode }) {
+export function AppAuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [initialized, setInitialized] = useState(!isSupabaseConfigured);
-  const [staffUser, setStaffUser] = useState<User | null>(null);
+  const [appUser, setAppUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
 
-  const applyStaffUser = useCallback((user: User | null) => {
-    setStaffUser(user);
+  const applyAppUser = useCallback((user: User | null) => {
+    setAppUser(user);
     setEmail(user?.email || "");
     setInitialized(true);
   }, []);
 
-  const refreshStaffSession = useCallback(async () => {
+  const refreshAppSession = useCallback(async () => {
     if (!isSupabaseConfigured) {
       return null;
     }
@@ -50,10 +50,10 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    const user = await syncStaffSessionFromClient(supabase);
-    applyStaffUser(user);
+    const user = await syncAppSessionFromClient(supabase);
+    applyAppUser(user);
     return user;
-  }, [applyStaffUser]);
+  }, [applyAppUser]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -65,9 +65,9 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     async function bootstrap() {
-      const user = await syncStaffSessionFromClient(authClient);
+      const user = await syncAppSessionFromClient(authClient);
       if (!mounted) return;
-      applyStaffUser(user);
+      applyAppUser(user);
     }
 
     void bootstrap();
@@ -78,7 +78,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT") {
-        applyStaffUser(null);
+        applyAppUser(null);
         return;
       }
 
@@ -89,10 +89,10 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [applyStaffUser]);
+  }, [applyAppUser]);
 
   const signOut = useCallback(async () => {
-    applyStaffUser(null);
+    applyAppUser(null);
 
     if (!isSupabaseConfigured) return;
 
@@ -102,28 +102,28 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();
-  }, [applyStaffUser, router]);
+  }, [applyAppUser, router]);
 
   const value = useMemo(
     () => ({
       initialized,
-      staffUser,
+      appUser,
       email,
       signOut,
-      refreshStaffSession,
+      refreshAppSession,
     }),
-    [email, initialized, refreshStaffSession, signOut, staffUser],
+    [appUser, email, initialized, refreshAppSession, signOut],
   );
 
   return (
-    <StaffAuthContext.Provider value={value}>{children}</StaffAuthContext.Provider>
+    <AppAuthContext.Provider value={value}>{children}</AppAuthContext.Provider>
   );
 }
 
-export function useStaffAuth() {
-  const context = useContext(StaffAuthContext);
+export function useAppAuth() {
+  const context = useContext(AppAuthContext);
   if (!context) {
-    throw new Error("useStaffAuth must be used within StaffAuthProvider.");
+    throw new Error("useAppAuth must be used within AppAuthProvider.");
   }
   return context;
 }

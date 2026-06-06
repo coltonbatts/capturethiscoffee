@@ -32,7 +32,7 @@ export function StatusChip({ status }: { status: OrderStatus }) {
 export function Avatar({ person }: { person: Person }) {
   if (person.photo_url) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- Staff-entered photo URLs can be from any host.
+      // eslint-disable-next-line @next/next/no-img-element -- User-entered photo URLs can be from any host.
       <img
         src={person.photo_url}
         alt=""

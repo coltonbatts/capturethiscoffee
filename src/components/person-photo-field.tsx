@@ -43,7 +43,7 @@ export function PersonPhotoField({
       <div className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
         <div className="grid size-24 place-items-center overflow-hidden rounded-xl bg-white ring-1 ring-zinc-200">
           {value ? (
-            // eslint-disable-next-line @next/next/no-img-element -- Staff-uploaded Supabase/local photos are dynamic.
+            // eslint-disable-next-line @next/next/no-img-element -- Supabase/local photos are dynamic.
             <img
               src={value}
               alt=""
