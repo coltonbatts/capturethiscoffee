@@ -7,7 +7,7 @@ import {
   type Database,
 } from "@/lib/supabase";
 
-const protectedPathPattern = /^\/(productions|people|clients)(\/|$)/;
+const protectedPathPattern = /^\/(productions|people|clients|labels)(\/|$)/;
 const staffDeniedParam = "staff";
 
 export async function proxy(request: NextRequest) {
@@ -77,5 +77,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/productions/:path*", "/people/:path*", "/clients/:path*", "/login"],
+  matcher: [
+    "/productions/:path*",
+    "/people/:path*",
+    "/clients/:path*",
+    "/labels/:path*",
+    "/login",
+  ],
 };

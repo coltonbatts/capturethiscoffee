@@ -114,7 +114,7 @@ values (
   'person-photos',
   true,
   8388608,
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  array['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
 )
 on conflict (id) do update set
   public = excluded.public,

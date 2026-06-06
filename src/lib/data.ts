@@ -100,6 +100,8 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return loadLocalCoffeeData();
 
+  await requireFreshStaffSession(supabase);
+
   const [
     clientsResult,
     peopleResult,

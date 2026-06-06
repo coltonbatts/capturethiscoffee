@@ -9,18 +9,46 @@ export function isStaffUser(user: User | null | undefined): boolean {
   return user.app_metadata?.staff === true;
 }
 
+export async function getVerifiedStaffUser(supabase: SupabaseClient) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user || !isStaffUser(user)) {
+    return null;
+  }
+
+  return user;
+}
+
 export async function requireFreshStaffSession(supabase: SupabaseClient) {
-  const { data: refreshed, error: refreshError } =
-    await supabase.auth.refreshSession();
+  const { error: refreshError } = await supabase.auth.refreshSession();
 
   if (refreshError) {
     throw new Error(refreshError.message);
   }
 
-  const user = refreshed.session?.user;
-  if (!isStaffUser(user)) {
+  const user = await getVerifiedStaffUser(supabase);
+  if (!user) {
     throw new Error(STAFF_ACCESS_MESSAGE);
   }
+}
+
+export async function getStaffAccessToken(supabase: SupabaseClient) {
+  await requireFreshStaffSession(supabase);
+
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) throw new Error(error.message);
+  if (!session?.access_token) {
+    throw new Error("Sign in again to continue.");
+  }
+
+  return session.access_token;
 }
 
 export function normalizeSupabaseWriteError(message: string): Error {

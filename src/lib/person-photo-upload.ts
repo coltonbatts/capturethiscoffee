@@ -41,6 +41,14 @@ export async function uploadPersonPhoto(
         "Person photo storage is not ready. Run the Supabase storage migration, then try again.",
       );
     }
+    if (
+      error.message.toLowerCase().includes("mime type") ||
+      error.message.toLowerCase().includes("invalid file type")
+    ) {
+      throw new Error(
+        "That image type is not supported. Use JPEG, PNG, WebP, GIF, or HEIC from your camera roll.",
+      );
+    }
     throw normalizeSupabaseWriteError(error.message);
   }
 

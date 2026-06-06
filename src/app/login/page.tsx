@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { Field, inputClass, primaryButtonClass } from "@/components/ui";
-import { isStaffUser, STAFF_ACCESS_MESSAGE } from "@/lib/auth";
+import { useStaffAuth } from "@/components/staff-auth-provider";
+import { STAFF_ACCESS_MESSAGE } from "@/lib/auth";
 import {
   getSupabaseBrowserClient,
   isSupabaseConfigured,
@@ -28,6 +29,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { initialized, staffUser, refreshStaffSession } = useStaffAuth();
   const staffDenied = searchParams.get("staff") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,26 +46,11 @@ function LoginForm() {
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
+    if (!initialized || !staffUser) return;
 
-    let mounted = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted || !data.session) return;
-
-      if (!isStaffUser(data.session.user)) {
-        await supabase.auth.signOut();
-        if (mounted) setError(STAFF_ACCESS_MESSAGE);
-        return;
-      }
-
-      router.replace(nextPath());
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
+    router.replace(nextPath());
+    router.refresh();
+  }, [initialized, router, staffUser]);
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,26 +71,29 @@ function LoginForm() {
     setSubmitting(true);
     setError("");
 
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+
+      const user = await refreshStaffSession();
+      if (!user) {
+        await supabase.auth.signOut();
+        setError(STAFF_ACCESS_MESSAGE);
+        return;
+      }
+
+      router.replace(nextPath());
+      router.refresh();
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    if (!isStaffUser(signInData.user)) {
-      await supabase.auth.signOut();
-      setError(STAFF_ACCESS_MESSAGE);
-      setSubmitting(false);
-      return;
-    }
-
-    router.replace(nextPath());
-    router.refresh();
   }
 
   return (

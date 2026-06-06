@@ -35,6 +35,17 @@ import {
 import { loadCoffeeData, resetDemoCoffeeData, updateOrderRecord } from "@/lib/data";
 import { formatDrink } from "@/lib/order-summary";
 import { probeNiimbotBluetooth } from "@/lib/niimbot-web-bluetooth";
+import {
+  loadPrintCalibration,
+  savePrintCalibration,
+  type PrintCalibration,
+} from "@/lib/label-calibration";
+import { buildLabelPrintJobPayload } from "@/lib/print-jobs";
+import { getStaffAccessToken } from "@/lib/auth";
+import {
+  getSupabaseBrowserClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase";
 import type { CoffeeData, Order, RosterOrder } from "@/lib/types";
 
 type LabelDraft = {
@@ -81,12 +92,6 @@ const fieldLabels: Array<[keyof LabelFieldOptions, string]> = [
   ["notesStatus", "Notes"],
 ];
 
-type PrintCalibration = {
-  offsetX: number;
-  offsetY: number;
-  scale: number;
-};
-
 type PrintSheetStyle = CSSProperties &
   Record<"--m2-print-offset-x" | "--m2-print-offset-y" | "--m2-print-scale", string>;
 
@@ -98,6 +103,8 @@ export default function LabelWorkstationPage() {
   const [style, setStyle] = useState<LabelContentStyle>("standard");
   const [fields, setFields] = useState<LabelFieldOptions>(defaultLabelFields);
   const [printing, setPrinting] = useState(false);
+  const [queueing, setQueueing] = useState(false);
+  const [queueStatus, setQueueStatus] = useState("");
   const [copied, setCopied] = useState(false);
   const [printerProbe, setPrinterProbe] = useState("");
   const [checkingPrinter, setCheckingPrinter] = useState(false);
@@ -105,11 +112,7 @@ export default function LabelWorkstationPage() {
   const [printLabels, setPrintLabels] = useState<CoffeeLabel[]>([]);
   const [pendingPrintedOrderId, setPendingPrintedOrderId] = useState("");
   const [pendingAdvance, setPendingAdvance] = useState(false);
-  const [calibration, setCalibration] = useState<PrintCalibration>({
-    offsetX: 0,
-    offsetY: 0,
-    scale: 100,
-  });
+  const [calibration, setCalibration] = useState<PrintCalibration>(loadPrintCalibration);
 
   useEffect(() => {
     let mounted = true;
@@ -185,7 +188,11 @@ export default function LabelWorkstationPage() {
   }
 
   function updateCalibration(patch: Partial<PrintCalibration>) {
-    setCalibration((current) => ({ ...current, ...patch }));
+    setCalibration((current) => {
+      const next = { ...current, ...patch };
+      savePrintCalibration(next);
+      return next;
+    });
   }
 
   function chooseOrder(orderId: string) {
@@ -240,6 +247,82 @@ export default function LabelWorkstationPage() {
       setError(err instanceof Error ? err.message : "Could not prepare that label.");
     } finally {
       window.setTimeout(() => setPrinting(false), 300);
+    }
+  }
+
+  async function queueCurrentLabel() {
+    if (!currentLabel || !draft.personName.trim()) {
+      setError("Enter a name before queueing.");
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      setError("Print job queue requires Supabase auth.");
+      return;
+    }
+
+    setQueueing(true);
+    setQueueStatus("");
+    setError("");
+
+    try {
+      let nextData = data;
+      const selectedOrder = selectedItem?.order;
+
+      if (data && selectedOrder) {
+        nextData = await updateOrderRecord(data, selectedOrder.id, {
+          ...draftOrderPatch(draft),
+          status:
+            selectedOrder.status === "not_asked"
+              ? "confirmed"
+              : selectedOrder.status,
+        });
+        setData(nextData);
+      }
+
+      const token = await getAccessToken();
+      const payload = buildLabelPrintJobPayload({
+        productionId: selectedOrder?.production_id || production?.id || null,
+        orderId: selectedOrder?.id || null,
+        personId: selectedOrder?.person_id || selectedItem?.person.id || null,
+        label: currentLabel,
+        options,
+      });
+
+      const response = await fetch("/api/print-jobs", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          production_id: payload.source.production_id,
+          order_id: payload.source.order_id,
+          person_id: payload.source.person_id,
+          payload,
+          copies: 1,
+        }),
+      });
+      const body = await response.json();
+
+      if (!response.ok) {
+        throw new Error(body.error || "Could not queue that label.");
+      }
+
+      const jobId = body.jobs?.[0]?.id;
+      setQueueStatus(
+        jobId
+          ? `Queued ${currentLabel.personName} (${jobId.slice(0, 8)}).`
+          : `Queued ${currentLabel.personName}.`,
+      );
+      setRecent((current) => [
+        `Queued: ${currentLabel.personName} - ${currentLabel.drink}`,
+        ...current,
+      ].slice(0, 5));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not queue that label.");
+    } finally {
+      setQueueing(false);
     }
   }
 
@@ -567,6 +650,15 @@ export default function LabelWorkstationPage() {
               </button>
               <button
                 type="button"
+                onClick={() => void queueCurrentLabel()}
+                disabled={queueing || printing}
+                className={`${secondaryButtonClass} min-h-14`}
+              >
+                <BadgePlus size={18} aria-hidden="true" />
+                {queueing ? "Queueing" : "Queue"}
+              </button>
+              <button
+                type="button"
                 onClick={() => void printCurrent({ advance: false })}
                 disabled={printing}
                 className={`${secondaryButtonClass} min-h-14`}
@@ -577,12 +669,18 @@ export default function LabelWorkstationPage() {
               <button
                 type="button"
                 onClick={copyCurrent}
-                className={`${secondaryButtonClass} min-h-14`}
+                className={`${secondaryButtonClass} min-h-14 sm:col-start-4`}
               >
                 <Clipboard size={18} aria-hidden="true" />
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
+
+            {queueStatus ? (
+              <p className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">
+                {queueStatus}
+              </p>
+            ) : null}
 
             {pendingPrintedOrderId ? (
               <div className="grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -743,6 +841,12 @@ function PrinterCalibrationChecklist() {
       </p>
     </div>
   );
+}
+
+async function getAccessToken() {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) throw new Error("Supabase auth is not available.");
+  return getStaffAccessToken(supabase);
 }
 
 function PrinterCalibrationControls({

@@ -9,11 +9,11 @@ import {
   UserRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { CaptureMark } from "@/components/capture-mark";
-import { isStaffUser } from "@/lib/auth";
-import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
+import { useStaffAuth } from "@/components/staff-auth-provider";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
   title: string;
@@ -22,7 +22,7 @@ type AppShellProps = {
 };
 
 export function AppShell({ title, actions, children }: AppShellProps) {
-  const auth = useShellAuth();
+  const auth = useProtectedShellAuth();
 
   if (!auth.ready) {
     return (
@@ -95,73 +95,19 @@ export function AppShell({ title, actions, children }: AppShellProps) {
   );
 }
 
-function useShellAuth() {
+function useProtectedShellAuth() {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(!isSupabaseConfigured);
-  const [email, setEmail] = useState("");
+  const { initialized, staffUser, email, signOut } = useStaffAuth();
+  const ready = !isSupabaseConfigured || (initialized && Boolean(staffUser));
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || !initialized) return;
 
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-
-    let mounted = true;
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-
-      if (!data.session) {
-        router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
-        return;
-      }
-
-      if (!isStaffUser(data.session.user)) {
-        await supabase.auth.signOut();
-        router.replace("/login?staff=1");
-        return;
-      }
-
-      setEmail(data.session.user.email || "");
-      setReady(true);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-
-      if (!session) {
-        setReady(false);
-        router.replace("/login");
-        return;
-      }
-
-      if (!isStaffUser(session.user)) {
-        await supabase.auth.signOut();
-        router.replace("/login?staff=1");
-        return;
-      }
-
-      setEmail(session.user.email || "");
-      setReady(true);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [pathname, router]);
-
-  async function signOut() {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-
-    await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
-  }
+    if (!staffUser) {
+      router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
+    }
+  }, [initialized, pathname, router, staffUser]);
 
   return { ready, email, signOut };
 }
