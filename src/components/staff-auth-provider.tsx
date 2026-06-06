@@ -11,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getVerifiedStaffUser, requireFreshStaffSession } from "@/lib/auth";
+import { getVerifiedStaffUser } from "@/lib/auth";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type StaffAuthContextValue = {
@@ -25,13 +25,6 @@ type StaffAuthContextValue = {
 const StaffAuthContext = createContext<StaffAuthContextValue | null>(null);
 
 async function syncStaffSessionFromClient(supabase: SupabaseClient) {
-  try {
-    await requireFreshStaffSession(supabase);
-  } catch {
-    await supabase.auth.signOut();
-    return null;
-  }
-
   return getVerifiedStaffUser(supabase);
 }
 

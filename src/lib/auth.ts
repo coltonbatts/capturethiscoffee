@@ -22,12 +22,6 @@ export async function getVerifiedStaffUser(supabase: SupabaseClient) {
 }
 
 export async function requireFreshStaffSession(supabase: SupabaseClient) {
-  const { error: refreshError } = await supabase.auth.refreshSession();
-
-  if (refreshError) {
-    throw new Error(refreshError.message);
-  }
-
   const user = await getVerifiedStaffUser(supabase);
   if (!user) {
     throw new Error(STAFF_ACCESS_MESSAGE);
