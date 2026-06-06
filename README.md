@@ -15,7 +15,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 
 ## What is in this MVP
 
-- Staff login at `/login` when auth is enabled
+- Private demo login at `/login` when auth is enabled
 - Production list at `/productions`
 - Production creation at `/productions/new`
 - Runner dashboard at `/productions/[id]`
@@ -52,7 +52,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` or leave it unset when you want sign-in and Supabase-backed data enabled.
 6. Restart `npm run dev` after changing `.env.local`.
 7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
-8. For a controlled demo, disable public sign-ups or leave sign-ups unused and create staff users manually.
+8. For a controlled demo, disable public sign-ups or leave sign-ups unused and create demo users manually.
 
 When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads and writes these Supabase tables:
 
@@ -62,28 +62,23 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `productions`
 - `production_roster`
 - `orders`
-- Supabase Storage bucket `person-photos` for staff-uploaded people photos
+- Supabase Storage bucket `person-photos` for authenticated people photos
 
 When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset control is available on the productions list in that mode only (no in-app demo messaging).
 
 If auth is enabled or unset but either Supabase env var is missing, the app shows a configuration error instead of falling back to localStorage.
 
-## Staff users
+## Demo users
 
-Create staff users in the Supabase dashboard:
+Create demo users in the Supabase dashboard:
 
 1. Go to **Authentication > Users**.
 2. Click **Add user**.
-3. Enter a staff email, for example `runner@capturethis.com` or owner `luke@capturethis.com`.
+3. Enter a demo user email, for example `runner@capturethis.com` or owner `luke@capturethis.com`.
 4. Set a password and confirm the user if your project requires it.
-5. Grant staff access by setting **app metadata** on each user (RLS checks this claim, not user metadata):
-   - In **Authentication > Users**, open the user and click **Edit user**.
-   - Under **App Metadata**, set `{ "staff": true }` and save.
-   - Or run `STAFF_EMAIL=... STAFF_PASSWORD=... node scripts/create-staff-user.mjs` with `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (server-only; never expose in the browser).
+5. No app metadata is required for the private demo. Any authenticated user can read and write the shared Supabase data.
 
-Existing users must sign out and sign in again (or wait for JWT refresh) so the updated `app_metadata` appears in their token.
-
-Accounts without `staff: true` can sign in to Supabase Auth but are signed out by the app with a clear message; they cannot read or write app tables (RLS).
+Anonymous users cannot read or write app tables (RLS). Keep public sign-ups disabled if only invited demo users should access production data.
 
 Then open `/login`, sign in, and continue to `/productions`.
 

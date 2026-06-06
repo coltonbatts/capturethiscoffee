@@ -2,11 +2,10 @@ import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const STAFF_ACCESS_MESSAGE =
-  "This account does not have staff access. Ask your admin to enable staff on your account.";
+  "Sign in to continue.";
 
 export function isStaffUser(user: User | null | undefined): boolean {
-  if (!user) return false;
-  return user.app_metadata?.staff === true;
+  return Boolean(user);
 }
 
 export async function getVerifiedStaffUser(supabase: SupabaseClient) {
@@ -54,7 +53,7 @@ export async function getStaffAccessToken(supabase: SupabaseClient) {
 export function normalizeSupabaseWriteError(message: string): Error {
   if (message.includes("violates row-level security policy")) {
     return new Error(
-      `${STAFF_ACCESS_MESSAGE} Sign out and sign back in if staff access was just enabled.`,
+      `${STAFF_ACCESS_MESSAGE} If you are already signed in, sign out and sign back in.`,
     );
   }
 

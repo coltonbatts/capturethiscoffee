@@ -154,51 +154,57 @@ revoke all on public.orders from anon;
 
 drop policy if exists "Internal staff can manage clients" on clients;
 drop policy if exists "Staff can manage clients" on clients;
-create policy "Staff can manage clients"
+drop policy if exists "Authenticated users can manage clients" on clients;
+create policy "Authenticated users can manage clients"
 on clients for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage people" on people;
 drop policy if exists "Staff can manage people" on people;
-create policy "Staff can manage people"
+drop policy if exists "Authenticated users can manage people" on people;
+create policy "Authenticated users can manage people"
 on people for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage client people" on client_people;
 drop policy if exists "Staff can manage client people" on client_people;
-create policy "Staff can manage client people"
+drop policy if exists "Authenticated users can manage client people" on client_people;
+create policy "Authenticated users can manage client people"
 on client_people for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage productions" on productions;
 drop policy if exists "Staff can manage productions" on productions;
-create policy "Staff can manage productions"
+drop policy if exists "Authenticated users can manage productions" on productions;
+create policy "Authenticated users can manage productions"
 on productions for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage production roster" on production_roster;
 drop policy if exists "Staff can manage production roster" on production_roster;
-create policy "Staff can manage production roster"
+drop policy if exists "Authenticated users can manage production roster" on production_roster;
+create policy "Authenticated users can manage production roster"
 on production_roster for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage orders" on orders;
 drop policy if exists "Staff can manage orders" on orders;
-create policy "Staff can manage orders"
+drop policy if exists "Authenticated users can manage orders" on orders;
+create policy "Authenticated users can manage orders"
 on orders for all
 to authenticated
-using (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true)
-with check (coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true);
+using (true)
+with check (true);
 
 drop policy if exists "Public can read person photos" on storage.objects;
 create policy "Public can read person photos"
@@ -207,14 +213,9 @@ to public
 using (bucket_id = 'person-photos');
 
 drop policy if exists "Staff can manage person photos" on storage.objects;
-create policy "Staff can manage person photos"
+drop policy if exists "Authenticated users can manage person photos" on storage.objects;
+create policy "Authenticated users can manage person photos"
 on storage.objects for all
 to authenticated
-using (
-  bucket_id = 'person-photos'
-  and coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true
-)
-with check (
-  bucket_id = 'person-photos'
-  and coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false) = true
-);
+using (bucket_id = 'person-photos')
+with check (bucket_id = 'person-photos');
