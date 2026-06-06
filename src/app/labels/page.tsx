@@ -13,7 +13,7 @@ import {
   Settings,
   UserRound,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { CaptureAngle } from "@/components/capture-mark";
 import { AppShell } from "@/components/app-shell";
 import {
@@ -81,6 +81,15 @@ const fieldLabels: Array<[keyof LabelFieldOptions, string]> = [
   ["notesStatus", "Notes"],
 ];
 
+type PrintCalibration = {
+  offsetX: number;
+  offsetY: number;
+  scale: number;
+};
+
+type PrintSheetStyle = CSSProperties &
+  Record<"--m2-print-offset-x" | "--m2-print-offset-y" | "--m2-print-scale", string>;
+
 export default function LabelWorkstationPage() {
   const [data, setData] = useState<CoffeeData | null>(null);
   const [error, setError] = useState("");
@@ -96,6 +105,11 @@ export default function LabelWorkstationPage() {
   const [printLabels, setPrintLabels] = useState<CoffeeLabel[]>([]);
   const [pendingPrintedOrderId, setPendingPrintedOrderId] = useState("");
   const [pendingAdvance, setPendingAdvance] = useState(false);
+  const [calibration, setCalibration] = useState<PrintCalibration>({
+    offsetX: 0,
+    offsetY: 0,
+    scale: 100,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -157,9 +171,21 @@ export default function LabelWorkstationPage() {
       )[0],
     [draft, options, selectedId],
   );
+  const printSheetStyle = useMemo<PrintSheetStyle>(
+    () => ({
+      "--m2-print-offset-x": `${calibration.offsetX}mm`,
+      "--m2-print-offset-y": `${calibration.offsetY}mm`,
+      "--m2-print-scale": String(calibration.scale / 100),
+    }),
+    [calibration],
+  );
 
   function updateDraft(patch: Partial<LabelDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  function updateCalibration(patch: Partial<PrintCalibration>) {
+    setCalibration((current) => ({ ...current, ...patch }));
   }
 
   function chooseOrder(orderId: string) {
@@ -215,6 +241,16 @@ export default function LabelWorkstationPage() {
     } finally {
       window.setTimeout(() => setPrinting(false), 300);
     }
+  }
+
+  function printCalibrationLabel() {
+    setPrinting(true);
+    setError("");
+    setPendingPrintedOrderId("");
+    setPendingAdvance(false);
+    setPrintLabels([calibrationLabel(calibration)]);
+    window.setTimeout(() => window.print(), 60);
+    window.setTimeout(() => setPrinting(false), 300);
   }
 
   async function markPendingPrinted() {
@@ -615,6 +651,12 @@ export default function LabelWorkstationPage() {
                 Printer
               </h2>
               <PrinterCalibrationChecklist />
+              <PrinterCalibrationControls
+                calibration={calibration}
+                disabled={printing}
+                onChange={updateCalibration}
+                onPrint={printCalibrationLabel}
+              />
               <button
                 type="button"
                 onClick={checkPrinter}
@@ -625,7 +667,10 @@ export default function LabelWorkstationPage() {
                 {checkingPrinter ? "Checking..." : "Experimental M2 check"}
               </button>
               {printerProbe ? (
-                <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
+                <p
+                  className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700"
+                  aria-live="polite"
+                >
                   {printerProbe}
                 </p>
               ) : null}
@@ -670,7 +715,7 @@ export default function LabelWorkstationPage() {
       </div>
 
       <section className="print-only hidden">
-        <div className="m2-label-sheet">
+        <div className="m2-label-sheet" style={printSheetStyle}>
           {(printLabels.length ? printLabels : currentLabel ? [currentLabel] : []).map(
             (label) => (
               <PrintableLabel key={label.id} label={label} />
@@ -697,6 +742,108 @@ function PrinterCalibrationChecklist() {
         NIIMBOT Bluetooth is an experimental check only.
       </p>
     </div>
+  );
+}
+
+function PrinterCalibrationControls({
+  calibration,
+  disabled,
+  onChange,
+  onPrint,
+}: {
+  calibration: PrintCalibration;
+  disabled: boolean;
+  onChange: (patch: Partial<PrintCalibration>) => void;
+  onPrint: () => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-black">Physical calibration</p>
+          <p className="mt-0.5 text-xs font-medium text-zinc-500">
+            Nudge only after the first real M2 print.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onPrint}
+          disabled={disabled}
+          className={`${secondaryButtonClass} min-h-10 px-3`}
+        >
+          <Printer size={17} aria-hidden="true" />
+          Test
+        </button>
+      </div>
+
+      <CalibrationSlider
+        label="Left/right"
+        value={calibration.offsetX}
+        min={-3}
+        max={3}
+        step={0.5}
+        unit="mm"
+        onChange={(offsetX) => onChange({ offsetX })}
+      />
+      <CalibrationSlider
+        label="Up/down"
+        value={calibration.offsetY}
+        min={-3}
+        max={3}
+        step={0.5}
+        unit="mm"
+        onChange={(offsetY) => onChange({ offsetY })}
+      />
+      <CalibrationSlider
+        label="Scale"
+        value={calibration.scale}
+        min={94}
+        max={102}
+        step={1}
+        unit="%"
+        onChange={(scale) => onChange({ scale })}
+      />
+    </div>
+  );
+}
+
+function CalibrationSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="grid gap-1.5 text-sm font-semibold text-zinc-700">
+      <span className="flex items-center justify-between gap-2">
+        <span>{label}</span>
+        <span className="font-mono text-xs text-zinc-500">
+          {value > 0 && unit === "mm" ? "+" : ""}
+          {value}
+          {unit}
+        </span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-black"
+      />
+    </label>
   );
 }
 
@@ -819,6 +966,31 @@ function PrintableLabel({ label }: { label: CoffeeLabel }) {
       </div>
     </article>
   );
+}
+
+function calibrationLabel(calibration: PrintCalibration): CoffeeLabel {
+  return {
+    id: `m2-calibration-${Date.now()}`,
+    personName: "M2 calibration",
+    drink: "Border should sit inside the 50mm x 30mm label.",
+    group: "Test",
+    productionClient: "Capture This Coffee",
+    notesStatus: "",
+    title: "M2 CALIBRATION",
+    bodyLines: [
+      "Border inside edge / text readable",
+      `X ${signedMillimeters(calibration.offsetX)} / Y ${signedMillimeters(
+        calibration.offsetY,
+      )} / ${calibration.scale}%`,
+    ],
+    footerStart: "50 x 30mm",
+    footerEnd: "Set scale 100% in dialog",
+    lines: [],
+  };
+}
+
+function signedMillimeters(value: number) {
+  return `${value > 0 ? "+" : ""}${value}mm`;
 }
 
 function preferredProduction(data: CoffeeData) {

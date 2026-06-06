@@ -205,6 +205,9 @@ button {
 
   .m2-label-sheet {
     display: block !important;
+    --m2-print-offset-x: 0mm;
+    --m2-print-offset-y: 0mm;
+    --m2-print-scale: 1;
   }
 
   .m2-label {
@@ -222,6 +225,9 @@ button {
     color: #000000;
     background: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
+    transform: translate(var(--m2-print-offset-x), var(--m2-print-offset-y))
+      scale(var(--m2-print-scale));
+    transform-origin: top left;
   }
 
   .m2-label:last-child {
