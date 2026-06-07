@@ -37,8 +37,167 @@ printer HP_LaserJet_M402dw__E3221E_ is idle.
 device for HP_LaserJet_M402dw__E3221E_: dnssd://HP%20LaserJet%20M402dw%20(E3221E)._ipps._tcp.local./?uuid=50484256-4633-3838-3632-80ce62e3221e
 ```
 
-No NIIMBOT printer was registered in CUPS, and `system_profiler SPUSBDataType`
-did not list a connected USB device from this session.
+No NIIMBOT printer was registered in CUPS.
+
+The same MacBook does see the directly connected printer over USB serial:
+
+- macOS USB name: `NIIMBOT M2_H LABEL PRINTER`
+- USB vendor/product: `0x3513 / 0x0002`
+- Serial: `M2_H-I409130491`
+- Serial device: `/dev/cu.usbmodem1101`
+- Read-only identity response: `#10001:V01.01,M2_H-I409130491,1*7C#`
+
+This means the practical direct-print path is a local USB serial bridge, not
+CUPS or browser print.
+
+## USB serial probe
+
+Before attempting any print protocol work, run the safe read-only probe:
+
+```bash
+npm run niimbot:probe
+```
+
+To target a specific device:
+
+```bash
+npm run niimbot:probe -- /dev/cu.usbmodem1101
+```
+
+The probe detects `/dev/cu.usbmodem*` ports, opens the selected port, sends only
+read-only identity/version query frames for `#10001` and `#10003`, waits with
+short timeouts, prints the responses, and closes the serial handle. It must not
+print, feed, beep, move the motor, or mutate printer state.
+
+For protocol-level status checks:
+
+```bash
+npm run niimbot:status -- /dev/cu.usbmodem1101
+```
+
+This sends heartbeat/status/RFID read requests only and prints raw response
+frames for diagnosis.
+
+## USB test print
+
+After the read-only probe succeeds and a label roll/ribbon are loaded, the next
+small direct-print test is the printer's own test page command:
+
+```bash
+npm run niimbot:test-print -- --yes /dev/cu.usbmodem1101
+```
+
+This sends the NIIMBOT protocol `PrintTestPage` packet
+`55 55 5a 01 01 5a aa aa`. It may consume a label. It does not send a Capture
+This Coffee raster label yet.
+
+Observed 2026-06-07 response from `/dev/cu.usbmodem1101`:
+
+```text
+> 55 55 5a 01 01 5a aa aa
+< 55 55 6a 01 ff 94 aa aa
+```
+
+The response is a valid `0x6a` frame for `PrintTestPage`. Physical output still
+needs human confirmation at the printer.
+
+Physical result: no label printed. Treat `ff` as a non-success response until
+the M2_H command sequence and media/ribbon status are better understood.
+
+Follow-up status probe after the no-print result:
+
+```text
+Heartbeat
+> 55 55 dc 01 04 d9 aa aa
+< 55 55 d9 0b 20 21 04 4a 00 00 01 01 00 00 00 9d aa aa
+
+PrintStatus
+> 55 55 a3 01 01 a3 aa aa
+< 55 55 b3 0a 00 00 00 00 0a f0 00 00 00 00 43 aa aa
+
+PrinterStatusData
+> 55 55 a5 01 01 a5 aa aa
+< 55 55 b5 0d 30 30 da c0 00 c8 00 00 00 14 00 03 01 7c aa aa
+
+RfidInfo
+> 55 55 1a 01 01 1a aa aa
+< 55 55 1b 28 88 1d 3e 19 d9 14 10 80 09 30 34 32 32 32 35 30 30 35 10 50 5a 31 49 33 30 34 35 34 30 30 30 37 30 34 36 01 0e 00 02 01 8e aa aa
+```
+
+The next real print attempt should use a full model-appropriate print task
+sequence, not the standalone `PrintTestPage` command.
+
+## USB diagnostic print result
+
+First physical direct-USB print success:
+
+```bash
+npm run niimbot:print-diagnostic -- --yes /dev/cu.usbmodem101
+```
+
+Physical result: the M2_H printed three solid horizontal bars. No readable text
+was attempted in this diagnostic. This confirms the local USB serial path can
+execute a full print task with bitmap row data.
+
+The diagnostic sequence accepted setup and row packets, then returned
+`PrintStatus` plus an unexpected `0xd3` frame after `PageEnd` instead of the
+documented `0xe4` response. A cleanup command was sent afterward:
+
+```text
+> 55 55 da 01 01 da aa aa
+< 55 55 d0 01 01 d0 aa aa
+```
+
+Next protocol step: print a tiny deterministic glyph pattern, not the full app
+label yet, to confirm row direction, x-axis direction, bit packing, margins, and
+the correct end-of-page/status handling for M2_H firmware `1.50`.
+
+## USB glyph calibration print
+
+After the three-bar diagnostic succeeds, run one deterministic bitmap glyph
+label:
+
+```bash
+npm run niimbot:print-glyph-test -- --yes /dev/cu.usbmodem101
+```
+
+The glyph test uses the same full print-task path as
+`niimbot:print-diagnostic`, with density `1`, label type `1`, one 354 x 567
+pixel page, and explicit bitmap rows only. It prints a sparse border box,
+`TOP`, `LEFT`, and `USB OK` from built-in block glyphs. It does not render app
+labels, load fonts, or send more than one page.
+
+Safety controls:
+
+- Requires `--yes`.
+- Detects `/dev/cu.usbmodem*` if no port is supplied.
+- Uses read timeouts for setup, page end, status, and abort cleanup.
+- Closes the serial handle in `finally`.
+- Sends cancel `0xda` if the script aborts after `PrintStart` and before
+  `PrintEnd`.
+- Logs every setup/end packet and every non-empty bitmap row packet.
+
+Physical result: pending. Ask the operator to confirm whether the border and
+glyphs are readable, whether `TOP` appears at the expected label edge, and
+whether `LEFT` appears on the expected left side.
+
+Observed 2026-06-07 run against `/dev/cu.usbmodem101`:
+
+```text
+Heartbeat -> d9
+SetDensity -> 31
+SetLabelType -> 33
+PrintStart -> 02
+SetPageSize -> 14
+PageEnd -> b3 plus d3
+Next PrintStatus poll -> d3 plus e4
+Later PrintStatus poll -> b3
+PrintEnd -> f4
+```
+
+The command exited successfully and closed the serial handle. Physical
+orientation/readability still needs operator confirmation at the printer before
+using these bitmap assumptions for app-rendered labels.
 
 ## NIIMBOT app setup
 
@@ -91,11 +250,13 @@ The station PNG is rendered at 591 x 354 pixels, matching 50mm x 30mm at
 
 ## Confirmed working profile
 
-Pending physical printer validation on this laptop. Fill this in after both the
-NIIMBOT app test label and Capture This Coffee test label print correctly:
+Pending physical print validation on this laptop. USB serial detection is
+confirmed, but direct printing is not implemented yet. Fill in the print fields
+after both the NIIMBOT app test label and Capture This Coffee test label print
+correctly:
 
-- Printer model:
-- Connection:
+- Printer model: NIIMBOT M2_H
+- Connection: USB-C serial, `/dev/cu.usbmodem1101`
 - NIIMBOT app version:
 - macOS version:
 - Label stock:
@@ -108,4 +269,4 @@ NIIMBOT app test label and Capture This Coffee test label print correctly:
 - Density:
 - Alignment/calibration:
 - PNG fallback needed:
-- Notes:
+- Notes: USB identity query returned `#10001:V01.01,M2_H-I409130491,1*7C#`.

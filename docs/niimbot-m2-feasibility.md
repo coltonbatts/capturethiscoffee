@@ -13,6 +13,12 @@ characteristic. It does not send print commands yet.
 ## Known M2 details
 
 - Model family: NIIMBOT M2 / M2_H, thermal transfer.
+- Tested USB model name: `NIIMBOT M2_H LABEL PRINTER`.
+- Tested USB vendor/product: `0x3513 / 0x0002`.
+- Tested serial: `M2_H-I409130491`.
+- Tested macOS serial device: `/dev/cu.usbmodem1101`.
+- Read-only identity query response:
+  `#10001:V01.01,M2_H-I409130491,1*7C#`.
 - Resolution: 300 DPI.
 - Effective printhead: about 48mm, 567px.
 - Label widths: 20-50mm.
@@ -53,6 +59,9 @@ characteristic. It does not send print commands yet.
      app.
    - More operational overhead, but usually better than reverse-engineering BLE
      in the browser if this must work reliably on set.
+   - Current next step: use `npm run niimbot:probe` to confirm the USB serial
+     identity/version query path before sending any print, feed, beep, motor, or
+     state-mutating commands.
 
 ## Test checklist when the printer arrives
 

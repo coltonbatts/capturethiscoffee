@@ -25,6 +25,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Copyable coffee summaries and browser-printable M2 label cards
+- NIIMBOT M2_H direct USB serial diagnostics for read-only probes and low-density bitmap print tests
 
 ## Run locally
 
@@ -85,6 +86,30 @@ Then open `/login`, sign in, and continue to `/productions`.
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
+
+## NIIMBOT direct USB diagnostics
+
+The current confirmed direct-print path for the NIIMBOT M2_H is local USB
+serial, not CUPS. The tested printer exposes `/dev/cu.usbmodem*` on macOS with
+USB vendor/product `0x3513 / 0x0002`.
+
+Safe status checks:
+
+```bash
+npm run niimbot:probe
+npm run niimbot:status
+```
+
+One-label print diagnostics, requiring explicit confirmation:
+
+```bash
+npm run niimbot:print-diagnostic -- --yes /dev/cu.usbmodem101
+npm run niimbot:print-glyph-test -- --yes /dev/cu.usbmodem101
+```
+
+Use the detected `/dev/cu.usbmodem*` path if it changes after reconnecting the
+printer. The glyph test is still a deterministic calibration step; confirm
+physical orientation and readability before moving to app-rendered labels.
 
 The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table and photo upload access are controlled by Supabase Auth plus RLS/storage policies.
 
