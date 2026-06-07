@@ -28,7 +28,7 @@ export default function LoginPage() {
 
 function LoginForm() {
   const router = useRouter();
-  const { initialized, appUser, refreshAppSession } = useAppAuth();
+  const { initialized, appUser, applyAppUser } = useAppAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(supabaseConfigError);
@@ -70,25 +70,30 @@ function LoginForm() {
     setError("");
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data, error: signInError } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        }),
+        "Sign-in is taking too long. Check your connection and try again.",
+      );
 
       if (signInError) {
         setError(signInError.message);
         return;
       }
 
-      const user = await refreshAppSession();
-      if (!user) {
+      if (!data.user || !data.session?.access_token) {
         await supabase.auth.signOut();
         setError(AUTH_ACCESS_MESSAGE);
         return;
       }
 
+      applyAppUser(data.user);
       router.replace(nextPath());
       router.refresh();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not sign in.");
     } finally {
       setSubmitting(false);
     }
@@ -151,4 +156,20 @@ function nextPath() {
 
   const next = new URLSearchParams(window.location.search).get("next");
   return next?.startsWith("/") ? next : "/productions";
+}
+
+function withTimeout<T>(promise: Promise<T>, message: string, ms = 15000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }

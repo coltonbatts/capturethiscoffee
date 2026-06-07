@@ -18,6 +18,7 @@ type AppAuthContextValue = {
   initialized: boolean;
   appUser: User | null;
   email: string;
+  applyAppUser: (user: User | null) => void;
   signOut: () => Promise<void>;
   refreshAppSession: () => Promise<User | null>;
 };
@@ -74,7 +75,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = authClient.auth.onAuthStateChange((event) => {
+    } = authClient.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT") {
@@ -82,7 +83,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      void bootstrap();
+      applyAppUser(session?.user ?? null);
     });
 
     return () => {
@@ -109,10 +110,11 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
       initialized,
       appUser,
       email,
+      applyAppUser,
       signOut,
       refreshAppSession,
     }),
-    [appUser, email, initialized, refreshAppSession, signOut],
+    [appUser, applyAppUser, email, initialized, refreshAppSession, signOut],
   );
 
   return (
