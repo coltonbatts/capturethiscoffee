@@ -1,5 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 import type { OrderStatus, Person } from "@/lib/types";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 const statusStyles: Record<OrderStatus, string> = {
   not_asked: "bg-zinc-100 text-zinc-700 border-zinc-200",
@@ -30,11 +33,42 @@ export function StatusChip({ status }: { status: OrderStatus }) {
 }
 
 export function Avatar({ person }: { person: Person }) {
+  const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
+  const storagePath = storagePathFromPersonPhotoUrl(person.photo_url);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function signPersonPhoto() {
+      setSignedPhotoUrl(null);
+
+      if (!storagePath || !isSupabaseConfigured) return;
+
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) return;
+
+      const { data } = await supabase.storage
+        .from("person-photos")
+        .createSignedUrl(storagePath, 60 * 60);
+
+      if (!cancelled) setSignedPhotoUrl(data?.signedUrl || null);
+    }
+
+    void signPersonPhoto();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storagePath]);
+
   if (person.photo_url) {
+    const src = storagePath ? signedPhotoUrl : person.photo_url;
+    if (!src) return <AvatarFallback person={person} />;
+
     return (
       // eslint-disable-next-line @next/next/no-img-element -- User-entered photo URLs can be from any host.
       <img
-        src={person.photo_url}
+        src={src}
         alt=""
         className="size-12 rounded-full object-cover ring-1 ring-zinc-200"
         loading="lazy"
@@ -43,6 +77,10 @@ export function Avatar({ person }: { person: Person }) {
     );
   }
 
+  return <AvatarFallback person={person} />;
+}
+
+function AvatarFallback({ person }: { person: Person }) {
   return (
     <div className="grid size-12 place-items-center rounded-full bg-black text-sm font-semibold text-white ring-1 ring-black/10">
       {person.name
@@ -52,6 +90,20 @@ export function Avatar({ person }: { person: Person }) {
         .slice(0, 2)}
     </div>
   );
+}
+
+function storagePathFromPersonPhotoUrl(photoUrl: string | undefined) {
+  if (!photoUrl) return "";
+
+  try {
+    const url = new URL(photoUrl);
+    const marker = "/storage/v1/object/public/person-photos/";
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return "";
+    return decodeURIComponent(url.pathname.slice(markerIndex + marker.length));
+  } catch {
+    return "";
+  }
 }
 
 export function Field({
