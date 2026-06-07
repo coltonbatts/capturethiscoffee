@@ -10,6 +10,8 @@
 - On a phone, open the production page and verify search, quick add, order edit,
   and status taps are comfortable one-handed.
 - Keep `/labels` bookmarked for the fastest print station flow.
+- Keep the NIIMBOT laptop runbook handy:
+  [label-printer-station.md](label-printer-station.md).
 
 ## Supabase checklist
 

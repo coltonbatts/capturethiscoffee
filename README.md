@@ -84,6 +84,7 @@ Then open `/login`, sign in, and continue to `/productions`.
 
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
+NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
 
 The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table and photo upload access are controlled by Supabase Auth plus RLS/storage policies.
 
