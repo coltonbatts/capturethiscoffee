@@ -25,6 +25,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Copyable coffee summaries and browser-printable M2 label cards
+- Remote NIIMBOT queue workflow: operators can send labels to the printer laptop queue from `/labels`, and the printer laptop can process jobs from `/labels/station`
 - NIIMBOT M2_H direct USB serial diagnostics for read-only probes and low-density bitmap print tests
 
 ## Run locally
@@ -86,6 +87,27 @@ Then open `/login`, sign in, and continue to `/productions`.
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
+
+## Remote label queue
+
+The Step 1 NIIMBOT production workflow keeps printing browser-based and avoids
+direct USB/WebUSB/Web Bluetooth control from the website:
+
+1. Any signed-in operator opens `/labels`, selects or edits the current cup label,
+   and clicks **Send to printer**.
+2. The printer laptop keeps `/labels/station` open.
+3. The station polls the queue, emphasizes the next highest-priority oldest job,
+   and uses one primary **Print next label** button.
+4. The station renders the stored 50mm x 30mm label payload with the existing
+   browser print layout and opens `window.print()`.
+5. Staff confirm the physical result manually with **Mark printed**. That
+   completes the print job, records `printed_at`, marks the active attempt
+   succeeded when present, and sets `orders.label_printed = true`.
+6. Staff can also **Reprint current** or **Mark failed / skip** with a simple
+   reason.
+
+This queue requires Supabase Auth plus the label print-job migrations. Browser
+print remains available on `/labels` as the local fallback.
 
 ## NIIMBOT direct USB diagnostics
 

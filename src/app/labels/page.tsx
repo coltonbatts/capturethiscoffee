@@ -315,11 +315,11 @@ export default function LabelWorkstationPage() {
       const jobId = body.jobs?.[0]?.id;
       setQueueStatus(
         jobId
-          ? `Queued ${currentLabel.personName} (${jobId.slice(0, 8)}).`
-          : `Queued ${currentLabel.personName}.`,
+          ? `Sent ${currentLabel.personName} to the printer laptop queue (${jobId.slice(0, 8)}).`
+          : `Sent ${currentLabel.personName} to the printer laptop queue.`,
       );
       setRecent((current) => [
-        `Queued: ${currentLabel.personName} - ${currentLabel.drink}`,
+        `Sent to printer: ${currentLabel.personName} - ${currentLabel.drink}`,
         ...current,
       ].slice(0, 5));
     } catch (err) {
@@ -658,7 +658,7 @@ export default function LabelWorkstationPage() {
                 className={`${secondaryButtonClass} min-h-14`}
               >
                 <BadgePlus size={18} aria-hidden="true" />
-                {queueing ? "Queueing" : "Queue"}
+                {queueing ? "Sending" : "Send to printer"}
               </button>
               <button
                 type="button"

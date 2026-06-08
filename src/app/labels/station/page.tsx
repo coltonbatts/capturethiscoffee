@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   CheckCircle2,
-  Download,
   ExternalLink,
   Printer,
   RefreshCw,
@@ -27,9 +26,7 @@ import { getAppAccessToken } from "@/lib/auth";
 import type { CoffeeLabel } from "@/lib/label-copy";
 import type {
   LabelPrintAttemptStatus,
-  LabelPrintJobPayloadV1,
   LabelPrintJobStatus,
-  LabelPrintTransport,
 } from "@/lib/print-jobs";
 import {
   getSupabaseBrowserClient,
@@ -52,11 +49,8 @@ export default function LabelStationPage() {
   const [selectedJobId, setSelectedJobId] = useState("");
   const [printLabels, setPrintLabels] = useState<CoffeeLabel[]>([]);
   const [currentAttemptId, setCurrentAttemptId] = useState("");
-  const [transport, setTransport] =
-    useState<Extract<LabelPrintTransport, "laptop_browser" | "laptop_usb">>(
-      "laptop_browser",
-    );
   const [printerName, setPrinterName] = useState("NIIMBOT M2");
+  const [failureReason, setFailureReason] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -71,6 +65,10 @@ export default function LabelStationPage() {
   );
   const queuedCount = queuedJobs.length;
   const activeCount = activeJobs.length;
+  const nextQueuedJob = queuedJobs[0];
+  const canPrintSelected =
+    selectedJob?.status === "claimed" || selectedJob?.status === "printing";
+  const primaryJob = canPrintSelected ? selectedJob : nextQueuedJob;
 
   const refreshJobs = useCallback(async ({ silent = false } = {}) => {
     if (!isSupabaseConfigured) {
@@ -119,6 +117,29 @@ export default function LabelStationPage() {
     };
   }, [refreshJobs]);
 
+  async function claimJob(job: StationJob) {
+    const body = await apiFetch<{ job: StationJob }>(
+      `/api/print-jobs/${job.id}/claim`,
+      { method: "POST" },
+    );
+    setSelectedJobId(body.job.id);
+    return body.job;
+  }
+
+  async function printNextLabel() {
+    const jobToPrint = primaryJob;
+    if (!jobToPrint) {
+      setStatus("No queued labels to print.");
+      return;
+    }
+
+    await runJobAction("print", async () => {
+      const claimedJob =
+        jobToPrint.status === "queued" ? await claimJob(jobToPrint) : jobToPrint;
+      await printJob(claimedJob);
+    });
+  }
+
   async function claimNext() {
     const next = queuedJobs[0];
     if (!next) {
@@ -127,27 +148,32 @@ export default function LabelStationPage() {
     }
 
     await runJobAction("claim", async () => {
-      const body = await apiFetch<{ job: StationJob }>(
-        `/api/print-jobs/${next.id}/claim`,
-        { method: "POST" },
-      );
-      setSelectedJobId(body.job.id);
-      setStatus(`Claimed ${jobTitle(body.job)}.`);
+      const job = await claimJob(next);
+      setStatus(`Claimed ${jobTitle(job)}.`);
       await refreshJobs({ silent: true });
     });
   }
 
-  async function printViaBrowser() {
+  async function reprintCurrentJob() {
     if (!selectedJob) return;
 
-    await runJobAction("print", async () => {
-      const attempt = await createAttempt(selectedJob.id, "started");
-      setCurrentAttemptId(attempt.id);
-      setPrintLabels([selectedJob.payload.label]);
-      setStatus("Browser print dialog opening. Mark printed only after the physical label is correct.");
-      window.setTimeout(() => window.print(), 80);
-      await refreshJobs({ silent: true });
+    await runJobAction("reprint", async () => {
+      const job =
+        selectedJob.status === "queued" ? await claimJob(selectedJob) : selectedJob;
+      await printJob(job);
     });
+  }
+
+  async function printJob(job: StationJob) {
+    const attempt = await createAttempt(job.id, "started");
+    setCurrentAttemptId(attempt.id);
+    setSelectedJobId(job.id);
+    setPrintLabels([job.payload.label]);
+    setStatus(
+      "Print dialog opening. Use Mark printed only after the physical label is correct.",
+    );
+    window.setTimeout(() => window.print(), 80);
+    await refreshJobs({ silent: true });
   }
 
   async function markPrinted() {
@@ -170,16 +196,20 @@ export default function LabelStationPage() {
     if (!selectedJob) return;
 
     await runJobAction("release", async () => {
-      await maybeRecordFailureAttempt(selectedJob, "cancelled", "Released for retry.");
+      const reason = failureReason.trim() || "Skipped at laptop station.";
+      const attemptId = currentAttemptId || latestStartedAttempt(selectedJob)?.id || "";
+      await maybeRecordFailureAttempt(selectedJob, "cancelled", reason);
       await apiFetch(`/api/print-jobs/${selectedJob.id}/fail`, {
         method: "POST",
         body: JSON.stringify({
           release: true,
-          error_message: "Released by laptop station.",
+          attempt_id: attemptId || null,
+          error_message: reason,
         }),
       });
       setCurrentAttemptId("");
-      setStatus(`Released ${jobTitle(selectedJob)} back to the queue.`);
+      setFailureReason("");
+      setStatus(`Skipped ${jobTitle(selectedJob)} and returned it to the queue.`);
       await refreshJobs({ silent: true });
     });
   }
@@ -188,30 +218,21 @@ export default function LabelStationPage() {
     if (!selectedJob) return;
 
     await runJobAction("fail", async () => {
-      await maybeRecordFailureAttempt(selectedJob, "failed", "Failed at laptop station.");
+      const reason = failureReason.trim() || "Failed at laptop station.";
+      const attemptId = currentAttemptId || latestStartedAttempt(selectedJob)?.id || "";
+      await maybeRecordFailureAttempt(selectedJob, "failed", reason);
       await apiFetch(`/api/print-jobs/${selectedJob.id}/fail`, {
         method: "POST",
         body: JSON.stringify({
           release: false,
-          error_message: "Failed at laptop station.",
+          attempt_id: attemptId || null,
+          error_message: reason,
         }),
       });
       setCurrentAttemptId("");
+      setFailureReason("");
       setStatus(`Failed ${jobTitle(selectedJob)}.`);
       await refreshJobs({ silent: true });
-    });
-  }
-
-  async function downloadPng() {
-    if (!selectedJob) return;
-    await runJobAction("png", async () => {
-      const url = renderLabelPng(selectedJob.payload);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `${safeFilePart(jobTitle(selectedJob))}-50x30mm-300dpi.png`;
-      anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus("Downloaded a 300 DPI PNG for NIIMBOT app import.");
     });
   }
 
@@ -225,7 +246,7 @@ export default function LabelStationPage() {
         method: "POST",
         body: JSON.stringify({
           status: attemptStatus,
-          transport,
+          transport: "laptop_browser",
           printer_name: printerName,
           printer_identifier: "laptop-station",
         }),
@@ -247,7 +268,7 @@ export default function LabelStationPage() {
       method: "POST",
       body: JSON.stringify({
         status: attemptStatus,
-        transport,
+        transport: "laptop_browser",
         printer_name: printerName,
         printer_identifier: "laptop-station",
         error_message: message,
@@ -284,8 +305,8 @@ export default function LabelStationPage() {
               Laptop print station
             </h1>
             <p className="mt-1 text-sm font-medium text-zinc-600">
-              Claim queued labels, print through the browser or export a 300 DPI PNG
-              for the NIIMBOT laptop app, then record the physical result.
+              Keep this page open on the printer laptop. Print the next queued
+              label, then confirm the physical result.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center">
@@ -305,13 +326,13 @@ export default function LabelStationPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(360px,1.1fr)_minmax(280px,0.75fr)]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(360px,1.2fr)_minmax(280px,0.85fr)]">
           <Panel className="grid gap-4 p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold">Queue</h2>
+                <h2 className="text-lg font-bold">Next label</h2>
                 <p className="mt-1 text-sm text-zinc-600">
-                  Oldest highest-priority job is claimed first.
+                  Highest priority and oldest created job prints first.
                 </p>
               </div>
               <button
@@ -325,78 +346,89 @@ export default function LabelStationPage() {
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => void claimNext()}
-              className={`${primaryButtonClass} min-h-12`}
-              disabled={!queuedJobs.length || Boolean(busy)}
-            >
-              <Printer size={18} aria-hidden="true" />
-              Claim next queued
-            </button>
-
-            <JobList
-              title="Claimed or printing"
-              jobs={activeJobs}
-              selectedJobId={selectedJob?.id || ""}
-              onSelect={setSelectedJobId}
-            />
-            <JobList
-              title="Queued"
-              jobs={queuedJobs}
-              selectedJobId={selectedJob?.id || ""}
-              onSelect={setSelectedJobId}
-            />
-          </Panel>
-
-          <Panel className="grid gap-4 p-4">
-            <div>
-              <h2 className="text-lg font-bold">Current label</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                50mm x 30mm snapshot from the stored print-job payload.
-              </p>
-            </div>
-
-            <div className="grid min-h-[280px] place-items-center overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(135deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_48%,#eef2f7_52%,#f8fafc_52%)] p-3 sm:min-h-[340px] sm:p-4">
-              {selectedJob ? (
-                <ScreenLabel label={selectedJob.payload.label} />
+            <div className="grid min-h-[320px] place-items-center overflow-hidden rounded-2xl border-2 border-black bg-[linear-gradient(135deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_48%,#eef2f7_52%,#f8fafc_52%)] p-4 sm:min-h-[390px]">
+              {primaryJob ? (
+                <div className="grid gap-3">
+                  <ScreenLabel label={primaryJob.payload.label} />
+                  <div className="text-center">
+                    <p className="text-sm font-black text-black">
+                      {jobTitle(primaryJob)}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-normal text-zinc-500">
+                      {primaryJob.status} - {primaryJob.id.slice(0, 8)}
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <p className="text-sm font-semibold text-zinc-500">
-                  No label selected.
+                  No queued labels.
                 </p>
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={() => void printNextLabel()}
+              className={`${primaryButtonClass} min-h-16 text-lg`}
+              disabled={!primaryJob || Boolean(busy)}
+            >
+              <Printer size={22} aria-hidden="true" />
+              {busy === "print" ? "Opening print dialog..." : "Print next label"}
+            </button>
+
             {selectedJob ? (
-              <div className="grid gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void printViaBrowser()}
-                    disabled={Boolean(busy) || selectedJob.status === "queued"}
-                    className={`${primaryButtonClass} col-span-2 min-h-14 text-base sm:col-span-1`}
-                  >
-                    <Printer size={19} aria-hidden="true" />
-                    Print via browser
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void downloadPng()}
-                    disabled={Boolean(busy)}
-                    className={`${secondaryButtonClass} min-h-14`}
-                  >
-                    <Download size={18} aria-hidden="true" />
-                    Download PNG
-                  </button>
+              <div className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black text-black">Current job</p>
+                    <p className="mt-1 text-xs font-semibold text-zinc-500">
+                      {selectedJob.status} - Attempts:{" "}
+                      {selectedJob.label_print_attempts?.length || 0}
+                    </p>
+                  </div>
+                  <span className={statusPillClass(selectedJob.status)}>
+                    {selectedJob.status}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={() => void markPrinted()}
                     disabled={Boolean(busy) || selectedJob.status === "queued"}
-                    className={`${primaryButtonClass} min-h-14`}
+                    className={`${primaryButtonClass} min-h-14 sm:col-span-1`}
                   >
                     <CheckCircle2 size={18} aria-hidden="true" />
                     Mark printed
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => void reprintCurrentJob()}
+                    disabled={Boolean(busy)}
+                    className={`${secondaryButtonClass} min-h-14`}
+                  >
+                    <RotateCcw size={18} aria-hidden="true" />
+                    Reprint current
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void claimNext()}
+                    disabled={!queuedJobs.length || Boolean(busy)}
+                    className={`${secondaryButtonClass} min-h-14`}
+                  >
+                    <Printer size={18} aria-hidden="true" />
+                    Claim only
+                  </button>
+                </div>
+                <label className="grid gap-1.5 text-sm font-medium text-zinc-600">
+                  Failed or skip reason
+                  <input
+                    className={inputClass}
+                    value={failureReason}
+                    onChange={(event) => setFailureReason(event.target.value)}
+                    placeholder="Wrong stock, bad print, customer changed drink..."
+                  />
+                </label>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => void releaseJob()}
@@ -404,7 +436,7 @@ export default function LabelStationPage() {
                     className={`${secondaryButtonClass} min-h-14`}
                   >
                     <RotateCcw size={18} aria-hidden="true" />
-                    Release/retry
+                    Mark failed / skip
                   </button>
                   <button
                     type="button"
@@ -413,7 +445,7 @@ export default function LabelStationPage() {
                     className={`${dangerButtonClass} min-h-14`}
                   >
                     <XCircle size={18} aria-hidden="true" />
-                    Fail
+                    Fail permanently
                   </button>
                 </div>
                 {selectedJob.status === "queued" ? (
@@ -427,30 +459,12 @@ export default function LabelStationPage() {
 
           <Panel className="grid content-start gap-4 p-4">
             <div>
-              <h2 className="text-lg font-bold">Print path</h2>
+              <h2 className="text-lg font-bold">Queue</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                Use the working NIIMBOT desktop app or OS driver first.
+                Refreshes every few seconds while the station is open.
               </p>
             </div>
 
-            <label className="grid gap-1.5 text-sm font-medium text-zinc-600">
-              Transport
-              <select
-                className={inputClass}
-                value={transport}
-                onChange={(event) =>
-                  setTransport(
-                    event.target.value as Extract<
-                      LabelPrintTransport,
-                      "laptop_browser" | "laptop_usb"
-                    >,
-                  )
-                }
-              >
-                <option value="laptop_browser">Laptop browser</option>
-                <option value="laptop_usb">Laptop USB / desktop app</option>
-              </select>
-            </label>
             <label className="grid gap-1.5 text-sm font-medium text-zinc-600">
               Printer name
               <input
@@ -463,24 +477,31 @@ export default function LabelStationPage() {
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
               <p className="font-bold text-black">Operational path</p>
               <ul className="mt-1 list-disc space-y-1 pl-5">
-                <li>Browser: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
-                <li>PNG: import the downloaded 591 x 354 image into the NIIMBOT laptop app.</li>
+                <li>Choose the NIIMBOT driver in the browser print dialog.</li>
+                <li>Use 50mm x 30mm label size and 100% scale.</li>
                 <li>Only mark printed after the physical M2 label is correct.</li>
               </ul>
             </div>
 
-            {selectedJob ? (
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-sm">
-                <p className="font-bold text-black">{jobTitle(selectedJob)}</p>
-                <p className="mt-1 text-zinc-600">{selectedJob.payload.label.drink}</p>
-                <p className="mt-2 font-mono text-xs text-zinc-500">
-                  {selectedJob.id.slice(0, 8)} - {selectedJob.status}
-                </p>
-                <p className="mt-1 text-xs font-semibold text-zinc-500">
-                  Attempts: {selectedJob.label_print_attempts?.length || 0}
-                </p>
-              </div>
-            ) : null}
+            <JobList
+              title="Claimed or printing"
+              jobs={activeJobs}
+              selectedJobId={selectedJob?.id || ""}
+              onSelect={(id) => {
+                setCurrentAttemptId("");
+                setSelectedJobId(id);
+              }}
+            />
+            <JobList
+              title="Queued"
+              jobs={queuedJobs}
+              selectedJobId={selectedJob?.id || ""}
+              onSelect={(id) => {
+                setCurrentAttemptId("");
+                setSelectedJobId(id);
+              }}
+              emphasizeFirst
+            />
           </Panel>
         </div>
       </div>
@@ -506,11 +527,13 @@ function JobList({
   jobs,
   selectedJobId,
   onSelect,
+  emphasizeFirst = false,
 }: {
   title: string;
   jobs: StationJob[];
   selectedJobId: string;
   onSelect: (id: string) => void;
+  emphasizeFirst?: boolean;
 }) {
   return (
     <div className="grid gap-2">
@@ -519,7 +542,7 @@ function JobList({
       </h3>
       {jobs.length ? (
         <div className="grid gap-2">
-          {jobs.map((job) => (
+          {jobs.map((job, index) => (
             <button
               key={job.id}
               type="button"
@@ -527,6 +550,8 @@ function JobList({
               className={`grid gap-1 rounded-xl border p-3 text-left transition active:scale-[0.99] ${
                 job.id === selectedJobId
                   ? "border-black bg-black text-white"
+                  : emphasizeFirst && index === 0
+                    ? "border-black bg-white text-black shadow-sm shadow-black/10"
                   : "border-zinc-200 bg-white text-black hover:border-zinc-400"
               }`}
             >
@@ -534,8 +559,8 @@ function JobList({
                 <span className="min-w-0 truncate text-sm font-black">
                   {jobTitle(job)}
                 </span>
-                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-black uppercase text-zinc-700">
-                  {job.status}
+                <span className={job.id === selectedJobId ? "shrink-0 rounded-full bg-white px-2 py-1 text-[11px] font-black uppercase text-black" : statusPillClass(job.status)}>
+                  {emphasizeFirst && index === 0 ? "next" : job.status}
                 </span>
               </span>
               <span
@@ -564,6 +589,17 @@ function Metric({ value, label }: { value: number; label: string }) {
       <p className="mt-1 text-xs font-semibold text-zinc-500">{label}</p>
     </div>
   );
+}
+
+function statusPillClass(status: LabelPrintJobStatus) {
+  const base =
+    "inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[11px] font-black uppercase";
+
+  if (status === "printed") return `${base} bg-emerald-100 text-emerald-950`;
+  if (status === "failed") return `${base} bg-red-100 text-red-800`;
+  if (status === "printing") return `${base} bg-sky-100 text-sky-950`;
+  if (status === "claimed") return `${base} bg-amber-100 text-amber-950`;
+  return `${base} bg-zinc-100 text-zinc-700`;
 }
 
 async function fetchJobs(status: LabelPrintJobStatus) {
@@ -607,123 +643,4 @@ function latestStartedAttempt(job: StationJob) {
 
 function jobTitle(job: StationJob) {
   return job.payload.label.personName || job.payload.label.title || "Cup label";
-}
-
-function safeFilePart(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48) || "label";
-}
-
-function renderLabelPng(payload: LabelPrintJobPayloadV1) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 591;
-  canvas.height = 354;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas export is not available in this browser.");
-
-  const label = payload.label;
-  const main = label.title || label.personName;
-  const body = label.bodyLines.join(" / ") || label.drink;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
-
-  ctx.strokeRect(42, 42, 80, 80);
-  drawCaptureMark(ctx, 82, 82, 48);
-
-  ctx.fillStyle = "#000000";
-  ctx.font = "900 39px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, main, 146, 48, 385, 42, 2);
-
-  ctx.font = "900 28px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, body, 42, 154, 508, 34, 3);
-
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(42, 282);
-  ctx.lineTo(550, 282);
-  ctx.stroke();
-
-  ctx.font = "900 17px Arial, Helvetica, sans-serif";
-  drawEllipsisText(ctx, label.footerStart, 42, 316, 185);
-  drawEllipsisText(ctx, label.footerEnd, 250, 316, 300);
-
-  const dataUrl = canvas.toDataURL("image/png");
-  const byteString = atob(dataUrl.split(",")[1] || "");
-  const bytes = new Uint8Array(byteString.length);
-  for (let index = 0; index < byteString.length; index += 1) {
-    bytes[index] = byteString.charCodeAt(index);
-  }
-  return URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
-}
-
-function drawWrappedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  maxLines: number,
-) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
-
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (ctx.measureText(next).width <= maxWidth || !line) {
-      line = next;
-      continue;
-    }
-    lines.push(line);
-    line = word;
-    if (lines.length === maxLines) break;
-  }
-  if (line && lines.length < maxLines) lines.push(line);
-
-  lines.slice(0, maxLines).forEach((value, index) => {
-    const isLast = index === maxLines - 1 && lines.length === maxLines;
-    drawEllipsisText(ctx, isLast ? value : value, x, y + index * lineHeight, maxWidth);
-  });
-}
-
-function drawEllipsisText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-) {
-  let value = text;
-  while (value && ctx.measureText(value).width > maxWidth) {
-    value = `${value.slice(0, -2)}...`;
-  }
-  ctx.fillText(value, x, y);
-}
-
-function drawCaptureMark(
-  ctx: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  size: number,
-) {
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(-Math.PI / 4);
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = "#000000";
-  ctx.beginPath();
-  ctx.moveTo(-size / 2, 0);
-  ctx.lineTo(size / 2, 0);
-  ctx.moveTo(0, -size / 2);
-  ctx.lineTo(0, size / 2);
-  ctx.stroke();
-  ctx.restore();
 }

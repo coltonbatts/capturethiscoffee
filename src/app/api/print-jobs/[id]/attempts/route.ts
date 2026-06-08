@@ -54,6 +54,16 @@ export async function POST(
 
     if (error) throw new ApiError(error.message, 400);
 
+    if (status === "started") {
+      const { error: jobError } = await supabase
+        .from("label_print_jobs")
+        .update({ status: "printing", error_message: null })
+        .eq("id", id)
+        .in("status", ["claimed", "printing"]);
+
+      if (jobError) throw new ApiError(jobError.message, 400);
+    }
+
     return Response.json({ attempt: data }, { status: 201 });
   } catch (error) {
     return jsonError(error);
