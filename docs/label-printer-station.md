@@ -154,18 +154,87 @@ the correct end-of-page/status handling for M2_H firmware `1.50`.
 
 ## USB glyph calibration print
 
-After the three-bar diagnostic succeeds, run one deterministic bitmap glyph
-label:
+Confirmed physical direct-USB glyph print success on 2026-06-08:
 
 ```bash
 npm run niimbot:print-glyph-test -- --yes /dev/cu.usbmodem101
 ```
 
-The glyph test uses the same full print-task path as
-`niimbot:print-diagnostic`, with density `1`, label type `1`, one 354 x 567
-pixel page, and explicit bitmap rows only. It prints a sparse border box,
-`TOP`, `LEFT`, and `USB OK` from built-in block glyphs. It does not render app
-labels, load fonts, or send more than one page.
+The M2_H requires the B1-style task for reliable physical printing from USB
+serial:
+
+- `SetDensity(1)`.
+- `SetLabelType(1)`.
+- B1 `PrintStart` with seven data bytes:
+  `00 01 00 00 00 00 00`.
+- `PageStart(1)`.
+- Six-byte `SetPageSize(rows=354, cols=567, copies=1)`.
+- Padded 354-row bitmap stream for the 567-pixel printhead.
+- Bitmap row black-pixel count segment in total mode: `[00, low, high]`.
+- `PageEnd(1)`.
+- Poll `PrintStatus` until it reports `page=1`, `printProgress=100`, and
+  `feedProgress=100`.
+- `PrintEnd(1)`.
+
+The earlier D110M_V4-style task and the early B1 task both accepted setup, row,
+`PageEnd`, and `PrintEnd` frames but did not physically print. The key
+breakthrough was not sending `PrintEnd` on the first `0xb3` status response.
+The first status response reported `page=0`; the printer only printed once the
+script waited for page completion.
+
+The successful run progressed as:
+
+```text
+PrintStatus: page=0 printProgress=0 feedProgress=0
+PrintStatus: page=0 printProgress=12 feedProgress=0
+PrintStatus: page=0 printProgress=42 feedProgress=0
+PrintStatus: page=0 printProgress=70 feedProgress=0
+PrintStatus: page=0 printProgress=98 feedProgress=0
+PrintStatus: page=1 printProgress=100 feedProgress=100
+PrintEnd -> f4 data=01
+```
+
+The glyph test prints a sparse border box, `TOP`, `LEFT`, and `USB OK` from
+built-in block glyphs. It does not render app labels, load fonts, or send more
+than one page.
+
+Safety controls:
+
+- Requires `--yes`.
+- Detects `/dev/cu.usbmodem*` if no port is supplied.
+- Uses bounded nonblocking write retries and preserves partial writes.
+- Paces B1 row writes conservatively and passively drains pending frames between
+  row batches.
+- Uses read timeouts for setup, page end, status, and abort cleanup.
+- Closes the serial handle in `finally`.
+- Sends cancel `0xda` if the script aborts after `PrintStart` and before
+  `PrintEnd`.
+- Writes a raw request/response transcript under `logs/`.
+
+Do not use `0xda` as a commit command. Observed behavior indicates it is
+`CancelPrint`; it only repositioned media when sent after `PrintEnd`.
+
+## USB layout bitmap print
+
+After glyph calibration confirms the M2_H row direction, x-axis direction, bit
+packing, and margins, run one deterministic layout bitmap:
+
+```bash
+npm run niimbot:print-layout-test -- --yes /dev/cu.usbmodem101
+```
+
+This uses the same full print-task path as the glyph test. It sends one 354 x
+567 pixel page, density `1`, label type `1`, explicit bitmap rows only, and a
+fixed `CAPTURE / TEST / TOP LEFT` block-glyph layout. It does not render live
+app data, load fonts, or send more than one page.
+
+The script logs:
+
+- Orientation marker assumptions: `TOP LEFT` near row 34, column 34.
+- Bitmap dimensions and non-empty row count.
+- Every setup, page end, status poll, print end, and cleanup frame.
+- Every non-empty bitmap row packet.
+- Serial handle cleanup in `finally`.
 
 Safety controls:
 
@@ -175,29 +244,11 @@ Safety controls:
 - Closes the serial handle in `finally`.
 - Sends cancel `0xda` if the script aborts after `PrintStart` and before
   `PrintEnd`.
-- Logs every setup/end packet and every non-empty bitmap row packet.
 
-Physical result: pending. Ask the operator to confirm whether the border and
-glyphs are readable, whether `TOP` appears at the expected label edge, and
-whether `LEFT` appears on the expected left side.
-
-Observed 2026-06-07 run against `/dev/cu.usbmodem101`:
-
-```text
-Heartbeat -> d9
-SetDensity -> 31
-SetLabelType -> 33
-PrintStart -> 02
-SetPageSize -> 14
-PageEnd -> b3 plus d3
-Next PrintStatus poll -> d3 plus e4
-Later PrintStatus poll -> b3
-PrintEnd -> f4
-```
-
-The command exited successfully and closed the serial handle. Physical
-orientation/readability still needs operator confirmation at the printer before
-using these bitmap assumptions for app-rendered labels.
+Physical result: pending. Ask the operator to confirm whether `CAPTURE`, `TEST`,
+and `TOP LEFT` are readable, whether the filled square appears at the physical
+top-left corner, and whether the small outlined square appears at the opposite
+corner.
 
 ## NIIMBOT app setup
 
