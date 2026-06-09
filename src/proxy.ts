@@ -60,7 +60,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && pathname === "/login") {
+  // Only admins get bounced off the login page. A signed-in non-admin stays
+  // here so the login page can explain that the account needs admin access,
+  // instead of silently looping back to a protected route.
+  if (user && isAdminAppUser(user) && pathname === "/login") {
     return NextResponse.redirect(new URL("/productions", request.url));
   }
 

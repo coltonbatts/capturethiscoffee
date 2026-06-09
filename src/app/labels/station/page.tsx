@@ -24,6 +24,7 @@ import {
   secondaryButtonClass,
 } from "@/components/ui";
 import { getAppAccessToken } from "@/lib/auth";
+import { describeDataError } from "@/lib/data";
 import type { CoffeeLabel } from "@/lib/label-copy";
 import type {
   LabelPrintAttemptStatus,
@@ -46,6 +47,8 @@ type StationJob = PrintJobRow & {
 
 const pollingMs = 3500;
 const isPrintStationYolo = process.env.NEXT_PUBLIC_PRINT_STATION_YOLO === "true";
+const connectionLostMessage =
+  "Connection lost — showing the last loaded queue. Retrying automatically.";
 
 export default function LabelStationPage() {
   const [queuedJobs, setQueuedJobs] = useState<StationJob[]>([]);
@@ -82,8 +85,10 @@ export default function LabelStationPage() {
       return;
     }
 
-    if (!silent) setBusy("refresh");
-    setError("");
+    if (!silent) {
+      setBusy("refresh");
+      setError("");
+    }
 
     try {
       const [queued, claimed, printing] = await Promise.all([
@@ -102,9 +107,19 @@ export default function LabelStationPage() {
         }
         return nextActive[0]?.id || nextQueued[0]?.id || "";
       });
+      // Clear only the connection banner — never an action error the
+      // operator is still reading.
+      setError((current) => (current === connectionLostMessage ? "" : current));
       if (!silent) setStatus("Queue refreshed.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load print jobs.");
+      if (silent) {
+        // Background poll failed: degrade gracefully. Keep the last known
+        // queue on screen and keep retrying instead of replacing it with a
+        // raw fetch error.
+        setError((current) => current || connectionLostMessage);
+      } else {
+        setError(describeDataError(err, "Could not load print jobs."));
+      }
     } finally {
       if (!silent) setBusy("");
     }
@@ -162,10 +177,17 @@ export default function LabelStationPage() {
         return;
       }
 
+      // Attempt rows are bookkeeping. If one fails to record (network blip),
+      // keep going — a stuck claimed batch with no print is worse than a
+      // missing attempt row. Completion works without an attempt id.
       const attempts: Record<string, string> = {};
       for (const job of claimedJobs) {
-        const attempt = await createAttempt(job.id, "started");
-        attempts[job.id] = attempt.id;
+        try {
+          const attempt = await createAttempt(job.id, "started");
+          attempts[job.id] = attempt.id;
+        } catch {
+          // Best effort — continue with the batch.
+        }
       }
 
       setBatchJobs(claimedJobs);
@@ -184,8 +206,15 @@ export default function LabelStationPage() {
     if (!selectedJob) return;
 
     await runJobAction("print", async () => {
-      const attempt = await createAttempt(selectedJob.id, "started");
-      setCurrentAttemptId(attempt.id);
+      // Best-effort attempt logging — never block the physical print on it.
+      let attemptId = "";
+      try {
+        const attempt = await createAttempt(selectedJob.id, "started");
+        attemptId = attempt.id;
+      } catch {
+        // Continue without an attempt row; completion works without one.
+      }
+      setCurrentAttemptId(attemptId);
       setPrintLabels([selectedJob.payload.label]);
       setStatus("Browser print dialog opening. Mark printed only after the physical label is correct.");
       window.setTimeout(() => window.print(), 80);
@@ -350,16 +379,21 @@ export default function LabelStationPage() {
       return;
     }
 
-    await apiFetch(`/api/print-jobs/${job.id}/attempts`, {
-      method: "POST",
-      body: JSON.stringify({
-        status: attemptStatus,
-        transport,
-        printer_name: printerName,
-        printer_identifier: "laptop-station",
-        error_message: message,
-      }),
-    });
+    try {
+      await apiFetch(`/api/print-jobs/${job.id}/attempts`, {
+        method: "POST",
+        body: JSON.stringify({
+          status: attemptStatus,
+          transport,
+          printer_name: printerName,
+          printer_identifier: "laptop-station",
+          error_message: message,
+        }),
+      });
+    } catch {
+      // Attempt rows are bookkeeping — never let them block releasing or
+      // failing a job, or it gets stuck claimed with no recovery path.
+    }
   }
 
   async function runJobAction(name: string, action: () => Promise<void>) {
@@ -368,7 +402,7 @@ export default function LabelStationPage() {
     try {
       await action();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Print station action failed.");
+      setError(describeDataError(err, "Print station action failed."));
     } finally {
       setBusy("");
     }

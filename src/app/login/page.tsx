@@ -1,9 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
-import { Field, inputClass, primaryButtonClass } from "@/components/ui";
+import {
+  Field,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { AUTH_ACCESS_MESSAGE } from "@/lib/auth";
 import {
@@ -28,11 +34,13 @@ export default function LoginPage() {
 
 function LoginForm() {
   const router = useRouter();
-  const { initialized, appUser, applyAppUser } = useAppAuth();
+  const { initialized, appUser, isAdmin, signOut, applyAppUser } = useAppAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(supabaseConfigError);
   const [submitting, setSubmitting] = useState(false);
+
+  const needsAdmin = isSupabaseConfigured && initialized && Boolean(appUser) && !isAdmin;
 
   useEffect(() => {
     if (supabaseConfigError) {
@@ -46,9 +54,18 @@ function LoginForm() {
 
     if (!initialized || !appUser) return;
 
+    // A signed-in account without admin metadata can't use the setup tools.
+    // Keep them on this page to explain why rather than redirecting into a
+    // route the proxy will just bounce back.
+    if (!isAdmin) return;
+
     router.replace(nextPath());
     router.refresh();
-  }, [appUser, initialized, router]);
+  }, [appUser, initialized, isAdmin, router]);
+
+  if (needsAdmin) {
+    return <NeedsAdminNotice email={appUser?.email || ""} onSignOut={signOut} />;
+  }
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -146,6 +163,58 @@ function LoginForm() {
               : "Continue"}
           </button>
         </form>
+      </section>
+    </main>
+  );
+}
+
+function NeedsAdminNotice({
+  email,
+  onSignOut,
+}: {
+  email: string;
+  onSignOut: () => Promise<void>;
+}) {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
+      <section className="w-full max-w-md overflow-hidden rounded-2xl border border-zinc-700 bg-white text-black shadow-xl">
+        <div className="flex items-center gap-3 border-b border-zinc-200 bg-black p-5 text-white">
+          <CaptureMark invert className="size-11 rounded-xl" />
+          <h1 className="text-xl font-semibold">Capture This</h1>
+        </div>
+        <div className="grid gap-4 p-5">
+          <div className="grid gap-2">
+            <h2 className="text-lg font-bold text-black">
+              This account needs admin access
+            </h2>
+            <p className="text-sm font-medium leading-6 text-zinc-600">
+              {email ? (
+                <>
+                  You&apos;re signed in as{" "}
+                  <span className="font-semibold text-black">{email}</span>, but
+                  this account can&apos;t manage clients, people, or productions
+                  yet.
+                </>
+              ) : (
+                "You're signed in, but this account can't manage clients, people, or productions yet."
+              )}
+            </p>
+            <p className="text-sm font-medium leading-6 text-zinc-600">
+              Ask an admin to turn on admin access for your account, then sign
+              out and back in.
+            </p>
+          </div>
+          <Link href="/productions" className={primaryButtonClass}>
+            Go to today&apos;s jobs
+          </Link>
+          <button
+            type="button"
+            onClick={() => void onSignOut()}
+            className={secondaryButtonClass}
+          >
+            Sign out
+          </button>
+        </div>
       </section>
     </main>
   );

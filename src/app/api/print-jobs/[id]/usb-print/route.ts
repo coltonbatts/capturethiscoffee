@@ -54,6 +54,14 @@ export async function POST(
     });
   } catch (error) {
     if (isExecError(error)) {
+      if (isTimeoutError(error)) {
+        return jsonError(
+          new ApiError(
+            "USB print timed out — check the printer's cable and power, then retry, or use browser print / PNG download instead.",
+            504,
+          ),
+        );
+      }
       return jsonError(
         new ApiError(
           trimOutput(error.stderr || error.stdout || error.message) ||
@@ -91,4 +99,12 @@ function isExecError(
   error: unknown,
 ): error is Error & { stdout?: string; stderr?: string } {
   return error instanceof Error && ("stdout" in error || "stderr" in error);
+}
+
+function isTimeoutError(error: Error & { killed?: boolean; code?: unknown }) {
+  return (
+    error.killed === true ||
+    error.code === "ETIMEDOUT" ||
+    /ETIMEDOUT/i.test(error.message)
+  );
 }

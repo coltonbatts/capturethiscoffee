@@ -32,8 +32,9 @@ After first sign-in, Luke should change his password when password reset is enab
 ## Supabase dashboard (your checklist)
 
 - [x] RLS migration `harden_rls_and_set_updated_at` applied on project `lehwhehssjfudyrtljus`
-- [x] Shared demo access migration applied so any signed-in Supabase user can
-  use the app. Luke does not need `app_metadata.staff`.
+- [x] Luke's Supabase user has admin access set in `app_metadata`:
+  `{"admin": true}`. This is required — the app proxy gates `/clients`,
+  `/people`, `/labels`, and `/productions/new` to admin users only.
 - [ ] Apply storage migration `add_person_photo_storage` and the shared demo
   access migration so authenticated users can upload to `person-photos`
 - [ ] **Disable public sign-ups**: Authentication → Providers → Email → turn off “Allow new users to sign up”
@@ -53,4 +54,4 @@ After first sign-in, Luke should change his password when password reset is enab
 
 1. Supabase → **Authentication → Users → Add user**
 2. Set a password and confirm the user if your Supabase project requires it.
-3. No app metadata is required for the current shared demo policy.
+3. Set `app_metadata` to `{"admin": true}` in Supabase → **Authentication → Users → Edit user → Raw app_metadata** so they can access all app routes.

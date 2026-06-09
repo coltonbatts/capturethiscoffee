@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loadCoffeeData, updateOrderRecord } from "@/lib/data";
+import { describeDataError, loadCoffeeData, updateOrderRecord } from "@/lib/data";
 import type { CoffeeData, Order } from "@/lib/types";
 
 type LoadState = "loading" | "ready" | "error";
 
 function errorMessage(err: unknown, fallback: string) {
-  return err instanceof Error ? err.message : fallback;
+  return describeDataError(err, fallback);
 }
 
 /**
@@ -43,8 +43,7 @@ export function useCoffeeStore() {
     dataRef.current = data;
   }, [data]);
 
-  useEffect(() => {
-    mounted.current = true;
+  const fetchData = useCallback(() => {
     loadCoffeeData()
       .then((next) => {
         if (!mounted.current) return;
@@ -56,11 +55,24 @@ export function useCoffeeStore() {
         setError(errorMessage(err, "Could not load this production."));
         setState("error");
       });
+  }, []);
+
+  // Retry path — on shoot day a single dropped request must never leave the
+  // dashboard permanently stuck on an error screen.
+  const reload = useCallback(() => {
+    setState("loading");
+    setError("");
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    mounted.current = true;
+    fetchData();
 
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [fetchData]);
 
   const markPending = useCallback((id: string, on: boolean) => {
     setPendingOrders((prev) => {
@@ -164,5 +176,6 @@ export function useCoffeeStore() {
     pendingOrders,
     patchOrder,
     run,
+    reload,
   };
 }

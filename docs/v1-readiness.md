@@ -21,9 +21,9 @@
   `production_roster`, `orders`, `printer_devices`, `label_print_jobs`, and
   `label_print_attempts`.
 - Confirm the `person-photos` storage bucket and policies exist.
-- Confirm Luke can sign in as a normal Supabase Auth user. The current shared
-  demo policy allows any authenticated Supabase user to use the app; no
-  `app_metadata.staff` flag is required.
+- Confirm Luke can sign in and that his Supabase user has `app_metadata` set to
+  `{"admin": true}`. The app proxy requires admin metadata to access `/clients`,
+  `/people`, `/labels`, and `/productions/new`.
 - Disable public email sign-ups unless intentionally onboarding more demo users.
 - Verify a new client, person, photo, production, roster edit, order edit, and
   label printed flag persist after refresh on a second device.

@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
-import { EmptyState, Panel } from "@/components/ui";
+import { EmptyState, Panel, secondaryButtonClass } from "@/components/ui";
 import { plainTextCoffeeSummary } from "@/lib/order-summary";
 import {
   addRosterPerson,
@@ -46,8 +46,17 @@ import { type RosterStateFilter, useRosterView } from "./use-roster-view";
 export default function ProductionDashboardPage() {
   const params = useParams<{ id: string }>();
   const { isAdmin } = useAppAuth();
-  const { data, state, error, setError, saving, pendingOrders, patchOrder, run } =
-    useCoffeeStore();
+  const {
+    data,
+    state,
+    error,
+    setError,
+    saving,
+    pendingOrders,
+    patchOrder,
+    run,
+    reload,
+  } = useCoffeeStore();
 
   // Filter state lives here so typing in search never re-renders the modals.
   const [query, setQuery] = useState("");
@@ -96,7 +105,15 @@ export default function ProductionDashboardPage() {
         {state === "loading" ? (
           <Panel className="h-40 animate-pulse bg-white/70 p-4" />
         ) : state === "error" ? (
-          <EmptyState title="Couldn't load this production" description={error} />
+          <EmptyState
+            title="Couldn't load this production"
+            description={error}
+            action={
+              <button type="button" onClick={reload} className={secondaryButtonClass}>
+                Try again
+              </button>
+            }
+          />
         ) : (
           <EmptyState title="Production not found" />
         )}

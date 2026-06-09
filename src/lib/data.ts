@@ -84,6 +84,21 @@ const present = (value: string | null | undefined) => value || "";
 
 export const isSupabaseBacked = isSupabaseConfigured;
 
+const networkErrorPattern =
+  /failed to fetch|network ?error|load failed|network request failed|fetch failed|err_internet_disconnected/i;
+
+/**
+ * Day-of error copy: turn raw fetch/Supabase transport failures into a message
+ * a runner can act on. Anything else passes through unchanged.
+ */
+export function describeDataError(err: unknown, fallback: string): string {
+  const message = err instanceof Error ? err.message : "";
+  if (message && networkErrorPattern.test(message)) {
+    return "No connection — check Wi-Fi or signal, then try again.";
+  }
+  return message || fallback;
+}
+
 async function getWritableSupabase(): Promise<SupabaseClient<Database> | null> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return null;
@@ -533,7 +548,11 @@ export async function updateOrderRecord(
 
     if (error) throwSupabaseWriteError(error);
     const updated = mapOrder(data);
-    await ensureLabelQueueForOrder(orderId);
+    try {
+      await ensureLabelQueueForOrder(orderId);
+    } catch {
+      // Label queue sync is optional — order save succeeds even if it fails
+    }
     return {
       ...current,
       orders: current.orders.map((order) =>
@@ -600,7 +619,11 @@ export async function saveOrderDraft(
     }
 
     const savedOrder = mapOrder(orderRow);
-    await ensureLabelQueueForOrder(orderId);
+    try {
+      await ensureLabelQueueForOrder(orderId);
+    } catch {
+      // Label queue sync is optional — order save succeeds even if it fails
+    }
     return {
       ...current,
       orders: current.orders.map((item) =>

@@ -6,7 +6,6 @@ import {
   FolderKanban,
   LogIn,
   LogOut,
-  Printer,
   UserRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -90,7 +89,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 md:py-7">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-black/95 px-3 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur md:hidden no-print">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-2">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
           {navItems.map((item) => (
             <NavItem
               key={item.href}
@@ -129,9 +128,10 @@ function pathnameForLogin() {
   return `${window.location.pathname}${window.location.search}`;
 }
 
+// Labels are reached inside a production's Labels tab and the operator-only
+// /labels station route, so they no longer need a top-level nav tab.
 const navItems = [
   { href: "/productions", icon: <FolderKanban size={18} />, label: "Jobs" },
-  { href: "/labels", icon: <Printer size={18} />, label: "Labels" },
   { href: "/people", icon: <ContactRound size={18} />, label: "People" },
   { href: "/clients", icon: <UserRound size={18} />, label: "Clients" },
 ];

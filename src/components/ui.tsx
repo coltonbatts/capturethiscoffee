@@ -34,6 +34,7 @@ export function StatusChip({ status }: { status: OrderStatus }) {
 
 export function Avatar({ person }: { person: Person }) {
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const storagePath = storagePathFromPersonPhotoUrl(person.photo_url);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export function Avatar({ person }: { person: Person }) {
 
     async function signPersonPhoto() {
       setSignedPhotoUrl(null);
+      setPhotoFailed(false);
 
       if (!storagePath || !isSupabaseConfigured) return;
 
@@ -61,7 +63,7 @@ export function Avatar({ person }: { person: Person }) {
     };
   }, [storagePath]);
 
-  if (person.photo_url) {
+  if (person.photo_url && !photoFailed) {
     const src = storagePath ? signedPhotoUrl : person.photo_url;
     if (!src) return <AvatarFallback person={person} />;
 
@@ -73,6 +75,9 @@ export function Avatar({ person }: { person: Person }) {
         className="size-12 rounded-full object-cover ring-1 ring-zinc-200"
         loading="lazy"
         referrerPolicy="no-referrer"
+        // Missing or unreachable photos degrade to initials instead of a
+        // broken-image icon on the runner dashboard.
+        onError={() => setPhotoFailed(true)}
       />
     );
   }

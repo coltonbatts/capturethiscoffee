@@ -13,7 +13,13 @@ import {
   Settings,
   UserRound,
 } from "lucide-react";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   PrintableLabel,
@@ -35,7 +41,12 @@ import {
   type LabelContentStyle,
   type LabelFieldOptions,
 } from "@/lib/label-copy";
-import { loadCoffeeData, resetDemoCoffeeData, updateOrderRecord } from "@/lib/data";
+import {
+  describeDataError,
+  loadCoffeeData,
+  resetDemoCoffeeData,
+  updateOrderRecord,
+} from "@/lib/data";
 import { formatDrink } from "@/lib/order-summary";
 import { probeNiimbotBluetooth } from "@/lib/niimbot-web-bluetooth";
 import {
@@ -47,6 +58,7 @@ import { buildLabelPrintJobPayload } from "@/lib/print-jobs";
 import { getAppAccessToken } from "@/lib/auth";
 import {
   getSupabaseBrowserClient,
+  isAuthDisabled,
   isSupabaseConfigured,
 } from "@/lib/supabase";
 import type { CoffeeData, Order, RosterOrder } from "@/lib/types";
@@ -117,11 +129,11 @@ export default function LabelWorkstationPage() {
   const [pendingAdvance, setPendingAdvance] = useState(false);
   const [calibration, setCalibration] = useState<PrintCalibration>(loadPrintCalibration);
 
-  useEffect(() => {
-    let mounted = true;
+  // Initial load with a retry path — a single dropped request on shoot day
+  // must not leave the workstation stuck; Manual labels keep working regardless.
+  const fetchShootData = useCallback(() => {
     loadCoffeeData()
       .then((next) => {
-        if (!mounted) return;
         setData(next);
         const firstProduction = preferredProduction(next);
         const client = next.clients.find(
@@ -143,14 +155,21 @@ export default function LabelWorkstationPage() {
           clientName: client?.name || "",
         }));
       })
-      .catch((err: Error) => {
-        if (mounted) setError(err.message);
+      .catch((err: unknown) => {
+        setError(
+          `${describeDataError(err, "Could not load shoot orders.")} Manual labels still work.`,
+        );
       });
-
-    return () => {
-      mounted = false;
-    };
   }, []);
+
+  const loadInitial = useCallback(() => {
+    setError("");
+    fetchShootData();
+  }, [fetchShootData]);
+
+  useEffect(() => {
+    fetchShootData();
+  }, [fetchShootData]);
 
   const production = data ? preferredProduction(data) : undefined;
   const rosterItems = useMemo(
@@ -230,11 +249,20 @@ export default function LabelWorkstationPage() {
 
     try {
       if (data && selectedItem?.order) {
-        const next = await updateOrderRecord(data, selectedItem.order.id, {
-          ...draftOrderPatch(draft),
-          status: selectedItem.order.status === "not_asked" ? "confirmed" : selectedItem.order.status,
-        });
-        setData(next);
+        // The physical label matters more than the database row on shoot day:
+        // if the save fails (network drop, Supabase error), warn and print
+        // anyway. The label content comes from local state either way.
+        try {
+          const next = await updateOrderRecord(data, selectedItem.order.id, {
+            ...draftOrderPatch(draft),
+            status: selectedItem.order.status === "not_asked" ? "confirmed" : selectedItem.order.status,
+          });
+          setData(next);
+        } catch (saveErr) {
+          setError(
+            `${describeDataError(saveErr, "Couldn't save the order.")} Printing anyway — the saved order wasn't updated.`,
+          );
+        }
         setPendingPrintedOrderId(selectedItem.order.id);
         setPendingAdvance(advance);
       }
@@ -247,7 +275,7 @@ export default function LabelWorkstationPage() {
 
       window.setTimeout(() => window.print(), 60);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not prepare that label.");
+      setError(describeDataError(err, "Could not prepare that label."));
     } finally {
       window.setTimeout(() => setPrinting(false), 300);
     }
@@ -323,7 +351,9 @@ export default function LabelWorkstationPage() {
         ...current,
       ].slice(0, 5));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not queue that label.");
+      setError(
+        `${describeDataError(err, "Could not queue that label.")} The queue is optional — browser print still works.`,
+      );
     } finally {
       setQueueing(false);
     }
@@ -362,7 +392,11 @@ export default function LabelWorkstationPage() {
         else chooseOrder("manual");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not mark label printed.");
+      // Keep pendingPrintedOrderId so the confirm button stays visible and the
+      // runner can retry once the connection comes back.
+      setError(
+        `${describeDataError(err, "Could not mark label printed.")} Tap the confirm button again to retry.`,
+      );
     } finally {
       window.setTimeout(() => setPrinting(false), 200);
     }
@@ -443,8 +477,18 @@ export default function LabelWorkstationPage() {
         </section>
 
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
-            {error}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+            <span className="min-w-0">{error}</span>
+            {!data ? (
+              <button
+                type="button"
+                onClick={loadInitial}
+                className={`${secondaryButtonClass} min-h-10 shrink-0 px-3`}
+              >
+                <RotateCcw size={16} aria-hidden="true" />
+                Try again
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -500,14 +544,16 @@ export default function LabelWorkstationPage() {
                   Adjust the selected order or type a one-off cup label.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={resetDemo}
-                className={`${secondaryButtonClass} min-w-11 px-3`}
-                aria-label="Reset demo data"
-              >
-                <RotateCcw size={18} aria-hidden="true" />
-              </button>
+              {isAuthDisabled ? (
+                <button
+                  type="button"
+                  onClick={resetDemo}
+                  className={`${secondaryButtonClass} min-w-11 px-3`}
+                  aria-label="Reset demo data"
+                >
+                  <RotateCcw size={18} aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
 
             <Field label="Person or cup">

@@ -28,6 +28,28 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Remote label queue from `/labels` to `/labels/station` when Supabase print-job migrations are applied
 - NIIMBOT M2_H direct USB serial diagnostics and early bitmap print tests
 
+## Day-of resilience
+
+The day-of flow is hardened so a single failure never strands the runner
+mid-shoot:
+
+- Network or Supabase failures surface a plain "No connection — check Wi-Fi or
+  signal, then try again" message instead of raw fetch errors, and the runner
+  dashboard and `/labels` workstation both have a **Try again** retry when the
+  initial load fails.
+- Status taps on the dashboard are optimistic: the change shows immediately,
+  and a failed save rolls back just that one order with an error toast.
+- On `/labels`, a failed order save warns but **still prints the physical
+  label** from local state; queue failures remind you the remote queue is
+  optional and browser print keeps working.
+- `/labels/station` keeps showing the last loaded queue when a background
+  refresh fails ("Connection lost… retrying automatically"), print-attempt
+  bookkeeping is best-effort and can never block printing or releasing a job,
+  and a USB print timeout returns a clear message pointing at the browser
+  print / PNG fallbacks.
+- Missing or unreachable people photos fall back to initials instead of a
+  broken image.
+
 ## Run locally
 
 ```bash
@@ -42,7 +64,17 @@ The app redirects `/` to `/productions`.
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL editor. This enables RLS and allows only authenticated users to read and write app tables.
+2. Run `supabase/schema.sql` and then every file in `supabase/migrations` (in
+   filename order) in the Supabase SQL editor. These enable RLS with the access
+   model the app actually relies on:
+   - **Active event-day data is publicly readable** — anyone with the link can
+     read active productions, people, and orders.
+   - **Setup writes require an admin** — creating or editing clients, people,
+     productions, rosters, and new order drafts requires a signed-in user with
+     `app_metadata.admin = true` (`staff`/`role` are also accepted; see
+     `src/lib/auth.ts`).
+   - **Live order updates stay open** — runners can update an existing order's
+     status and drink on an active production without signing in.
 3. Copy `.env.example` to `.env.local`.
 4. Fill in:
 
@@ -69,7 +101,7 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `label_print_attempts`
 - Supabase Storage bucket `person-photos` for authenticated people photos
 
-When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset control is available on the productions list in that mode only (no in-app demo messaging).
+When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset-to-seed control lives on the labels screen and only rewrites this browser's local data — in Supabase-backed mode it does not touch shared data and should be treated as a local-only affordance.
 
 If auth is enabled or unset but either Supabase env var is missing, the app shows a configuration error instead of falling back to localStorage.
 
@@ -79,11 +111,19 @@ Create demo users in the Supabase dashboard:
 
 1. Go to **Authentication > Users**.
 2. Click **Add user**.
-3. Enter a demo user email, for example `runner@capturethis.com` or owner `luke@capturethis.com`.
+3. Enter a demo user email, for example owner `luke@capturethis.com`.
 4. Set a password and confirm the user if your project requires it.
-5. No app metadata is required for the private demo. Any authenticated user can read and write the shared Supabase data.
+5. Set the user's **Raw app_metadata** to `{"admin": true}`. This is required for
+   anyone who needs to create or edit clients, people, productions, rosters, or
+   new order drafts — including Luke. Without it, the user can sign in and read
+   data but every setup write fails with "Admin access required," and the app
+   proxy redirects them away from `/people`, `/clients`, `/labels`, and
+   `/productions/new`.
 
-Anonymous users cannot read or write app tables (RLS). Keep public sign-ups disabled if only invited demo users should access production data.
+Runners do not need an account for the day-of flow: anonymous visitors can read
+active productions and update an existing order's status and drink on an active
+production. They cannot create records or reach the admin/setup routes above.
+Keep public sign-ups disabled so only invited admins can be created.
 
 Then open `/login`, sign in, and continue to `/productions`.
 
@@ -128,7 +168,16 @@ Use the detected `/dev/cu.usbmodem*` path if it changes after reconnecting the
 printer. The glyph test is still a deterministic calibration step; confirm
 physical orientation and readability before moving to app-rendered labels.
 
-The app does not use the service role key. The browser uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; table and photo upload access are controlled by Supabase Auth plus RLS/storage policies.
+The browser never uses the service role key — it uses only
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and table/photo
+access is controlled by Supabase Auth plus RLS/storage policies.
+
+The trusted **label-queue** server routes are the exception: when an order is
+saved, the app reconciles its label print job through a server route that uses
+`SUPABASE_SERVICE_ROLE_KEY` (see `src/lib/supabase-server.ts`). This key is
+required only for the remote `/labels` → `/labels/station` queue. If it is unset,
+label-queue reconciliation is skipped and **order saves still succeed** — the
+queue handoff is simply unavailable until the key is configured.
 
 ## Seed data
 
