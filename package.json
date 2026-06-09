@@ -14,7 +14,8 @@
     "niimbot:probe": "node scripts/niimbot-probe.mjs",
     "niimbot:print-diagnostic": "node scripts/niimbot-print-diagnostic.mjs",
     "niimbot:status": "node scripts/niimbot-status.mjs",
-    "niimbot:test-print": "node scripts/niimbot-test-print.mjs"
+    "niimbot:test-print": "node scripts/niimbot-test-print.mjs",
+    "label:serial-worker": "node scripts/label-serial-worker.mjs"
   },
   "dependencies": {
     "@mmote/niimblue-node": "0.0.12",

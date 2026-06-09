@@ -52,6 +52,8 @@ export default function LabelStationPage() {
   const [selectedJobId, setSelectedJobId] = useState("");
   const [printLabels, setPrintLabels] = useState<CoffeeLabel[]>([]);
   const [currentAttemptId, setCurrentAttemptId] = useState("");
+  const [batchJobs, setBatchJobs] = useState<StationJob[]>([]);
+  const [batchAttemptIds, setBatchAttemptIds] = useState<Record<string, string>>({});
   const [transport, setTransport] =
     useState<Extract<LabelPrintTransport, "laptop_browser" | "laptop_usb">>(
       "laptop_browser",
@@ -71,6 +73,7 @@ export default function LabelStationPage() {
   );
   const queuedCount = queuedJobs.length;
   const activeCount = activeJobs.length;
+  const batchCount = batchJobs.length;
 
   const refreshJobs = useCallback(async ({ silent = false } = {}) => {
     if (!isSupabaseConfigured) {
@@ -137,6 +140,45 @@ export default function LabelStationPage() {
     });
   }
 
+  async function printCurrentQueue() {
+    if (!queuedJobs.length) {
+      setStatus("No queued labels ready.");
+      return;
+    }
+
+    await runJobAction("batch-print", async () => {
+      const body = await apiFetch<{ jobs: StationJob[] }>(
+        "/api/print-jobs/batch/claim",
+        {
+          method: "POST",
+          body: JSON.stringify({ job_ids: queuedJobs.map((job) => job.id) }),
+        },
+      );
+      const claimedJobs = sortJobs(body.jobs || []);
+      if (!claimedJobs.length) {
+        setStatus("No queued labels were available to claim.");
+        await refreshJobs({ silent: true });
+        return;
+      }
+
+      const attempts: Record<string, string> = {};
+      for (const job of claimedJobs) {
+        const attempt = await createAttempt(job.id, "started");
+        attempts[job.id] = attempt.id;
+      }
+
+      setBatchJobs(claimedJobs);
+      setBatchAttemptIds(attempts);
+      setSelectedJobId(claimedJobs[0]?.id || "");
+      setPrintLabels(claimedJobs.map((job) => job.payload.label));
+      setStatus(
+        `Printing ${claimedJobs.length} ${claimedJobs.length === 1 ? "label" : "labels"}. Mark batch printed only after the physical labels are correct.`,
+      );
+      window.setTimeout(() => window.print(), 80);
+      await refreshJobs({ silent: true });
+    });
+  }
+
   async function printViaBrowser() {
     if (!selectedJob) return;
 
@@ -146,6 +188,24 @@ export default function LabelStationPage() {
       setPrintLabels([selectedJob.payload.label]);
       setStatus("Browser print dialog opening. Mark printed only after the physical label is correct.");
       window.setTimeout(() => window.print(), 80);
+      await refreshJobs({ silent: true });
+    });
+  }
+
+  async function printViaUsb() {
+    if (!selectedJob) return;
+
+    await runJobAction("usb-print", async () => {
+      const body = await apiFetch<{ ok: boolean; stdout?: string; stderr?: string }>(
+        `/api/print-jobs/${selectedJob.id}/usb-print`,
+        { method: "POST" },
+      );
+      setCurrentAttemptId("");
+      setStatus(
+        body.ok
+          ? `Printed ${jobTitle(selectedJob)} through local USB serial.`
+          : "USB print finished without a success response.",
+      );
       await refreshJobs({ silent: true });
     });
   }
@@ -162,6 +222,52 @@ export default function LabelStationPage() {
       });
       setCurrentAttemptId("");
       setStatus(`Marked ${jobTitle(selectedJob)} printed.`);
+      await refreshJobs({ silent: true });
+    });
+  }
+
+  async function markBatchPrinted() {
+    if (!batchJobs.length) return;
+
+    await runJobAction("batch-complete", async () => {
+      await apiFetch("/api/print-jobs/batch/complete", {
+        method: "POST",
+        body: JSON.stringify({
+          jobs: batchJobs.map((job) => ({
+            id: job.id,
+            attempt_id: batchAttemptIds[job.id] || null,
+          })),
+        }),
+      });
+      setStatus(
+        `Marked ${batchJobs.length} ${batchJobs.length === 1 ? "label" : "labels"} printed.`,
+      );
+      setBatchJobs([]);
+      setBatchAttemptIds({});
+      setCurrentAttemptId("");
+      await refreshJobs({ silent: true });
+    });
+  }
+
+  async function releaseBatch() {
+    if (!batchJobs.length) return;
+
+    await runJobAction("batch-release", async () => {
+      for (const job of batchJobs) {
+        await apiFetch(`/api/print-jobs/${job.id}/fail`, {
+          method: "POST",
+          body: JSON.stringify({
+            release: true,
+            error_message: "Batch released by laptop station.",
+          }),
+        });
+      }
+      setStatus(
+        `Released ${batchJobs.length} ${batchJobs.length === 1 ? "label" : "labels"} back to the queue.`,
+      );
+      setBatchJobs([]);
+      setBatchAttemptIds({});
+      setCurrentAttemptId("");
       await refreshJobs({ silent: true });
     });
   }
@@ -284,8 +390,7 @@ export default function LabelStationPage() {
               Laptop print station
             </h1>
             <p className="mt-1 text-sm font-medium text-zinc-600">
-              Claim queued labels, print through the browser or export a 300 DPI PNG
-              for the NIIMBOT laptop app, then record the physical result.
+              Print every queued label in one batch, then record the physical result.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center">
@@ -327,12 +432,52 @@ export default function LabelStationPage() {
 
             <button
               type="button"
-              onClick={() => void claimNext()}
-              className={`${primaryButtonClass} min-h-12`}
+              onClick={() => void printCurrentQueue()}
+              className={`${primaryButtonClass} min-h-14 text-base`}
               disabled={!queuedJobs.length || Boolean(busy)}
             >
               <Printer size={18} aria-hidden="true" />
-              Claim next queued
+              Print current queue
+            </button>
+            <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-black text-zinc-800">
+              {queuedCount} {queuedCount === 1 ? "label" : "labels"} ready
+            </p>
+
+            {batchJobs.length ? (
+              <div className="grid gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3">
+                <p className="text-sm font-black text-sky-950">
+                  Batch in progress: {batchCount}{" "}
+                  {batchCount === 1 ? "label" : "labels"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void markBatchPrinted()}
+                  disabled={Boolean(busy)}
+                  className={`${primaryButtonClass} min-h-12`}
+                >
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                  Mark batch printed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void releaseBatch()}
+                  disabled={Boolean(busy)}
+                  className={`${secondaryButtonClass} min-h-11`}
+                >
+                  <RotateCcw size={18} aria-hidden="true" />
+                  Release batch
+                </button>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void claimNext()}
+              className={`${secondaryButtonClass} min-h-11`}
+              disabled={!queuedJobs.length || Boolean(busy)}
+            >
+              <Printer size={18} aria-hidden="true" />
+              Claim one
             </button>
 
             <JobList
@@ -351,14 +496,24 @@ export default function LabelStationPage() {
 
           <Panel className="grid gap-4 p-4">
             <div>
-              <h2 className="text-lg font-bold">Current label</h2>
+              <h2 className="text-lg font-bold">
+                {batchJobs.length ? "Current batch" : "Current label"}
+              </h2>
               <p className="mt-1 text-sm text-zinc-600">
-                50mm x 30mm snapshot from the stored print-job payload.
+                {batchJobs.length
+                  ? `${batchJobs.length} labels claimed for this print batch.`
+                  : "50mm x 30mm snapshot from the stored print-job payload."}
               </p>
             </div>
 
             <div className="grid min-h-[280px] place-items-center overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(135deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_48%,#eef2f7_52%,#f8fafc_52%)] p-3 sm:min-h-[340px] sm:p-4">
-              {selectedJob ? (
+              {batchJobs.length ? (
+                <div className="grid max-h-[420px] w-full grid-cols-1 gap-3 overflow-auto p-1 sm:grid-cols-2">
+                  {batchJobs.map((job) => (
+                    <ScreenLabel key={job.id} label={job.payload.label} />
+                  ))}
+                </div>
+              ) : selectedJob ? (
                 <ScreenLabel label={selectedJob.payload.label} />
               ) : (
                 <p className="text-sm font-semibold text-zinc-500">
@@ -372,9 +527,18 @@ export default function LabelStationPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
+                    onClick={() => void printViaUsb()}
+                    disabled={Boolean(busy)}
+                    className={`${primaryButtonClass} col-span-2 min-h-14 text-base`}
+                  >
+                    <Printer size={19} aria-hidden="true" />
+                    Print via USB
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void printViaBrowser()}
                     disabled={Boolean(busy) || selectedJob.status === "queued"}
-                    className={`${primaryButtonClass} col-span-2 min-h-14 text-base sm:col-span-1`}
+                    className={`${secondaryButtonClass} min-h-14`}
                   >
                     <Printer size={19} aria-hidden="true" />
                     Print via browser
@@ -418,7 +582,7 @@ export default function LabelStationPage() {
                 </div>
                 {selectedJob.status === "queued" ? (
                   <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
-                    Claim this job before printing or marking it complete.
+                    USB print will claim this job automatically. Claim it first for browser print or manual completion.
                   </p>
                 ) : null}
               </div>
@@ -429,7 +593,7 @@ export default function LabelStationPage() {
             <div>
               <h2 className="text-lg font-bold">Print path</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                Use the working NIIMBOT desktop app or OS driver first.
+                USB serial is primary on the printer laptop; browser print remains the fallback.
               </p>
             </div>
 
@@ -463,7 +627,8 @@ export default function LabelStationPage() {
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
               <p className="font-bold text-black">Operational path</p>
               <ul className="mt-1 list-disc space-y-1 pl-5">
-                <li>Browser: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
+                <li>USB: uses the local M2_H serial worker and stored print-job payload.</li>
+                <li>Browser fallback: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
                 <li>PNG: import the downloaded 591 x 354 image into the NIIMBOT laptop app.</li>
                 <li>Only mark printed after the physical M2 label is correct.</li>
               </ul>
@@ -564,6 +729,14 @@ function Metric({ value, label }: { value: number; label: string }) {
       <p className="mt-1 text-xs font-semibold text-zinc-500">{label}</p>
     </div>
   );
+}
+
+function sortJobs(jobs: StationJob[]) {
+  return [...jobs].sort((a, b) => {
+    const priority = b.priority - a.priority;
+    if (priority) return priority;
+    return a.created_at.localeCompare(b.created_at);
+  });
 }
 
 async function fetchJobs(status: LabelPrintJobStatus) {

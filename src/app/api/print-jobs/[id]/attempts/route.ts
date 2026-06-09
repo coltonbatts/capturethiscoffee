@@ -34,6 +34,16 @@ export async function POST(
       throw new ApiError("Invalid print transport.", 400);
     }
 
+    if (status === "started") {
+      const { error: jobError } = await supabase
+        .from("label_print_jobs")
+        .update({ status: "printing", error_message: null })
+        .eq("id", id)
+        .eq("status", "claimed");
+
+      if (jobError) throw new ApiError(jobError.message, 400);
+    }
+
     const { data, error } = await supabase
       .from("label_print_attempts")
       .insert({

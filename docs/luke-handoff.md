@@ -1,4 +1,4 @@
-# Luke staff login — handoff
+# Luke login handoff
 
 Send Luke this information (use a secure channel; do not post the password in Slack threads long-term).
 
@@ -26,18 +26,31 @@ After first sign-in, Luke should change his password when password reset is enab
 3. Open **Clients** and **People** — lists should load without errors.
 4. Create a test client and person; upload a photo; refresh — data and the photo should persist.
 5. Create a production and open its runner page.
+6. Open **Labels** (`/labels`), queue or print a test label, then verify the
+   print-station laptop can open `/labels/station` and see queued jobs.
 
 ## Supabase dashboard (your checklist)
 
 - [x] RLS migration `harden_rls_and_set_updated_at` applied on project `lehwhehssjfudyrtljus`
-- [x] Luke user created with `app_metadata.staff: true`
-- [ ] Apply storage migration `add_person_photo_storage` so staff can upload to `person-photos`
+- [x] Shared demo access migration applied so any signed-in Supabase user can
+  use the app. Luke does not need `app_metadata.staff`.
+- [ ] Apply storage migration `add_person_photo_storage` and the shared demo
+  access migration so authenticated users can upload to `person-photos`
 - [ ] **Disable public sign-ups**: Authentication → Providers → Email → turn off “Allow new users to sign up”
+- [ ] Apply the label print-job migration before using the remote `/labels` to
+  `/labels/station` queue.
+
+## Print station
+
+- `/labels` is the normal label screen and browser-print fallback.
+- `/labels/station` is the remote queue station for a laptop on the printer.
+- The supported live-demo physical print path is still browser print or PNG
+  import into the NIIMBOT desktop app.
+- M2_H USB serial scripts are promising diagnostics, not a productized Luke
+  workflow yet.
 
 ## Add more staff later
 
 1. Supabase → **Authentication → Users → Add user**
-2. Set **App Metadata** to `{ "staff": true }`
-3. Or run `node scripts/create-staff-user.mjs` with `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
-
-Users must sign out and back in after `app_metadata` changes.
+2. Set a password and confirm the user if your Supabase project requires it.
+3. No app metadata is required for the current shared demo policy.

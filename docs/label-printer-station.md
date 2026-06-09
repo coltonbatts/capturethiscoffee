@@ -6,7 +6,16 @@ Last setup check: 2026-06-07 on macOS.
 
 - Install dependencies with `npm install`.
 - Create `.env.local` from `.env.example`.
-- For a local-only print station without Supabase credentials, use:
+- For the live-demo queue station, set Supabase auth values and leave
+  `NEXT_PUBLIC_ENABLE_AUTH` unset or `true`:
+
+```bash
+NEXT_PUBLIC_ENABLE_AUTH=true
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+- For local-only browser print without the remote queue, use:
 
 ```bash
 NEXT_PUBLIC_ENABLE_AUTH=false
@@ -18,7 +27,13 @@ SUPABASE_SERVICE_ROLE_KEY=
 - Start the workstation with `npm run dev`.
 - Main print workstation: `http://localhost:3000/labels`.
 - Queue station: `http://localhost:3000/labels/station`.
-- Queue mode requires Supabase auth and the label print-job migration.
+- On the printer laptop, the queue station can print the selected queued,
+  claimed, or printing label through local NIIMBOT M2_H USB serial with
+  **Print via USB**. Browser print and PNG download remain available as
+  fallbacks.
+- Queue mode requires Supabase auth and the label print-job migration. Any
+  signed-in Supabase app user can use the station under the current shared-demo
+  policy; no `app_metadata.staff` flag is required.
 
 ## macOS printer detection
 
@@ -47,8 +62,9 @@ The same MacBook does see the directly connected printer over USB serial:
 - Serial device: `/dev/cu.usbmodem1101`
 - Read-only identity response: `#10001:V01.01,M2_H-I409130491,1*7C#`
 
-This means the practical direct-print path is a local USB serial bridge, not
-CUPS or browser print.
+This means CUPS is not the confirmed path for this M2_H. The supported
+printer-laptop path is local USB serial from the queue station. Browser print
+and PNG import remain fallback paths.
 
 ## USB serial probe
 
@@ -214,6 +230,59 @@ Safety controls:
 Do not use `0xda` as a commit command. Observed behavior indicates it is
 `CancelPrint`; it only repositioned media when sent after `PrintEnd`.
 
+Reconfirmed on 2026-06-09 from this printer laptop:
+
+- Printer port: `/dev/cu.usbmodem83201`
+- Identity: `M2_H-I409130491`
+- Firmware: `1.50`
+- Physical result: sparse border, `TOP`, `LEFT`, and `USB OK` printed exactly
+  as expected.
+- Transcript:
+  `logs/niimbot-glyph-2026-06-09T14-33-00-207Z.log`
+
+## USB queue station print
+
+Start the app on the printer laptop:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000/labels/station`, sign in, select a queued label,
+and click **Print via USB**. The station calls the local one-shot serial worker
+through `/api/print-jobs/:id/usb-print`.
+
+The USB path:
+
+- Reuses the stored `label_print_jobs.payload.label` (`CoffeeLabel`) instead of
+  rebuilding label copy from live order data.
+- Claims a queued selected job automatically, or uses an already claimed or
+  printing selected job.
+- Creates the print attempt with `transport: laptop_usb`.
+- Marks the job complete only after the worker finishes the M2_H B1 print task
+  and `PrintEnd` succeeds.
+- Fails the job if the serial print path throws. Use browser print or PNG
+  download as the fallback if the local USB device is unavailable.
+
+Optional environment overrides:
+
+```bash
+LABEL_SERIAL_PORT=/dev/cu.usbmodem101
+LABEL_SERIAL_API_BASE_URL=http://localhost:3000
+```
+
+For a terminal-only one-shot of the next queued label:
+
+```bash
+LABEL_SERIAL_AUTH_TOKEN=<supabase access token> npm run label:serial-worker -- --once
+```
+
+For a terminal-only one-shot of a specific selected job:
+
+```bash
+LABEL_SERIAL_AUTH_TOKEN=<supabase access token> npm run label:serial-worker -- --once --job-id=<label_print_job_id>
+```
+
 ## USB layout bitmap print
 
 After glyph calibration confirms the M2_H row direction, x-axis direction, bit
@@ -248,7 +317,8 @@ Safety controls:
 Physical result: pending. Ask the operator to confirm whether `CAPTURE`, `TEST`,
 and `TOP LEFT` are readable, whether the filled square appears at the physical
 top-left corner, and whether the small outlined square appears at the opposite
-corner.
+corner. Do not use this as the live-demo print path until that validation is
+complete and the station can print real app-label content reliably.
 
 ## NIIMBOT app setup
 
@@ -301,10 +371,11 @@ The station PNG is rendered at 591 x 354 pixels, matching 50mm x 30mm at
 
 ## Confirmed working profile
 
-Pending physical print validation on this laptop. USB serial detection is
-confirmed, but direct printing is not implemented yet. Fill in the print fields
-after both the NIIMBOT app test label and Capture This Coffee test label print
-correctly:
+Browser print and PNG import remain the supported live-demo profile. USB serial
+detection plus diagnostic bitmap/glyph printing are confirmed progress for the
+M2_H, but real app-label direct USB printing is not yet productized. Fill in the
+print fields after both the NIIMBOT app test label and Capture This Coffee
+browser/station test label print correctly:
 
 - Printer model: NIIMBOT M2_H
 - Connection: USB-C serial, `/dev/cu.usbmodem1101`

@@ -3,6 +3,7 @@
 import { formatDrink } from "./order-summary";
 import {
   normalizeSupabaseWriteError,
+  getAppAccessToken,
   requireFreshAppSession,
 } from "./auth";
 import {
@@ -530,6 +531,7 @@ export async function updateOrderRecord(
 
     if (error) throwSupabaseWriteError(error);
     const updated = mapOrder(data);
+    await ensureLabelQueueForOrder(supabase, orderId);
     return {
       ...current,
       orders: current.orders.map((order) =>
@@ -594,6 +596,7 @@ export async function saveOrderDraft(
     }
 
     const savedOrder = mapOrder(orderRow);
+    await ensureLabelQueueForOrder(supabase, orderId);
     return {
       ...current,
       orders: current.orders.map((item) =>
@@ -616,6 +619,28 @@ export async function saveOrderDraft(
   };
   saveCoffeeData(next);
   return next;
+}
+
+async function ensureLabelQueueForOrder(
+  supabase: SupabaseClient<Database>,
+  orderId: string,
+) {
+  const token = await getAppAccessToken(supabase);
+  const response = await fetch(`/api/orders/${orderId}/label-queue`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof body.error === "string"
+        ? body.error
+        : "Could not update the label queue.",
+    );
+  }
 }
 
 export async function createPersonAndAddToRoster(

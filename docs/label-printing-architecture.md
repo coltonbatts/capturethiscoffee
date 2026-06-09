@@ -2,13 +2,14 @@
 
 ## Recommendation
 
-Use both a laptop print station and a native iOS companion app, but build them in
-that order.
+Use the web app's label queue plus a laptop print station now. Keep the native
+iOS companion as a later path if direct mobile printing is still needed.
 
-The laptop print station is the lowest-risk operational path because the current
-Next.js app already renders 50mm x 30mm labels and can use the OS print dialog
-with NIIMBOT's desktop driver over USB. It should remain the production fallback
-even if iPhone printing works later.
+The laptop print station is the lowest-risk operational path because `/labels`
+can create queued print jobs and `/labels/station` can claim them, render 50mm x
+30mm labels, and use the OS print dialog or PNG import with NIIMBOT's desktop
+app. It should remain the production fallback even if direct USB or iPhone
+printing works later.
 
 The iOS companion should be native Swift first, not a pure web wrapper. iOS
 Safari and iOS Chrome cannot use Web Bluetooth for the M2, and iOS does not
@@ -27,13 +28,16 @@ connection state, rasterization if required by the SDK, and print execution.
 
 ```mermaid
 flowchart LR
-  Staff["Staff iPhone"] --> IOS["Native iOS companion"]
-  IOS --> Auth["Supabase Auth"]
-  IOS --> API["coffee.capturethis.com API"]
+  Staff["Staff phone/browser"] --> Web["Next.js web app /labels"]
+  Staff --> Auth["Supabase Auth"]
+  Web --> API["coffee.capturethis.com API"]
   API --> DB["Supabase tables"]
-  Web["Next.js web app"] --> API
-  Station["Laptop print station"] --> Web
-  Station --> Driver["NIIMBOT desktop driver / USB"]
+  Station["Laptop print station /labels/station"] --> API
+  Station --> Driver["Browser print or PNG import"]
+  Worker["Local USB serial worker spike"] --> API
+  Worker --> USB["M2_H USB serial"]
+  IOS["Future native iOS companion"] --> Auth
+  IOS --> API
   IOS --> BLE["CoreBluetooth or NIIMBOT iOS SDK"]
   BLE --> M2["NIIMBOT M2"]
 ```
@@ -134,9 +138,10 @@ Add these tables before the iOS MVP:
   - `last_seen_at timestamptz`
   - `metadata jsonb default '{}'::jsonb`
 
-RLS should follow the existing staff policy: only authenticated users with
-`app_metadata.staff = true` can read or write these tables. Longer term, add
-roles for admin versus field staff, but do not block the MVP on that.
+RLS currently follows the shared private-demo policy: any signed-in Supabase Auth
+user can read and write app and print-job data; anonymous users cannot. Longer
+term, add roles for admin versus field staff, but do not block the demo handoff
+on `app_metadata.staff`.
 
 ## Next.js repo changes
 
@@ -146,41 +151,39 @@ APIs, and are not cached by default for mutating methods.
 
 Concrete changes:
 
-- Add shared print-job types:
+- Print-job pieces now exist in the app:
   - `src/lib/print-jobs.ts`
-  - exports `LabelPrintJobPayloadV1`, `LabelPrintJobStatus`,
-    `buildLabelPrintJobPayload(...)`, and validation helpers.
-
-- Add server-side Supabase helpers:
   - `src/lib/supabase-server.ts`
-  - validates the caller's Supabase bearer token and staff metadata.
-
-- Add API endpoints:
-  - `GET /api/productions/[id]/label-queue`
-    - returns printable orders plus latest print job/attempt status.
+  - `src/lib/label-queue.ts`
   - `POST /api/print-jobs`
     - creates one or more jobs from order IDs or a manual label payload.
   - `GET /api/print-jobs?status=queued&production_id=...`
-    - used by iOS and laptop station queue views.
+    - used by station queue views and local worker spikes.
   - `POST /api/print-jobs/[id]/claim`
-    - marks a job claimed by the current staff user/device.
+    - marks a queued job claimed by the current authenticated user.
+  - `POST /api/print-jobs/batch/claim`
+    - claims a batch for station printing.
   - `POST /api/print-jobs/[id]/attempts`
     - records started/succeeded/failed attempts.
   - `POST /api/print-jobs/[id]/complete`
     - marks job printed and sets `orders.label_printed = true` in one
-      transaction or RPC.
+      RPC.
+  - `POST /api/print-jobs/batch/complete`
+    - completes a station batch after physical confirmation.
   - `POST /api/print-jobs/[id]/fail`
     - releases or fails a job with a printer-facing error.
-  - Optional: `GET /api/print-jobs/[id]/render.png`
-    - returns a canonical 300 DPI PNG if the iOS SDK accepts image printing.
 
-- Update `/labels`:
-  - keep browser print as-is;
-  - add a queue mode that creates `label_print_jobs`;
-  - add a laptop station view that claims queued jobs and prints with the
-    existing CSS/driver path;
-  - stop using `orders.label_printed` as the only print state. Treat it as a
-    denormalized final success flag.
+Current routes:
+
+- `/labels`
+  - keeps browser print as the fallback;
+  - creates remote `label_print_jobs` for the station;
+  - still treats `orders.label_printed` as the final visible success flag.
+- `/labels/station`
+  - claims queued jobs;
+  - prints through the browser path or downloads a 300 DPI PNG for NIIMBOT app
+    import;
+  - records attempts and completes/fails jobs after operator confirmation.
 
 - Add migration:
   - `supabase/migrations/YYYYMMDDHHMMSS_add_label_print_jobs.sql`
@@ -198,7 +201,7 @@ Build a small Swift app with four screens:
 1. Sign in
    - Supabase email/password or magic link.
    - Store the session in Keychain.
-   - Require `app_metadata.staff = true`.
+   - Match the web app's current auth policy: signed-in Supabase users only.
 
 2. Production queue
    - List active productions and open label jobs.
@@ -247,12 +250,23 @@ model differences.
 
 ### Phase 1: Print job queue in the web app
 
-- Add `label_print_jobs`, `label_print_attempts`, and `printer_devices`.
-- Add route handlers for create/claim/complete/fail.
-- Update `/labels` so staff can queue labels and a laptop station can claim and
-  print them.
-- This lets iPhones create or manage jobs in the web app even before iPhones can
+- `label_print_jobs`, `label_print_attempts`, `printer_devices`, and route
+  handlers for create/claim/attempt/complete/fail now exist.
+- `/labels` can queue labels and `/labels/station` can claim and print or
+  download them.
+- This lets phones create/manage jobs in the web app even before phones can
   physically print.
+
+### Phase 1b: M2_H USB serial spike
+
+- USB serial probing and status checks are confirmed on macOS via
+  `/dev/cu.usbmodem*`.
+- Diagnostic bitmap and glyph tests have physically printed from the M2_H using
+  a B1-style task sequence and progress polling.
+- `scripts/label-serial-worker.mjs` can poll the print-job API as a local worker
+  spike, but direct app-label USB printing should still be treated as
+  non-productized until layout rendering, failure handling, and operator setup
+  are validated end to end.
 
 ### Phase 2: iOS proof of print
 
@@ -280,11 +294,11 @@ model differences.
 
 The MVP should be:
 
-1. Keep laptop browser/USB printing as the guaranteed path.
-2. Add a print-job queue and attempts audit trail.
+1. Keep laptop browser printing and PNG import as the guaranteed path.
+2. Use the print-job queue and attempts audit trail for remote station work.
 3. Let phones create/claim/manage jobs through the existing web app or a tiny
    iOS shell.
-4. In parallel, run a Swift proof-of-print using the NIIMBOT SDK if available.
+4. In parallel, continue the M2_H USB serial and Swift proof-of-print spikes.
 
 This delivers useful field workflow immediately while isolating the uncertain
 Bluetooth/protocol problem.
@@ -295,6 +309,8 @@ Bluetooth/protocol problem.
 - Do not assume AirPrint works with the M2.
 - Do not build a full custom BLE print protocol before exhausting NIIMBOT SDK
   access.
+- Do not present M2_H USB serial scripts as the supported demo print path until
+  they can print real app labels reliably with documented setup/recovery.
 - Do not make the iOS app the system of record for print state.
 - Do not mark orders printed before a real print success or explicit staff
   confirmation.
@@ -346,5 +362,5 @@ End-to-end:
 - Confirm `label_print_jobs.status = printed`, one succeeded attempt exists, and
   `orders.label_printed = true`.
 - Repeat from iOS once native printing is available.
-- Verify two staff devices cannot both complete the same job.
+- Verify two authenticated devices cannot both complete the same job.
 - Verify a failed job can be retried without losing the original payload.

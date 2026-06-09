@@ -25,7 +25,8 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Copyable coffee summaries and browser-printable M2 label cards
-- NIIMBOT M2_H direct USB serial diagnostics for read-only probes and low-density bitmap print tests
+- Remote label queue from `/labels` to `/labels/station` when Supabase print-job migrations are applied
+- NIIMBOT M2_H direct USB serial diagnostics and early bitmap print tests
 
 ## Run locally
 
@@ -63,6 +64,9 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `productions`
 - `production_roster`
 - `orders`
+- `printer_devices`
+- `label_print_jobs`
+- `label_print_attempts`
 - Supabase Storage bucket `person-photos` for authenticated people photos
 
 When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset control is available on the productions list in that mode only (no in-app demo messaging).
@@ -87,11 +91,24 @@ Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
 
+## Label printing
+
+The supported live-demo path is browser print. Use `/labels` to print selected
+orders directly, or queue selected labels to the remote station at
+`/labels/station` when Supabase auth and the print-job migration are enabled.
+The station can claim queued jobs, render the same 50mm x 30mm labels, print
+through the browser dialog, download a PNG for the NIIMBOT desktop app, and mark
+jobs printed only after physical confirmation.
+
+The M2_H USB serial scripts show real progress toward direct local printing, but
+they are diagnostics/spikes rather than the productized demo path. Do not promise
+automatic USB printing to demo staff yet.
+
 ## NIIMBOT direct USB diagnostics
 
-The current confirmed direct-print path for the NIIMBOT M2_H is local USB
-serial, not CUPS. The tested printer exposes `/dev/cu.usbmodem*` on macOS with
-USB vendor/product `0x3513 / 0x0002`.
+The current confirmed low-level NIIMBOT M2_H path is local USB serial, not CUPS.
+The tested printer exposes `/dev/cu.usbmodem*` on macOS with USB vendor/product
+`0x3513 / 0x0002`.
 
 Safe status checks:
 
