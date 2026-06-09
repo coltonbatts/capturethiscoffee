@@ -77,7 +77,7 @@ export default function NewProductionPage() {
   }
 
   return (
-    <AppShell title="New production">
+    <AppShell title="New production" requireAuth>
       <form onSubmit={submit} className="grid gap-4">
         <Panel className="grid gap-4 p-5">
           <Field label="Production name">

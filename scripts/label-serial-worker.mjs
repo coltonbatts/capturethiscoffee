@@ -2,6 +2,7 @@
 
 import { promises as fs } from "node:fs";
 import { createRequire } from "node:module";
+import sharp from "sharp";
 
 const require = createRequire(import.meta.url);
 const { NiimbotHeadlessSerialClient } = require("@mmote/niimblue-node");
@@ -34,6 +35,7 @@ const pageTimeoutMs = 20_000;
 const cliPort = process.argv.find((arg) => arg.startsWith("/dev/"));
 const jobIdArg = process.argv.find((arg) => arg.startsWith("--job-id="));
 const requestedJobId = jobIdArg?.split("=")[1]?.trim() || "";
+const renderSample = process.argv.includes("--render-sample");
 const debug = process.argv.includes("--debug");
 const once = process.argv.includes("--once");
 const dryRun = process.argv.includes("--dry-run");
@@ -46,7 +48,10 @@ const apiBaseUrl = stripTrailingSlash(
 const bearerToken =
   env("LABEL_SERIAL_AUTH_TOKEN") ||
   env("PRINT_STATION_AUTH_TOKEN") ||
-  env("SUPABASE_ACCESS_TOKEN");
+  env("SUPABASE_ACCESS_TOKEN") ||
+  (env("PRINT_STATION_YOLO") === "true" || env("LABEL_SERIAL_YOLO") === "true"
+    ? "print-station-yolo"
+    : "");
 const requestedPort = cliPort || env("LABEL_SERIAL_PORT") || env("NIIMBOT_PORT");
 
 main().catch((error) => {
@@ -55,6 +60,11 @@ main().catch((error) => {
 });
 
 async function main() {
+  if (renderSample) {
+    await renderSampleRaster();
+    return;
+  }
+
   if (!bearerToken) {
     throw new Error(
       "Missing LABEL_SERIAL_AUTH_TOKEN. Use a Supabase access token for an authenticated app user.",
@@ -119,7 +129,7 @@ async function processNextJob(portInfo) {
   console.log(`Started attempt ${attempt.id}`);
 
   try {
-    const encodedImage = renderJobRaster(claimed);
+    const encodedImage = await renderJobRaster(claimed);
     console.log(`Rendered job ${claimed.id}: ${encodedImage.rowsData.length} row runs.`);
 
     if (dryRun) {
@@ -249,11 +259,121 @@ async function printRaster(port, encodedImage) {
   }
 }
 
-function renderJobRaster(job) {
+async function renderJobRaster(job) {
   const payload = job.payload;
   if (!isPayloadV1(payload)) throw new Error("Print job payload is not label payload v1.");
 
-  const label = payload.label;
+  try {
+    return await renderJobRasterFromSvg(payload.label);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`SVG raster render failed; falling back to block raster: ${message}`);
+    return renderJobRasterFallback(payload.label);
+  }
+}
+
+async function renderJobRasterFromSvg(label) {
+  const svg = renderLabelSvg(label);
+  const image = await sharp(Buffer.from(svg))
+    .resize(printheadColumns, labelRows, {
+      fit: "fill",
+      kernel: "lanczos3",
+    })
+    .grayscale()
+    .threshold(178)
+    .raw()
+    .toBuffer();
+  const rows = Array.from({ length: labelRows }, (_, row) => {
+    const rowBytes = Buffer.alloc(bytesPerRow, 0x00);
+    for (let column = 0; column < printheadColumns; column += 1) {
+      const pixel = image[row * printheadColumns + column];
+      if (pixel < 128) setPixel(rowBytes, column);
+    }
+    return rowBytes;
+  });
+
+  return encodeRows(rows);
+}
+
+function renderLabelSvg(label) {
+  const main = label.title || label.personName || "Cup label";
+  const body = label.bodyLines?.join(" / ") || label.drink || "";
+  const titleLines = wrapSvgText(main, 25, 2);
+  const bodyLines = wrapSvgText(body, 35, 3);
+  const footerStart = ellipsize(label.footerStart || label.group || "", 21);
+  const footerEnd = ellipsize(label.footerEnd || label.productionClient || "", 36);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${sourceColumns}" height="${labelRows}" viewBox="0 0 ${sourceColumns} ${labelRows}">
+  <rect width="100%" height="100%" fill="#fff"/>
+  <rect x="18" y="18" width="555" height="318" fill="none" stroke="#000" stroke-width="4"/>
+  <rect x="42" y="42" width="80" height="80" fill="none" stroke="#000" stroke-width="4"/>
+  <g transform="translate(82 82) rotate(-45)" stroke="#000" stroke-width="7" stroke-linecap="square">
+    <path d="M-24 0H24M0 -24V24"/>
+  </g>
+  <text x="146" y="48" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="900" dominant-baseline="hanging">${svgTspans(titleLines, 146, 48, 42)}</text>
+  <text x="42" y="154" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" dominant-baseline="hanging">${svgTspans(bodyLines, 42, 154, 34)}</text>
+  <line x1="42" y1="282" x2="550" y2="282" stroke="#000" stroke-width="3"/>
+  <text x="42" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerStart)}</text>
+  <text x="250" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerEnd)}</text>
+</svg>`;
+}
+
+function svgTspans(lines, x, y, lineHeight) {
+  return lines
+    .map((line, index) => {
+      return `<tspan x="${x}" y="${y + lineHeight * index}">${escapeXml(line)}</tspan>`;
+    })
+    .join("");
+}
+
+function wrapSvgText(text, maxChars, maxLines) {
+  const words = normalizeReadableText(text).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length <= maxChars || !line) {
+      line = next;
+      continue;
+    }
+    lines.push(line);
+    line = word;
+    if (lines.length >= maxLines) break;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+
+  return lines.slice(0, maxLines).map((value, index) => {
+    const limit = index === maxLines - 1 ? maxChars - 1 : maxChars;
+    return ellipsize(value, limit);
+  });
+}
+
+function ellipsize(text, maxChars) {
+  const value = normalizeReadableText(text);
+  if (value.length <= maxChars) return value;
+  if (maxChars <= 3) return value.slice(0, maxChars);
+  return `${value.slice(0, maxChars - 3).trimEnd()}...`;
+}
+
+function normalizeReadableText(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7e]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderJobRasterFallback(label) {
   const main = label.title || label.personName || "Cup label";
   const body = label.bodyLines?.join(" / ") || label.drink || "";
   const footerStart = label.footerStart || label.group || "";
@@ -270,6 +390,43 @@ function renderJobRaster(job) {
   drawTextLine(rows, footerEnd, sx(250), 302, sx(300), 3);
 
   return encodeRows(rows);
+}
+
+async function renderSampleRaster() {
+  await fs.mkdir("logs", { recursive: true });
+  const label = {
+    id: "sample-usb-label",
+    personName: "Jordan Lee",
+    drink: "Iced oat latte, half sweet, cinnamon, no whip",
+    group: "Camera Team",
+    productionClient: "Capture This Coffee / Day 03",
+    notesStatus: "Confirmed",
+    title: "Jordan Lee",
+    bodyLines: ["Iced oat latte, half sweet", "Cinnamon, no whip"],
+    footerStart: "Camera Team",
+    footerEnd: "Capture This Coffee / Day 03",
+    lines: [
+      "Jordan Lee",
+      "Iced oat latte, half sweet",
+      "Cinnamon, no whip",
+      "Camera Team - Capture This Coffee / Day 03",
+    ],
+  };
+  const svg = renderLabelSvg(label);
+  const pngPath = `logs/label-serial-sample-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+  await sharp(Buffer.from(svg))
+    .resize(printheadColumns, labelRows, { fit: "fill", kernel: "lanczos3" })
+    .png()
+    .toFile(pngPath);
+  const encoded = await renderJobRasterFromSvg(label);
+  const blackPixels = encoded.rowsData.reduce(
+    (total, row) => total + row.blackPixelsCount * row.repeat,
+    0,
+  );
+  console.log(`Rendered sample label preview: ${pngPath}`);
+  console.log(
+    `Raster check: ${printheadColumns} x ${labelRows}, ${encoded.rowsData.length} row runs, ${blackPixels} black pixels.`,
+  );
 }
 
 function encodeRows(rows) {

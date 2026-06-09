@@ -45,6 +45,7 @@ type StationJob = PrintJobRow & {
 };
 
 const pollingMs = 3500;
+const isPrintStationYolo = process.env.NEXT_PUBLIC_PRINT_STATION_YOLO === "true";
 
 export default function LabelStationPage() {
   const [queuedJobs, setQueuedJobs] = useState<StationJob[]>([]);
@@ -76,7 +77,7 @@ export default function LabelStationPage() {
   const batchCount = batchJobs.length;
 
   const refreshJobs = useCallback(async ({ silent = false } = {}) => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured && !isPrintStationYolo) {
       setError("Print station requires Supabase auth.");
       return;
     }
@@ -376,6 +377,7 @@ export default function LabelStationPage() {
   return (
     <AppShell
       title="Label print station"
+      requireAuth
       actions={
         <Link href="/labels" className={`${secondaryButtonClass} min-h-10 border-zinc-700 bg-zinc-950 px-3 text-white hover:bg-zinc-800`}>
           <ExternalLink size={16} aria-hidden="true" />
@@ -750,7 +752,7 @@ async function apiFetch<T = unknown>(path: string, init: RequestInit = {}) {
   const response = await fetch(path, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init.body ? { "Content-Type": "application/json" } : {}),
       ...init.headers,
     },
@@ -767,6 +769,7 @@ async function apiFetch<T = unknown>(path: string, init: RequestInit = {}) {
 }
 
 async function getAccessToken() {
+  if (isPrintStationYolo) return "";
   const supabase = getSupabaseBrowserClient();
   if (!supabase) throw new Error("Supabase auth is not available.");
   return getAppAccessToken(supabase);

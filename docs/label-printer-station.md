@@ -34,6 +34,21 @@ SUPABASE_SERVICE_ROLE_KEY=
 - Queue mode requires Supabase auth and the label print-job migration. Any
   signed-in Supabase app user can use the station under the current shared-demo
   policy; no `app_metadata.staff` flag is required.
+- For lowest-friction printer-laptop operation, enable local print-station YOLO
+  mode. This bypasses auth only for `/api/print-jobs*` station routes and uses
+  the server-only Supabase service role key internally:
+
+```bash
+PRINT_STATION_YOLO=true
+NEXT_PUBLIC_PRINT_STATION_YOLO=true
+SUPABASE_SERVICE_ROLE_KEY=
+PRINT_STATION_USER_ID=
+LABEL_SERIAL_PORT=/dev/cu.usbmodem83201
+```
+
+`PRINT_STATION_USER_ID` is optional if the Supabase project has at least one
+Auth user; when omitted, the station records attempts under the first Auth user.
+Do not prefix `SUPABASE_SERVICE_ROLE_KEY` with `NEXT_PUBLIC_`.
 
 ## macOS printer detection
 

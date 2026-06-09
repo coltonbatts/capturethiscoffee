@@ -2,7 +2,7 @@ import {
   ApiError,
   jsonError,
   parsePositiveInteger,
-  requireAuthenticatedBearerToken,
+  requirePrintStationAccess,
 } from "@/lib/supabase-server";
 
 type ClaimBatchBody = {
@@ -12,7 +12,7 @@ type ClaimBatchBody = {
 
 export async function POST(request: Request) {
   try {
-    const { supabase, user } = await requireAuthenticatedBearerToken(request);
+    const { supabase, user } = await requirePrintStationAccess(request);
     const body = (await safeJson(request)) as ClaimBatchBody;
     const requestedIds = Array.isArray(body.job_ids)
       ? body.job_ids.filter((id): id is string => typeof id === "string" && Boolean(id))

@@ -15,7 +15,8 @@
     "niimbot:print-diagnostic": "node scripts/niimbot-print-diagnostic.mjs",
     "niimbot:status": "node scripts/niimbot-status.mjs",
     "niimbot:test-print": "node scripts/niimbot-test-print.mjs",
-    "label:serial-worker": "node scripts/label-serial-worker.mjs"
+    "label:serial-worker": "node scripts/label-serial-worker.mjs",
+    "label:serial-sample": "node scripts/label-serial-worker.mjs --render-sample"
   },
   "dependencies": {
     "@mmote/niimblue-node": "0.0.12",
@@ -24,7 +25,8 @@
     "lucide-react": "^0.562.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

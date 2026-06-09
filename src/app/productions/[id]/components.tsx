@@ -120,7 +120,7 @@ export function RunnerHeader({
   detail: string;
   runnerName?: string;
   progress: { percent: number; responded: number; total: number };
-  onEditDetails: () => void;
+  onEditDetails?: () => void;
 }) {
   return (
     <Panel className="mb-4 overflow-hidden no-print">
@@ -132,14 +132,16 @@ export function RunnerHeader({
           ) : null}
         </div>
         <div className="flex shrink-0 items-start gap-2">
-          <button
-            type="button"
-            onClick={onEditDetails}
-            className="grid size-11 place-items-center rounded-xl border border-zinc-300 bg-white text-black hover:bg-zinc-50"
-            aria-label="Edit production details"
-          >
-            <Pencil size={18} aria-hidden="true" />
-          </button>
+          {onEditDetails ? (
+            <button
+              type="button"
+              onClick={onEditDetails}
+              className="grid size-11 place-items-center rounded-xl border border-zinc-300 bg-white text-black hover:bg-zinc-50"
+              aria-label="Edit production details"
+            >
+              <Pencil size={18} aria-hidden="true" />
+            </button>
+          ) : null}
           <div className="rounded-xl bg-black px-3 py-2 text-right text-sm font-medium text-white">
             <span className="block text-2xl leading-none">{progress.percent}%</span>
             <span className="text-xs text-zinc-300">
@@ -287,6 +289,7 @@ export function FilterBar({
 export function PeopleTab({
   items,
   pendingOrders,
+  canManageSetup,
   onAdvance,
   onEdit,
   onEditRoster,
@@ -295,6 +298,7 @@ export function PeopleTab({
 }: {
   items: RosterOrder[];
   pendingOrders: ReadonlySet<string>;
+  canManageSetup: boolean;
   onAdvance: (order: Order, status: OrderStatus) => void;
   onEdit: (order: Order) => void;
   onEditRoster: (item: RosterOrder) => void;
@@ -314,6 +318,7 @@ export function PeopleTab({
           key={item.roster.id}
           item={item}
           pending={item.order ? pendingOrders.has(item.order.id) : false}
+          canManageSetup={canManageSetup}
           onAdvance={onAdvance}
           onEdit={onEdit}
           onEditRoster={onEditRoster}
@@ -328,6 +333,7 @@ export function PeopleTab({
 function RosterCard({
   item,
   pending,
+  canManageSetup,
   onAdvance,
   onEdit,
   onEditRoster,
@@ -336,6 +342,7 @@ function RosterCard({
 }: {
   item: RosterOrder;
   pending: boolean;
+  canManageSetup: boolean;
   onAdvance: (order: Order, status: OrderStatus) => void;
   onEdit: (order: Order) => void;
   onEditRoster: (item: RosterOrder) => void;
@@ -388,30 +395,35 @@ function RosterCard({
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
             No order record yet. Remove and re-add this person to rebuild it.
           </p>
-          <button
-            type="button"
-            onClick={() => onEditRoster(item)}
-            className={secondaryButtonClass}
-          >
-            <Pencil size={18} aria-hidden="true" />
-            Edit roster
-          </button>
+          {canManageSetup ? (
+            <button
+              type="button"
+              onClick={() => onEditRoster(item)}
+              className={secondaryButtonClass}
+            >
+              <Pencil size={18} aria-hidden="true" />
+              Edit roster
+            </button>
+          ) : null}
         </div>
       ) : !onSet ? (
         <div className="mt-3 grid gap-2">
-          <button
-            type="button"
-            onClick={() => onEditRoster(item)}
-            className={secondaryButtonClass}
-          >
-            <Pencil size={18} aria-hidden="true" />
-            Edit roster
-          </button>
+          {canManageSetup ? (
+            <button
+              type="button"
+              onClick={() => onEditRoster(item)}
+              className={secondaryButtonClass}
+            >
+              <Pencil size={18} aria-hidden="true" />
+              Edit roster
+            </button>
+          ) : null}
         </div>
       ) : (
         <CardActions
           order={order}
           pending={pending}
+          canManageSetup={canManageSetup}
           onAdvance={onAdvance}
           onEdit={onEdit}
           onEditRoster={() => onEditRoster(item)}
@@ -426,6 +438,7 @@ function RosterCard({
 function CardActions({
   order,
   pending,
+  canManageSetup,
   onAdvance,
   onEdit,
   onEditRoster,
@@ -434,6 +447,7 @@ function CardActions({
 }: {
   order: Order;
   pending: boolean;
+  canManageSetup: boolean;
   onAdvance: (order: Order, status: OrderStatus) => void;
   onEdit: (order: Order) => void;
   onEditRoster: () => void;
@@ -496,16 +510,18 @@ function CardActions({
         <Pencil size={18} aria-hidden="true" />
         Edit order
       </button>
-      <button
-        type="button"
-        onClick={onEditRoster}
-        className={`${secondaryButtonClass} ${
-          isTerminal || order.status === "picked_up" ? "" : "col-span-2"
-        }`}
-      >
-        <Pencil size={18} aria-hidden="true" />
-        Edit roster
-      </button>
+      {canManageSetup ? (
+        <button
+          type="button"
+          onClick={onEditRoster}
+          className={`${secondaryButtonClass} ${
+            isTerminal || order.status === "picked_up" ? "" : "col-span-2"
+          }`}
+        >
+          <Pencil size={18} aria-hidden="true" />
+          Edit roster
+        </button>
+      ) : null}
     </div>
   );
 }

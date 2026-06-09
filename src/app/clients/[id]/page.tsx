@@ -120,7 +120,7 @@ export default function ClientDetailPage() {
 
   if (data && !client) {
     return (
-      <AppShell title="Client not found">
+      <AppShell title="Client not found" requireAuth>
         <EmptyState
           title="Client not found"
           action={
@@ -137,6 +137,7 @@ export default function ClientDetailPage() {
   return (
     <AppShell
       title={client?.name || "Client"}
+      requireAuth
       actions={
         <Link href="/clients" className={secondaryButtonClass}>
           <ArrowLeft size={18} aria-hidden="true" />

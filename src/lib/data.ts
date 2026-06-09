@@ -3,7 +3,6 @@
 import { formatDrink } from "./order-summary";
 import {
   normalizeSupabaseWriteError,
-  getAppAccessToken,
   requireFreshAppSession,
 } from "./auth";
 import {
@@ -93,6 +92,10 @@ async function getWritableSupabase(): Promise<SupabaseClient<Database> | null> {
   return supabase;
 }
 
+function getPublicSupabase(): SupabaseClient<Database> | null {
+  return getSupabaseBrowserClient();
+}
+
 function throwSupabaseWriteError(error: { message: string }): never {
   throw normalizeSupabaseWriteError(error.message);
 }
@@ -100,8 +103,6 @@ function throwSupabaseWriteError(error: { message: string }): never {
 export async function loadCoffeeData(): Promise<CoffeeData> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return loadLocalCoffeeData();
-
-  await requireFreshAppSession(supabase);
 
   const [
     clientsResult,
@@ -124,7 +125,6 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
   const error = [
     clientsResult.error,
     peopleResult.error,
-    clientPeopleResult.error,
     productionsResult.error,
     rosterResult.error,
     ordersResult.error,
@@ -135,7 +135,9 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
   return {
     clients: (clientsResult.data || []).map(mapClient),
     people: (peopleResult.data || []).map(mapPerson),
-    client_people: (clientPeopleResult.data || []).map(mapClientPerson),
+    client_people: clientPeopleResult.error
+      ? []
+      : (clientPeopleResult.data || []).map(mapClientPerson),
     productions: (productionsResult.data || []).map(mapProduction),
     production_roster: (rosterResult.data || []).map(mapRoster),
     orders: (ordersResult.data || []).map(mapOrder),
@@ -520,7 +522,7 @@ export async function updateOrderRecord(
 ): Promise<CoffeeData> {
   const updated_at = new Date().toISOString();
 
-  const supabase = await getWritableSupabase();
+  const supabase = getPublicSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("orders")
@@ -531,7 +533,7 @@ export async function updateOrderRecord(
 
     if (error) throwSupabaseWriteError(error);
     const updated = mapOrder(data);
-    await ensureLabelQueueForOrder(supabase, orderId);
+    await ensureLabelQueueForOrder(orderId);
     return {
       ...current,
       orders: current.orders.map((order) =>
@@ -568,7 +570,9 @@ export async function saveOrderDraft(
   const usualOrder = formatDrink(updatedOrder);
   const shouldUpdateUsual = options.updateUsualOrder && usualOrder !== "No order";
 
-  const supabase = await getWritableSupabase();
+  const supabase = shouldUpdateUsual
+    ? await getWritableSupabase()
+    : getPublicSupabase();
   if (supabase) {
     const { data: orderRow, error: orderError } = await supabase
       .from("orders")
@@ -596,7 +600,7 @@ export async function saveOrderDraft(
     }
 
     const savedOrder = mapOrder(orderRow);
-    await ensureLabelQueueForOrder(supabase, orderId);
+    await ensureLabelQueueForOrder(orderId);
     return {
       ...current,
       orders: current.orders.map((item) =>
@@ -621,16 +625,9 @@ export async function saveOrderDraft(
   return next;
 }
 
-async function ensureLabelQueueForOrder(
-  supabase: SupabaseClient<Database>,
-  orderId: string,
-) {
-  const token = await getAppAccessToken(supabase);
+async function ensureLabelQueueForOrder(orderId: string) {
   const response = await fetch(`/api/orders/${orderId}/label-queue`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {

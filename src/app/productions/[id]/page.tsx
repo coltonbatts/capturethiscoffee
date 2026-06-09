@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { useAppAuth } from "@/components/app-auth-provider";
 import { EmptyState, Panel } from "@/components/ui";
 import { plainTextCoffeeSummary } from "@/lib/order-summary";
 import {
@@ -44,6 +45,7 @@ import { type RosterStateFilter, useRosterView } from "./use-roster-view";
 
 export default function ProductionDashboardPage() {
   const params = useParams<{ id: string }>();
+  const { isAdmin } = useAppAuth();
   const { data, state, error, setError, saving, pendingOrders, patchOrder, run } =
     useCoffeeStore();
 
@@ -238,7 +240,7 @@ export default function ProductionDashboardPage() {
         detail={detail}
         runnerName={production.runner_name}
         progress={view.progress}
-        onEditDetails={openProductionEditor}
+        onEditDetails={isAdmin ? openProductionEditor : undefined}
       />
 
       <RunMetrics
@@ -265,6 +267,7 @@ export default function ProductionDashboardPage() {
         <PeopleTab
           items={view.filteredItems}
           pendingOrders={pendingOrders}
+          canManageSetup={isAdmin}
           onAdvance={advance}
           onEdit={openOrderEditor}
           onEditRoster={openRosterEditor}
@@ -300,21 +303,23 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
 
-      <AddToRoster
-        people={view.peopleNotOnRoster.map((person) => ({
-          id: person.id,
-          label: `${person.name} - ${person.department || person.type}`,
-        }))}
-        value={personToAdd}
-        onChange={setPersonToAdd}
-        onAdd={addPerson}
-        onNewGuest={() => {
-          setQuickAddForm(emptyPersonForm("guest"));
-          setLinkQuickAddToClient(false);
-          setQuickAddOpen(true);
-        }}
-        saving={saving}
-      />
+      {isAdmin ? (
+        <AddToRoster
+          people={view.peopleNotOnRoster.map((person) => ({
+            id: person.id,
+            label: `${person.name} - ${person.department || person.type}`,
+          }))}
+          value={personToAdd}
+          onChange={setPersonToAdd}
+          onAdd={addPerson}
+          onNewGuest={() => {
+            setQuickAddForm(emptyPersonForm("guest"));
+            setLinkQuickAddToClient(false);
+            setQuickAddOpen(true);
+          }}
+          saving={saving}
+        />
+      ) : null}
 
       {editingId ? (
         <OrderEditor
@@ -328,7 +333,7 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
 
-      {editingRosterId ? (
+      {editingRosterId && isAdmin ? (
         <RosterEditor
           draft={rosterDraft}
           onChange={setRosterDraft}
@@ -339,7 +344,7 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
 
-      {editingProduction ? (
+      {editingProduction && isAdmin ? (
         <ProductionDetailsEditor
           draft={productionDraft}
           onChange={setProductionDraft}
@@ -349,7 +354,7 @@ export default function ProductionDashboardPage() {
         />
       ) : null}
 
-      {quickAddOpen ? (
+      {quickAddOpen && isAdmin ? (
         <QuickAddPersonSheet
           form={quickAddForm}
           clientName={client?.name || "this client"}

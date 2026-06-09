@@ -101,7 +101,7 @@ export default function PeoplePage() {
   }
 
   return (
-    <AppShell title="People">
+    <AppShell title="People" requireAuth>
       <form onSubmit={addPerson} className="mb-4 grid gap-3">
         <Panel className="grid gap-3 p-4">
           <PersonFields form={form} onChange={setForm} showActive={false} />

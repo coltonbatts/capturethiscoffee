@@ -1,11 +1,11 @@
-import { ApiError, jsonError, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
+import { ApiError, jsonError, requirePrintStationAccess } from "@/lib/supabase-server";
 
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { supabase } = await requireAuthenticatedBearerToken(request);
+    const { supabase } = await requirePrintStationAccess(request);
     const { id } = await context.params;
     const body = await safeJson(request);
 

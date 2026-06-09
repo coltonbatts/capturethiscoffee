@@ -11,12 +11,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getVerifiedAppUser } from "@/lib/auth";
+import { getVerifiedAppUser, isAdminAppUser } from "@/lib/auth";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type AppAuthContextValue = {
   initialized: boolean;
   appUser: User | null;
+  isAdmin: boolean;
   email: string;
   applyAppUser: (user: User | null) => void;
   signOut: () => Promise<void>;
@@ -109,6 +110,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
     () => ({
       initialized,
       appUser,
+      isAdmin: isAdminAppUser(appUser),
       email,
       applyAppUser,
       signOut,

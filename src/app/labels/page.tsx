@@ -419,7 +419,7 @@ export default function LabelWorkstationPage() {
   }
 
   return (
-    <AppShell title="Label workstation">
+    <AppShell title="Label workstation" requireAuth>
       <div className="grid gap-4 no-print">
         <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-black/5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>

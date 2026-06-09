@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Plus, RotateCcw, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { useAppAuth } from "@/components/app-auth-provider";
 import {
   EmptyState,
   Panel,
@@ -20,6 +21,7 @@ import {
 import type { CoffeeData } from "@/lib/types";
 
 export default function ProductionsPage() {
+  const { isAdmin } = useAppAuth();
   const [data, setData] = useState<CoffeeData | null>(null);
   const [error, setError] = useState("");
 
@@ -70,10 +72,12 @@ export default function ProductionsPage() {
     <AppShell
       title="Jobs"
       actions={
-        <Link href="/productions/new" className={primaryButtonClass}>
-          <Plus size={18} aria-hidden="true" />
-          New
-        </Link>
+        isAdmin ? (
+          <Link href="/productions/new" className={primaryButtonClass}>
+            <Plus size={18} aria-hidden="true" />
+            New
+          </Link>
+        ) : null
       }
     >
       {!isSupabaseBacked ? (
@@ -150,10 +154,12 @@ export default function ProductionsPage() {
           title="No jobs yet"
           description="Create a production to start confirming orders."
           action={
-            <Link href="/productions/new" className={primaryButtonClass}>
-              <Plus size={18} aria-hidden="true" />
-              New job
-            </Link>
+            isAdmin ? (
+              <Link href="/productions/new" className={primaryButtonClass}>
+                <Plus size={18} aria-hidden="true" />
+                New job
+              </Link>
+            ) : undefined
           }
         />
       )}

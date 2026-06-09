@@ -1,12 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminAppUser } from "@/lib/auth";
 import {
   isAuthDisabled,
   supabaseConfigError,
   type Database,
 } from "@/lib/supabase";
 
-const protectedPathPattern = /^\/(productions|people|clients|labels)(\/|$)/;
+const protectedPathPattern =
+  /^\/(people|clients|labels|productions\/new)(\/|$)/;
 
 export async function proxy(request: NextRequest) {
   if (isAuthDisabled) {
@@ -51,7 +53,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && protectedPathPattern.test(pathname)) {
+  if ((!user || !isAdminAppUser(user)) && protectedPathPattern.test(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);

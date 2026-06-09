@@ -145,6 +145,21 @@ alter table productions enable row level security;
 alter table production_roster enable row level security;
 alter table orders enable row level security;
 
+create or replace function public.current_user_is_admin()
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select
+    auth.role() = 'service_role'
+    or coalesce((auth.jwt() -> 'app_metadata' ->> 'admin')::boolean, false)
+    or coalesce((auth.jwt() -> 'app_metadata' ->> 'staff')::boolean, false)
+    or (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin', 'staff')
+    or coalesce((auth.jwt() -> 'app_metadata' -> 'roles') ? 'admin', false)
+    or coalesce((auth.jwt() -> 'app_metadata' -> 'roles') ? 'staff', false);
+$$;
+
 revoke all on public.clients from anon;
 revoke all on public.people from anon;
 revoke all on public.client_people from anon;
@@ -152,65 +167,158 @@ revoke all on public.productions from anon;
 revoke all on public.production_roster from anon;
 revoke all on public.orders from anon;
 
+grant select on public.clients to anon;
+grant select on public.people to anon;
+grant select on public.productions to anon;
+grant select on public.production_roster to anon;
+grant select on public.orders to anon;
+grant update (
+  drink_type,
+  size,
+  temperature,
+  milk_type,
+  sweetener,
+  caffeine,
+  special_notes,
+  vendor,
+  status,
+  updated_at
+) on public.orders to anon;
+
+grant all on public.clients to authenticated;
+grant all on public.people to authenticated;
+grant all on public.client_people to authenticated;
+grant all on public.productions to authenticated;
+grant all on public.production_roster to authenticated;
+grant all on public.orders to authenticated;
+
 drop policy if exists "Internal staff can manage clients" on clients;
 drop policy if exists "Staff can manage clients" on clients;
 drop policy if exists "Authenticated users can manage clients" on clients;
-create policy "Authenticated users can manage clients"
+drop policy if exists "Public can read active clients" on clients;
+drop policy if exists "Admins can manage clients" on clients;
+create policy "Public can read active clients"
+on clients for select
+to anon, authenticated
+using (active = true or public.current_user_is_admin());
+create policy "Admins can manage clients"
 on clients for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Internal staff can manage people" on people;
 drop policy if exists "Staff can manage people" on people;
 drop policy if exists "Authenticated users can manage people" on people;
-create policy "Authenticated users can manage people"
+drop policy if exists "Public can read active people" on people;
+drop policy if exists "Admins can manage people" on people;
+create policy "Public can read active people"
+on people for select
+to anon, authenticated
+using (active = true or public.current_user_is_admin());
+create policy "Admins can manage people"
 on people for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Internal staff can manage client people" on client_people;
 drop policy if exists "Staff can manage client people" on client_people;
 drop policy if exists "Authenticated users can manage client people" on client_people;
-create policy "Authenticated users can manage client people"
+drop policy if exists "Admins can manage client people" on client_people;
+create policy "Admins can manage client people"
 on client_people for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Internal staff can manage productions" on productions;
 drop policy if exists "Staff can manage productions" on productions;
 drop policy if exists "Authenticated users can manage productions" on productions;
-create policy "Authenticated users can manage productions"
+drop policy if exists "Public can read visible productions" on productions;
+drop policy if exists "Admins can manage productions" on productions;
+create policy "Public can read visible productions"
+on productions for select
+to anon, authenticated
+using (status in ('planning', 'active') or public.current_user_is_admin());
+create policy "Admins can manage productions"
 on productions for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Internal staff can manage production roster" on production_roster;
 drop policy if exists "Staff can manage production roster" on production_roster;
 drop policy if exists "Authenticated users can manage production roster" on production_roster;
-create policy "Authenticated users can manage production roster"
+drop policy if exists "Public can read roster for visible productions" on production_roster;
+drop policy if exists "Admins can manage production roster" on production_roster;
+create policy "Public can read roster for visible productions"
+on production_roster for select
+to anon, authenticated
+using (
+  exists (
+    select 1
+    from public.productions p
+    where p.id = production_roster.production_id
+      and p.status in ('planning', 'active')
+  )
+  or public.current_user_is_admin()
+);
+create policy "Admins can manage production roster"
 on production_roster for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Internal staff can manage orders" on orders;
 drop policy if exists "Staff can manage orders" on orders;
 drop policy if exists "Authenticated users can manage orders" on orders;
-create policy "Authenticated users can manage orders"
+drop policy if exists "Public can read orders for visible productions" on orders;
+drop policy if exists "Public can update operational order fields" on orders;
+drop policy if exists "Admins can manage orders" on orders;
+create policy "Public can read orders for visible productions"
+on orders for select
+to anon, authenticated
+using (
+  exists (
+    select 1
+    from public.productions p
+    where p.id = orders.production_id
+      and p.status in ('planning', 'active')
+  )
+  or public.current_user_is_admin()
+);
+create policy "Public can update operational order fields"
+on orders for update
+to anon
+using (
+  exists (
+    select 1
+    from public.productions p
+    where p.id = orders.production_id
+      and p.status = 'active'
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.productions p
+    where p.id = orders.production_id
+      and p.status = 'active'
+  )
+);
+create policy "Admins can manage orders"
 on orders for all
 to authenticated
-using (true)
-with check (true);
+using (public.current_user_is_admin())
+with check (public.current_user_is_admin());
 
 drop policy if exists "Public can read person photos" on storage.objects;
 drop policy if exists "Staff can manage person photos" on storage.objects;
 drop policy if exists "Authenticated users can manage person photos" on storage.objects;
-create policy "Authenticated users can manage person photos"
+drop policy if exists "Admins can manage person photos" on storage.objects;
+create policy "Admins can manage person photos"
 on storage.objects for all
 to authenticated
-using (bucket_id = 'person-photos')
-with check (bucket_id = 'person-photos');
+using (bucket_id = 'person-photos' and public.current_user_is_admin())
+with check (bucket_id = 'person-photos' and public.current_user_is_admin());

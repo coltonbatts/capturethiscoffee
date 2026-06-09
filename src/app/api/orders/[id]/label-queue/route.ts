@@ -1,12 +1,12 @@
 import { ensureOrderLabelQueueState } from "@/lib/label-queue";
-import { ApiError, jsonError, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
+import { ApiError, getTrustedLabelQueueContext, jsonError } from "@/lib/supabase-server";
 
 export async function POST(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { supabase, user } = await requireAuthenticatedBearerToken(request);
+    const { supabase, user } = await getTrustedLabelQueueContext();
     const { id } = await context.params;
 
     const result = await ensureOrderLabelQueueState(supabase, id, user.id);

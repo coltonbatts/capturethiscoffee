@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ContactRound,
   FolderKanban,
+  LogIn,
   LogOut,
   Printer,
   UserRound,
@@ -18,11 +19,12 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 type AppShellProps = {
   title: string;
   actions?: ReactNode;
+  requireAuth?: boolean;
   children: ReactNode;
 };
 
-export function AppShell({ title, actions, children }: AppShellProps) {
-  const auth = useProtectedShellAuth();
+export function AppShell({ title, actions, requireAuth = false, children }: AppShellProps) {
+  const auth = useShellAuth(requireAuth);
 
   if (!auth.ready) {
     return (
@@ -64,7 +66,7 @@ export function AppShell({ title, actions, children }: AppShellProps) {
               </div>
             ) : null}
             {actions ? <div className="shrink-0">{actions}</div> : null}
-            {isSupabaseConfigured ? (
+            {isSupabaseConfigured && auth.email ? (
               <button
                 type="button"
                 onClick={auth.signOut}
@@ -73,6 +75,14 @@ export function AppShell({ title, actions, children }: AppShellProps) {
               >
                 <LogOut size={18} aria-hidden="true" />
               </button>
+            ) : isSupabaseConfigured ? (
+              <Link
+                href={`/login?next=${encodeURIComponent(pathnameForLogin())}`}
+                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-700 bg-zinc-950 text-zinc-300 hover:bg-zinc-800"
+                aria-label="Sign in"
+              >
+                <LogIn size={18} aria-hidden="true" />
+              </Link>
             ) : null}
           </div>
         </div>
@@ -95,21 +105,28 @@ export function AppShell({ title, actions, children }: AppShellProps) {
   );
 }
 
-function useProtectedShellAuth() {
+function useShellAuth(requireAuth: boolean) {
   const router = useRouter();
   const pathname = usePathname();
   const { initialized, appUser, email, signOut } = useAppAuth();
-  const ready = !isSupabaseConfigured || (initialized && Boolean(appUser));
+  const ready =
+    !isSupabaseConfigured ||
+    (initialized && (!requireAuth || Boolean(appUser)));
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !initialized) return;
+    if (!requireAuth || !isSupabaseConfigured || !initialized) return;
 
     if (!appUser) {
       router.replace(`/login?next=${encodeURIComponent(pathname || "/productions")}`);
     }
-  }, [appUser, initialized, pathname, router]);
+  }, [appUser, initialized, pathname, requireAuth, router]);
 
   return { ready, email, signOut };
+}
+
+function pathnameForLogin() {
+  if (typeof window === "undefined") return "/productions";
+  return `${window.location.pathname}${window.location.search}`;
 }
 
 const navItems = [

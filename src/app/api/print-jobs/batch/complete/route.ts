@@ -1,4 +1,4 @@
-import { ApiError, jsonError, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
+import { ApiError, jsonError, requirePrintStationAccess } from "@/lib/supabase-server";
 
 type CompleteBatchBody = {
   jobs?: unknown;
@@ -6,7 +6,7 @@ type CompleteBatchBody = {
 
 export async function POST(request: Request) {
   try {
-    const { supabase } = await requireAuthenticatedBearerToken(request);
+    const { supabase } = await requirePrintStationAccess(request);
     const body = (await safeJson(request)) as CompleteBatchBody;
     const jobs = Array.isArray(body.jobs) ? body.jobs : [];
     const completed = [];

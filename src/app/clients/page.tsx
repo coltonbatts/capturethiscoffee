@@ -56,7 +56,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <AppShell title="Clients">
+    <AppShell title="Clients" requireAuth>
       <form onSubmit={addClient} className="mb-4 grid gap-3">
         <Panel className="grid gap-3 p-4">
           <Field label="Name">

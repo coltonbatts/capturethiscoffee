@@ -8,7 +8,7 @@ import {
 
 type AuthenticatedRouteContext = {
   supabase: SupabaseClient<Database>;
-  user: User;
+  user: Pick<User, "id">;
 };
 
 export class ApiError extends Error {
@@ -40,6 +40,44 @@ export async function requireAuthenticatedBearerToken(
   if (!isAuthenticatedAppUser(user)) throw new ApiError(AUTH_ACCESS_MESSAGE, 403);
 
   return { supabase, user };
+}
+
+export async function requirePrintStationAccess(
+  request: Request,
+): Promise<AuthenticatedRouteContext> {
+  if (!isPrintStationYoloEnabled()) {
+    return requireAuthenticatedBearerToken(request);
+  }
+
+  const supabase = getSupabaseServiceRoleClient();
+  const userId =
+    process.env.PRINT_STATION_USER_ID?.trim() || (await firstSupabaseUserId(supabase));
+
+  if (!userId) {
+    throw new ApiError(
+      "PRINT_STATION_YOLO requires PRINT_STATION_USER_ID or at least one Supabase Auth user.",
+      500,
+    );
+  }
+
+  return { supabase, user: { id: userId } };
+}
+
+export async function getTrustedLabelQueueContext(): Promise<AuthenticatedRouteContext> {
+  const supabase = getSupabaseServiceRoleClient();
+  const userId =
+    process.env.PRINT_QUEUE_USER_ID?.trim() ||
+    process.env.PRINT_STATION_USER_ID?.trim() ||
+    (await firstSupabaseUserId(supabase));
+
+  if (!userId) {
+    throw new ApiError(
+      "Label queue creation requires PRINT_QUEUE_USER_ID, PRINT_STATION_USER_ID, or at least one Supabase Auth user.",
+      500,
+    );
+  }
+
+  return { supabase, user: { id: userId } };
 }
 
 export function jsonError(error: unknown) {
@@ -84,4 +122,35 @@ function getSupabaseRouteClient(token: string) {
       autoRefreshToken: false,
     },
   });
+}
+
+function getSupabaseServiceRoleClient() {
+  if (supabaseConfigError) throw new ApiError(supabaseConfigError, 500);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new ApiError(
+      "Trusted server Supabase operations require NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      500,
+    );
+  }
+
+  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+async function firstSupabaseUserId(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
+  if (error) throw new ApiError(error.message, 500);
+  return data.users[0]?.id || "";
+}
+
+export function isPrintStationYoloEnabled() {
+  return process.env.PRINT_STATION_YOLO === "true";
 }

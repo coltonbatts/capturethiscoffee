@@ -3,8 +3,9 @@ import path from "node:path";
 import { promisify } from "node:util";
 import {
   ApiError,
+  isPrintStationYoloEnabled,
   jsonError,
-  requireAuthenticatedBearerToken,
+  requirePrintStationAccess,
 } from "@/lib/supabase-server";
 
 const execFileAsync = promisify(execFile);
@@ -17,9 +18,10 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAuthenticatedBearerToken(request);
+    await requirePrintStationAccess(request);
     const { id } = await context.params;
     const authHeader = request.headers.get("authorization") || "";
+    const isYolo = isPrintStationYoloEnabled();
     const body = await safeJson(request);
     const port = stringOrNull(body.port);
     const debug = body.debug === true;
@@ -37,7 +39,10 @@ export async function POST(
       maxBuffer: 1024 * 1024,
       env: {
         ...process.env,
-        LABEL_SERIAL_AUTH_TOKEN: authHeader.replace(/^Bearer\s+/i, ""),
+        LABEL_SERIAL_AUTH_TOKEN: isYolo
+          ? "print-station-yolo"
+          : authHeader.replace(/^Bearer\s+/i, ""),
+        LABEL_SERIAL_YOLO: isYolo ? "true" : "",
         LABEL_SERIAL_API_BASE_URL: process.env.LABEL_SERIAL_API_BASE_URL || appBaseUrl(request),
       },
     });

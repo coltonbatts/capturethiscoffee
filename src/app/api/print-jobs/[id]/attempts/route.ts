@@ -1,4 +1,4 @@
-import { ApiError, jsonError, requireAuthenticatedBearerToken } from "@/lib/supabase-server";
+import { ApiError, jsonError, requirePrintStationAccess } from "@/lib/supabase-server";
 import type { LabelPrintAttemptStatus, LabelPrintTransport } from "@/lib/print-jobs";
 
 const attemptStatuses: LabelPrintAttemptStatus[] = [
@@ -20,7 +20,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { supabase, user } = await requireAuthenticatedBearerToken(request);
+    const { supabase, user } = await requirePrintStationAccess(request);
     const { id } = await context.params;
     const body = await request.json();
     const status = body.status as LabelPrintAttemptStatus;
