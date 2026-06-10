@@ -62,6 +62,9 @@ export default function LabelStationPage() {
     useState<Extract<LabelPrintTransport, "laptop_browser" | "laptop_usb">>(
       "laptop_browser",
     );
+  const isLocalStation =
+    typeof window !== "undefined" &&
+    isLocalStationHost(window.location.hostname);
   const [printerName, setPrinterName] = useState("NIIMBOT M2");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -564,12 +567,18 @@ export default function LabelStationPage() {
                   <button
                     type="button"
                     onClick={() => void printViaUsb()}
-                    disabled={Boolean(busy)}
+                    disabled={Boolean(busy) || !isLocalStation}
                     className={`${primaryButtonClass} col-span-2 min-h-14 text-base`}
                   >
                     <Printer size={19} aria-hidden="true" />
                     Print via USB
                   </button>
+                  {!isLocalStation ? (
+                    <p className="col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                      USB printing is local-only. Run this app on the printer laptop
+                      and open localhost to use the attached NIIMBOT.
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => void printViaBrowser()}
@@ -813,6 +822,15 @@ function latestStartedAttempt(job: StationJob) {
   return [...(job.label_print_attempts || [])]
     .filter((attempt) => attempt.status === "started")
     .sort((a, b) => b.started_at.localeCompare(a.started_at))[0];
+}
+
+function isLocalStationHost(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".localhost")
+  );
 }
 
 function jobTitle(job: StationJob) {

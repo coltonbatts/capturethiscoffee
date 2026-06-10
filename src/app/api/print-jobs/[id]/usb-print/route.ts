@@ -19,6 +19,12 @@ export async function POST(
 ) {
   try {
     await requirePrintStationAccess(request);
+    if (isHostedRuntime()) {
+      throw new ApiError(
+        "USB printing must run from the local printer laptop. Open the station from http://localhost:3000/labels/station with the NIIMBOT connected, then use Print via USB.",
+        400,
+      );
+    }
     const { id } = await context.params;
     const authHeader = request.headers.get("authorization") || "";
     const isYolo = isPrintStationYoloEnabled();
@@ -64,14 +70,21 @@ export async function POST(
       }
       return jsonError(
         new ApiError(
-          trimOutput(error.stderr || error.stdout || error.message) ||
-            "USB print worker failed.",
+          operatorUsbErrorMessage(error),
           500,
         ),
       );
     }
     return jsonError(error);
   }
+}
+
+function isHostedRuntime() {
+  return Boolean(
+    process.env.VERCEL ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env.NEXT_RUNTIME === "edge",
+  );
 }
 
 async function safeJson(request: Request) {
@@ -107,4 +120,18 @@ function isTimeoutError(error: Error & { killed?: boolean; code?: unknown }) {
     error.code === "ETIMEDOUT" ||
     /ETIMEDOUT/i.test(error.message)
   );
+}
+
+function operatorUsbErrorMessage(error: Error & { stdout?: string; stderr?: string }) {
+  const detail = `${error.stderr || ""}\n${error.stdout || ""}\n${error.message}`.trim();
+
+  if (/ERR_MODULE_NOT_FOUND|Cannot find package 'sharp'/i.test(detail)) {
+    return "USB print worker is not available in this environment. Use the local printer laptop at localhost for USB printing, or use browser print / PNG download here.";
+  }
+
+  if (/MODULE_NOT_FOUND|Cannot find module/i.test(detail)) {
+    return "USB print worker is missing a local dependency. Run USB printing from the configured printer laptop, or use browser print / PNG download.";
+  }
+
+  return "USB print failed. Check the printer laptop, cable, and power, then retry, or use browser print / PNG download.";
 }
