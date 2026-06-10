@@ -2,6 +2,71 @@
 
 Last setup check: 2026-06-07 on macOS.
 
+## Operating model
+
+`coffee.capturethis.com` is the master queue and source of truth. It stores
+productions, orders, label payloads, queue state, and print attempts.
+
+The NIIMBOT is controlled by a local station running on the same laptop as the
+printer. Hosted/serverless code cannot access a USB or Bluetooth printer plugged
+into a person's machine. Open the station from `http://localhost:3000`, not from
+the deployed domain, when using **Print via USB**.
+
+Printer serial numbers are useful for confirming identity, but they do not go in
+the master website env. The station uses the local device path reported by macOS,
+for example `LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
+
+## Repeatable new laptop setup
+
+1. Install dependencies with `npm install`.
+2. Create `.env.local` from `.env.example`.
+3. Set Supabase browser auth values:
+
+```bash
+NEXT_PUBLIC_ENABLE_AUTH=true
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+4. Plug in and power on the NIIMBOT.
+5. Run the read-only probe:
+
+```bash
+npm run niimbot:probe
+```
+
+6. If more than one `/dev/cu.usbmodem*` device appears, probe each one until the
+   NIIMBOT returns identity and firmware:
+
+```bash
+npm run niimbot:probe -- /dev/cu.usbmodem83201
+```
+
+7. Save the responding port in `.env.local`:
+
+```bash
+LABEL_SERIAL_PORT=/dev/cu.usbmodem83201
+LABEL_SERIAL_API_BASE_URL=http://localhost:3000
+```
+
+8. Run a read-only status check:
+
+```bash
+npm run niimbot:status -- /dev/cu.usbmodem83201
+```
+
+9. Start the local station:
+
+```bash
+npm run dev
+```
+
+10. Open `http://localhost:3000/labels/station`, sign in, queue one label from
+    `/labels`, click **Print via USB**, and confirm the physical label before
+    marking the job printed.
+
+Browser print and PNG download are the fallback paths if USB fails.
+
 ## Local app setup
 
 - Install dependencies with `npm install`.

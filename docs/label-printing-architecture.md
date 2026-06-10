@@ -2,14 +2,29 @@
 
 ## Recommendation
 
-Use the web app's label queue plus a laptop print station now. Keep the native
+Use the web app's label queue plus a local laptop print station. Keep the native
 iOS companion as a later path if direct mobile printing is still needed.
+
+This is the operating model for Capture This Coffee:
+
+- `coffee.capturethis.com` is the shared system of record for jobs, people,
+  orders, label payloads, queue state, and print history.
+- Physical printing belongs to a local station running on the same laptop as the
+  printer. The cloud site must never be expected to open USB, serial, Bluetooth,
+  or OS printer devices attached to somebody's machine.
+- A printer station is repeatable and disposable: install the app, connect a
+  supported NIIMBOT, run the local station, claim queued jobs, print, and report
+  success/failure back to the master queue.
+- The station can use local USB serial as the primary path on confirmed M2_H
+  hardware, with browser print and PNG import as operator fallbacks.
+- Printer serial numbers are diagnostic identity data, not master-site config.
+  The local station selects its local device path or future local device ID.
 
 The laptop print station is the lowest-risk operational path because `/labels`
 can create queued print jobs and `/labels/station` can claim them, render 50mm x
-30mm labels, and use the OS print dialog or PNG import with NIIMBOT's desktop
-app. It should remain the production fallback even if direct USB or iPhone
-printing works later.
+30mm labels, and execute printing from the machine physically connected to the
+printer. It should remain the production fallback even if iPhone printing works
+later.
 
 The iOS companion should be native Swift first, not a pure web wrapper. iOS
 Safari and iOS Chrome cannot use Web Bluetooth for the M2, and iOS does not
@@ -32,10 +47,10 @@ flowchart LR
   Staff --> Auth["Supabase Auth"]
   Web --> API["coffee.capturethis.com API"]
   API --> DB["Supabase tables"]
-  Station["Laptop print station /labels/station"] --> API
-  Station --> Driver["Browser print or PNG import"]
-  Worker["Local USB serial worker spike"] --> API
-  Worker --> USB["M2_H USB serial"]
+  Station["Local laptop print station /labels/station"] --> API
+  Station --> Worker["Local USB serial worker"]
+  Station --> Driver["Browser print or PNG import fallback"]
+  Worker --> USB["NIIMBOT M2_H USB serial"]
   IOS["Future native iOS companion"] --> Auth
   IOS --> API
   IOS --> BLE["CoreBluetooth or NIIMBOT iOS SDK"]
@@ -263,10 +278,13 @@ model differences.
   `/dev/cu.usbmodem*`.
 - Diagnostic bitmap and glyph tests have physically printed from the M2_H using
   a B1-style task sequence and progress polling.
-- `scripts/label-serial-worker.mjs` can poll the print-job API as a local worker
-  spike, but direct app-label USB printing should still be treated as
-  non-productized until layout rendering, failure handling, and operator setup
-  are validated end to end.
+- `scripts/label-serial-worker.mjs` is the local station worker for app-label
+  USB printing. The `/api/print-jobs/[id]/usb-print` route is intentionally
+  local-only: it must run from localhost on the printer laptop and is guarded
+  against hosted/serverless execution.
+- Before handing the station to another operator, validate the full sequence on
+  that laptop: probe, status check, one queued label, physical confirmation,
+  retry/release, and fallback browser/PNG print.
 
 ### Phase 2: iOS proof of print
 
@@ -294,11 +312,14 @@ model differences.
 
 The MVP should be:
 
-1. Keep laptop browser printing and PNG import as the guaranteed path.
-2. Use the print-job queue and attempts audit trail for remote station work.
-3. Let phones create/claim/manage jobs through the existing web app or a tiny
+1. Treat the cloud website as the master queue and audit trail.
+2. Treat each printer laptop as a local station that owns physical printing.
+3. Use local USB serial where confirmed; keep laptop browser printing and PNG
+   import as guaranteed fallbacks.
+4. Let phones create/claim/manage jobs through the existing web app or a tiny
    iOS shell.
-4. In parallel, continue the M2_H USB serial and Swift proof-of-print spikes.
+5. In parallel, continue the Swift proof-of-print spike only if mobile-native
+   printing becomes necessary.
 
 This delivers useful field workflow immediately while isolating the uncertain
 Bluetooth/protocol problem.
@@ -309,8 +330,8 @@ Bluetooth/protocol problem.
 - Do not assume AirPrint works with the M2.
 - Do not build a full custom BLE print protocol before exhausting NIIMBOT SDK
   access.
-- Do not present M2_H USB serial scripts as the supported demo print path until
-  they can print real app labels reliably with documented setup/recovery.
+- Do not expose the hosted site's USB print button as if it can reach a local
+  printer. USB printing is only valid from localhost on the printer laptop.
 - Do not make the iOS app the system of record for print state.
 - Do not mark orders printed before a real print success or explicit staff
   confirmation.

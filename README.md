@@ -133,16 +133,19 @@ NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-
 
 ## Label printing
 
-The supported live-demo path is browser print. Use `/labels` to print selected
-orders directly, or queue selected labels to the remote station at
-`/labels/station` when Supabase auth and the print-job migration are enabled.
-The station can claim queued jobs, render the same 50mm x 30mm labels, print
-through the browser dialog, download a PNG for the NIIMBOT desktop app, and mark
-jobs printed only after physical confirmation.
+Capture This Coffee uses a master queue plus local printer stations.
+`coffee.capturethis.com` owns productions, orders, label payloads, queue state,
+and print history. Physical printing happens only on a local station running on
+the laptop connected to the NIIMBOT.
 
-The M2_H USB serial scripts show real progress toward direct local printing, but
-they are diagnostics/spikes rather than the productized demo path. Do not promise
-automatic USB printing to demo staff yet.
+Use `/labels` to print a selected order through the browser fallback or queue it
+for a station. Open `/labels/station` from `http://localhost:3000` on the
+printer laptop to claim queued jobs and print through local USB serial. Browser
+print and 300 DPI PNG download remain fallbacks.
+
+Do not configure NIIMBOT serial numbers in the master website. Each station
+selects its own local printer device path, for example
+`LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
 
 ## NIIMBOT direct USB diagnostics
 

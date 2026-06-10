@@ -45,10 +45,13 @@ After first sign-in, Luke should change his password when password reset is enab
 
 - `/labels` is the normal label screen and browser-print fallback.
 - `/labels/station` is the remote queue station for a laptop on the printer.
-- The supported live-demo physical print path is still browser print or PNG
-  import into the NIIMBOT desktop app.
-- M2_H USB serial scripts are promising diagnostics, not a productized Luke
-  workflow yet.
+- `coffee.capturethis.com` stores the queue; the laptop connected to the NIIMBOT
+  owns the physical print.
+- For USB printing, run the app locally on that laptop and open
+  `http://localhost:3000/labels/station`. The hosted domain cannot access the
+  local USB printer.
+- Browser print and PNG import into the NIIMBOT desktop app remain fallback
+  paths.
 
 ## Add more staff later
 

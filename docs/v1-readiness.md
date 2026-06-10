@@ -34,11 +34,14 @@
 
 ## Printer setup checklist
 
-- Supported V1 path: browser print through the OS print dialog. The remote
-  station queue is supported for moving jobs from `/labels` to
-  `/labels/station`; the actual physical print still uses browser print or PNG
-  import.
+- Supported V1 model: master queue plus local printer station. The deployed app
+  stores jobs and labels; the laptop connected to the NIIMBOT opens
+  `http://localhost:3000/labels/station` and owns the physical print.
+- Local USB serial is the primary station path on confirmed NIIMBOT M2_H
+  hardware. Browser print and PNG import remain fallbacks.
 - Printer: NIIMBOT M2/M2_H with 50mm x 30mm label stock loaded.
+- Local station env: set `LABEL_SERIAL_PORT` to the responding
+  `/dev/cu.usbmodem*` path from `npm run niimbot:probe`.
 - Orientation: use landscape if the driver asks.
 - Scale: set to 100%, not fit to page.
 - Margins: start with none. If the driver clips, test its default margin setting.
@@ -52,9 +55,8 @@
   correct.
 - Treat `Experimental M2 check` as a Bluetooth capability probe only. Direct
   browser Bluetooth printing is not a V1 promise.
-- Treat the M2_H USB serial scripts as diagnostics/spikes. They have confirmed
-  USB serial probing and low-density bitmap/glyph progress, but direct app-label
-  USB printing is not the live-demo supported path yet.
+- Do not use the hosted domain for **Print via USB**. USB printing only works
+  from the local station server on the printer laptop.
 
 ## Luke demo script
 
@@ -76,8 +78,8 @@
   likely BLE service/characteristic in compatible Chromium browsers.
 - iOS Safari does not support the Web Bluetooth path; browser print remains the
   supported route.
-- Direct M2_H USB serial printing is not productized in the app. Current scripts
-  are diagnostic/local-worker progress and require an operator who understands
+- Direct M2_H USB serial printing is local-station only and requires an operator
+  who understands
   the runbook.
 - Browser print behavior depends on the installed OS driver and its saved paper
   size, margin, scale, density, and alignment settings.
