@@ -44,11 +44,33 @@ type PrintAttemptRow =
 type StationJob = PrintJobRow & {
   label_print_attempts?: PrintAttemptRow[];
 };
+type LocalUsbReadiness = {
+  ok: boolean;
+  local: boolean;
+  configuredPort: string;
+  configuredPortVisible?: boolean;
+  ports: string[];
+  message: string;
+};
+type PersistedPrinterStatus = {
+  connected: boolean;
+  deviceName: string;
+  message: string;
+  checkedAt: number;
+};
 
 const pollingMs = 3500;
 const isPrintStationYolo = process.env.NEXT_PUBLIC_PRINT_STATION_YOLO === "true";
 const connectionLostMessage =
   "Connection lost — showing the last loaded queue. Retrying automatically.";
+const printerStatusStorageKey = "capturethiscoffee.niimbot-status";
+const printerStatusEvent = "capturethiscoffee:niimbot-status";
+const unknownPrinterStatus: PersistedPrinterStatus = {
+  connected: false,
+  deviceName: "",
+  message: "",
+  checkedAt: 0,
+};
 
 export default function LabelStationPage() {
   const [queuedJobs, setQueuedJobs] = useState<StationJob[]>([]);
@@ -62,13 +84,21 @@ export default function LabelStationPage() {
     useState<Extract<LabelPrintTransport, "laptop_browser" | "laptop_usb">>(
       "laptop_browser",
     );
-  const isLocalStation =
-    typeof window !== "undefined" &&
-    isLocalStationHost(window.location.hostname);
+  const [hostName] = useState(() =>
+    typeof window === "undefined" ? "" : window.location.hostname,
+  );
+  const [localUsbReadiness, setLocalUsbReadiness] =
+    useState<LocalUsbReadiness | null>(null);
+  const [checkingLocalUsb, setCheckingLocalUsb] = useState(false);
+  const [browserPrinterStatus, setBrowserPrinterStatus] =
+    useState<PersistedPrinterStatus>(loadBrowserPrinterStatus);
   const [printerName, setPrinterName] = useState("NIIMBOT M2");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const isLocalStation = hostName ? isLocalStationHost(hostName) : false;
+  const canPrintViaUsb = isLocalStation && localUsbReadiness?.ok === true;
+  const localStationUrl = "http://localhost:3000/labels/station";
 
   const jobs = useMemo(
     () => [...activeJobs, ...queuedJobs],
@@ -140,6 +170,60 @@ export default function LabelStationPage() {
       window.clearInterval(interval);
     };
   }, [refreshJobs]);
+
+  const checkLocalUsbReadiness = useCallback(async () => {
+    setCheckingLocalUsb(true);
+    try {
+      const response = await fetch("/api/print-station/local-readiness");
+      const body = (await response.json().catch(() => ({}))) as Partial<LocalUsbReadiness>;
+      setLocalUsbReadiness({
+        ok: Boolean(body.ok),
+        local: Boolean(body.local),
+        configuredPort:
+          typeof body.configuredPort === "string" ? body.configuredPort : "",
+        configuredPortVisible:
+          typeof body.configuredPortVisible === "boolean"
+            ? body.configuredPortVisible
+            : undefined,
+        ports: Array.isArray(body.ports)
+          ? body.ports.filter((port): port is string => typeof port === "string")
+          : [],
+        message:
+          typeof body.message === "string" && body.message
+            ? body.message
+            : "Could not verify local USB station readiness.",
+      });
+    } catch {
+      setLocalUsbReadiness({
+        ok: false,
+        local: false,
+        configuredPort: "",
+        ports: [],
+        message:
+          "Could not reach the local station readiness check from this page.",
+      });
+    } finally {
+      setCheckingLocalUsb(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    function syncPrinterStatus() {
+      setBrowserPrinterStatus(loadBrowserPrinterStatus());
+    }
+
+    window.addEventListener("storage", syncPrinterStatus);
+    window.addEventListener(printerStatusEvent, syncPrinterStatus);
+    const initialUsbCheck = window.setTimeout(() => {
+      void checkLocalUsbReadiness();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(initialUsbCheck);
+      window.removeEventListener("storage", syncPrinterStatus);
+      window.removeEventListener(printerStatusEvent, syncPrinterStatus);
+    };
+  }, [checkLocalUsbReadiness]);
 
   async function claimNext() {
     const next = queuedJobs[0];
@@ -567,7 +651,7 @@ export default function LabelStationPage() {
                   <button
                     type="button"
                     onClick={() => void printViaUsb()}
-                    disabled={Boolean(busy) || !isLocalStation}
+                    disabled={Boolean(busy) || !canPrintViaUsb}
                     className={`${primaryButtonClass} col-span-2 min-h-14 text-base`}
                   >
                     <Printer size={19} aria-hidden="true" />
@@ -575,8 +659,31 @@ export default function LabelStationPage() {
                   </button>
                   {!isLocalStation ? (
                     <p className="col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
-                      USB printing is local-only. Run this app on the printer laptop
-                      and open localhost to use the attached NIIMBOT.
+                      {browserPrinterStatus.connected
+                        ? `Printer is visible to this browser as ${browserPrinterStatus.deviceName || "NIIMBOT"}, but USB printing requires the local station server. Open ${localStationUrl} on this laptop.`
+                        : `USB printing is local-only. Open ${localStationUrl} on the printer laptop to use the attached NIIMBOT.`}
+                    </p>
+                  ) : null}
+                  {isLocalStation && !canPrintViaUsb ? (
+                    <div className="col-span-2 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                      <p>
+                        {localUsbReadiness?.message ||
+                          "Checking whether the local station server can see the NIIMBOT USB port."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void checkLocalUsbReadiness()}
+                        disabled={checkingLocalUsb || Boolean(busy)}
+                        className={`${secondaryButtonClass} min-h-10 justify-self-start border-amber-300 bg-white px-3 text-amber-950 hover:bg-amber-100`}
+                      >
+                        <RefreshCw size={16} aria-hidden="true" />
+                        {checkingLocalUsb ? "Checking USB..." : "Recheck USB"}
+                      </button>
+                    </div>
+                  ) : null}
+                  {canPrintViaUsb && localUsbReadiness ? (
+                    <p className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
+                      {localUsbReadiness.message}
                     </p>
                   ) : null}
                   <button
@@ -638,7 +745,8 @@ export default function LabelStationPage() {
             <div>
               <h2 className="text-lg font-bold">Print path</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                USB serial is primary on the printer laptop; browser print remains the fallback.
+                USB serial is primary only when this page is served by the local
+                station server; browser print remains the fallback.
               </p>
             </div>
 
@@ -673,6 +781,7 @@ export default function LabelStationPage() {
               <p className="font-bold text-black">Operational path</p>
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 <li>USB: uses the local M2_H serial worker and stored print-job payload.</li>
+                <li>Bluetooth check: proves only that this browser can see the printer.</li>
                 <li>Browser fallback: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
                 <li>PNG: import the downloaded 591 x 354 image into the NIIMBOT laptop app.</li>
                 <li>Only mark printed after the physical M2 label is correct.</li>
@@ -831,6 +940,25 @@ function isLocalStationHost(hostname: string) {
     hostname === "::1" ||
     hostname.endsWith(".localhost")
   );
+}
+
+function loadBrowserPrinterStatus(): PersistedPrinterStatus {
+  if (typeof window === "undefined") return unknownPrinterStatus;
+
+  try {
+    const raw = window.localStorage.getItem(printerStatusStorageKey);
+    if (!raw) return unknownPrinterStatus;
+
+    const parsed = JSON.parse(raw) as Partial<PersistedPrinterStatus>;
+    return {
+      connected: Boolean(parsed.connected),
+      deviceName: typeof parsed.deviceName === "string" ? parsed.deviceName : "",
+      message: typeof parsed.message === "string" ? parsed.message : "",
+      checkedAt: typeof parsed.checkedAt === "number" ? parsed.checkedAt : 0,
+    };
+  } catch {
+    return unknownPrinterStatus;
+  }
 }
 
 function jobTitle(job: StationJob) {

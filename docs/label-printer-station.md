@@ -332,6 +332,16 @@ Open `http://localhost:3000/labels/station`, sign in, select a queued label,
 and click **Print via USB**. The station calls the local one-shot serial worker
 through `/api/print-jobs/:id/usb-print`.
 
+If the page is open at `coffee.capturethis.com`, **Print via USB** stays
+disabled even when the browser Bluetooth check says `M2_H-I409130491 connected`.
+That Bluetooth status only proves this browser can see the printer. USB printing
+requires the Next.js route and serial worker to run on the printer laptop, so
+open `http://localhost:3000/labels/station` on that laptop.
+
+The station page checks `/api/print-station/local-readiness` to confirm it is
+served from a local host and that the local server can see the configured
+`LABEL_SERIAL_PORT`, for example `/dev/cu.usbmodem83201`.
+
 The USB path:
 
 - Reuses the stored `label_print_jobs.payload.label` (`CoffeeLabel`) instead of

@@ -29,6 +29,7 @@ const unknownStatus: PersistedPrinterStatus = {
 export function PrinterStationCallout() {
   const [status, setStatus] = useState<PersistedPrinterStatus>(loadPrinterStatus);
   const [checking, setChecking] = useState(false);
+  const [localStationUrl] = useState(getLocalStationUrl);
   const disconnectCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -132,6 +133,12 @@ export function PrinterStationCallout() {
             <p className="mt-1 text-sm font-medium text-zinc-300">
               {status.message} {checkedLabel}.
             </p>
+            {status.connected && localStationUrl.startsWith("http://localhost") ? (
+              <p className="mt-1 text-sm font-semibold text-amber-200">
+                Printer is visible to this browser, but USB printing requires the
+                local station server on the printer laptop.
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -146,11 +153,13 @@ export function PrinterStationCallout() {
             {checking ? "Checking NIIMBOT..." : "Check NIIMBOT"}
           </button>
           <Link
-            href="/labels/station"
+            href={localStationUrl}
             className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-amber-300 px-6 text-base font-black text-black shadow-[0_10px_30px_rgba(251,191,36,0.28)] transition hover:bg-amber-200 active:scale-[0.99]"
           >
             <Printer size={18} aria-hidden="true" />
-            Open Print Station
+            {localStationUrl.startsWith("http://localhost")
+              ? "Open Local Station"
+              : "Open Print Station"}
           </Link>
         </div>
       </div>
@@ -185,4 +194,20 @@ function persistPrinterStatus(status: PersistedPrinterStatus) {
 
   window.localStorage.setItem(printerStatusStorageKey, JSON.stringify(status));
   window.dispatchEvent(new Event(printerStatusEvent));
+}
+
+function getLocalStationUrl() {
+  if (typeof window === "undefined") return "/labels/station";
+  return isLocalStationHost(window.location.hostname)
+    ? "/labels/station"
+    : "http://localhost:3000/labels/station";
+}
+
+function isLocalStationHost(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".localhost")
+  );
 }

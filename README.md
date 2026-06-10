@@ -143,6 +143,12 @@ for a station. Open `/labels/station` from `http://localhost:3000` on the
 printer laptop to claim queued jobs and print through local USB serial. Browser
 print and 300 DPI PNG download remain fallbacks.
 
+The NIIMBOT Bluetooth/browser check only proves the current browser can see the
+printer. It does not prove the Next.js USB print route can access the cable. USB
+printing stays disabled on `coffee.capturethis.com`; use
+`http://localhost:3000/labels/station` on the printer laptop for physical USB
+printing.
+
 Do not configure NIIMBOT serial numbers in the master website. Each station
 selects its own local printer device path, for example
 `LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
