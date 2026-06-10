@@ -1,6 +1,6 @@
 # Print station demo script
 
-Use this for a 3 to 5 minute walkthrough with Luke.
+Use this for a 3 to 5 minute walkthrough with the client or print operator.
 
 ## 1. Show the master website
 

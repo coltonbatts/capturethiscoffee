@@ -111,12 +111,12 @@ Create demo users in the Supabase dashboard:
 
 1. Go to **Authentication > Users**.
 2. Click **Add user**.
-3. Enter a demo user email, for example owner `luke@capturethis.com`.
+3. Enter a demo user email, for example owner `admin@example.com`.
 4. Set a password and confirm the user if your project requires it.
 5. Set the user's **Raw app_metadata** to `{"admin": true}`. This is required for
    anyone who needs to create or edit clients, people, productions, rosters, or
-   new order drafts — including Luke. Without it, the user can sign in and read
-   data but every setup write fails with "Admin access required," and the app
+   new order drafts. Without it, the user can sign in and read data but every
+   setup write fails with "Admin access required," and the app
    proxy redirects them away from `/people`, `/clients`, `/labels`, and
    `/productions/new`.
 
@@ -127,10 +127,10 @@ Keep public sign-ups disabled so only invited admins can be created.
 
 Then open `/login`, sign in, and continue to `/productions`.
 
-Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
+Client onboarding checklist: [docs/client-login-handoff.md](docs/client-login-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
-Luke print-station handoff: [docs/luke-print-station-handoff.md](docs/luke-print-station-handoff.md).
+Client print-station handoff: [docs/client-print-station-handoff.md](docs/client-print-station-handoff.md).
 Printer laptop quick start: [docs/print-station-quickstart.md](docs/print-station-quickstart.md).
 Print-station demo script: [docs/print-station-demo-script.md](docs/print-station-demo-script.md).
 
@@ -171,9 +171,9 @@ Do not configure NIIMBOT serial numbers in the master website. Each station
 selects its own local printer device path, for example
 `LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
 
-Luke-facing printer station docs:
+Client-facing printer station docs:
 
-- [Luke print-station handoff](docs/luke-print-station-handoff.md)
+- [Client print-station handoff](docs/client-print-station-handoff.md)
 - [Printer laptop quick start](docs/print-station-quickstart.md)
 - [Print-station demo script](docs/print-station-demo-script.md)
 

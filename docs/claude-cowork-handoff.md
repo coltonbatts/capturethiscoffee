@@ -2,13 +2,13 @@
 
 ## Goal
 
-Come into this as a fresh product-minded dev and tighten the app around the story we actually want to show Luke.
+Come into this as a fresh product-minded dev and tighten the app around the story we actually want to show the client.
 
 The clean story is:
 
 - Capture This Coffee is a runner-first shoot-day workflow.
 - The primary path is: sign in, open a production, confirm drinks fast, print labels when needed, and track delivery.
-- Luke should not feel like he is entering an internal ops tool, printer lab, or demo sandbox.
+- The client should not feel like he is entering an internal ops tool, printer lab, or demo sandbox.
 
 ## Current diagnosis
 
@@ -24,17 +24,17 @@ Right now the app is trying to be all of these at once:
 - Printer experiment/calibration environment
 - Demo/local-data sandbox
 
-That makes the presentation to Luke fuzzy.
+That makes the presentation to the client fuzzy.
 
 ## Main findings
 
 ### 1. Auth and role logic conflict with the docs
 
-Docs currently say any signed-in Supabase user can use the app and Luke does not need staff/admin metadata.
+Docs currently say any signed-in Supabase user can use the app and the client does not need staff/admin metadata.
 
 Relevant docs:
 
-- [docs/luke-handoff.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/luke-handoff.md)
+- [docs/client-login-handoff.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/client-login-handoff.md)
 - [docs/v1-readiness.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/v1-readiness.md)
 
 But the code still treats several important surfaces as admin-only.
@@ -51,12 +51,12 @@ Specific mismatch:
 - Proxy blocks `/people`, `/clients`, `/labels`, and `/productions/new` for non-admin users.
 - Admin is derived from `app_metadata`.
 - Production creation and several setup/edit actions are hidden behind `isAdmin`.
-- Docs say Luke should be able to create productions and use the app as a normal authenticated user.
+- Docs say the client should be able to create productions and use the app as a normal authenticated user.
 
 This is the first thing to resolve. Decide which is true:
 
-1. Luke is meant to be a normal signed-in user.
-2. Luke is meant to be a privileged/admin user.
+1. The client is meant to be a normal signed-in user.
+2. The client is meant to be a privileged/admin user.
 
 Then make docs, middleware, and UI all say the same thing.
 
@@ -105,7 +105,7 @@ This is especially risky because:
 - It undermines trust in persistence
 - It is exactly the kind of thing a demo audience notices even if they do not fully understand it
 
-If Luke is the audience, demo-reset affordances should not appear in Luke-facing flows.
+If the client is the audience, demo-reset affordances should not appear in client-facing flows.
 
 ### 4. Label-related surfaces are over-expanded
 
@@ -146,11 +146,11 @@ Relevant code:
 
 This feels more like a full internal command center than a sharply scoped runner tool.
 
-That may be fine long-term, but for Luke presentation it dilutes the story.
+That may be fine long-term, but for the client presentation it dilutes the story.
 
 ## Recommended product stance
 
-If optimizing for Luke, center the product around:
+If optimizing for the client, center the product around:
 
 - `/productions`
 - `/productions/[id]`
@@ -168,10 +168,10 @@ Everything else should be treated as one of:
 
 Make explicit decisions on:
 
-1. Is Luke a normal authenticated user or an admin?
+1. Is the client a normal authenticated user or an admin?
 2. Is printing a support feature inside the runner flow, or a separate workstation product?
-3. Is `/labels` meant for Luke, staff, or only the printer operator?
-4. What is the single demo path we want Luke to remember?
+3. Is `/labels` meant for the client, staff, or only the printer operator?
+4. What is the single demo path we want the client to remember?
 
 ### Phase 2: Remove contradictions
 
@@ -188,7 +188,7 @@ Likely files:
 - [src/lib/auth.ts](/Users/coltonbatts/Desktop/CaptureThisCoffee/src/lib/auth.ts)
 - [src/app/productions/page.tsx](/Users/coltonbatts/Desktop/CaptureThisCoffee/src/app/productions/page.tsx)
 - [src/app/productions/[id]/page.tsx](/Users/coltonbatts/Desktop/CaptureThisCoffee/src/app/productions/%5Bid%5D/page.tsx)
-- [docs/luke-handoff.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/luke-handoff.md)
+- [docs/client-login-handoff.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/client-login-handoff.md)
 - [docs/v1-readiness.md](/Users/coltonbatts/Desktop/CaptureThisCoffee/docs/v1-readiness.md)
 
 ### Phase 3: Decouple runner flow from printer infrastructure where possible
@@ -205,11 +205,11 @@ Likely files:
 - [src/lib/supabase-server.ts](/Users/coltonbatts/Desktop/CaptureThisCoffee/src/lib/supabase-server.ts)
 - [src/app/api/orders/[id]/label-queue/route.ts](/Users/coltonbatts/Desktop/CaptureThisCoffee/src/app/api/orders/%5Bid%5D/label-queue/route.ts)
 
-### Phase 4: Simplify Luke-facing surfaces
+### Phase 4: Simplify client-facing surfaces
 
 Candidates:
 
-- hide/remove top-level `Labels` nav for Luke-facing demo
+- hide/remove top-level `Labels` nav for client-facing demo
 - keep label actions inside the production context
 - keep `/labels/station` as an operator surface only
 - remove demo-reset and experimental printer controls from the main presentation path
@@ -222,7 +222,7 @@ Likely files:
 
 ## Suggested demo path
 
-If the goal is “show Luke something coherent,” the path should probably be:
+If the goal is “show the client something coherent,” the path should probably be:
 
 1. Sign in
 2. Open Productions
@@ -264,6 +264,6 @@ The key question is not “does every feature exist?”
 
 The key question is:
 
-"What should Luke believe this product is after 3 minutes?"
+"What should the client believe this product is after 3 minutes?"
 
 Right now the answer is muddled. The next pass should make that answer obvious.

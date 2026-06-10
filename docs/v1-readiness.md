@@ -4,7 +4,7 @@
 
 - Deploy the app with `NEXT_PUBLIC_ENABLE_AUTH` unset or `true`.
 - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Confirm `/login` signs in Luke and redirects to `/productions`.
+- Confirm `/login` signs in the client user and redirects to `/productions`.
 - Create the real client, production, runner name, shoot date, and location.
 - Add or import the day-of people before the shoot when possible.
 - On a phone, open the production page and verify search, quick add, order edit,
@@ -21,7 +21,7 @@
   `production_roster`, `orders`, `printer_devices`, `label_print_jobs`, and
   `label_print_attempts`.
 - Confirm the `person-photos` storage bucket and policies exist.
-- Confirm Luke can sign in and that his Supabase user has `app_metadata` set to
+- Confirm the client user can sign in and that their Supabase user has `app_metadata` set to
   `{"admin": true}`. The app proxy requires admin metadata to access `/clients`,
   `/people`, `/labels`, and `/productions/new`.
 - Disable public email sign-ups unless intentionally onboarding more demo users.
@@ -58,7 +58,7 @@
 - Do not use the hosted domain for **Print via USB**. USB printing only works
   from the local station server on the printer laptop.
 
-## Luke demo script
+## Client demo script
 
 1. Sign in at `/login`.
 2. Open the active production from `/productions`.
@@ -95,7 +95,7 @@
 - Print a 50mm x 30mm vendor-app test label.
 - Print from Chrome desktop using `/labels` and `/labels/station`; record scale,
   orientation, margin, density, and alignment settings that work.
-- Repeat from the actual phone/tablet Luke expects to use.
+- Repeat from the actual phone or tablet the client expects to use.
 - Confirm the label is readable after condensation handling on a cold cup.
 - Confirm browser print followed by `Mark printed & next` keeps the local and
   remote station queues moving.
