@@ -130,6 +130,9 @@ Then open `/login`, sign in, and continue to `/productions`.
 Luke onboarding checklist: [docs/luke-handoff.md](docs/luke-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
+Luke print-station handoff: [docs/luke-print-station-handoff.md](docs/luke-print-station-handoff.md).
+Printer laptop quick start: [docs/print-station-quickstart.md](docs/print-station-quickstart.md).
+Print-station demo script: [docs/print-station-demo-script.md](docs/print-station-demo-script.md).
 
 ## Label printing
 
@@ -167,6 +170,12 @@ printing.
 Do not configure NIIMBOT serial numbers in the master website. Each station
 selects its own local printer device path, for example
 `LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
+
+Luke-facing printer station docs:
+
+- [Luke print-station handoff](docs/luke-print-station-handoff.md)
+- [Printer laptop quick start](docs/print-station-quickstart.md)
+- [Print-station demo script](docs/print-station-demo-script.md)
 
 ## NIIMBOT direct USB diagnostics
 
