@@ -16,6 +16,30 @@ Printer serial numbers are useful for confirming identity, but they do not go in
 the master website env. The station uses the local device path reported by macOS,
 for example `LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
 
+## On-set operator workflow
+
+1. Plug in and power on the NIIMBOT M2_H.
+2. Double-click `Start Print Station.command` in the Capture This Coffee folder.
+3. Wait for green readiness on the station page.
+4. Use `http://localhost:3000/labels/station` to claim and print queued labels.
+5. If USB readiness fails, use browser print or Download PNG from the station
+   page, then mark the job printed only after the physical label is correct.
+
+The double-click launcher runs `npm run station:start`. It checks that it is in
+the repo root, confirms Node/npm dependencies are installed, detects the NIIMBOT
+USB serial port, starts or reuses `http://localhost:3000`, opens the station
+page, and prints the readiness endpoint result in Terminal.
+
+Detection order:
+
+1. `LABEL_SERIAL_PORT`, when already set and visible.
+2. USB vendor/product `3513:0002`.
+3. The first `/dev/cu.usbmodem*` device.
+
+If no likely port is visible, the launcher tells the operator to plug in and
+power on the NIIMBOT, then run the launcher again. The known working setup is
+port `/dev/cu.usbmodem83201`, identity `M2_H-I409130491`, firmware `1.50`.
+
 ## Repeatable new laptop setup
 
 1. Install dependencies with `npm install`.
@@ -58,7 +82,7 @@ npm run niimbot:status -- /dev/cu.usbmodem83201
 9. Start the local station:
 
 ```bash
-npm run dev
+npm run station:start
 ```
 
 10. Open `http://localhost:3000/labels/station`, sign in, queue one label from
@@ -90,6 +114,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 - Start the workstation with `npm run dev`.
+- For on-set printer-laptop use, prefer double-clicking
+  `Start Print Station.command` or running `npm run station:start`; this uses
+  production mode and injects the local USB env for the station server.
 - Main print workstation: `http://localhost:3000/labels`.
 - Queue station: `http://localhost:3000/labels/station`.
 - On the printer laptop, the queue station can print the selected queued,
@@ -325,7 +352,7 @@ Reconfirmed on 2026-06-09 from this printer laptop:
 Start the app on the printer laptop:
 
 ```bash
-npm run dev
+npm run station:start
 ```
 
 Open `http://localhost:3000/labels/station`, sign in, select a queued label,

@@ -138,10 +138,25 @@ Capture This Coffee uses a master queue plus local printer stations.
 and print history. Physical printing happens only on a local station running on
 the laptop connected to the NIIMBOT.
 
+On the printer laptop, the normal on-set startup path is:
+
+1. Plug in and power on the NIIMBOT M2_H.
+2. Double-click `Start Print Station.command`.
+3. Wait for green readiness on the station page.
+4. Use `http://localhost:3000/labels/station`.
+5. If USB readiness fails, use browser print or Download PNG from the station
+   page as the fallback.
+
 Use `/labels` to print a selected order through the browser fallback or queue it
 for a station. Open `/labels/station` from `http://localhost:3000` on the
 printer laptop to claim queued jobs and print through local USB serial. Browser
 print and 300 DPI PNG download remain fallbacks.
+
+The launcher runs `npm run station:start`. It detects the local NIIMBOT serial
+port, sets `LABEL_SERIAL_PORT` and
+`LABEL_SERIAL_API_BASE_URL=http://localhost:3000` for the local server, rebuilds
+the production app when needed, starts `npm run start`, opens the station page,
+and prints the local readiness result in Terminal.
 
 The NIIMBOT Bluetooth/browser check only proves the current browser can see the
 printer. It does not prove the Next.js USB print route can access the cable. USB
