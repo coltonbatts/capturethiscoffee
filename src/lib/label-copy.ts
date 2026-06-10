@@ -9,6 +9,7 @@ export type LabelFieldOptions = {
   group: boolean;
   productionClient: boolean;
   notesStatus: boolean;
+  orderId: boolean;
 };
 
 export type LabelFormatterOptions = {
@@ -23,6 +24,7 @@ export type CoffeeLabel = {
   group: string;
   productionClient: string;
   notesStatus: string;
+  orderId: string;
   title: string;
   bodyLines: string[];
   footerStart: string;
@@ -49,6 +51,7 @@ export const defaultLabelFields: LabelFieldOptions = {
   group: true,
   productionClient: true,
   notesStatus: false,
+  orderId: true,
 };
 
 export const defaultLabelOptions: LabelFormatterOptions = {
@@ -76,6 +79,7 @@ export function buildCoffeeLabels(
     const drink = formatDrink(item.order);
     const productionClient = [production.name, client?.name].filter(Boolean).join(" / ");
     const notesStatus = statusCopy[item.order.status];
+    const orderId = shortOrderId(item.order.id);
 
     const label: CoffeeLabel = {
       id: item.order?.id || item.roster.id,
@@ -84,6 +88,7 @@ export function buildCoffeeLabels(
       group,
       productionClient,
       notesStatus,
+      orderId,
       title: "",
       bodyLines: [],
       footerStart: "",
@@ -136,8 +141,10 @@ function labelLayout(label: CoffeeLabel, options: LabelFormatterOptions) {
     return {
       title,
       bodyLines: fields.personName && fields.drink ? [label.drink] : [],
-      footerStart: fields.group ? label.group : "",
-      footerEnd: "",
+      footerStart: [fields.group ? label.group : "", fields.orderId ? label.orderId : ""]
+        .filter(Boolean)
+        .join("  "),
+      footerEnd: "CAPTURE THIS",
     };
   }
 
@@ -155,8 +162,10 @@ function labelLayout(label: CoffeeLabel, options: LabelFormatterOptions) {
         fields.personName && fields.drink ? label.drink : "",
         fields.notesStatus ? label.notesStatus : "",
       ].filter(Boolean),
-      footerStart: fields.group ? label.group : "",
-      footerEnd: fields.productionClient ? label.productionClient : "",
+      footerStart: [fields.group ? label.group : "", fields.orderId ? label.orderId : ""]
+        .filter(Boolean)
+        .join("  "),
+      footerEnd: fields.productionClient ? label.productionClient : "CAPTURE THIS COFFEE",
     };
   }
 
@@ -173,7 +182,16 @@ function labelLayout(label: CoffeeLabel, options: LabelFormatterOptions) {
       fields.personName && fields.drink ? label.drink : "",
       fields.notesStatus ? label.notesStatus : "",
     ].filter(Boolean),
-    footerStart: fields.group ? label.group : "",
-    footerEnd: fields.productionClient ? label.productionClient : "",
+    footerStart: [fields.group ? label.group : "", fields.orderId ? label.orderId : ""]
+      .filter(Boolean)
+      .join("  "),
+    footerEnd: fields.productionClient ? label.productionClient : "CAPTURE THIS COFFEE",
   };
+}
+
+function shortOrderId(id: string | undefined) {
+  if (!id) return "";
+  const clean = id.replace(/^order-/, "").trim();
+  if (!clean || clean === "manual") return "";
+  return `#${clean.slice(0, 6).toUpperCase()}`;
 }

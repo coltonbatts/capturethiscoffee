@@ -984,17 +984,27 @@ function LabelPreviewCard({
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl bg-zinc-100 p-3">
-        <div className="grid aspect-[5/3] w-[260px] grid-cols-[42px_1fr] grid-rows-[auto_1fr_auto] gap-x-2 overflow-hidden border-2 border-black bg-white p-3 font-sans text-black shadow-sm">
-          <div className="row-span-2 grid size-9 place-items-center border-2 border-black p-1">
+        <div className="grid aspect-[5/3] w-[280px] grid-cols-[30px_42px_1fr] grid-rows-[auto_1fr_auto] gap-x-2 overflow-hidden border-2 border-black bg-white bg-[linear-gradient(90deg,#000_0_30px,transparent_30px)] p-2 font-sans text-black shadow-sm">
+          <div className="row-span-3 flex items-center justify-between py-1 text-[7px] font-black leading-none text-white [text-orientation:mixed] [transform:rotate(180deg)] [writing-mode:vertical-rl]">
+            <span>CAPTURE</span>
+            <span>THIS</span>
+            <span>COFFEE</span>
+          </div>
+          <div className="grid size-10 place-items-center border-2 border-black p-1">
             <CaptureAngle />
           </div>
-          <h4 className="truncate text-lg font-black leading-none">
-            {label.title || label.personName}
-          </h4>
-          <p className="mt-1 overflow-hidden text-sm font-bold leading-tight">
+          <div className="min-w-0">
+            <p className="mb-1 text-[7px] font-black uppercase leading-none">
+              On-set coffee
+            </p>
+            <h4 className="truncate text-xl font-black uppercase leading-none">
+              {label.title || label.personName}
+            </h4>
+          </div>
+          <p className="col-span-2 mt-2 overflow-hidden border-y-2 border-black py-1.5 text-sm font-black leading-tight">
             {label.bodyLines.join(" / ") || label.drink}
           </p>
-          <div className="col-span-2 flex items-end justify-between gap-2 border-t border-black pt-2 text-[11px] font-bold leading-none">
+          <div className="col-span-2 flex items-end justify-between gap-2 pt-2 text-[10px] font-black uppercase leading-none">
             <span className="min-w-0 truncate">
               {label.footerStart}
             </span>
@@ -1016,10 +1026,18 @@ function PrintableLabel({ label }: { label: CoffeeLabel }) {
 
   return (
     <article className="m2-label">
+      <div className="m2-label-brand" aria-label="Capture This Coffee">
+        <span>CAPTURE</span>
+        <span>THIS</span>
+        <span>COFFEE</span>
+      </div>
       <div className="m2-label-mark">
         <CaptureAngle />
       </div>
-      <h2>{main}</h2>
+      <div className="m2-label-main">
+        <p className="m2-label-kicker">On-set coffee</p>
+        <h2>{main}</h2>
+      </div>
       <p className="m2-label-order">{body}</p>
       <div className="m2-label-footer">
         <span>{label.footerStart}</span>

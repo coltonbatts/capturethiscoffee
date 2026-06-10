@@ -68,6 +68,7 @@ type LabelDraft = {
   group: string;
   productionName: string;
   clientName: string;
+  internalId: string;
   size: string;
   temperature: string;
   drinkType: string;
@@ -82,6 +83,7 @@ const blankDraft: LabelDraft = {
   group: "Set",
   productionName: "Today on set",
   clientName: "",
+  internalId: "",
   size: "Medium",
   temperature: "Iced",
   drinkType: "Latte",
@@ -105,6 +107,7 @@ const fieldLabels: Array<[keyof LabelFieldOptions, string]> = [
   ["group", "Group"],
   ["productionClient", "Shoot"],
   ["notesStatus", "Notes"],
+  ["orderId", "ID"],
 ];
 
 type PrintSheetStyle = CSSProperties &
@@ -662,6 +665,15 @@ export default function LabelWorkstationPage() {
                 placeholder="No room, decaf, extra hot..."
               />
             </Field>
+
+            <Field label="Order ID">
+              <input
+                className={inputClass}
+                value={draft.internalId}
+                onChange={(event) => updateDraft({ internalId: event.target.value })}
+                placeholder="Optional runner code"
+              />
+            </Field>
           </Panel>
 
           <Panel className="grid gap-4 p-4">
@@ -1091,6 +1103,7 @@ function calibrationLabel(calibration: PrintCalibration): CoffeeLabel {
     group: "Test",
     productionClient: "Capture This Coffee",
     notesStatus: "",
+    orderId: "#TEST",
     title: "M2 CALIBRATION",
     bodyLines: [
       "Border inside edge / text readable",
@@ -1156,6 +1169,7 @@ function draftFromRosterItem(
     group: item.roster.group_label || item.person.department || "Set",
     productionName: production.name || "Today on set",
     clientName: client?.name || "",
+    internalId: order?.id ? order.id.slice(0, 6).toUpperCase() : "",
     size: order?.size || "",
     temperature: order?.temperature || "",
     drinkType: order?.drink_type || "",
@@ -1168,6 +1182,7 @@ function draftFromRosterItem(
 
 function draftRosterOrder(draft: LabelDraft, id: string): RosterOrder {
   const order = draftOrderPatch(draft);
+  const labelId = draft.internalId.trim() || id;
   return {
     roster: {
       id: `roster-${id}`,
@@ -1187,7 +1202,7 @@ function draftRosterOrder(draft: LabelDraft, id: string): RosterOrder {
       created_at: new Date(0).toISOString(),
     },
     order: {
-      id: `order-${id}`,
+      id: `order-${labelId}`,
       production_id: "draft-production",
       roster_id: `roster-${id}`,
       person_id: `person-${id}`,

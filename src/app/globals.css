@@ -45,32 +45,62 @@ button {
 .screen-label {
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr);
-  grid-template-rows: 54px minmax(0, 1fr) 34px;
-  column-gap: 12px;
+  grid-template-columns: 38px 58px minmax(0, 1fr);
+  grid-template-rows: minmax(76px, auto) minmax(0, 1fr) 32px;
+  gap: 10px 12px;
   width: min(100%, 420px);
   aspect-ratio: 5 / 3;
   overflow: hidden;
-  border: 2px solid #000000;
-  padding: 14px;
+  border: 3px solid #000000;
+  padding: 12px;
   color: #000000;
   background: #ffffff;
+  background-image: linear-gradient(90deg, #000000 0 38px, transparent 38px);
   box-shadow: 0 18px 32px rgb(0 0 0 / 0.15);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.screen-label-brand {
+  grid-row: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 4px 0;
+  color: #ffffff;
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  writing-mode: vertical-rl;
 }
 
 .screen-label-mark {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   border: 2px solid #000000;
-  padding: 7px;
+  padding: 8px;
 }
 
 .screen-label-mark svg {
   width: 100%;
   height: 100%;
+}
+
+.screen-label-main {
+  min-width: 0;
+  align-self: start;
+}
+
+.screen-label-kicker {
+  margin-bottom: 5px;
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .screen-label h3 {
@@ -79,37 +109,39 @@ button {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 1.65rem;
+  font-size: 2rem;
   font-weight: 900;
   line-height: 0.98;
   letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .screen-label-order {
-  grid-column: 1 / -1;
+  grid-column: 2 / -1;
   display: -webkit-box;
   min-width: 0;
   overflow: hidden;
-  margin-top: 7px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  font-size: 1.08rem;
+  align-self: center;
+  border-block: 3px solid #000000;
+  padding: 8px 0;
+  font-size: 1.12rem;
   font-weight: 900;
   line-height: 1.08;
 }
 
 .screen-label-footer {
-  grid-column: 1 / -1;
+  grid-column: 2 / -1;
   display: grid;
-  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   align-items: end;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
-  border-top: 2px solid #000000;
-  padding-top: 8px;
   font-size: 0.72rem;
   font-weight: 900;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .screen-label-footer span {
@@ -121,28 +153,28 @@ button {
 
 @media (min-width: 640px) {
   .screen-label {
-    grid-template-columns: 60px minmax(0, 1fr);
-    grid-template-rows: 66px minmax(0, 1fr) 40px;
-    column-gap: 16px;
+    grid-template-columns: 42px 66px minmax(0, 1fr);
+    grid-template-rows: minmax(84px, auto) minmax(0, 1fr) 36px;
+    gap: 12px 15px;
     width: min(100%, 460px);
     border-width: 3px;
-    padding: 18px;
+    padding: 14px;
+    background-image: linear-gradient(90deg, #000000 0 42px, transparent 42px);
   }
 
   .screen-label-mark {
-    width: 58px;
-    height: 58px;
+    width: 66px;
+    height: 66px;
     border-width: 3px;
-    padding: 8px;
+    padding: 9px;
   }
 
   .screen-label h3 {
-    font-size: 2rem;
+    font-size: 2.22rem;
   }
 
   .screen-label-order {
-    margin-top: 8px;
-    font-size: 1.22rem;
+    font-size: 1.28rem;
   }
 
   .screen-label-footer {
@@ -152,26 +184,28 @@ button {
 
 @media (max-width: 420px) {
   .screen-label {
-    grid-template-columns: 42px minmax(0, 1fr);
-    grid-template-rows: 48px minmax(0, 1fr) 30px;
-    column-gap: 10px;
-    padding: 12px;
+    grid-template-columns: 30px 46px minmax(0, 1fr);
+    grid-template-rows: minmax(58px, auto) minmax(0, 1fr) 26px;
+    gap: 8px;
+    padding: 10px;
+    background-image: linear-gradient(90deg, #000000 0 30px, transparent 30px);
   }
 
   .screen-label-mark {
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
     padding: 6px;
   }
 
   .screen-label h3 {
-    font-size: 1.35rem;
+    font-size: 1.34rem;
   }
 
   .screen-label-order {
-    margin-top: 5px;
     font-size: 0.92rem;
     line-height: 1.06;
+    border-block-width: 2px;
+    padding: 5px 0;
   }
 
   .screen-label-footer {
@@ -213,17 +247,19 @@ button {
   .m2-label {
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 7.4mm minmax(0, 1fr);
-    grid-template-rows: 8.2mm minmax(0, 1fr) 4.4mm;
-    column-gap: 1.8mm;
+    grid-template-columns: 5mm 8.8mm minmax(0, 1fr);
+    grid-template-rows: 10.8mm minmax(0, 1fr) 4.2mm;
+    gap: 1.2mm 1.7mm;
     width: 50mm;
     height: 30mm;
     overflow: hidden;
     break-after: page;
     page-break-after: always;
-    padding: 2mm 2mm 1.7mm;
+    border: 0.45mm solid #000000;
+    padding: 1.35mm 1.5mm 1.25mm;
     color: #000000;
     background: #ffffff;
+    background-image: linear-gradient(90deg, #000000 0 5mm, transparent 5mm);
     font-family: Arial, Helvetica, sans-serif;
     transform: translate(var(--m2-print-offset-x), var(--m2-print-offset-y))
       scale(var(--m2-print-scale));
@@ -235,13 +271,28 @@ button {
     page-break-after: auto;
   }
 
+  .m2-label-brand {
+    grid-row: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5mm 0;
+    color: #ffffff;
+    font-size: 3.3pt;
+    font-weight: 900;
+    line-height: 1;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    writing-mode: vertical-rl;
+  }
+
   .m2-label-mark {
     display: grid;
     place-items: center;
-    width: 7.2mm;
-    height: 7.2mm;
+    width: 8.6mm;
+    height: 8.6mm;
     border: 0.35mm solid #000000;
-    padding: 0.9mm;
+    padding: 1mm;
     color: #000000;
   }
 
@@ -250,42 +301,57 @@ button {
     height: 100%;
   }
 
+  .m2-label-main {
+    min-width: 0;
+  }
+
+  .m2-label-kicker {
+    margin: 0 0 0.7mm;
+    font-size: 3.4pt;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
   .m2-label h2 {
     display: -webkit-box;
     min-width: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    font-size: 8.6pt;
+    font-size: 9.7pt;
     font-weight: 900;
-    line-height: 0.92;
+    line-height: 0.9;
     letter-spacing: 0;
+    text-transform: uppercase;
   }
 
   .m2-label-order {
-    grid-column: 1 / -1;
+    grid-column: 2 / -1;
     display: -webkit-box;
     min-width: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
-    font-size: 6.6pt;
-    font-weight: 800;
+    align-self: center;
+    border-block: 0.45mm solid #000000;
+    padding: 1.15mm 0;
+    font-size: 6.9pt;
+    font-weight: 900;
     line-height: 1.08;
   }
 
   .m2-label-footer {
-    grid-column: 1 / -1;
+    grid-column: 2 / -1;
     display: grid;
-    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
     align-items: end;
-    gap: 1.6mm;
+    gap: 1.2mm;
     min-width: 0;
-    border-top: 0.28mm solid #000000;
-    padding-top: 0.7mm;
     font-size: 4.1pt;
-    font-weight: 800;
+    font-weight: 900;
     line-height: 1;
+    text-transform: uppercase;
   }
 
   .m2-label-footer span {
