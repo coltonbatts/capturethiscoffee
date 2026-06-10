@@ -28,6 +28,14 @@ type BluetoothDeviceLike = {
   name?: string;
   id?: string;
   gatt?: BluetoothRemoteGATTServerLike;
+  addEventListener?: (
+    type: "gattserverdisconnected",
+    listener: () => void,
+  ) => void;
+  removeEventListener?: (
+    type: "gattserverdisconnected",
+    listener: () => void,
+  ) => void;
 };
 
 type NavigatorWithBluetooth = Navigator & {
@@ -46,45 +54,54 @@ export type NiimbotProbeResult = {
   characteristicUuid?: string;
 };
 
+export type NiimbotConnection = {
+  device: BluetoothDeviceLike;
+  deviceName: string;
+  characteristicUuid: string;
+};
+
 export function isWebBluetoothAvailable() {
   return typeof navigator !== "undefined" && "bluetooth" in navigator;
 }
 
-export async function probeNiimbotBluetooth(): Promise<NiimbotProbeResult> {
+export async function connectNiimbotBluetooth(): Promise<NiimbotConnection> {
   const bluetooth = (navigator as NavigatorWithBluetooth).bluetooth;
 
   if (!bluetooth) {
-    return {
-      ok: false,
-      message:
-        "Web Bluetooth is not available in this browser. Use Chrome or Edge on desktop/Android, or keep using browser print.",
-    };
+    throw new Error(
+      "Web Bluetooth is not available in this browser. Use Chrome or Edge on desktop/Android, or keep using browser print.",
+    );
   }
 
+  const device = await bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [NIIMBOT_BLE_SERVICE],
+  });
+
+  if (!device.gatt) {
+    throw new Error("The selected device does not expose a Bluetooth GATT server.");
+  }
+
+  const server = await device.gatt.connect();
+  const service = await server.getPrimaryService(NIIMBOT_BLE_SERVICE);
+  const characteristic = await service.getCharacteristic(
+    NIIMBOT_BLE_CHARACTERISTIC,
+  );
+
+  return {
+    device,
+    deviceName: device.name || "Unnamed device",
+    characteristicUuid: characteristic.uuid,
+  };
+}
+
+export async function probeNiimbotBluetooth(): Promise<NiimbotProbeResult> {
   try {
-    const device = await bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [NIIMBOT_BLE_SERVICE],
-    });
-
-    if (!device.gatt) {
-      return {
-        ok: false,
-        deviceName: device.name,
-        message: "The selected device does not expose a Bluetooth GATT server.",
-      };
-    }
-
-    const server = await device.gatt.connect();
-    const service = await server.getPrimaryService(NIIMBOT_BLE_SERVICE);
-    const characteristic = await service.getCharacteristic(
-      NIIMBOT_BLE_CHARACTERISTIC,
-    );
-
+    const connection = await connectNiimbotBluetooth();
     return {
       ok: true,
-      deviceName: device.name || "Unnamed device",
-      characteristicUuid: characteristic.uuid,
+      deviceName: connection.deviceName,
+      characteristicUuid: connection.characteristicUuid,
       message:
         "Connected and found the common NIIMBOT BLE print characteristic. Next step is sending a harmless status command or SDK sample print.",
     };

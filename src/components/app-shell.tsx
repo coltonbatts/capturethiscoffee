@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { useAppAuth } from "@/components/app-auth-provider";
+import { PrinterStationCallout } from "@/components/printer-station-callout";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
@@ -33,7 +34,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
     );
   }
 
-  return (
+    return (
     <div className="min-h-dvh pb-24 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black text-white backdrop-blur no-print">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
@@ -86,6 +87,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
           </div>
         </div>
       </header>
+      <PrinterStationCallout />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 md:py-7">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-black/95 px-3 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur md:hidden no-print">
