@@ -26,9 +26,13 @@ import {
 import { getAppAccessToken } from "@/lib/auth";
 import { describeDataError } from "@/lib/data";
 import type { CoffeeLabel } from "@/lib/label-copy";
+import {
+  niimbotM2ExportFileName,
+  niimbotM2ExportPreset,
+  renderNiimbotM2LabelPngBlob,
+} from "@/lib/niimbot-m2-export";
 import type {
   LabelPrintAttemptStatus,
-  LabelPrintJobPayloadV1,
   LabelPrintJobStatus,
   LabelPrintTransport,
 } from "@/lib/print-jobs";
@@ -428,13 +432,16 @@ export default function LabelStationPage() {
   async function downloadPng() {
     if (!selectedJob) return;
     await runJobAction("png", async () => {
-      const url = renderLabelPng(selectedJob.payload);
+      const blob = renderNiimbotM2LabelPngBlob(selectedJob.payload);
+      const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `${safeFilePart(jobTitle(selectedJob))}-50x30mm-300dpi.png`;
+      anchor.download = niimbotM2ExportFileName(jobTitle(selectedJob));
       anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus("Downloaded a 300 DPI PNG for NIIMBOT app import.");
+      setStatus(
+        `Downloaded ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for NIIMBOT app import.`,
+      );
     });
   }
 
@@ -702,7 +709,7 @@ export default function LabelStationPage() {
                     className={`${secondaryButtonClass} min-h-14`}
                   >
                     <Download size={18} aria-hidden="true" />
-                    Download PNG
+                    Export NIIMBOT M2 PNG
                   </button>
                   <button
                     type="button"
@@ -783,7 +790,17 @@ export default function LabelStationPage() {
                 <li>USB: uses the local M2_H serial worker and stored print-job payload.</li>
                 <li>Bluetooth check: proves only that this browser can see the printer.</li>
                 <li>Browser fallback: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
-                <li>PNG: import the downloaded 591 x 354 image into the NIIMBOT laptop app.</li>
+                <li>
+                  {niimbotM2ExportPreset.label} PNG: save the downloaded{" "}
+                  {niimbotM2ExportPreset.pixelWidth} x{" "}
+                  {niimbotM2ExportPreset.pixelHeight} image and import it into
+                  the NIIMBOT mobile app.
+                </li>
+                <li>
+                  Core label content stays inside a{" "}
+                  {niimbotM2ExportPreset.safeMarginPx}px safe margin for the
+                  50mm x 30mm preset.
+                </li>
                 <li>Only mark printed after the physical M2 label is correct.</li>
               </ul>
             </div>
@@ -963,123 +980,4 @@ function loadBrowserPrinterStatus(): PersistedPrinterStatus {
 
 function jobTitle(job: StationJob) {
   return job.payload.label.personName || job.payload.label.title || "Cup label";
-}
-
-function safeFilePart(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48) || "label";
-}
-
-function renderLabelPng(payload: LabelPrintJobPayloadV1) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 591;
-  canvas.height = 354;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas export is not available in this browser.");
-
-  const label = payload.label;
-  const main = label.title || label.personName;
-  const body = label.bodyLines.join(" / ") || label.drink;
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
-
-  ctx.strokeRect(42, 42, 80, 80);
-  drawCaptureMark(ctx, 82, 82, 48);
-
-  ctx.fillStyle = "#000000";
-  ctx.font = "900 39px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, main, 146, 48, 385, 42, 2);
-
-  ctx.font = "900 28px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, body, 42, 154, 508, 34, 3);
-
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(42, 282);
-  ctx.lineTo(550, 282);
-  ctx.stroke();
-
-  ctx.font = "900 17px Arial, Helvetica, sans-serif";
-  drawEllipsisText(ctx, label.footerStart, 42, 316, 185);
-  drawEllipsisText(ctx, label.footerEnd, 250, 316, 300);
-
-  const dataUrl = canvas.toDataURL("image/png");
-  const byteString = atob(dataUrl.split(",")[1] || "");
-  const bytes = new Uint8Array(byteString.length);
-  for (let index = 0; index < byteString.length; index += 1) {
-    bytes[index] = byteString.charCodeAt(index);
-  }
-  return URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
-}
-
-function drawWrappedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  maxLines: number,
-) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
-
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (ctx.measureText(next).width <= maxWidth || !line) {
-      line = next;
-      continue;
-    }
-    lines.push(line);
-    line = word;
-    if (lines.length === maxLines) break;
-  }
-  if (line && lines.length < maxLines) lines.push(line);
-
-  lines.slice(0, maxLines).forEach((value, index) => {
-    const isLast = index === maxLines - 1 && lines.length === maxLines;
-    drawEllipsisText(ctx, isLast ? value : value, x, y + index * lineHeight, maxWidth);
-  });
-}
-
-function drawEllipsisText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-) {
-  let value = text;
-  while (value && ctx.measureText(value).width > maxWidth) {
-    value = `${value.slice(0, -2)}...`;
-  }
-  ctx.fillText(value, x, y);
-}
-
-function drawCaptureMark(
-  ctx: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  size: number,
-) {
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(-Math.PI / 4);
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = "#000000";
-  ctx.beginPath();
-  ctx.moveTo(-size / 2, 0);
-  ctx.lineTo(size / 2, 0);
-  ctx.moveTo(0, -size / 2);
-  ctx.lineTo(0, size / 2);
-  ctx.stroke();
-  ctx.restore();
 }

@@ -1,0 +1,12 @@
+{
+  "id": "niimbot_m2_50x30_png",
+  "label": "NIIMBOT M2",
+  "description": "50mm x 30mm PNG for NIIMBOT app import",
+  "widthMm": 50,
+  "heightMm": 30,
+  "dpi": 300,
+  "pixelWidth": 591,
+  "pixelHeight": 354,
+  "printableWidthPx": 567,
+  "safeMarginPx": 18
+}

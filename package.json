@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "verify:niimbot-export": "node scripts/verify-niimbot-m2-export.mjs",
     "create-demo-user": "node scripts/create-demo-user.mjs",
     "niimbot:cancel": "node scripts/niimbot-cancel.mjs",
     "niimbot:print-glyph-test": "node scripts/niimbot-print-glyph-test.mjs",

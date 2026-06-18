@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clipboard,
   Coffee,
+  Download,
   Layers2,
   PencilLine,
   Printer,
@@ -49,6 +50,11 @@ import {
 } from "@/lib/data";
 import { formatDrink } from "@/lib/order-summary";
 import { probeNiimbotBluetooth } from "@/lib/niimbot-web-bluetooth";
+import {
+  niimbotM2ExportFileName,
+  niimbotM2ExportPreset,
+  renderNiimbotM2LabelPngBlob,
+} from "@/lib/niimbot-m2-export";
 import {
   loadPrintCalibration,
   savePrintCalibration,
@@ -360,6 +366,32 @@ export default function LabelWorkstationPage() {
     } finally {
       setQueueing(false);
     }
+  }
+
+  function exportCurrentPng() {
+    if (!currentLabel || !draft.personName.trim()) {
+      setError("Enter a name before exporting.");
+      return;
+    }
+
+    const selectedOrder = selectedItem?.order;
+    const payload = buildLabelPrintJobPayload({
+      productionId: selectedOrder?.production_id || production?.id || null,
+      orderId: selectedOrder?.id || null,
+      personId: selectedOrder?.person_id || selectedItem?.person.id || null,
+      label: currentLabel,
+      options,
+    });
+    const blob = renderNiimbotM2LabelPngBlob(payload);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = niimbotM2ExportFileName(currentLabel.personName || currentLabel.title);
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setQueueStatus(
+      `Exported ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for NIIMBOT app import.`,
+    );
   }
 
   function printCalibrationLabel() {
@@ -699,7 +731,7 @@ export default function LabelWorkstationPage() {
               {currentLabel ? <ScreenLabel label={currentLabel} /> : null}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               <button
                 type="button"
                 onClick={() => void printCurrent({ advance: true })}
@@ -729,8 +761,17 @@ export default function LabelWorkstationPage() {
               </button>
               <button
                 type="button"
+                onClick={exportCurrentPng}
+                disabled={printing}
+                className={`${secondaryButtonClass} min-h-14`}
+              >
+                <Download size={18} aria-hidden="true" />
+                M2 PNG
+              </button>
+              <button
+                type="button"
                 onClick={copyCurrent}
-                className={`${secondaryButtonClass} min-h-14 sm:col-start-4`}
+                className={`${secondaryButtonClass} min-h-14 sm:col-start-5`}
               >
                 <Clipboard size={18} aria-hidden="true" />
                 {copied ? "Copied" : "Copy"}
