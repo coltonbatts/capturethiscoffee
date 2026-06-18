@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MapPin, Plus, RotateCcw, UserRound } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
 import {
   EmptyState,
   Panel,
-  StatusChip,
-  cardClass,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/ui";
@@ -51,15 +49,9 @@ export default function ProductionsPage() {
         const orders = data.orders.filter(
           (order) => order.production_id === production.id,
         );
-        const done = orders.filter((order) => order.status !== "not_asked").length;
-        const progress = orders.length ? Math.round((done / orders.length) * 100) : 0;
-        const openStatus =
-          orders.find((order) => order.status === "not_asked")?.status ||
-          orders.find((order) => order.status === "confirmed")?.status ||
-          orders[0]?.status ||
-          "not_asked";
+        const remaining = orders.filter((order) => order.status === "not_asked").length;
 
-        return { production, client, orders, done, progress, openStatus };
+        return { production, client, orders, remaining };
       });
   }, [data]);
 
@@ -106,45 +98,24 @@ export default function ProductionsPage() {
           ))}
         </div>
       ) : cards.length ? (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {cards.map(({ production, client, orders, done, progress, openStatus }) => (
-            <Link key={production.id} href={`/productions/${production.id}`} className={cardClass}>
-              <div className="flex items-start justify-between gap-3">
+        <div className="grid gap-2">
+          {cards.map(({ production, client, orders, remaining }) => (
+            <Link
+              key={production.id}
+              href={`/productions/${production.id}`}
+              className="block rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-400"
+            >
+              <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="truncate text-lg font-semibold">{production.name}</h2>
                   <p className="truncate text-sm text-zinc-600">
-                    {client?.name || "No client"}
+                    {[client?.name, production.shoot_date].filter(Boolean).join(" · ") ||
+                      "No client or date"}
                   </p>
                 </div>
-                <StatusChip status={openStatus} />
-              </div>
-              <div className="mt-4 grid gap-2 text-sm text-zinc-700">
-                <span className="flex items-center gap-2">
-                  <CalendarDays size={16} aria-hidden="true" />
-                  {production.shoot_date || "No date"}
+                <span className="shrink-0 text-sm font-medium text-zinc-700">
+                  {remaining ? `${remaining} left` : `${orders.length} done`}
                 </span>
-                <span className="flex items-center gap-2">
-                  <MapPin size={16} aria-hidden="true" />
-                  {production.location || "Location TBD"}
-                </span>
-                <span className="flex items-center gap-2">
-                  <UserRound size={16} aria-hidden="true" />
-                  {production.runner_name || "No runner"}
-                </span>
-              </div>
-              <div className="mt-4">
-                <div className="mb-1.5 flex justify-between text-xs text-zinc-500">
-                  <span>Progress</span>
-                  <span>
-                    {done}/{orders.length}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
-                  <div
-                    className="h-full rounded-full bg-black transition-[width]"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
               </div>
             </Link>
           ))}

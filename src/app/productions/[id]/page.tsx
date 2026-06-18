@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { EmptyState, Panel, secondaryButtonClass } from "@/components/ui";
-import { plainTextCoffeeSummary } from "@/lib/order-summary";
 import {
   addRosterPerson,
   createPersonAndAddToRoster,
@@ -24,24 +23,17 @@ import type {
 } from "@/lib/types";
 import {
   AddToRoster,
-  DrinksTab,
   ErrorToast,
-  FilterBar,
-  GroupsTab,
-  LabelsTab,
+  SearchRoster,
   OrderEditor,
   PeopleTab,
   ProductionDetailsEditor,
   QuickAddPersonSheet,
   RosterEditor,
-  RunMetrics,
   RunnerHeader,
-  StatusTab,
-  SummaryTab,
-  type Tab,
 } from "./components";
 import { useCoffeeStore } from "./use-coffee-store";
-import { type RosterStateFilter, useRosterView } from "./use-roster-view";
+import { useRosterView } from "./use-roster-view";
 
 export default function ProductionDashboardPage() {
   const params = useParams<{ id: string }>();
@@ -60,11 +52,6 @@ export default function ProductionDashboardPage() {
 
   // Filter state lives here so typing in search never re-renders the modals.
   const [query, setQuery] = useState("");
-  const [groupFilter, setGroupFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
-  const [rosterStateFilter, setRosterStateFilter] =
-    useState<RosterStateFilter>("on_set");
-  const [tab, setTab] = useState<Tab>("People");
 
   // Editor/sheet state.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,14 +75,18 @@ export default function ProductionDashboardPage() {
     emptyPersonForm("guest"),
   );
   const [linkQuickAddToClient, setLinkQuickAddToClient] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const production = data?.productions.find((item) => item.id === params.id);
   const client = data?.clients.find((item) => item.id === production?.client_id);
 
   const filters = useMemo(
-    () => ({ query, groupFilter, statusFilter, rosterStateFilter }),
-    [query, groupFilter, statusFilter, rosterStateFilter],
+    () => ({
+      query,
+      groupFilter: "all",
+      statusFilter: "all" as const,
+      rosterStateFilter: "on_set" as const,
+    }),
+    [query],
   );
   const view = useRosterView(data, production, filters);
 
@@ -236,17 +227,6 @@ export default function ProductionDashboardPage() {
     }
   }
 
-  async function copySummary() {
-    const text = plainTextCoffeeSummary(production!, client, view.activeItems);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
-    } catch {
-      setError("Couldn't copy automatically — select the summary text to copy it.");
-    }
-  }
-
   const detail = [client?.name, production.shoot_date, production.location]
     .filter(Boolean)
     .join(" · ");
@@ -260,65 +240,21 @@ export default function ProductionDashboardPage() {
         onEditDetails={isAdmin ? openProductionEditor : undefined}
       />
 
-      <RunMetrics
-        total={view.progress.total}
-        delivered={view.progress.delivered}
-        offSet={view.offSetCount}
-      />
-
-      <FilterBar
+      <SearchRoster
         query={query}
         onQuery={setQuery}
-        rosterStateFilter={rosterStateFilter}
-        onRosterState={setRosterStateFilter}
-        groupFilter={groupFilter}
-        onGroup={setGroupFilter}
-        statusFilter={statusFilter}
-        onStatus={setStatusFilter}
-        groups={view.groups}
-        tab={tab}
-        onTab={setTab}
+        count={view.filteredItems.length}
+        total={view.progress.total}
       />
 
-      {tab === "People" ? (
-        <PeopleTab
-          items={view.filteredItems}
-          pendingOrders={pendingOrders}
-          canManageSetup={isAdmin}
-          onAdvance={advance}
-          onEdit={openOrderEditor}
-          onEditRoster={openRosterEditor}
-          onNoOrder={(order) => advance(order, "no_order")}
-          onDelivered={(order) => advance(order, "delivered")}
-        />
-      ) : null}
-      {tab === "Groups" ? <GroupsTab items={view.activeItems} /> : null}
-      {tab === "Drinks" ? <DrinksTab items={view.activeItems} /> : null}
-      {tab === "Status" ? (
-        <StatusTab
-          items={view.activeItems}
-          pendingOrders={pendingOrders}
-          onStatus={(orderId, patch) => void patchOrder(orderId, patch)}
-        />
-      ) : null}
-      {tab === "Summary" ? (
-        <SummaryTab
-          productionName={production.name}
-          clientName={client?.name || ""}
-          summary={plainTextCoffeeSummary(production, client, view.activeItems)}
-          items={view.activeItems}
-          copied={copied}
-          onCopy={copySummary}
-        />
-      ) : null}
-      {tab === "Labels" ? (
-        <LabelsTab
-          productionName={production.name}
-          clientName={client?.name || ""}
-          items={view.activeItems}
-          onCopyError={setError}
-        />
-      ) : null}
+      <PeopleTab
+        items={view.filteredItems}
+        pendingOrders={pendingOrders}
+        canManageSetup={isAdmin}
+        onAdvance={advance}
+        onEdit={openOrderEditor}
+        onEditRoster={openRosterEditor}
+      />
 
       {isAdmin ? (
         <AddToRoster

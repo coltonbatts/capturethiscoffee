@@ -1,19 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ContactRound,
-  FolderKanban,
-  LogIn,
-  LogOut,
-  UserRound,
-} from "lucide-react";
+import { LogIn, LogOut, UserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { CaptureMark } from "@/components/capture-mark";
 import { useAppAuth } from "@/components/app-auth-provider";
-import { PrinterStationCallout } from "@/components/printer-station-callout";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 type AppShellProps = {
@@ -34,31 +27,20 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
     );
   }
 
-    return (
-    <div className="min-h-dvh pb-24 md:pb-0">
-      <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black text-white backdrop-blur no-print">
+  return (
+    <div className="min-h-dvh">
+      <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur no-print">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/productions" className="flex min-w-0 items-center gap-3">
-            <CaptureMark invert className="size-10 rounded-xl shadow-sm" />
+            <CaptureMark className="size-9 rounded-lg" />
             <span className="block truncate text-lg font-semibold leading-tight">
               {title}
             </span>
           </Link>
-          <nav className="hidden items-center gap-1 rounded-2xl border border-zinc-700 bg-zinc-950 p-1 md:flex">
-            {navItems.map((item) => (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                compact
-              />
-            ))}
-          </nav>
           <div className="flex shrink-0 items-center gap-2">
             {auth.email ? (
               <div
-                className="hidden max-w-48 items-center gap-1.5 truncate rounded-xl border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-300 sm:flex"
+                className="hidden max-w-48 items-center gap-1.5 truncate text-xs text-zinc-500 sm:flex"
                 title={auth.email}
               >
                 <UserRound size={15} aria-hidden="true" />
@@ -70,7 +52,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
               <button
                 type="button"
                 onClick={auth.signOut}
-                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-700 bg-zinc-950 text-zinc-300 hover:bg-zinc-800"
+                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
                 aria-label="Sign out"
               >
                 <LogOut size={18} aria-hidden="true" />
@@ -78,7 +60,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             ) : isSupabaseConfigured ? (
               <Link
                 href={`/login?next=${encodeURIComponent(pathnameForLogin())}`}
-                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-700 bg-zinc-950 text-zinc-300 hover:bg-zinc-800"
+                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
                 aria-label="Sign in"
               >
                 <LogIn size={18} aria-hidden="true" />
@@ -87,21 +69,8 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
           </div>
         </div>
       </header>
-      <PrinterStationCallout />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 md:py-7">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-black/95 px-3 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur md:hidden no-print">
-        <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              icon={item.icon}
-              label={item.label}
-            />
-          ))}
-        </div>
-      </nav>
     </div>
   );
 }
@@ -128,53 +97,4 @@ function useShellAuth(requireAuth: boolean) {
 function pathnameForLogin() {
   if (typeof window === "undefined") return "/productions";
   return `${window.location.pathname}${window.location.search}`;
-}
-
-// Labels are reached inside a production's Labels tab and the operator-only
-// /labels station route, so they no longer need a top-level nav tab.
-const navItems = [
-  { href: "/productions", icon: <FolderKanban size={18} />, label: "Jobs" },
-  { href: "/people", icon: <ContactRound size={18} />, label: "People" },
-  { href: "/clients", icon: <UserRound size={18} />, label: "Clients" },
-];
-
-function NavItem({
-  href,
-  icon,
-  label,
-  compact = false,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-  compact?: boolean;
-}) {
-  const pathname = usePathname();
-  const active =
-    href === "/productions"
-      ? pathname === href || pathname.startsWith("/productions/")
-      : pathname === href;
-
-  return (
-    <Link
-      href={href}
-      className={
-        compact
-          ? `inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium ${
-              active
-                ? "bg-white text-black"
-                : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
-            }`
-          : `flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-xs font-medium ${
-              active
-                ? "bg-white text-black shadow-sm"
-                : "text-zinc-300 active:bg-zinc-800"
-            }`
-      }
-      aria-current={active ? "page" : undefined}
-    >
-      {icon}
-      {label}
-    </Link>
-  );
 }
