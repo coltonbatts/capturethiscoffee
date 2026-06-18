@@ -5,10 +5,13 @@ import {
   ChevronRight,
   Pencil,
   Plus,
+  Printer,
+  RotateCcw,
   Search,
   Trash2,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { PersonPhotoField } from "@/components/person-photo-field";
 import {
@@ -53,6 +56,15 @@ const nextStep: Partial<Record<OrderStatus, { status: OrderStatus; label: string
     confirmed: { status: "ordered", label: "Mark ordered" },
     ordered: { status: "picked_up", label: "Mark picked up" },
     picked_up: { status: "delivered", label: "Mark delivered" },
+  };
+
+const previousStep: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> =
+  {
+    confirmed: { status: "not_asked", label: "Back to not asked" },
+    ordered: { status: "confirmed", label: "Back to confirmed" },
+    picked_up: { status: "ordered", label: "Back to ordered" },
+    delivered: { status: "picked_up", label: "Reopen delivery" },
+    no_order: { status: "confirmed", label: "Reopen order" },
   };
 
 export function ErrorToast({
@@ -322,9 +334,10 @@ function CardActions({
   onEditRoster: () => void;
 }) {
   const step = nextStep[order.status];
+  const previous = previousStep[order.status];
 
   return (
-    <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+    <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
       {step ? (
         <button
           type="button"
@@ -340,11 +353,31 @@ function CardActions({
           {step.label}
         </button>
       ) : (
-        <div className="grid min-h-11 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-950">
-          {statusLabels[order.status]}
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="grid min-h-11 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-950">
+            {statusLabels[order.status]}
+          </div>
+          {previous ? (
+            <button
+              type="button"
+              onClick={() => onAdvance(order, previous.status)}
+              disabled={pending}
+              className={secondaryButtonClass}
+            >
+              <RotateCcw size={18} aria-hidden="true" />
+              {previous.label}
+            </button>
+          ) : null}
         </div>
       )}
 
+      <Link
+        href={`/labels?order=${encodeURIComponent(order.id)}`}
+        className={secondaryButtonClass}
+      >
+        <Printer size={18} aria-hidden="true" />
+        Label
+      </Link>
       <button
         type="button"
         onClick={() => onEdit(order)}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogIn, LogOut, UserRound } from "lucide-react";
+import { LogIn, LogOut, Printer, UserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
@@ -38,6 +38,13 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/labels"
+              className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+              aria-label="Open label workstation"
+            >
+              <Printer size={18} aria-hidden="true" />
+            </Link>
             {auth.email ? (
               <div
                 className="hidden max-w-48 items-center gap-1.5 truncate text-xs text-zinc-500 sm:flex"

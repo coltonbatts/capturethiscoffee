@@ -148,9 +148,22 @@ export default function LabelWorkstationPage() {
         const client = next.clients.find(
           (item) => item.id === firstProduction?.client_id,
         );
+        const requestedOrderId = requestedOrderIdFromUrl();
+        const requestedItem =
+          firstProduction && requestedOrderId
+            ? rosterOrdersForProduction(next, firstProduction.id).find(
+                (item) => item.order?.id === requestedOrderId,
+              )
+            : undefined;
         const firstPrintable = firstProduction
           ? rosterOrdersForProduction(next, firstProduction.id).find(isUnprintedPrintable)
           : undefined;
+
+        if (firstProduction && requestedItem?.order) {
+          setSelectedId(requestedItem.order.id);
+          setDraft(draftFromRosterItem(next, firstProduction, requestedItem));
+          return;
+        }
 
         if (firstProduction && firstPrintable?.order) {
           setSelectedId(firstPrintable.order.id);
@@ -1276,4 +1289,9 @@ function nextPrintableOrderId(items: RosterOrder[], currentId: string) {
   const index = printable.findIndex((item) => item.order?.id === currentId);
   const next = printable[index + 1] || printable[0];
   return next.order?.id || "";
+}
+
+function requestedOrderIdFromUrl() {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("order") || "";
 }

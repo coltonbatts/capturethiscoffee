@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bluetooth, CircleAlert, CircleCheckBig, Printer } from "lucide-react";
+import { Bluetooth, ChevronDown, ChevronUp, CircleAlert, CircleCheckBig, Printer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { secondaryButtonClass } from "@/components/ui";
 import {
@@ -18,6 +18,7 @@ type PersistedPrinterStatus = {
 
 const printerStatusStorageKey = "capturethiscoffee.niimbot-status";
 const printerStatusEvent = "capturethiscoffee:niimbot-status";
+const printerCalloutCollapsedKey = "capturethiscoffee.print-callout-collapsed";
 
 const unknownStatus: PersistedPrinterStatus = {
   connected: false,
@@ -30,7 +31,19 @@ export function PrinterStationCallout() {
   const [status, setStatus] = useState<PersistedPrinterStatus>(loadPrinterStatus);
   const [checking, setChecking] = useState(false);
   const [localStationUrl] = useState(getLocalStationUrl);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(printerCalloutCollapsedKey) === "true";
+  });
   const disconnectCleanupRef = useRef<(() => void) | null>(null);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      window.localStorage.setItem(printerCalloutCollapsedKey, String(next));
+      return next;
+    });
+  }
 
   useEffect(() => {
     function syncStatus() {
@@ -106,6 +119,37 @@ export function PrinterStationCallout() {
       })}`
     : "Needs printer check";
 
+  if (collapsed) {
+    return (
+      <section className="border-b border-zinc-800 bg-zinc-950 text-white no-print">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2">
+          <div className="flex items-center gap-2.5">
+            <Printer size={15} className="shrink-0 text-amber-300" aria-hidden="true" />
+            <span className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
+              Print Station
+            </span>
+            <span
+              className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2 text-xs font-semibold ${statusTone}`}
+            >
+              <StatusIcon size={12} aria-hidden="true" />
+              {status.connected
+                ? `${status.deviceName || "NIIMBOT"} connected`
+                : "Not connected"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            aria-label="Expand print station"
+          >
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="border-b border-zinc-800 bg-[linear-gradient(135deg,#18181b_0%,#18181b_44%,#27272a_44%,#27272a_100%)] text-white no-print">
       <div className="mx-auto grid max-w-6xl gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
@@ -114,9 +158,19 @@ export function PrinterStationCallout() {
             <Printer size={28} aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
-              Print Station
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+                Print Station
+              </p>
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                className="grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white lg:hidden"
+                aria-label="Collapse print station"
+              >
+                <ChevronUp size={16} aria-hidden="true" />
+              </button>
+            </div>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className="text-lg font-black leading-tight md:text-xl">
                 Open the laptop print station fast.
@@ -142,7 +196,15 @@ export function PrinterStationCallout() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row lg:items-center">
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="hidden size-10 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white lg:grid"
+            aria-label="Collapse print station"
+          >
+            <ChevronUp size={16} aria-hidden="true" />
+          </button>
           <button
             type="button"
             onClick={() => void checkPrinter()}
