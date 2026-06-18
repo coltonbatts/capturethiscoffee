@@ -1,4 +1,5 @@
 import { ApiError, jsonError, requirePrintStationAccess } from "@/lib/supabase-server";
+import { printJobFailureStatus } from "@/lib/print-jobs";
 
 export async function POST(
   request: Request,
@@ -9,16 +10,17 @@ export async function POST(
     const { id } = await context.params;
     const body = await request.json();
     const release = body.release === true;
+    const status = printJobFailureStatus(release);
 
     const patch = release
       ? {
-          status: "queued" as const,
+          status,
           assigned_to: null,
           claimed_at: null,
           error_message: stringOrNull(body.error_message),
         }
       : {
-          status: "failed" as const,
+          status,
           error_message: stringOrNull(body.error_message) || "Print failed.",
         };
 

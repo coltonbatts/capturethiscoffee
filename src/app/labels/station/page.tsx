@@ -10,7 +10,13 @@ import {
   RotateCcw,
   XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   PrintableLabel,
@@ -25,12 +31,17 @@ import {
 } from "@/components/ui";
 import { getAppAccessToken } from "@/lib/auth";
 import { describeDataError } from "@/lib/data";
+import {
+  loadPrintCalibration,
+  type PrintCalibration,
+} from "@/lib/label-calibration";
 import type { CoffeeLabel } from "@/lib/label-copy";
 import {
   niimbotM2ExportFileName,
   niimbotM2ExportPreset,
   renderNiimbotM2LabelPngBlob,
 } from "@/lib/niimbot-m2-export";
+import { canMarkLabelPrintJobPrinted } from "@/lib/print-jobs";
 import type {
   LabelPrintAttemptStatus,
   LabelPrintJobStatus,
@@ -62,6 +73,11 @@ type PersistedPrinterStatus = {
   message: string;
   checkedAt: number;
 };
+type PrintSheetStyle = CSSProperties &
+  Record<
+    "--m2-print-offset-x" | "--m2-print-offset-y" | "--m2-print-scale",
+    string
+  >;
 
 const pollingMs = 3500;
 const isPrintStationYolo = process.env.NEXT_PUBLIC_PRINT_STATION_YOLO === "true";
@@ -96,6 +112,7 @@ export default function LabelStationPage() {
   const [checkingLocalUsb, setCheckingLocalUsb] = useState(false);
   const [browserPrinterStatus, setBrowserPrinterStatus] =
     useState<PersistedPrinterStatus>(loadBrowserPrinterStatus);
+  const [calibration] = useState<PrintCalibration>(loadPrintCalibration);
   const [printerName, setPrinterName] = useState("NIIMBOT M2");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -115,6 +132,23 @@ export default function LabelStationPage() {
   const queuedCount = queuedJobs.length;
   const activeCount = activeJobs.length;
   const batchCount = batchJobs.length;
+  const canMarkSelectedPrinted = selectedJob
+    ? canMarkLabelPrintJobPrinted(selectedJob.status)
+    : false;
+  const nextOperatorStep = getNextOperatorStep({
+    batchCount,
+    canPrintViaUsb,
+    hasJobs: Boolean(jobs.length),
+    selectedStatus: selectedJob?.status,
+  });
+  const printSheetStyle = useMemo<PrintSheetStyle>(
+    () => ({
+      "--m2-print-offset-x": `${calibration.offsetX}mm`,
+      "--m2-print-offset-y": `${calibration.offsetY}mm`,
+      "--m2-print-scale": String(calibration.scale / 100),
+    }),
+    [calibration],
+  );
 
   const refreshJobs = useCallback(async ({ silent = false } = {}) => {
     if (!isSupabaseConfigured && !isPrintStationYolo) {
@@ -297,17 +331,21 @@ export default function LabelStationPage() {
     if (!selectedJob) return;
 
     await runJobAction("print", async () => {
+      const job = await claimIfQueued(selectedJob);
       // Best-effort attempt logging — never block the physical print on it.
       let attemptId = "";
       try {
-        const attempt = await createAttempt(selectedJob.id, "started");
+        const attempt = await createAttempt(job.id, "started");
         attemptId = attempt.id;
       } catch {
         // Continue without an attempt row; completion works without one.
       }
       setCurrentAttemptId(attemptId);
-      setPrintLabels([selectedJob.payload.label]);
-      setStatus("Browser print dialog opening. Mark printed only after the physical label is correct.");
+      setSelectedJobId(job.id);
+      setPrintLabels([job.payload.label]);
+      setStatus(
+        `Browser print dialog opening for ${jobTitle(job)}. Mark printed only after the physical label is correct.`,
+      );
       window.setTimeout(() => window.print(), 80);
       await refreshJobs({ silent: true });
     });
@@ -432,17 +470,30 @@ export default function LabelStationPage() {
   async function downloadPng() {
     if (!selectedJob) return;
     await runJobAction("png", async () => {
-      const blob = renderNiimbotM2LabelPngBlob(selectedJob.payload);
+      const job = await claimIfQueued(selectedJob);
+      const blob = await renderNiimbotM2LabelPngBlob(job.payload);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = niimbotM2ExportFileName(jobTitle(selectedJob));
+      anchor.download = niimbotM2ExportFileName(jobTitle(job));
       anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setSelectedJobId(job.id);
       setStatus(
-        `Downloaded ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for NIIMBOT app import.`,
+        `Downloaded ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for ${jobTitle(job)}.`,
       );
+      await refreshJobs({ silent: true });
     });
+  }
+
+  async function claimIfQueued(job: StationJob) {
+    if (job.status !== "queued") return job;
+
+    const body = await apiFetch<{ job: StationJob }>(
+      `/api/print-jobs/${job.id}/claim`,
+      { method: "POST" },
+    );
+    return { ...body.job, payload: job.payload };
   }
 
   async function createAttempt(
@@ -539,6 +590,18 @@ export default function LabelStationPage() {
             {status}
           </div>
         ) : null}
+        <div
+          className={`rounded-xl border p-3 text-sm font-semibold ${
+            nextOperatorStep.tone === "ready"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+              : nextOperatorStep.tone === "warning"
+                ? "border-amber-200 bg-amber-50 text-amber-950"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700"
+          }`}
+        >
+          <span className="font-black text-black">Next: </span>
+          {nextOperatorStep.message}
+        </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(280px,0.8fr)_minmax(360px,1.1fr)_minmax(280px,0.75fr)]">
           <Panel className="grid gap-4 p-4">
@@ -570,7 +633,9 @@ export default function LabelStationPage() {
               Print current queue
             </button>
             <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-black text-zinc-800">
-              {queuedCount} {queuedCount === 1 ? "label" : "labels"} ready
+              {queuedCount
+                ? `${queuedCount} ${queuedCount === 1 ? "label" : "labels"} ready`
+                : "No queued labels yet. Keep this page open; queued labels appear automatically."}
             </p>
 
             {batchJobs.length ? (
@@ -586,8 +651,12 @@ export default function LabelStationPage() {
                   className={`${primaryButtonClass} min-h-12`}
                 >
                   <CheckCircle2 size={18} aria-hidden="true" />
-                  Mark batch printed
+                  Mark batch physically printed
                 </button>
+                <p className="text-xs font-bold text-sky-950">
+                  Use only after every label in this batch is on stock, readable,
+                  and not clipped.
+                </p>
                 <button
                   type="button"
                   onClick={() => void releaseBatch()}
@@ -677,6 +746,11 @@ export default function LabelStationPage() {
                         {localUsbReadiness?.message ||
                           "Checking whether the local station server can see the NIIMBOT USB port."}
                       </p>
+                      <p className="font-black">
+                        Do not mark printed from USB until a physical label comes
+                        out correctly. Use browser print or PNG export as the
+                        fallback.
+                      </p>
                       <button
                         type="button"
                         onClick={() => void checkLocalUsbReadiness()}
@@ -696,7 +770,7 @@ export default function LabelStationPage() {
                   <button
                     type="button"
                     onClick={() => void printViaBrowser()}
-                    disabled={Boolean(busy) || selectedJob.status === "queued"}
+                    disabled={Boolean(busy)}
                     className={`${secondaryButtonClass} min-h-14`}
                   >
                     <Printer size={19} aria-hidden="true" />
@@ -711,14 +785,19 @@ export default function LabelStationPage() {
                     <Download size={18} aria-hidden="true" />
                     Export NIIMBOT M2 PNG
                   </button>
+                  <p className="col-span-2 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-semibold text-zinc-700">
+                    Browser print and PNG export both claim a queued label. The
+                    job is not complete until you inspect the physical output and
+                    click Mark physically printed.
+                  </p>
                   <button
                     type="button"
                     onClick={() => void markPrinted()}
-                    disabled={Boolean(busy) || selectedJob.status === "queued"}
+                    disabled={Boolean(busy) || !canMarkSelectedPrinted}
                     className={`${primaryButtonClass} min-h-14`}
                   >
                     <CheckCircle2 size={18} aria-hidden="true" />
-                    Mark printed
+                    Mark physically printed
                   </button>
                   <button
                     type="button"
@@ -741,7 +820,9 @@ export default function LabelStationPage() {
                 </div>
                 {selectedJob.status === "queued" ? (
                   <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
-                    USB print will claim this job automatically. Claim it first for browser print or manual completion.
+                    Browser print and PNG export will claim this label
+                    automatically. Mark physically printed stays locked until
+                    the label is claimed and physically printed.
                   </p>
                 ) : null}
               </div>
@@ -787,11 +868,11 @@ export default function LabelStationPage() {
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
               <p className="font-bold text-black">Operational path</p>
               <ul className="mt-1 list-disc space-y-1 pl-5">
-                <li>USB: uses the local M2_H serial worker and stored print-job payload.</li>
+                <li>USB: use first only when the readiness message is green.</li>
                 <li>Bluetooth check: proves only that this browser can see the printer.</li>
-                <li>Browser fallback: choose the NIIMBOT driver, 50mm x 30mm, 100% scale.</li>
+                <li>Browser fallback: choose the NIIMBOT driver, 50mm x 30mm, 100% scale, no fit-to-page.</li>
                 <li>
-                  {niimbotM2ExportPreset.label} PNG: save the downloaded{" "}
+                  PNG fallback: save the downloaded{" "}
                   {niimbotM2ExportPreset.pixelWidth} x{" "}
                   {niimbotM2ExportPreset.pixelHeight} image and import it into
                   the NIIMBOT mobile app.
@@ -822,7 +903,7 @@ export default function LabelStationPage() {
       </div>
 
       <section className="print-only hidden">
-        <div className="m2-label-sheet">
+        <div className="m2-label-sheet" style={printSheetStyle}>
           {(printLabels.length
             ? printLabels
             : selectedJob
@@ -908,6 +989,56 @@ function sortJobs(jobs: StationJob[]) {
     if (priority) return priority;
     return a.created_at.localeCompare(b.created_at);
   });
+}
+
+function getNextOperatorStep({
+  batchCount,
+  canPrintViaUsb,
+  hasJobs,
+  selectedStatus,
+}: {
+  batchCount: number;
+  canPrintViaUsb: boolean;
+  hasJobs: boolean;
+  selectedStatus?: LabelPrintJobStatus;
+}) {
+  if (batchCount > 0) {
+    return {
+      tone: "warning" as const,
+      message:
+        "Inspect every label in the batch. Mark batch physically printed only if all labels are correct; otherwise release the batch.",
+    };
+  }
+
+  if (!hasJobs) {
+    return {
+      tone: "idle" as const,
+      message:
+        "Waiting for queued labels. Use the workstation to queue labels, or keep this station open for automatic refresh.",
+    };
+  }
+
+  if (selectedStatus === "queued") {
+    return {
+      tone: canPrintViaUsb ? "ready" as const : "warning" as const,
+      message: canPrintViaUsb
+        ? "Print via USB. If USB fails, use browser print or PNG export; this label will be claimed automatically."
+        : "USB is not ready. Use browser print or PNG export, then confirm only after the physical label is correct.",
+    };
+  }
+
+  if (selectedStatus === "claimed" || selectedStatus === "printing") {
+    return {
+      tone: "warning" as const,
+      message:
+        "A label is in progress. Mark physically printed only after the stock output is readable, correctly scaled, and not clipped.",
+    };
+  }
+
+  return {
+    tone: "idle" as const,
+    message: "Refresh the queue or select a label to continue.",
+  };
 }
 
 async function fetchJobs(status: LabelPrintJobStatus) {

@@ -8,8 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 }
 
 * {
@@ -242,6 +242,10 @@ button {
     --m2-print-offset-x: 0mm;
     --m2-print-offset-y: 0mm;
     --m2-print-scale: 1;
+    width: 50mm;
+    min-height: 30mm;
+    margin: 0;
+    padding: 0;
   }
 
   .m2-label {

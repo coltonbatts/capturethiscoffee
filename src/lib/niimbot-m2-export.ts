@@ -14,7 +14,7 @@ export function renderNiimbotM2LabelPngBlob(payload: LabelPrintJobPayloadV1) {
   return renderCoffeeLabelPngBlob(payload.label);
 }
 
-function renderCoffeeLabelPngBlob(label: CoffeeLabel) {
+async function renderCoffeeLabelPngBlob(label: CoffeeLabel) {
   const canvas = document.createElement("canvas");
   canvas.width = niimbotM2ExportPreset.pixelWidth;
   canvas.height = niimbotM2ExportPreset.pixelHeight;
@@ -24,14 +24,12 @@ function renderCoffeeLabelPngBlob(label: CoffeeLabel) {
 
   drawNiimbotM2Label(ctx, label);
 
-  const dataUrl = canvas.toDataURL("image/png");
-  const byteString = atob(dataUrl.split(",")[1] || "");
-  const bytes = new Uint8Array(byteString.length);
-  for (let index = 0; index < byteString.length; index += 1) {
-    bytes[index] = byteString.charCodeAt(index);
-  }
-
-  return new Blob([bytes], { type: "image/png" });
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Could not export the label PNG."));
+    }, "image/png");
+  });
 }
 
 function drawNiimbotM2Label(ctx: CanvasContext, label: CoffeeLabel) {
@@ -110,11 +108,34 @@ function drawEllipsisText(
   y: number,
   maxWidth: number,
 ) {
-  let value = text;
-  while (value && ctx.measureText(value).width > maxWidth) {
-    value = `${value.slice(0, -2)}...`;
+  const value = ellipsizeToWidth(ctx, text, maxWidth);
+  if (value) ctx.fillText(value, x, y);
+}
+
+function ellipsizeToWidth(ctx: CanvasContext, text: string, maxWidth: number) {
+  if (!text) return "";
+  if (ctx.measureText(text).width <= maxWidth) return text;
+
+  const ellipsis = "...";
+  if (ctx.measureText(ellipsis).width > maxWidth) return "";
+
+  let low = 0;
+  let high = text.length;
+  let best = "";
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const candidate = `${text.slice(0, mid).trimEnd()}${ellipsis}`;
+
+    if (ctx.measureText(candidate).width <= maxWidth) {
+      best = candidate;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
   }
-  ctx.fillText(value, x, y);
+
+  return best;
 }
 
 function drawCaptureMark(

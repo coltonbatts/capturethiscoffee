@@ -381,30 +381,41 @@ export default function LabelWorkstationPage() {
     }
   }
 
-  function exportCurrentPng() {
+  async function exportCurrentPng() {
     if (!currentLabel || !draft.personName.trim()) {
       setError("Enter a name before exporting.");
       return;
     }
 
-    const selectedOrder = selectedItem?.order;
-    const payload = buildLabelPrintJobPayload({
-      productionId: selectedOrder?.production_id || production?.id || null,
-      orderId: selectedOrder?.id || null,
-      personId: selectedOrder?.person_id || selectedItem?.person.id || null,
-      label: currentLabel,
-      options,
-    });
-    const blob = renderNiimbotM2LabelPngBlob(payload);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = niimbotM2ExportFileName(currentLabel.personName || currentLabel.title);
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setQueueStatus(
-      `Exported ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for NIIMBOT app import.`,
-    );
+    setPrinting(true);
+    setError("");
+
+    try {
+      const selectedOrder = selectedItem?.order;
+      const payload = buildLabelPrintJobPayload({
+        productionId: selectedOrder?.production_id || production?.id || null,
+        orderId: selectedOrder?.id || null,
+        personId: selectedOrder?.person_id || selectedItem?.person.id || null,
+        label: currentLabel,
+        options,
+      });
+      const blob = await renderNiimbotM2LabelPngBlob(payload);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = niimbotM2ExportFileName(
+        currentLabel.personName || currentLabel.title,
+      );
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setQueueStatus(
+        `Exported ${niimbotM2ExportPreset.pixelWidth} x ${niimbotM2ExportPreset.pixelHeight}px ${niimbotM2ExportPreset.label} PNG for NIIMBOT app import.`,
+      );
+    } catch (err) {
+      setError(describeDataError(err, "Could not export that PNG."));
+    } finally {
+      setPrinting(false);
+    }
   }
 
   function printCalibrationLabel() {
@@ -774,7 +785,7 @@ export default function LabelWorkstationPage() {
               </button>
               <button
                 type="button"
-                onClick={exportCurrentPng}
+                onClick={() => void exportCurrentPng()}
                 disabled={printing}
                 className={`${secondaryButtonClass} min-h-14`}
               >

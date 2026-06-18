@@ -24,6 +24,31 @@ export type LabelPrintTransport =
   | "laptop_usb"
   | "bridge";
 
+export const activeLabelPrintJobStatuses = [
+  "queued",
+  "claimed",
+  "printing",
+] satisfies LabelPrintJobStatus[];
+
+export function canClaimLabelPrintJob(status: LabelPrintJobStatus) {
+  return status === "queued";
+}
+
+export function canStartLabelPrintAttempt(status: LabelPrintJobStatus) {
+  return status === "claimed";
+}
+
+export function canMarkLabelPrintJobPrinted(status: LabelPrintJobStatus) {
+  return status === "claimed" || status === "printing";
+}
+
+export function printJobFailureStatus(release: boolean): Extract<
+  LabelPrintJobStatus,
+  "queued" | "failed"
+> {
+  return release ? "queued" : "failed";
+}
+
 export type LabelPrintJobPayloadV1 = {
   version: 1;
   label_size: {

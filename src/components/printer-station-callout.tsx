@@ -28,13 +28,11 @@ const unknownStatus: PersistedPrinterStatus = {
 };
 
 export function PrinterStationCallout() {
-  const [status, setStatus] = useState<PersistedPrinterStatus>(loadPrinterStatus);
+  const [status, setStatus] = useState<PersistedPrinterStatus>(unknownStatus);
   const [checking, setChecking] = useState(false);
-  const [localStationUrl] = useState(getLocalStationUrl);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(printerCalloutCollapsedKey) === "true";
-  });
+  const [localStationUrl, setLocalStationUrl] = useState("/labels/station");
+  const [collapsed, setCollapsed] = useState(false);
+  const [browserReady, setBrowserReady] = useState(false);
   const disconnectCleanupRef = useRef<(() => void) | null>(null);
 
   function toggleCollapsed() {
@@ -50,10 +48,20 @@ export function PrinterStationCallout() {
       setStatus(loadPrinterStatus());
     }
 
+    const hydrationFrame = window.requestAnimationFrame(() => {
+      setBrowserReady(true);
+      setLocalStationUrl(getLocalStationUrl());
+      setCollapsed(
+        window.localStorage.getItem(printerCalloutCollapsedKey) === "true",
+      );
+      syncStatus();
+    });
+
     window.addEventListener("storage", syncStatus);
     window.addEventListener(printerStatusEvent, syncStatus);
 
     return () => {
+      window.cancelAnimationFrame(hydrationFrame);
       window.removeEventListener("storage", syncStatus);
       window.removeEventListener(printerStatusEvent, syncStatus);
       disconnectCleanupRef.current?.();
@@ -208,7 +216,7 @@ export function PrinterStationCallout() {
           <button
             type="button"
             onClick={() => void checkPrinter()}
-            disabled={checking || !isWebBluetoothAvailable()}
+            disabled={checking || !browserReady || !isWebBluetoothAvailable()}
             className={`${secondaryButtonClass} min-h-12 border-zinc-600 bg-zinc-950 px-4 text-white hover:bg-zinc-800 disabled:border-zinc-800 disabled:bg-zinc-900`}
           >
             <Bluetooth size={18} aria-hidden="true" />
