@@ -36,6 +36,7 @@ const cliPort = process.argv.find((arg) => arg.startsWith("/dev/"));
 const jobIdArg = process.argv.find((arg) => arg.startsWith("--job-id="));
 const requestedJobId = jobIdArg?.split("=")[1]?.trim() || "";
 const renderSample = process.argv.includes("--render-sample");
+const printSample = process.argv.includes("--print-sample");
 const debug = process.argv.includes("--debug");
 const once = process.argv.includes("--once");
 const dryRun = process.argv.includes("--dry-run");
@@ -60,6 +61,12 @@ main().catch((error) => {
 });
 
 async function main() {
+  if (printSample) {
+    const portInfo = await resolvePrinterPort();
+    await renderSampleRaster({ print: true, portInfo });
+    return;
+  }
+
   if (renderSample) {
     await renderSampleRaster();
     return;
@@ -298,23 +305,27 @@ async function renderJobRasterFromSvg(label) {
 function renderLabelSvg(label) {
   const main = label.title || label.personName || "Cup label";
   const body = label.bodyLines?.join(" / ") || label.drink || "";
-  const titleLines = wrapSvgText(main, 25, 2);
-  const bodyLines = wrapSvgText(body, 35, 3);
-  const footerStart = ellipsize(label.footerStart || label.group || "", 21);
-  const footerEnd = ellipsize(label.footerEnd || label.productionClient || "", 36);
+  const nameProfile = labelNameProfile(main);
+  const titleLines = wrapSvgText(main.toUpperCase(), nameProfile.maxChars, 2);
+  const bodyLines = wrapSvgText(body, 42, 3);
+  const footerStart = ellipsize(label.footerStart || label.group || "", 19).toUpperCase();
+  const footerEnd = ellipsize(label.footerEnd || label.productionClient || "", 31).toUpperCase();
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${sourceColumns}" height="${labelRows}" viewBox="0 0 ${sourceColumns} ${labelRows}">
   <rect width="100%" height="100%" fill="#fff"/>
   <rect x="18" y="18" width="555" height="318" fill="none" stroke="#000" stroke-width="4"/>
-  <rect x="42" y="42" width="80" height="80" fill="none" stroke="#000" stroke-width="4"/>
-  <g transform="translate(82 82) rotate(-45)" stroke="#000" stroke-width="7" stroke-linecap="square">
-    <path d="M-24 0H24M0 -24V24"/>
+  <rect x="18" y="18" width="56" height="318" fill="#000"/>
+  <text x="46" y="177" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(-90 46 177)">CAPTURE  THIS  COFFEE</text>
+  <rect x="506" y="38" width="48" height="48" fill="#fff" stroke="#000" stroke-width="4"/>
+  <g transform="translate(530 62) rotate(-45)" stroke="#000" stroke-width="7" stroke-linecap="square">
+    <path d="M-13.5 0H13.5M0 -13.5V13.5"/>
   </g>
-  <text x="146" y="48" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="900" dominant-baseline="hanging">${svgTspans(titleLines, 146, 48, 42)}</text>
-  <text x="42" y="154" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" dominant-baseline="hanging">${svgTspans(bodyLines, 42, 154, 34)}</text>
-  <line x1="42" y1="282" x2="550" y2="282" stroke="#000" stroke-width="3"/>
-  <text x="42" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerStart)}</text>
-  <text x="250" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerEnd)}</text>
+  <text x="92" y="${nameProfile.y}" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="${nameProfile.fontSize}" font-weight="900" dominant-baseline="hanging">${svgTspans(titleLines, 92, nameProfile.y, nameProfile.lineHeight)}</text>
+  <line x1="92" y1="218" x2="554" y2="218" stroke="#000" stroke-width="4"/>
+  <line x1="92" y1="282" x2="554" y2="282" stroke="#000" stroke-width="4"/>
+  <text x="92" y="229" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" dominant-baseline="hanging">${svgTspans(bodyLines, 92, 229, 22)}</text>
+  <text x="92" y="314" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerStart)}</text>
+  <text x="285" y="314" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${escapeXml(footerEnd)}</text>
 </svg>`;
 }
 
@@ -365,6 +376,48 @@ function normalizeReadableText(value) {
     .trim();
 }
 
+function labelNameProfile(value) {
+  const length = normalizeReadableText(value).length;
+  if (length <= 10) {
+    return {
+      fontSize: 50,
+      lineHeight: 45,
+      maxChars: 10,
+      y: 112,
+      fallbackScale: 5,
+      fallbackY: 110,
+    };
+  }
+  if (length <= 20) {
+    return {
+      fontSize: 61,
+      lineHeight: 52,
+      maxChars: 14,
+      y: 89,
+      fallbackScale: 6,
+      fallbackY: 88,
+    };
+  }
+  if (length <= 24) {
+    return {
+      fontSize: 51,
+      lineHeight: 44,
+      maxChars: 17,
+      y: 83,
+      fallbackScale: 5,
+      fallbackY: 82,
+    };
+  }
+  return {
+    fontSize: 38,
+    lineHeight: 35,
+    maxChars: 21,
+    y: 80,
+    fallbackScale: 4,
+    fallbackY: 78,
+  };
+}
+
 function escapeXml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -378,38 +431,44 @@ function renderJobRasterFallback(label) {
   const body = label.bodyLines?.join(" / ") || label.drink || "";
   const footerStart = label.footerStart || label.group || "";
   const footerEnd = label.footerEnd || label.productionClient || "";
+  const nameProfile = labelNameProfile(main);
   const rows = Array.from({ length: labelRows }, () => Buffer.alloc(bytesPerRow, 0x00));
 
   drawRect(rows, sx(18), 18, sx(sourceColumns - 36), labelRows - 36, 4);
-  drawRect(rows, sx(42), 42, sx(80), 80, 4);
-  drawCaptureMark(rows, sx(82), 82, sx(48));
-  drawTextBlock(rows, main, sx(146), 48, sx(385), 7, 2);
-  drawTextBlock(rows, body, sx(42), 154, sx(508), 5, 3);
-  fillRect(rows, sx(42), 282, sx(508), 3);
-  drawTextLine(rows, footerStart, sx(42), 302, sx(185), 3);
-  drawTextLine(rows, footerEnd, sx(250), 302, sx(300), 3);
+  drawTextLine(rows, "CTC", sx(30), 152, sx(32), 4);
+  drawRect(rows, sx(506), 38, sx(48), 48, 4);
+  drawCaptureMark(rows, sx(530), 62, sx(27));
+  drawTextBlock(rows, main, sx(92), nameProfile.fallbackY, sx(402), nameProfile.fallbackScale, 2);
+  drawTextBlock(rows, body, sx(92), 229, sx(462), 4, 3);
+  fillRect(rows, sx(92), 218, sx(462), 4);
+  fillRect(rows, sx(92), 282, sx(462), 4);
+  drawTextLine(rows, footerStart, sx(92), 314, sx(172), 3);
+  drawTextLine(rows, footerEnd, sx(285), 314, sx(270), 3);
 
   return encodeRows(rows);
 }
 
-async function renderSampleRaster() {
+async function renderSampleRaster({
+  print = false,
+  portInfo = undefined,
+} = {}) {
   await fs.mkdir("logs", { recursive: true });
   const label = {
     id: "sample-usb-label",
     personName: "Jordan Lee",
-    drink: "Iced oat latte, half sweet, cinnamon, no whip",
-    group: "Camera Team",
-    productionClient: "Capture This Coffee / Day 03",
+    drink: "Medium, Iced, Matcha latte, Almond milk, Half sweet, No room",
+    group: "Client",
+    productionClient: "Capture This Coffee / Test",
     notesStatus: "Confirmed",
     title: "Jordan Lee",
-    bodyLines: ["Iced oat latte, half sweet", "Cinnamon, no whip"],
-    footerStart: "Camera Team",
-    footerEnd: "Capture This Coffee / Day 03",
+    bodyLines: ["Medium, Iced, Matcha latte", "Almond milk, Half sweet, No room"],
+    footerStart: "Client  #TEST",
+    footerEnd: "Capture This Coffee / Test",
     lines: [
       "Jordan Lee",
-      "Iced oat latte, half sweet",
-      "Cinnamon, no whip",
-      "Camera Team - Capture This Coffee / Day 03",
+      "Medium, Iced, Matcha latte",
+      "Almond milk, Half sweet, No room",
+      "Client #TEST - Capture This Coffee / Test",
     ],
   };
   const svg = renderLabelSvg(label);
@@ -427,6 +486,12 @@ async function renderSampleRaster() {
   console.log(
     `Raster check: ${printheadColumns} x ${labelRows}, ${encoded.rowsData.length} row runs, ${blackPixels} black pixels.`,
   );
+
+  if (print) {
+    if (!portInfo?.path) throw new Error("Missing printer port for sample print.");
+    console.log(`Printing redesigned sample label to ${portInfo.path}`);
+    await printRaster(portInfo.path, encoded);
+  }
 }
 
 function encodeRows(rows) {

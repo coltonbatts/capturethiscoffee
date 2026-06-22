@@ -76,12 +76,12 @@ export function ErrorToast({
 }) {
   return (
     <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-3 md:bottom-4 no-print">
-      <div className="flex w-full max-w-md items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 shadow-lg shadow-black/10">
+      <div className="flex w-full max-w-md items-start gap-3 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
         <span className="min-w-0 flex-1">{message}</span>
         <button
           type="button"
           onClick={onDismiss}
-          className="grid size-6 shrink-0 place-items-center rounded-lg text-red-700 hover:bg-red-100"
+          className="grid size-6 shrink-0 place-items-center rounded-lg text-red-700 hover:bg-red-50"
           aria-label="Dismiss"
         >
           <X size={16} aria-hidden="true" />
@@ -103,7 +103,7 @@ export function RunnerHeader({
   onEditDetails?: () => void;
 }) {
   return (
-    <section className="mb-4 border-b border-zinc-200 pb-4 no-print">
+    <section className="mb-4 border-b border-black pb-4 no-print">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm text-zinc-600">
@@ -118,7 +118,7 @@ export function RunnerHeader({
             <button
               type="button"
               onClick={onEditDetails}
-              className="grid size-11 place-items-center rounded-xl border border-zinc-300 bg-white text-black hover:bg-zinc-50"
+              className="grid size-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
               aria-label="Edit production details"
             >
               <Pencil size={18} aria-hidden="true" />
@@ -134,7 +134,7 @@ export function RunnerHeader({
           </div>
         </div>
       </div>
-      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-zinc-200">
+      <div className="mt-4 h-1.5 overflow-hidden rounded-sm bg-zinc-200">
         <div
           className="h-full bg-black transition-[width]"
           style={{ width: `${progress.percent}%` }}
@@ -236,7 +236,7 @@ function RosterCard({
 
   return (
     <article
-      className="w-full min-w-0 rounded-xl border border-zinc-200 bg-white p-3"
+      className="w-full min-w-0 rounded-xl border border-zinc-400 bg-white p-3"
       aria-busy={pending}
     >
       <div className={`flex gap-3 ${pending ? "opacity-60" : ""}`}>
@@ -254,7 +254,7 @@ function RosterCard({
             <div className="grid shrink-0 justify-items-end gap-1">
               {order ? <StatusChip status={order.status} /> : null}
               {!onSet ? (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                <span className="rounded-md border border-zinc-500 bg-white px-2.5 py-1 text-xs font-black text-zinc-700">
                   Off set
                 </span>
               ) : null}
@@ -277,7 +277,7 @@ function RosterCard({
         // Partial data: roster row exists but its order never landed. Surface
         // it instead of silently rendering nothing (the old `return null`).
         <div className="mt-3 grid gap-2">
-          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
+          <p className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-zinc-800">
             No order record yet. Remove and re-add this person to rebuild it.
           </p>
           {canManageSetup ? (
@@ -354,7 +354,7 @@ function CardActions({
         </button>
       ) : (
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="grid min-h-11 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-950">
+          <div className="grid min-h-11 place-items-center rounded-lg border border-zinc-500 bg-zinc-200 px-3 text-sm font-black text-black">
             {statusLabels[order.status]}
           </div>
           {previous ? (
@@ -465,7 +465,7 @@ function Sheet({
   onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const className =
-    "mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-2xl border border-zinc-200 bg-white p-5 shadow-2xl";
+    "mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5";
 
   return (
     <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3 no-print">
@@ -597,7 +597,7 @@ export function OrderEditor({
           ))}
         </select>
       </Field>
-      <label className="flex min-h-11 items-start gap-3 rounded-xl border border-zinc-300 p-3 text-sm text-zinc-700">
+      <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
         <input
           type="checkbox"
           checked={updateUsualOrder}
@@ -742,7 +742,7 @@ export function RosterEditor({
           autoFocus
         />
       </Field>
-      <label className="flex min-h-11 items-start gap-3 rounded-xl border border-zinc-300 p-3 text-sm text-zinc-700">
+      <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
         <input
           type="checkbox"
           checked={draft.on_set_today ?? true}
@@ -896,7 +896,7 @@ export function QuickAddPersonSheet({
         />
       </Field>
       {canLinkToClient ? (
-        <label className="flex min-h-11 items-start gap-3 rounded-xl border border-zinc-300 p-3 text-sm text-zinc-700">
+        <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
           <input
             type="checkbox"
             checked={linkToClient}

@@ -150,7 +150,7 @@ export default function ClientDetailPage() {
       ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+        <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
@@ -203,7 +203,7 @@ export default function ClientDetailPage() {
       <div className="grid gap-3">
         {!data ? (
           [0, 1, 2].map((item) => (
-            <Panel key={item} className="h-24 animate-pulse bg-white/70 p-4" />
+            <Panel key={item} className="h-24 animate-pulse bg-zinc-100 p-4" />
           ))
         ) : !linked.length ? (
           <EmptyState title="No contacts" description="Link people from your roster." />

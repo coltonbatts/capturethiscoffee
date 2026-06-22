@@ -118,8 +118,8 @@ function LoginForm() {
 
   return (
     <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
-      <section className="w-full max-w-md overflow-hidden rounded-2xl border border-zinc-700 bg-white text-black shadow-xl">
-        <div className="flex items-center gap-3 border-b border-zinc-200 bg-black p-5 text-white">
+      <section className="w-full max-w-md overflow-hidden rounded-xl border border-black bg-white text-black">
+        <div className="flex items-center gap-3 border-b border-black bg-black p-5 text-white">
           <CaptureMark invert className="size-11 rounded-xl" />
           <h1 className="text-xl font-semibold">Capture This</h1>
         </div>
@@ -147,7 +147,7 @@ function LoginForm() {
             />
           </Field>
           {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+            <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
               {error}
             </div>
           ) : null}
@@ -177,8 +177,8 @@ function NeedsAdminNotice({
 }) {
   return (
     <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
-      <section className="w-full max-w-md overflow-hidden rounded-2xl border border-zinc-700 bg-white text-black shadow-xl">
-        <div className="flex items-center gap-3 border-b border-zinc-200 bg-black p-5 text-white">
+      <section className="w-full max-w-md overflow-hidden rounded-xl border border-black bg-white text-black">
+        <div className="flex items-center gap-3 border-b border-black bg-black p-5 text-white">
           <CaptureMark invert className="size-11 rounded-xl" />
           <h1 className="text-xl font-semibold">Capture This</h1>
         </div>

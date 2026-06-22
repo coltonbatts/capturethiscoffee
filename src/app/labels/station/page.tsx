@@ -558,48 +558,48 @@ export default function LabelStationPage() {
       title="Label print station"
       requireAuth
       actions={
-        <Link href="/labels" className={`${secondaryButtonClass} min-h-10 border-zinc-700 bg-zinc-950 px-3 text-white hover:bg-zinc-800`}>
+        <Link href="/labels" className={`${secondaryButtonClass} min-h-10 border-black bg-black px-3 text-white hover:bg-zinc-800`}>
           <ExternalLink size={16} aria-hidden="true" />
           Workstation
         </Link>
       }
     >
       <div className="grid gap-4 no-print">
-        <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-black/5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <section className="grid gap-4 border-y border-black bg-white py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
             <h1 className="text-2xl font-black leading-tight tracking-normal text-black md:text-3xl">
-              Laptop print station
+              Print station
             </h1>
             <p className="mt-1 text-sm font-medium text-zinc-600">
-              Print every queued label in one batch, then record the physical result.
+              Print the queue, inspect the stock, record the result.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center">
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-500 bg-white p-2 text-center">
             <Metric value={queuedCount} label="Queued" />
             <Metric value={activeCount} label="Claimed" />
           </div>
         </section>
 
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
             {error}
           </div>
         ) : null}
         {status ? (
-          <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">
+          <div className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
             {status}
           </div>
         ) : null}
         <div
           className={`rounded-xl border p-3 text-sm font-semibold ${
             nextOperatorStep.tone === "ready"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+              ? "border-black bg-black text-white"
               : nextOperatorStep.tone === "warning"
-                ? "border-amber-200 bg-amber-50 text-amber-950"
-                : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                ? "border-zinc-700 bg-white text-black"
+                : "border-zinc-500 bg-white text-zinc-700"
           }`}
         >
-          <span className="font-black text-black">Next: </span>
+          <span className="font-black">Next: </span>
           {nextOperatorStep.message}
         </div>
 
@@ -608,9 +608,6 @@ export default function LabelStationPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold">Queue</h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Oldest highest-priority job is claimed first.
-                </p>
               </div>
               <button
                 type="button"
@@ -632,15 +629,15 @@ export default function LabelStationPage() {
               <Printer size={18} aria-hidden="true" />
               Print current queue
             </button>
-            <p className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-black text-zinc-800">
+            <p className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-black text-zinc-800">
               {queuedCount
                 ? `${queuedCount} ${queuedCount === 1 ? "label" : "labels"} ready`
                 : "No queued labels yet. Keep this page open; queued labels appear automatically."}
             </p>
 
             {batchJobs.length ? (
-              <div className="grid gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3">
-                <p className="text-sm font-black text-sky-950">
+              <div className="grid gap-2 rounded-lg border border-zinc-500 bg-white p-3">
+                <p className="text-sm font-black text-black">
                   Batch in progress: {batchCount}{" "}
                   {batchCount === 1 ? "label" : "labels"}
                 </p>
@@ -653,7 +650,7 @@ export default function LabelStationPage() {
                   <CheckCircle2 size={18} aria-hidden="true" />
                   Mark batch physically printed
                 </button>
-                <p className="text-xs font-bold text-sky-950">
+                <p className="text-xs font-bold text-zinc-700">
                   Use only after every label in this batch is on stock, readable,
                   and not clipped.
                 </p>
@@ -698,14 +695,9 @@ export default function LabelStationPage() {
               <h2 className="text-lg font-bold">
                 {batchJobs.length ? "Current batch" : "Current label"}
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                {batchJobs.length
-                  ? `${batchJobs.length} labels claimed for this print batch.`
-                  : "50mm x 30mm snapshot from the stored print-job payload."}
-              </p>
             </div>
 
-            <div className="grid min-h-[280px] place-items-center overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(135deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_48%,#eef2f7_52%,#f8fafc_52%)] p-3 sm:min-h-[340px] sm:p-4">
+            <div className="grid min-h-[280px] place-items-center overflow-hidden rounded-xl border border-zinc-500 bg-zinc-100 p-3 sm:min-h-[340px] sm:p-4">
               {batchJobs.length ? (
                 <div className="grid max-h-[420px] w-full grid-cols-1 gap-3 overflow-auto p-1 sm:grid-cols-2">
                   {batchJobs.map((job) => (
@@ -734,14 +726,14 @@ export default function LabelStationPage() {
                     Print via USB
                   </button>
                   {!isLocalStation ? (
-                    <p className="col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                    <p className="col-span-2 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
                       {browserPrinterStatus.connected
                         ? `Printer is visible to this browser as ${browserPrinterStatus.deviceName || "NIIMBOT"}, but USB printing requires the local station server. Open ${localStationUrl} on this laptop.`
                         : `USB printing is local-only. Open ${localStationUrl} on the printer laptop to use the attached NIIMBOT.`}
                     </p>
                   ) : null}
                   {isLocalStation && !canPrintViaUsb ? (
-                    <div className="col-span-2 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                    <div className="col-span-2 grid gap-2 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
                       <p>
                         {localUsbReadiness?.message ||
                           "Checking whether the local station server can see the NIIMBOT USB port."}
@@ -755,7 +747,7 @@ export default function LabelStationPage() {
                         type="button"
                         onClick={() => void checkLocalUsbReadiness()}
                         disabled={checkingLocalUsb || Boolean(busy)}
-                        className={`${secondaryButtonClass} min-h-10 justify-self-start border-amber-300 bg-white px-3 text-amber-950 hover:bg-amber-100`}
+                        className={`${secondaryButtonClass} min-h-10 justify-self-start px-3`}
                       >
                         <RefreshCw size={16} aria-hidden="true" />
                         {checkingLocalUsb ? "Checking USB..." : "Recheck USB"}
@@ -763,7 +755,7 @@ export default function LabelStationPage() {
                     </div>
                   ) : null}
                   {canPrintViaUsb && localUsbReadiness ? (
-                    <p className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-950">
+                    <p className="col-span-2 rounded-lg border border-black bg-black p-3 text-sm font-bold text-white">
                       {localUsbReadiness.message}
                     </p>
                   ) : null}
@@ -785,7 +777,7 @@ export default function LabelStationPage() {
                     <Download size={18} aria-hidden="true" />
                     Export NIIMBOT M2 PNG
                   </button>
-                  <p className="col-span-2 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-semibold text-zinc-700">
+                  <p className="col-span-2 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-zinc-700">
                     Browser print and PNG export both claim a queued label. The
                     job is not complete until you inspect the physical output and
                     click Mark physically printed.
@@ -819,7 +811,7 @@ export default function LabelStationPage() {
                   </button>
                 </div>
                 {selectedJob.status === "queued" ? (
-                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                  <p className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
                     Browser print and PNG export will claim this label
                     automatically. Mark physically printed stays locked until
                     the label is claimed and physically printed.
@@ -832,10 +824,6 @@ export default function LabelStationPage() {
           <Panel className="grid content-start gap-4 p-4">
             <div>
               <h2 className="text-lg font-bold">Print path</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                USB serial is primary only when this page is served by the local
-                station server; browser print remains the fallback.
-              </p>
             </div>
 
             <label className="grid gap-1.5 text-sm font-medium text-zinc-600">
@@ -865,7 +853,7 @@ export default function LabelStationPage() {
               />
             </label>
 
-            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
+            <div className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-medium leading-6 text-zinc-700">
               <p className="font-bold text-black">Operational path</p>
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 <li>USB: use first only when the readiness message is green.</li>
@@ -887,7 +875,7 @@ export default function LabelStationPage() {
             </div>
 
             {selectedJob ? (
-              <div className="rounded-xl border border-zinc-200 bg-white p-3 text-sm">
+              <div className="rounded-lg border border-zinc-500 bg-white p-3 text-sm">
                 <p className="font-bold text-black">{jobTitle(selectedJob)}</p>
                 <p className="mt-1 text-zinc-600">{selectedJob.payload.label.drink}</p>
                 <p className="mt-2 font-mono text-xs text-zinc-500">
@@ -941,17 +929,17 @@ function JobList({
               key={job.id}
               type="button"
               onClick={() => onSelect(job.id)}
-              className={`grid gap-1 rounded-xl border p-3 text-left transition active:scale-[0.99] ${
+              className={`grid gap-1 rounded-lg border p-3 text-left transition active:translate-y-px ${
                 job.id === selectedJobId
                   ? "border-black bg-black text-white"
-                  : "border-zinc-200 bg-white text-black hover:border-zinc-400"
+                  : "border-zinc-400 bg-white text-black hover:border-black"
               }`}
             >
               <span className="flex items-start justify-between gap-3">
                 <span className="min-w-0 truncate text-sm font-black">
                   {jobTitle(job)}
                 </span>
-                <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-black uppercase text-zinc-700">
+                <span className="shrink-0 rounded-md border border-zinc-400 bg-white px-2 py-1 text-[11px] font-black uppercase text-zinc-700">
                   {job.status}
                 </span>
               </span>
@@ -966,7 +954,7 @@ function JobList({
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-3 text-sm font-medium text-zinc-600">
+        <p className="rounded-lg border border-dashed border-zinc-500 bg-white p-3 text-sm font-bold text-zinc-600">
           None.
         </p>
       )}

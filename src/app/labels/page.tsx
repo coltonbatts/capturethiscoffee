@@ -514,18 +514,18 @@ export default function LabelWorkstationPage() {
   return (
     <AppShell title="Label workstation" requireAuth>
       <div className="grid gap-4 no-print">
-        <section className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-black/5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <section className="grid gap-4 border-y border-black bg-white py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
             <h1 className="text-2xl font-black leading-tight tracking-normal text-black md:text-3xl">
-              Active shoot labels
+              Labels
             </h1>
             <p className="mt-1 text-sm font-medium text-zinc-600">
               {production
                 ? `${production.name}${production.location ? ` at ${production.location}` : ""}`
-                : "Load the active production, tap a face, print, and move."}
+                : "Manual labels are available without shoot data."}
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 text-center">
+          <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-500 bg-white p-2 text-center">
             <Metric value={printableItems.length || 0} label="Printable" />
             <Metric
               value={rosterItems.filter((item) => item.order?.label_printed).length}
@@ -536,7 +536,7 @@ export default function LabelWorkstationPage() {
         </section>
 
         {error ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
             <span className="min-w-0">{error}</span>
             {!data ? (
               <button
@@ -552,15 +552,12 @@ export default function LabelWorkstationPage() {
         ) : null}
 
         <Panel className="grid gap-3 p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 border-b border-zinc-300 pb-3">
             <div>
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <UserRound size={19} aria-hidden="true" />
                 Shoot queue
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                First unprinted order is selected automatically.
-              </p>
             </div>
             <button
               type="button"
@@ -584,7 +581,7 @@ export default function LabelWorkstationPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm font-medium text-zinc-600">
+            <div className="rounded-lg border border-dashed border-zinc-500 bg-white p-4 text-sm font-bold text-zinc-600">
               No printable orders are loaded for this active shoot. Use Manual to
               print a one-off label.
             </div>
@@ -592,16 +589,13 @@ export default function LabelWorkstationPage() {
         </Panel>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.9fr)_minmax(360px,1.1fr)_minmax(280px,0.75fr)]">
-          <Panel className="grid gap-4 p-4">
+          <Panel className="grid content-start gap-4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-bold">
                   <UserRound size={19} aria-hidden="true" />
                   Manual fallback
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Adjust the selected order or type a one-off cup label.
-                </p>
               </div>
               {isAuthDisabled ? (
                 <button
@@ -669,7 +663,7 @@ export default function LabelWorkstationPage() {
                   key={item.label}
                   type="button"
                   onClick={() => updateDraft(item)}
-                  className="min-h-10 shrink-0 rounded-xl border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+                  className="min-h-10 shrink-0 rounded-lg border border-zinc-500 bg-white px-3 text-sm font-black text-zinc-800 hover:border-black hover:bg-zinc-100"
                 >
                   {item.label}
                 </button>
@@ -732,30 +726,27 @@ export default function LabelWorkstationPage() {
             </Field>
           </Panel>
 
-          <Panel className="grid gap-4 p-4">
+          <Panel className="grid content-start gap-4 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-lg font-bold">
                   <Coffee size={19} aria-hidden="true" />
                   Preview
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  This is the 50mm x 30mm browser print label.
-                </p>
               </div>
               {selectedItem?.order?.label_printed ? (
-                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 text-xs font-bold text-emerald-950">
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-zinc-500 bg-zinc-200 px-3 text-xs font-black text-black">
                   <CheckCircle2 size={15} aria-hidden="true" />
                   Printed
                 </span>
               ) : null}
             </div>
 
-            <div className="grid min-h-[260px] place-items-center overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(135deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_48%,#eef2f7_52%,#f8fafc_52%)] p-3 sm:min-h-[320px] sm:p-4">
+            <div className="grid min-h-[260px] place-items-center overflow-hidden rounded-xl border border-zinc-500 bg-zinc-100 p-3 sm:min-h-[320px] sm:p-4">
               {currentLabel ? <ScreenLabel label={currentLabel} /> : null}
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
               <button
                 type="button"
                 onClick={() => void printCurrent({ advance: true })}
@@ -795,7 +786,7 @@ export default function LabelWorkstationPage() {
               <button
                 type="button"
                 onClick={copyCurrent}
-                className={`${secondaryButtonClass} min-h-14 sm:col-start-5`}
+                className={`${secondaryButtonClass} min-h-14`}
               >
                 <Clipboard size={18} aria-hidden="true" />
                 {copied ? "Copied" : "Copy"}
@@ -803,14 +794,14 @@ export default function LabelWorkstationPage() {
             </div>
 
             {queueStatus ? (
-              <p className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm font-semibold text-sky-950">
+              <p className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
                 {queueStatus}
               </p>
             ) : null}
 
             {pendingPrintedOrderId ? (
-              <div className="grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                <p className="text-sm font-semibold leading-5 text-amber-950">
+              <div className="grid gap-2 rounded-lg border border-zinc-500 bg-white p-3">
+                <p className="text-sm font-bold leading-5 text-black">
                   After the browser print dialog finishes, confirm only if the label
                   came out correctly.
                 </p>
@@ -892,7 +883,7 @@ export default function LabelWorkstationPage() {
               </button>
               {printerProbe ? (
                 <p
-                  className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700"
+                  className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-medium leading-6 text-zinc-700"
                   aria-live="polite"
                 >
                   {printerProbe}
@@ -926,7 +917,7 @@ export default function LabelWorkstationPage() {
                   {recent.map((item) => (
                     <p
                       key={item}
-                      className="rounded-xl bg-zinc-100 p-3 text-sm font-semibold text-zinc-700"
+                      className="rounded-lg border border-zinc-300 bg-white p-3 text-sm font-bold text-zinc-700"
                     >
                       {item}
                     </p>
@@ -953,7 +944,7 @@ export default function LabelWorkstationPage() {
 
 function PrinterCalibrationChecklist() {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm font-medium leading-6 text-zinc-700">
+    <div className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-medium leading-6 text-zinc-700">
       <p className="font-bold text-black">Browser print setup</p>
       <ul className="mt-1 list-disc space-y-1 pl-5">
         <li>Label stock: 50mm x 30mm.</li>
@@ -987,7 +978,7 @@ function PrinterCalibrationControls({
   onPrint: () => void;
 }) {
   return (
-    <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-3">
+    <div className="grid gap-3 rounded-lg border border-zinc-500 bg-white p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-bold text-black">Physical calibration</p>
@@ -1103,12 +1094,12 @@ function QueueCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`grid min-h-32 w-[78vw] max-w-[320px] shrink-0 snap-start grid-cols-[3.25rem_minmax(0,1fr)] gap-3 rounded-xl border p-3 text-left transition active:scale-[0.99] sm:w-auto sm:max-w-none ${
+      className={`grid min-h-32 w-[78vw] max-w-[320px] shrink-0 snap-start grid-cols-[3.25rem_minmax(0,1fr)] gap-3 rounded-xl border p-3 text-left transition active:translate-y-px sm:w-auto sm:max-w-none ${
         selected
-          ? "border-black bg-black text-white shadow-sm shadow-black/15"
+          ? "border-black bg-black text-white"
           : printed
-            ? "border-emerald-200 bg-emerald-50 text-emerald-950"
-            : "border-zinc-200 bg-white text-black hover:border-zinc-400"
+            ? "border-zinc-500 bg-zinc-100 text-black"
+            : "border-zinc-400 bg-white text-black hover:border-black"
       }`}
       aria-pressed={selected}
     >
@@ -1120,24 +1111,24 @@ function QueueCard({
               {item.person.name}
             </span>
             <span
-              className={`mt-1 inline-flex max-w-full rounded-full px-2 py-1 text-xs font-bold ${
+              className={`mt-1 inline-flex max-w-full rounded-md border px-2 py-1 text-xs font-bold ${
                 selected
-                  ? "bg-white/15 text-white"
-                  : "bg-zinc-100 text-zinc-700"
+                  ? "border-white/30 bg-white/10 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700"
               }`}
             >
               <span className="truncate">{group}</span>
             </span>
           </span>
           <span
-            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-black uppercase ${
+            className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-black uppercase ${
               printed
                 ? selected
-                  ? "bg-emerald-400 text-black"
-                  : "bg-emerald-600 text-white"
+                  ? "border-white bg-white text-black"
+                  : "border-zinc-500 bg-zinc-200 text-black"
                 : selected
-                  ? "bg-white text-black"
-                  : "bg-black text-white"
+                  ? "border-white bg-white text-black"
+                  : "border-black bg-black text-white"
             }`}
           >
             {printed ? (

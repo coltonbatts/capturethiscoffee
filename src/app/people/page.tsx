@@ -113,7 +113,7 @@ export default function PeoplePage() {
       </form>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+        <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
@@ -129,7 +129,7 @@ export default function PeoplePage() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {!data ? (
           [0, 1, 2, 3, 4, 5].map((item) => (
-            <Panel key={item} className="h-28 animate-pulse bg-white/70 p-4" />
+            <Panel key={item} className="h-28 animate-pulse bg-zinc-100 p-4" />
           ))
         ) : !people.length ? (
           <EmptyState title="No people found" description="Add someone or clear your search." />
@@ -172,7 +172,7 @@ export default function PeoplePage() {
             role="dialog"
             aria-modal="true"
             aria-label="Edit person"
-            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-2xl border border-zinc-200 bg-white p-5 shadow-2xl"
+            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5"
           >
             <h2 className="text-lg font-semibold">Edit person</h2>
             <PersonFields form={editForm} onChange={setEditForm} showActive />
@@ -297,7 +297,7 @@ function PersonFields({
         />
       </Field>
       {showActive ? (
-        <label className="flex min-h-11 items-center gap-3 rounded-xl border border-zinc-300 px-3.5 text-sm font-medium text-zinc-700">
+        <label className="flex min-h-11 items-center gap-3 rounded-lg border border-zinc-500 px-3.5 text-sm font-medium text-zinc-700">
           <input
             type="checkbox"
             checked={form.active}

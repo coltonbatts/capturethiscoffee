@@ -29,18 +29,18 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur no-print">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+      <header className="sticky top-0 z-30 border-b border-black bg-white no-print">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <Link href="/productions" className="flex min-w-0 items-center gap-3">
             <CaptureMark className="size-9 rounded-lg" />
-            <span className="block truncate text-lg font-semibold leading-tight">
+            <span className="block truncate text-lg font-black leading-tight">
               {title}
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/labels"
-              className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+              className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
               aria-label="Open label workstation"
             >
               <Printer size={18} aria-hidden="true" />
@@ -59,7 +59,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
               <button
                 type="button"
                 onClick={auth.signOut}
-                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
                 aria-label="Sign out"
               >
                 <LogOut size={18} aria-hidden="true" />
@@ -67,7 +67,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             ) : isSupabaseConfigured ? (
               <Link
                 href={`/login?next=${encodeURIComponent(pathnameForLogin())}`}
-                className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
                 aria-label="Sign in"
               >
                 <LogIn size={18} aria-hidden="true" />

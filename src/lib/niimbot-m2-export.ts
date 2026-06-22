@@ -36,6 +36,7 @@ function drawNiimbotM2Label(ctx: CanvasContext, label: CoffeeLabel) {
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
+  const nameProfile = labelNameProfile(main);
 
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#ffffff";
@@ -50,34 +51,79 @@ function drawNiimbotM2Label(ctx: CanvasContext, label: CoffeeLabel) {
     pixelHeight - safeMarginPx * 2,
   );
 
-  ctx.strokeRect(42, 42, 80, 80);
-  drawCaptureMark(ctx, 82, 82, 48);
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(18, 18, 56, 318);
+  drawVerticalBrand(ctx, 46, 177);
+
+  ctx.strokeRect(506, 38, 48, 48);
+  drawCaptureMark(ctx, 530, 62, 27);
 
   ctx.fillStyle = "#000000";
-  ctx.font = "900 39px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, main, 146, 48, 385, 42, 2);
+  ctx.font = `900 ${nameProfile.fontSize}px Arial, Helvetica, sans-serif`;
+  drawFittedWrappedText(
+    ctx,
+    main.toUpperCase(),
+    92,
+    nameProfile.y,
+    402,
+    nameProfile.lineHeight,
+    2,
+    nameProfile.minFontSize,
+  );
 
-  ctx.font = "900 28px Arial, Helvetica, sans-serif";
-  drawWrappedText(ctx, body, 42, 154, 508, 34, 3);
-
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(42, 282);
-  ctx.lineTo(550, 282);
+  ctx.moveTo(92, 218);
+  ctx.lineTo(554, 218);
+  ctx.moveTo(92, 282);
+  ctx.lineTo(554, 282);
   ctx.stroke();
 
+  ctx.font = "900 22px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, body, 92, 229, 462, 22, 3, 17);
+
   ctx.font = "900 17px Arial, Helvetica, sans-serif";
-  drawEllipsisText(ctx, label.footerStart, 42, 316, 185);
-  drawEllipsisText(ctx, label.footerEnd, 250, 316, 300);
+  drawEllipsisText(ctx, label.footerStart.toUpperCase(), 92, 314, 172);
+  drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 285, 314, 270);
 }
 
-function drawWrappedText(
+function drawFittedWrappedText(
   ctx: CanvasContext,
   text: string,
   x: number,
   y: number,
   maxWidth: number,
   lineHeight: number,
+  maxLines: number,
+  minFontSize: number,
+) {
+  const originalFont = ctx.font;
+  const fontSize = Number(originalFont.match(/(\d+(?:\.\d+)?)px/)?.[1] || 16);
+  let nextFontSize = fontSize;
+  let nextLineHeight = lineHeight;
+  let lines = wrappedLines(ctx, text, maxWidth, maxLines);
+
+  while (
+    nextFontSize > minFontSize &&
+    lines.some((line) => ctx.measureText(line).width > maxWidth)
+  ) {
+    nextFontSize -= 1;
+    nextLineHeight = Math.max(nextLineHeight - 0.8, minFontSize * 0.84);
+    ctx.font = originalFont.replace(/(\d+(?:\.\d+)?)px/, `${nextFontSize}px`);
+    lines = wrappedLines(ctx, text, maxWidth, maxLines);
+  }
+
+  lines.slice(0, maxLines).forEach((value, index) => {
+    drawEllipsisText(ctx, value, x, y + index * nextLineHeight, maxWidth);
+  });
+
+  ctx.font = originalFont;
+}
+
+function wrappedLines(
+  ctx: CanvasContext,
+  text: string,
+  maxWidth: number,
   maxLines: number,
 ) {
   const words = text.split(/\s+/).filter(Boolean);
@@ -96,9 +142,7 @@ function drawWrappedText(
   }
   if (line && lines.length < maxLines) lines.push(line);
 
-  lines.slice(0, maxLines).forEach((value, index) => {
-    drawEllipsisText(ctx, value, x, y + index * lineHeight, maxWidth);
-  });
+  return lines.slice(0, maxLines);
 }
 
 function drawEllipsisText(
@@ -156,6 +200,32 @@ function drawCaptureMark(
   ctx.lineTo(0, size / 2);
   ctx.stroke();
   ctx.restore();
+}
+
+function drawVerticalBrand(ctx: CanvasContext, centerX: number, centerY: number) {
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 13px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("CAPTURE  THIS  COFFEE", 0, 5);
+  ctx.restore();
+  ctx.textAlign = "start";
+}
+
+function labelNameProfile(value: string) {
+  const length = value.trim().replace(/\s+/g, " ").length;
+  if (length <= 10) {
+    return { fontSize: 50, lineHeight: 45, minFontSize: 38, y: 112 };
+  }
+  if (length <= 20) {
+    return { fontSize: 61, lineHeight: 52, minFontSize: 42, y: 89 };
+  }
+  if (length <= 24) {
+    return { fontSize: 51, lineHeight: 44, minFontSize: 34, y: 83 };
+  }
+  return { fontSize: 38, lineHeight: 35, minFontSize: 26, y: 80 };
 }
 
 function safeFilePart(value: string) {

@@ -75,14 +75,11 @@ export default function ProductionsPage() {
     >
       <PrinterStationCallout />
 
-      <section className="mb-4 grid gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm shadow-black/5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <section className="mb-4 grid gap-3 border-y border-black bg-white py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
-          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">
-            Labels and printing
-          </h1>
+          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Orders</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
-            Build cup labels, print the next open order, queue labels for the laptop station,
-            or export NIIMBOT M2 PNGs for phone import.
+            Pick a job, print labels, keep the queue moving.
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 md:w-[360px]">
@@ -111,7 +108,7 @@ export default function ProductionsPage() {
       ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+        <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
@@ -119,7 +116,7 @@ export default function ProductionsPage() {
       {!data ? (
         <div className="grid gap-3 md:grid-cols-2">
           {[0, 1, 2, 3].map((item) => (
-            <Panel key={item} className="h-48 animate-pulse bg-white/70 p-4" />
+            <Panel key={item} className="h-32 animate-pulse bg-zinc-100 p-4" />
           ))}
         </div>
       ) : cards.length ? (
@@ -128,7 +125,7 @@ export default function ProductionsPage() {
             <Link
               key={production.id}
               href={`/productions/${production.id}`}
-              className="block rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-400"
+              className="block rounded-xl border border-zinc-400 bg-white p-4 transition hover:border-black active:translate-y-px"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -138,7 +135,7 @@ export default function ProductionsPage() {
                       "No client or date"}
                   </p>
                 </div>
-                <span className="shrink-0 text-sm font-medium text-zinc-700">
+                <span className="shrink-0 rounded-md border border-zinc-500 px-2.5 py-1 text-sm font-black text-zinc-900">
                   {remaining ? `${remaining} left` : `${orders.length} done`}
                 </span>
               </div>

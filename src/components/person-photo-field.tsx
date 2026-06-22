@@ -40,8 +40,8 @@ export function PersonPhotoField({
 
   return (
     <div className="grid gap-2">
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
-        <div className="grid size-24 place-items-center overflow-hidden rounded-xl bg-white ring-1 ring-zinc-200">
+      <div className="grid gap-3 rounded-lg border border-zinc-500 bg-white p-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
+        <div className="grid size-24 place-items-center overflow-hidden rounded-lg bg-white ring-1 ring-black">
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase/local photos are dynamic.
             <img
@@ -83,7 +83,7 @@ export function PersonPhotoField({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-800 hover:bg-red-100"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-700 bg-white px-3 text-sm font-bold text-red-700 hover:bg-red-50"
             >
               <Trash2 size={17} aria-hidden="true" />
               Remove photo
@@ -113,7 +113,7 @@ export function PersonPhotoField({
       ) : null}
 
       {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+        <p className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </p>
       ) : null}

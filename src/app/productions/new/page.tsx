@@ -91,17 +91,17 @@ export default function NewProductionPage() {
           </Field>
 
           {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+            <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
               {error}
             </div>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-2 rounded-xl bg-zinc-100 p-1">
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-500 bg-white p-1">
             <button
               type="button"
               onClick={() => setClientMode("existing")}
-              className={`min-h-11 rounded-lg text-sm font-medium ${
-                clientMode === "existing" ? "bg-black text-white shadow-sm" : "text-zinc-600"
+              className={`min-h-11 rounded-md text-sm font-black ${
+                clientMode === "existing" ? "bg-black text-white" : "text-zinc-600"
               }`}
             >
               Existing client
@@ -109,8 +109,8 @@ export default function NewProductionPage() {
             <button
               type="button"
               onClick={() => setClientMode("new")}
-              className={`min-h-11 rounded-lg text-sm font-medium ${
-                clientMode === "new" ? "bg-black text-white shadow-sm" : "text-zinc-600"
+              className={`min-h-11 rounded-md text-sm font-black ${
+                clientMode === "new" ? "bg-black text-white" : "text-zinc-600"
               }`}
             >
               New client

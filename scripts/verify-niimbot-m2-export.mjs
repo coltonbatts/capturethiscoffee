@@ -55,15 +55,18 @@ function renderSampleSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${preset.pixelWidth}" height="${preset.pixelHeight}" viewBox="0 0 ${preset.pixelWidth} ${preset.pixelHeight}">
   <rect width="100%" height="100%" fill="#fff"/>
   <rect x="${preset.safeMarginPx}" y="${preset.safeMarginPx}" width="${preset.pixelWidth - preset.safeMarginPx * 2}" height="${preset.pixelHeight - preset.safeMarginPx * 2}" fill="none" stroke="#000" stroke-width="4"/>
-  <rect x="42" y="42" width="80" height="80" fill="none" stroke="#000" stroke-width="4"/>
-  <g transform="translate(82 82) rotate(-45)" stroke="#000" stroke-width="7">
-    <path d="M-24 0H24M0 -24V24"/>
+  <rect x="18" y="18" width="56" height="318" fill="#000"/>
+  <text x="46" y="177" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(-90 46 177)">CAPTURE  THIS  COFFEE</text>
+  <rect x="506" y="38" width="48" height="48" fill="#fff" stroke="#000" stroke-width="4"/>
+  <g transform="translate(530 62) rotate(-45)" stroke="#000" stroke-width="7">
+    <path d="M-13.5 0H13.5M0 -13.5V13.5"/>
   </g>
-  <text x="146" y="48" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="900" dominant-baseline="hanging">${main}</text>
-  <text x="42" y="154" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="900" dominant-baseline="hanging">${body}</text>
-  <line x1="42" y1="282" x2="550" y2="282" stroke="#000" stroke-width="3"/>
-  <text x="42" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${footerStart}</text>
-  <text x="250" y="303" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${footerEnd}</text>
+  <text x="92" y="100" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="900" dominant-baseline="hanging">${main.toUpperCase()}</text>
+  <line x1="92" y1="218" x2="554" y2="218" stroke="#000" stroke-width="4"/>
+  <line x1="92" y1="282" x2="554" y2="282" stroke="#000" stroke-width="4"/>
+  <text x="92" y="229" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" dominant-baseline="hanging">${body}</text>
+  <text x="92" y="314" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${footerStart.toUpperCase()}</text>
+  <text x="285" y="314" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" dominant-baseline="hanging">${footerEnd.toUpperCase()}</text>
 </svg>`;
 }
 

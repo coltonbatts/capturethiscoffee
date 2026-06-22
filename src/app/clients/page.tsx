@@ -83,7 +83,7 @@ export default function ClientsPage() {
       </form>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+        <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
@@ -91,7 +91,7 @@ export default function ClientsPage() {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {!data ? (
           [0, 1, 2].map((item) => (
-            <Panel key={item} className="h-28 animate-pulse bg-white/70 p-4" />
+            <Panel key={item} className="h-28 animate-pulse bg-zinc-100 p-4" />
           ))
         ) : !data.clients.length ? (
           <EmptyState title="No clients yet" description="Add a client to use on new shoots." />
@@ -111,7 +111,7 @@ export default function ClientsPage() {
                   </p>
                 </div>
                 {client.active ? (
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900">
+                  <span className="rounded-md border border-zinc-500 bg-white px-2.5 py-1 text-xs font-black text-black">
                     Active
                   </span>
                 ) : null}

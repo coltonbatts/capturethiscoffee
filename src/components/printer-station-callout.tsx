@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Bluetooth, ChevronDown, ChevronUp, CircleAlert, CircleCheckBig, Printer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { secondaryButtonClass } from "@/components/ui";
 import {
   connectNiimbotBluetooth,
   isWebBluetoothAvailable,
@@ -117,8 +116,8 @@ export function PrinterStationCallout() {
   }
 
   const statusTone = status.connected
-    ? "border-emerald-300 bg-emerald-50 text-emerald-950"
-    : "border-amber-300 bg-amber-50 text-amber-950";
+    ? "border-white bg-white text-black"
+    : "border-zinc-500 bg-black text-white";
   const StatusIcon = status.connected ? CircleCheckBig : CircleAlert;
   const checkedLabel = status.checkedAt
     ? `Last checked ${new Date(status.checkedAt).toLocaleTimeString([], {
@@ -129,15 +128,15 @@ export function PrinterStationCallout() {
 
   if (collapsed) {
     return (
-      <section className="border-b border-zinc-800 bg-zinc-950 text-white no-print">
+      <section className="border-b border-black bg-black text-white no-print">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2">
           <div className="flex items-center gap-2.5">
-            <Printer size={15} className="shrink-0 text-amber-300" aria-hidden="true" />
-            <span className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
+            <Printer size={15} className="shrink-0 text-white" aria-hidden="true" />
+            <span className="text-xs font-black uppercase tracking-normal text-white">
               Print Station
             </span>
             <span
-              className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2 text-xs font-semibold ${statusTone}`}
+              className={`inline-flex min-h-6 items-center gap-1.5 rounded-md border px-2 text-xs font-black ${statusTone}`}
             >
               <StatusIcon size={12} aria-hidden="true" />
               {status.connected
@@ -148,7 +147,7 @@ export function PrinterStationCallout() {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            className="grid size-8 place-items-center rounded-lg text-zinc-300 hover:bg-white hover:text-black"
             aria-label="Expand print station"
           >
             <ChevronDown size={16} aria-hidden="true" />
@@ -159,21 +158,21 @@ export function PrinterStationCallout() {
   }
 
   return (
-    <section className="border-b border-zinc-800 bg-[linear-gradient(135deg,#18181b_0%,#18181b_44%,#27272a_44%,#27272a_100%)] text-white no-print">
+    <section className="border-b border-black bg-black text-white no-print">
       <div className="mx-auto grid max-w-6xl gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="grid gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-white text-black shadow-sm">
+          <div className="flex size-14 items-center justify-center rounded-xl border border-white bg-white text-black">
             <Printer size={28} aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+              <p className="text-xs font-black uppercase tracking-normal text-zinc-300">
                 Print Station
               </p>
               <button
                 type="button"
                 onClick={toggleCollapsed}
-                className="grid size-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white lg:hidden"
+                className="grid size-8 place-items-center rounded-lg text-zinc-300 hover:bg-white hover:text-black lg:hidden"
                 aria-label="Collapse print station"
               >
                 <ChevronUp size={16} aria-hidden="true" />
@@ -184,7 +183,7 @@ export function PrinterStationCallout() {
                 Open the laptop print station fast.
               </span>
               <span
-                className={`inline-flex min-h-8 items-center gap-2 rounded-full border px-3 py-1 text-xs font-black ${statusTone}`}
+                className={`inline-flex min-h-8 items-center gap-2 rounded-md border px-3 py-1 text-xs font-black ${statusTone}`}
               >
                 <StatusIcon size={14} aria-hidden="true" />
                 {status.connected
@@ -196,7 +195,7 @@ export function PrinterStationCallout() {
               {status.message} {checkedLabel}.
             </p>
             {status.connected && localStationUrl.startsWith("http://localhost") ? (
-              <p className="mt-1 text-sm font-semibold text-amber-200">
+              <p className="mt-1 text-sm font-semibold text-zinc-200">
                 Printer is visible to this browser, but USB printing requires the
                 local station server on the printer laptop.
               </p>
@@ -208,7 +207,7 @@ export function PrinterStationCallout() {
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="hidden size-10 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white lg:grid"
+            className="hidden size-10 place-items-center rounded-lg text-zinc-300 hover:bg-white hover:text-black lg:grid"
             aria-label="Collapse print station"
           >
             <ChevronUp size={16} aria-hidden="true" />
@@ -217,14 +216,14 @@ export function PrinterStationCallout() {
             type="button"
             onClick={() => void checkPrinter()}
             disabled={checking || !browserReady || !isWebBluetoothAvailable()}
-            className={`${secondaryButtonClass} min-h-12 border-zinc-600 bg-zinc-950 px-4 text-white hover:bg-zinc-800 disabled:border-zinc-800 disabled:bg-zinc-900`}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-white bg-black px-4 text-sm font-black leading-tight text-white transition hover:bg-zinc-900 active:translate-y-px disabled:cursor-not-allowed disabled:border-zinc-700 disabled:text-zinc-500"
           >
             <Bluetooth size={18} aria-hidden="true" />
             {checking ? "Checking NIIMBOT..." : "Check NIIMBOT"}
           </button>
           <Link
             href={localStationUrl}
-            className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-amber-300 px-6 text-base font-black text-black shadow-[0_10px_30px_rgba(251,191,36,0.28)] transition hover:bg-amber-200 active:scale-[0.99]"
+            className="inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border border-white bg-white px-6 text-base font-black text-black transition hover:bg-zinc-200 active:translate-y-px"
           >
             <Printer size={18} aria-hidden="true" />
             {localStationUrl.startsWith("http://localhost")
