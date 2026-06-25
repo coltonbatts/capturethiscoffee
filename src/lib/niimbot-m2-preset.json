@@ -1,7 +1,7 @@
 {
   "id": "niimbot_m2_50x30_png",
-  "label": "NIIMBOT M2",
-  "description": "50mm x 30mm PNG for NIIMBOT app import",
+  "label": "NIIMBOT M2 current assumed preset",
+  "description": "Current assumed 50mm x 30mm / 300 DPI PNG for NIIMBOT app import; physical lid-label stock has not been verified yet.",
   "widthMm": 50,
   "heightMm": 30,
   "dpi": 300,

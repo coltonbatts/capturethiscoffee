@@ -9,20 +9,9 @@
     "lint": "eslint",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "verify:niimbot-export": "node scripts/verify-niimbot-m2-export.mjs",
-    "create-demo-user": "node scripts/create-demo-user.mjs",
-    "niimbot:cancel": "node scripts/niimbot-cancel.mjs",
-    "niimbot:print-glyph-test": "node scripts/niimbot-print-glyph-test.mjs",
-    "niimbot:print-raster-spike": "node scripts/niimbot-print-raster-spike.mjs",
-    "niimbot:probe": "node scripts/niimbot-probe.mjs",
-    "niimbot:print-diagnostic": "node scripts/niimbot-print-diagnostic.mjs",
-    "niimbot:status": "node scripts/niimbot-status.mjs",
-    "niimbot:test-print": "node scripts/niimbot-test-print.mjs",
-    "station:start": "node scripts/start-print-station.mjs",
-    "label:serial-worker": "node scripts/label-serial-worker.mjs",
-    "label:serial-sample": "node scripts/label-serial-worker.mjs --render-sample"
+    "create-demo-user": "node scripts/create-demo-user.mjs"
   },
   "dependencies": {
-    "@mmote/niimblue-node": "0.0.12",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.86.0",
     "lucide-react": "^0.562.0",

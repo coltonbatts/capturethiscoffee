@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Plus, Printer, RotateCcw } from "lucide-react";
+import { ImageDown, Plus, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
@@ -11,7 +11,6 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/ui";
-import { PrinterStationCallout } from "@/components/printer-station-callout";
 import {
   isSupabaseBacked,
   loadCoffeeData,
@@ -73,23 +72,17 @@ export default function ProductionsPage() {
         ) : null
       }
     >
-      <PrinterStationCallout />
-
       <section className="mb-4 grid gap-3 border-y border-black bg-white py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
           <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Orders</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
-            Pick a job, print labels, keep the queue moving.
+            Pick a job, export labels, keep the coffee moving.
           </p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 md:w-[360px]">
+        <div className="grid gap-2 md:w-[220px]">
           <Link href="/labels" className={`${primaryButtonClass} min-h-14 text-base`}>
-            <Printer size={19} aria-hidden="true" />
+            <ImageDown size={19} aria-hidden="true" />
             Open labels
-          </Link>
-          <Link href="/labels/station" className={`${secondaryButtonClass} min-h-14`}>
-            <Download size={18} aria-hidden="true" />
-            Print station
           </Link>
         </div>
       </section>

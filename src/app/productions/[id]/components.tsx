@@ -496,6 +496,7 @@ function Sheet({
 export function OrderEditor({
   draft,
   updateUsualOrder,
+  canUpdateUsualOrder = true,
   onChange,
   onUpdateUsualOrder,
   onCancel,
@@ -504,6 +505,7 @@ export function OrderEditor({
 }: {
   draft: Partial<Order>;
   updateUsualOrder: boolean;
+  canUpdateUsualOrder?: boolean;
   onChange: (draft: Partial<Order>) => void;
   onUpdateUsualOrder: (value: boolean) => void;
   onCancel: () => void;
@@ -597,18 +599,20 @@ export function OrderEditor({
           ))}
         </select>
       </Field>
-      <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
-        <input
-          type="checkbox"
-          checked={updateUsualOrder}
-          onChange={(event) => onUpdateUsualOrder(event.target.checked)}
-          className="mt-0.5 size-4 accent-black"
-        />
-        <span>
-          <span className="block font-semibold text-black">Save as usual order</span>
-          <span className="text-zinc-600">Leave off for a one-day exception.</span>
-        </span>
-      </label>
+      {canUpdateUsualOrder ? (
+        <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
+          <input
+            type="checkbox"
+            checked={updateUsualOrder}
+            onChange={(event) => onUpdateUsualOrder(event.target.checked)}
+            className="mt-0.5 size-4 accent-black"
+          />
+          <span>
+            <span className="block font-semibold text-black">Save as usual order</span>
+            <span className="text-zinc-600">Leave off for a one-day exception.</span>
+          </span>
+        </label>
+      ) : null}
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           Cancel

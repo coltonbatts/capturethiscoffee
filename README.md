@@ -24,9 +24,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Supabase Auth email/password when env vars are configured
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
-- Copyable coffee summaries and browser-printable M2 label cards
-- Remote label queue from `/labels` to `/labels/station` when Supabase print-job migrations are applied
-- NIIMBOT M2_H direct USB serial diagnostics and early bitmap print tests
+- Copyable coffee summaries and print-ready NIIMBOT label PNG export from `/labels`
 
 ## Day-of resilience
 
@@ -39,14 +37,8 @@ mid-shoot:
   initial load fails.
 - Status taps on the dashboard are optimistic: the change shows immediately,
   and a failed save rolls back just that one order with an error toast.
-- On `/labels`, a failed order save warns but **still prints the physical
-  label** from local state; queue failures remind you the remote queue is
-  optional and browser print keeps working.
-- `/labels/station` keeps showing the last loaded queue when a background
-  refresh fails ("Connection lost… retrying automatically"), print-attempt
-  bookkeeping is best-effort and can never block printing or releasing a job,
-  and a USB print timeout returns a clear message pointing at the browser
-  print / PNG fallbacks.
+- `/labels` keeps PNG export client-side. If native phone sharing is not
+  available, the normal Download PNG action remains available.
 - Missing or unreachable people photos fall back to initials instead of a
   broken image.
 
@@ -67,14 +59,15 @@ The app redirects `/` to `/productions`.
 2. Run `supabase/schema.sql` and then every file in `supabase/migrations` (in
    filename order) in the Supabase SQL editor. These enable RLS with the access
    model the app actually relies on:
-   - **Active event-day data is publicly readable** — anyone with the link can
-     read active productions, people, and orders.
+   - **Event-day runner access is token scoped** — a production share token can
+     read only that production's runner payload through the app API.
    - **Setup writes require an admin** — creating or editing clients, people,
      productions, rosters, and new order drafts requires a signed-in user with
      `app_metadata.admin = true` (`staff`/`role` are also accepted; see
      `src/lib/auth.ts`).
-   - **Live order updates stay open** — runners can update an existing order's
-     status and drink on an active production without signing in.
+   - **Live order updates are token scoped** — runners can update operational
+     fields on existing orders only through a valid share token for that active
+     production.
 3. Copy `.env.example` to `.env.local`.
 4. Fill in:
 
@@ -94,11 +87,9 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `people`
 - `client_people`
 - `productions`
+- `production_share_tokens`
 - `production_roster`
 - `orders`
-- `printer_devices`
-- `label_print_jobs`
-- `label_print_attempts`
 - Supabase Storage bucket `person-photos` for authenticated people photos
 
 When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset-to-seed control lives on the labels screen and only rewrites this browser's local data — in Supabase-backed mode it does not touch shared data and should be treated as a local-only affordance.
@@ -120,97 +111,64 @@ Create demo users in the Supabase dashboard:
    proxy redirects them away from `/people`, `/clients`, `/labels`, and
    `/productions/new`.
 
-Runners do not need an account for the day-of flow: anonymous visitors can read
-active productions and update an existing order's status and drink on an active
-production. They cannot create records or reach the admin/setup routes above.
+Runners do not need an account for the day-of flow, but they do need a
+production share link. Anonymous visitors cannot read crew/order tables directly
+or update orders directly through Supabase. Generate a share token as an admin:
+
+```sql
+select public.create_production_share_token(
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  now() + interval '14 days',
+  'Shoot day runner link'
+);
+```
+
+Open `/productions/<production-id>?token=<returned-token>` for the runner view.
+The token authorizes only that production. It omits private person notes and
+dietary notes. It does include `usual_order` because the runner screen uses it
+as the operational prompt for confirming drinks quickly. Order edits are limited
+to operational drink/status fields on active productions.
 Keep public sign-ups disabled so only invited admins can be created.
+
+Manual RLS checks after applying migrations:
+
+```sql
+set local role anon;
+select * from public.people limit 1; -- permission denied
+select * from public.orders limit 1; -- permission denied
+update public.orders set status = 'confirmed' where true; -- permission denied
+reset role;
+```
 
 Then open `/login`, sign in, and continue to `/productions`.
 
+Operating SOP: [docs/standard-operating-procedure.md](docs/standard-operating-procedure.md).
 Client onboarding checklist: [docs/client-login-handoff.md](docs/client-login-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
-NIIMBOT label station setup: [docs/label-printer-station.md](docs/label-printer-station.md).
-Client print-station handoff: [docs/client-print-station-handoff.md](docs/client-print-station-handoff.md).
-Printer laptop quick start: [docs/print-station-quickstart.md](docs/print-station-quickstart.md).
-Print-station demo script: [docs/print-station-demo-script.md](docs/print-station-demo-script.md).
+Label image export workflow: [docs/label-image-export.md](docs/label-image-export.md).
 
 ## Label printing
 
-Capture This Coffee uses a master queue plus local printer stations.
-`coffee.capturethis.com` owns productions, orders, label payloads, queue state,
-and print history. Physical printing happens only on a local station running on
-the laptop connected to the NIIMBOT.
+Capture This Coffee generates a polished, print-ready PNG label. The NIIMBOT
+first-party app handles printer pairing and Bluetooth printing.
 
-On the printer laptop, the normal on-set startup path is:
+The on-set workflow is:
 
-1. Plug in and power on the NIIMBOT M2_H.
-2. Double-click `Start Print Station.command`.
-3. Wait for green readiness on the station page.
-4. Use `http://localhost:3000/labels/station`.
-5. If USB readiness fails, use browser print or Download PNG from the station
-   page as the fallback.
+1. Open `/labels` on the phone.
+2. Choose the production and one or more active labels.
+3. Preview the label.
+4. Tap **Share** when supported, or **Download PNG**.
+5. Open the NIIMBOT app.
+6. Import the PNG and print through NIIMBOT's Bluetooth flow.
 
-Use `/labels` to print a selected order through the browser fallback or queue it
-for a station. Open `/labels/station` from `http://localhost:3000` on the
-printer laptop to claim queued jobs and print through local USB serial. Browser
-print and 300 DPI PNG download remain fallbacks.
-
-The launcher runs `npm run station:start`. It detects the local NIIMBOT serial
-port, sets `LABEL_SERIAL_PORT` and
-`LABEL_SERIAL_API_BASE_URL=http://localhost:3000` for the local server, rebuilds
-the production app when needed, starts `npm run start`, opens the station page,
-and prints the local readiness result in Terminal.
-
-The NIIMBOT Bluetooth/browser check only proves the current browser can see the
-printer. It does not prove the Next.js USB print route can access the cable. USB
-printing stays disabled on `coffee.capturethis.com`; use
-`http://localhost:3000/labels/station` on the printer laptop for physical USB
-printing.
-
-Do not configure NIIMBOT serial numbers in the master website. Each station
-selects its own local printer device path, for example
-`LABEL_SERIAL_PORT=/dev/cu.usbmodem83201`.
-
-Client-facing printer station docs:
-
-- [Client print-station handoff](docs/client-print-station-handoff.md)
-- [Printer laptop quick start](docs/print-station-quickstart.md)
-- [Print-station demo script](docs/print-station-demo-script.md)
-
-## NIIMBOT direct USB diagnostics
-
-The current confirmed low-level NIIMBOT M2_H path is local USB serial, not CUPS.
-The tested printer exposes `/dev/cu.usbmodem*` on macOS with USB vendor/product
-`0x3513 / 0x0002`.
-
-Safe status checks:
-
-```bash
-npm run niimbot:probe
-npm run niimbot:status
-```
-
-One-label print diagnostics, requiring explicit confirmation:
-
-```bash
-npm run niimbot:print-diagnostic -- --yes /dev/cu.usbmodem101
-npm run niimbot:print-glyph-test -- --yes /dev/cu.usbmodem101
-```
-
-Use the detected `/dev/cu.usbmodem*` path if it changes after reconnecting the
-printer. The glyph test is still a deterministic calibration step; confirm
-physical orientation and readability before moving to app-rendered labels.
+The current assumed export preset is 50mm x 30mm at 300 DPI
+(`591 x 354px`). The exact lid-label media, round versus rectangular stock,
+actual dimensions, and NIIMBOT app import scaling still need physical
+verification before being treated as final.
 
 The browser never uses the service role key — it uses only
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and table/photo
 access is controlled by Supabase Auth plus RLS/storage policies.
-
-The trusted **label-queue** server routes are the exception: when an order is
-saved, the app reconciles its label print job through a server route that uses
-`SUPABASE_SERVICE_ROLE_KEY` (see `src/lib/supabase-server.ts`). This key is
-required only for the remote `/labels` → `/labels/station` queue. If it is unset,
-label-queue reconciliation is skipped and **order saves still succeed** — the
-queue handoff is simply unavailable until the key is configured.
 
 ## Seed data
 

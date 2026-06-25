@@ -75,6 +75,11 @@ type UpdateProductionInput = {
   status?: Production["status"];
 };
 
+type RunnerAccessOptions = {
+  productionId?: string;
+  shareToken?: string;
+};
+
 const blankToNull = (value?: string) => {
   const next = value?.trim();
   return next ? next : null;
@@ -157,6 +162,32 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
     production_roster: (rosterResult.data || []).map(mapRoster),
     orders: (ordersResult.data || []).map(mapOrder),
   };
+}
+
+export async function loadRunnerCoffeeData(
+  productionId: string,
+  shareToken: string,
+): Promise<CoffeeData> {
+  if (!productionId || !shareToken || !isSupabaseConfigured) {
+    return loadCoffeeData();
+  }
+
+  const response = await fetch(
+    `/api/public/productions/${encodeURIComponent(
+      productionId,
+    )}?token=${encodeURIComponent(shareToken)}`,
+  );
+  const body = (await response.json().catch(() => ({}))) as {
+    data?: CoffeeData;
+    error?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(body.error || "Could not load this production.");
+  }
+  if (!body.data) throw new Error("Could not load this production.");
+
+  return body.data;
 }
 
 export async function resetDemoCoffeeData(): Promise<CoffeeData> {
@@ -534,8 +565,40 @@ export async function updateOrderRecord(
   current: CoffeeData,
   orderId: string,
   patch: Partial<Order>,
+  options: RunnerAccessOptions = {},
 ): Promise<CoffeeData> {
   const updated_at = new Date().toISOString();
+
+  if (options.shareToken && options.productionId) {
+    const response = await fetch(
+      `/api/public/orders/${encodeURIComponent(orderId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productionId: options.productionId,
+          token: options.shareToken,
+          patch,
+        }),
+      },
+    );
+    const body = (await response.json().catch(() => ({}))) as {
+      order?: Order;
+      error?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(body.error || "Could not update order.");
+    }
+    if (!body.order) throw new Error("Could not update order.");
+
+    return {
+      ...current,
+      orders: current.orders.map((order) =>
+        order.id === orderId ? body.order! : order,
+      ),
+    };
+  }
 
   const supabase = getPublicSupabase();
   if (supabase) {
@@ -548,11 +611,6 @@ export async function updateOrderRecord(
 
     if (error) throwSupabaseWriteError(error);
     const updated = mapOrder(data);
-    try {
-      await ensureLabelQueueForOrder(orderId);
-    } catch {
-      // Label queue sync is optional — order save succeeds even if it fails
-    }
     return {
       ...current,
       orders: current.orders.map((order) =>
@@ -575,7 +633,7 @@ export async function saveOrderDraft(
   current: CoffeeData,
   orderId: string,
   draft: Partial<Order>,
-  options: { updateUsualOrder?: boolean } = {},
+  options: { updateUsualOrder?: boolean } & RunnerAccessOptions = {},
 ): Promise<CoffeeData> {
   const order = current.orders.find((item) => item.id === orderId);
   if (!order) return current;
@@ -587,7 +645,14 @@ export async function saveOrderDraft(
     updated_at: new Date().toISOString(),
   } satisfies Order;
   const usualOrder = formatDrink(updatedOrder);
-  const shouldUpdateUsual = options.updateUsualOrder && usualOrder !== "No order";
+  const hasRunnerToken = Boolean(options.shareToken && options.productionId);
+  const shouldUpdateUsual =
+    !hasRunnerToken && options.updateUsualOrder && usualOrder !== "No order";
+
+  if (hasRunnerToken) {
+    const result = await updateOrderRecord(current, orderId, updatedOrder, options);
+    return result;
+  }
 
   const supabase = shouldUpdateUsual
     ? await getWritableSupabase()
@@ -619,11 +684,6 @@ export async function saveOrderDraft(
     }
 
     const savedOrder = mapOrder(orderRow);
-    try {
-      await ensureLabelQueueForOrder(orderId);
-    } catch {
-      // Label queue sync is optional — order save succeeds even if it fails
-    }
     return {
       ...current,
       orders: current.orders.map((item) =>
@@ -646,21 +706,6 @@ export async function saveOrderDraft(
   };
   saveCoffeeData(next);
   return next;
-}
-
-async function ensureLabelQueueForOrder(orderId: string) {
-  const response = await fetch(`/api/orders/${orderId}/label-queue`, {
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(
-      typeof body.error === "string"
-        ? body.error
-        : "Could not update the label queue.",
-    );
-  }
 }
 
 export async function createPersonAndAddToRoster(

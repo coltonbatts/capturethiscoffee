@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
@@ -37,6 +37,8 @@ import { useRosterView } from "./use-roster-view";
 
 export default function ProductionDashboardPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const shareToken = searchParams.get("token") || "";
   const { isAdmin } = useAppAuth();
   const {
     data,
@@ -48,7 +50,7 @@ export default function ProductionDashboardPage() {
     patchOrder,
     run,
     reload,
-  } = useCoffeeStore();
+  } = useCoffeeStore({ productionId: params.id, shareToken });
 
   // Filter state lives here so typing in search never re-renders the modals.
   const [query, setQuery] = useState("");
@@ -162,7 +164,11 @@ export default function ProductionDashboardPage() {
           base,
           id,
           { ...draft, status: (draft.status || "confirmed") as OrderStatus },
-          { updateUsualOrder },
+          {
+            updateUsualOrder: isAdmin && updateUsualOrder,
+            productionId: production!.id,
+            shareToken,
+          },
         ),
       "Could not save order.",
     );
@@ -278,6 +284,7 @@ export default function ProductionDashboardPage() {
         <OrderEditor
           draft={draft}
           updateUsualOrder={updateUsualOrder}
+          canUpdateUsualOrder={isAdmin}
           onChange={setDraft}
           onUpdateUsualOrder={setUpdateUsualOrder}
           onCancel={closeOrderEditor}

@@ -9,54 +9,46 @@
 - Add or import the day-of people before the shoot when possible.
 - On a phone, open the production page and verify search, quick add, order edit,
   and status taps are comfortable one-handed.
-- Keep `/labels` bookmarked for direct browser-print fallback and
-  `/labels/station` bookmarked on the print-station laptop for queued jobs.
-- Keep the NIIMBOT laptop runbook handy:
-  [label-printer-station.md](label-printer-station.md).
+- On a phone, open `/labels`, preview a label, and verify PNG download/share.
+- Keep the NIIMBOT mobile app installed and paired with the printer.
 
 ## Supabase checklist
 
 - Run `supabase/schema.sql` and all migrations in `supabase/migrations`.
 - Confirm RLS is enabled on `clients`, `people`, `client_people`, `productions`,
-  `production_roster`, `orders`, `printer_devices`, `label_print_jobs`, and
-  `label_print_attempts`.
+  `production_share_tokens`, `production_roster`, and `orders`.
+- Confirm obsolete print-station tables are absent after the latest migration:
+  `printer_devices`, `label_print_jobs`, and `label_print_attempts`.
 - Confirm the `person-photos` storage bucket and policies exist.
-- Confirm the client user can sign in and that their Supabase user has `app_metadata` set to
-  `{"admin": true}`. The app proxy requires admin metadata to access `/clients`,
-  `/people`, `/labels`, and `/productions/new`.
+- Confirm the client user can sign in and that their Supabase user has
+  `app_metadata` set to `{"admin": true}`.
 - Disable public email sign-ups unless intentionally onboarding more demo users.
 - Verify a new client, person, photo, production, roster edit, order edit, and
   label printed flag persist after refresh on a second device.
-- Verify `/labels` can queue a selected label and `/labels/station` can claim,
-  print or download PNG, and complete that queued job.
 - Do not use `NEXT_PUBLIC_ENABLE_AUTH=false` in production. That is local demo
   mode and writes only to that browser's `localStorage`.
 
-## Printer setup checklist
+## Label export checklist
 
-- Supported V1 model: master queue plus local printer station. The deployed app
-  stores jobs and labels; the laptop connected to the NIIMBOT opens
-  `http://localhost:3000/labels/station` and owns the physical print.
-- Local USB serial is the primary station path on confirmed NIIMBOT M2_H
-  hardware. Browser print and PNG import remain fallbacks.
-- Printer: NIIMBOT M2/M2_H with 50mm x 30mm label stock loaded.
-- Local station env: set `LABEL_SERIAL_PORT` to the responding
-  `/dev/cu.usbmodem*` path from `npm run niimbot:probe`.
-- Orientation: use landscape if the driver asks.
-- Scale: set to 100%, not fit to page.
-- Margins: start with none. If the driver clips, test its default margin setting.
-- Density: raise printer or driver density if text is faint.
-- Alignment: use driver alignment controls if content is shifted or clipped.
-- Print one label from the NIIMBOT app first to verify ribbon, media, density, and
-  baseline alignment.
-- In Capture This Coffee, use `/labels` to browser-print one selected order, or
-  queue labels to `/labels/station` and print from the station laptop. Tap
-  `Mark printed` or `Mark printed & next` only after the physical label is
-  correct.
-- Treat `Experimental M2 check` as a Bluetooth capability probe only. Direct
-  browser Bluetooth printing is not a V1 promise.
-- Do not use the hosted domain for **Print via USB**. USB printing only works
-  from the local station server on the printer laptop.
+- Open `/labels` on the phone expected to handle labels.
+- Select the active production.
+- Select one or more active labels.
+- Confirm the preview is readable at small size.
+- Tap **Share** if available, or **Download PNG**.
+- Open the NIIMBOT app.
+- Import the PNG and print using NIIMBOT's Bluetooth flow.
+- Confirm the physical label is readable and not cropped.
+
+## Current physical unknowns
+
+- Exact NIIMBOT lid-label media.
+- Round vs rectangular stock.
+- Actual millimeter dimensions.
+- DPI and import scaling behavior in the NIIMBOT app.
+- Final physical print result after phone PNG import.
+
+The current assumed preset is 50mm x 30mm at 300 DPI. Treat it as provisional
+until a physical print confirms the media and import behavior.
 
 ## Client demo script
 
@@ -64,43 +56,30 @@
 2. Open the active production from `/productions`.
 3. Search for a known person, confirm or adjust their drink, and mark ordered.
 4. Quick-add one guest, enter a simple drink, and save.
-5. Open `/labels`; show the first unprinted order selected automatically.
-6. Print one label through the browser dialog, or queue it and open
-   `/labels/station` on the print-station laptop.
-7. If the physical label is correct, tap `Mark printed & next` in the active
-   print view.
+5. Open `/labels`; show the first active label selected automatically.
+6. Download or share the PNG.
+7. Open the NIIMBOT app and import the image.
 8. Back on the production runner page, mark the same order picked up and delivered.
 9. Show the Summary tab for the coffee-shop copy/paste view.
 
 ## Known limitations
 
-- Direct NIIMBOT Bluetooth printing is not implemented. The app only probes for a
-  likely BLE service/characteristic in compatible Chromium browsers.
-- iOS Safari does not support the Web Bluetooth path; browser print remains the
-  supported route.
-- Direct M2_H USB serial printing is local-station only and requires an operator
-  who understands
-  the runbook.
-- Browser print behavior depends on the installed OS driver and its saved paper
-  size, margin, scale, density, and alignment settings.
-- Offline production mode is not guaranteed with Supabase auth. Local demo mode is
-  intentionally separate and browser-local.
+- Direct NIIMBOT Bluetooth printing is not implemented in CTC. The NIIMBOT app
+  owns Bluetooth pairing and physical printing.
+- Web Share with files depends on the browser and OS. Use **Download PNG** when
+  sharing is unavailable.
+- The current export preset has not yet been physically verified against the
+  final lid-label media.
+- Offline production mode is not guaranteed with Supabase auth. Local demo mode
+  is intentionally separate and browser-local.
 - The app does not seed demo rows into Supabase automatically.
-- Print completion cannot be detected reliably by the browser, so the app requires
-  a human `Mark printed` confirmation.
 
-## Tomorrow's physical M2 test
+## Physical M2 test
 
-- Verify the exact NIIMBOT M2 model, firmware, label roll, and desktop/mobile OS.
-- Print a 50mm x 30mm vendor-app test label.
-- Print from Chrome desktop using `/labels` and `/labels/station`; record scale,
-  orientation, margin, density, and alignment settings that work.
-- Repeat from the actual phone or tablet the client expects to use.
+- Verify the exact NIIMBOT M2 model, firmware, label roll, and mobile OS.
+- Print a vendor-app test label.
+- Export a Capture This Coffee PNG from `/labels` on the phone.
+- Import that PNG into the NIIMBOT app.
+- Record whether the app preserves 50mm x 30mm sizing or needs manual scaling.
 - Confirm the label is readable after condensation handling on a cold cup.
-- Confirm browser print followed by `Mark printed & next` keeps the local and
-  remote station queues moving.
-- Test failure recovery: cancel print, do not mark printed, reprint the same label.
-- Run `Experimental M2 check` in Chrome/Edge and record whether the device appears
-  and whether the characteristic is found.
-- Decide after the test whether V1 stays browser-print-only or needs a feature-
-  flagged direct-print spike.
+- Record the final media, dimensions, DPI behavior, and any app import settings.

@@ -1,20 +1,23 @@
 import m2Preset from "@/lib/niimbot-m2-preset.json";
 import type { CoffeeLabel } from "@/lib/label-copy";
-import type { LabelPrintJobPayloadV1 } from "@/lib/print-jobs";
 
 export const niimbotM2ExportPreset = m2Preset;
 
 type CanvasContext = CanvasRenderingContext2D;
 
-export function niimbotM2ExportFileName(title: string) {
+export function niimbotM2ExportFileName(
+  label: Pick<CoffeeLabel, "personName" | "title" | "orderId"> | string,
+) {
+  const title =
+    typeof label === "string"
+      ? label
+      : [label.personName || label.title, label.orderId.replace(/^#/, "")]
+          .filter(Boolean)
+          .join("-");
   return `${safeFilePart(title)}-niimbot-m2-50x30mm-300dpi.png`;
 }
 
-export function renderNiimbotM2LabelPngBlob(payload: LabelPrintJobPayloadV1) {
-  return renderCoffeeLabelPngBlob(payload.label);
-}
-
-async function renderCoffeeLabelPngBlob(label: CoffeeLabel) {
+export async function renderNiimbotM2LabelPngBlob(label: CoffeeLabel) {
   const canvas = document.createElement("canvas");
   canvas.width = niimbotM2ExportPreset.pixelWidth;
   canvas.height = niimbotM2ExportPreset.pixelHeight;

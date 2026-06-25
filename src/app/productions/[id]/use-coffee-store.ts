@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { describeDataError, loadCoffeeData, updateOrderRecord } from "@/lib/data";
+import {
+  describeDataError,
+  loadCoffeeData,
+  loadRunnerCoffeeData,
+  updateOrderRecord,
+} from "@/lib/data";
 import type { CoffeeData, Order } from "@/lib/types";
 
 type LoadState = "loading" | "ready" | "error";
@@ -26,7 +31,7 @@ function errorMessage(err: unknown, fallback: string) {
  * single-flighted by `saving`. They replace the whole blob, built off the
  * freshest snapshot via `dataRef`.
  */
-export function useCoffeeStore() {
+export function useCoffeeStore(options: { productionId: string; shareToken: string }) {
   const [data, setData] = useState<CoffeeData | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
@@ -44,7 +49,12 @@ export function useCoffeeStore() {
   }, [data]);
 
   const fetchData = useCallback(() => {
-    loadCoffeeData()
+    const load =
+      options.shareToken && options.productionId
+        ? loadRunnerCoffeeData(options.productionId, options.shareToken)
+        : loadCoffeeData();
+
+    load
       .then((next) => {
         if (!mounted.current) return;
         setData(next);
@@ -55,7 +65,7 @@ export function useCoffeeStore() {
         setError(errorMessage(err, "Could not load this production."));
         setState("error");
       });
-  }, []);
+  }, [options.productionId, options.shareToken]);
 
   // Retry path — on shoot day a single dropped request must never leave the
   // dashboard permanently stuck on an error screen.
@@ -107,7 +117,10 @@ export function useCoffeeStore() {
       );
 
       try {
-        const result = await updateOrderRecord(base, orderId, patch);
+        const result = await updateOrderRecord(base, orderId, patch, {
+          productionId: options.productionId,
+          shareToken: options.shareToken,
+        });
         const serverOrder = result.orders.find((order) => order.id === orderId);
         if (serverOrder && mounted.current) {
           setData((prev) =>
@@ -140,7 +153,7 @@ export function useCoffeeStore() {
         if (mounted.current) markPending(orderId, false);
       }
     },
-    [markPending],
+    [markPending, options.productionId, options.shareToken],
   );
 
   const run = useCallback(

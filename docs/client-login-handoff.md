@@ -26,8 +26,8 @@ After first sign-in, the client should change their password when password reset
 3. Open **Clients** and **People** — lists should load without errors.
 4. Create a test client and person; upload a photo; refresh — data and the photo should persist.
 5. Create a production and open its runner page.
-6. Open **Labels** (`/labels`), queue or print a test label, then verify the
-   print-station laptop can open `/labels/station` and see queued jobs.
+6. Open **Labels** (`/labels`), preview a test label, then download or share the
+   PNG for NIIMBOT app import.
 
 ## Supabase dashboard (your checklist)
 
@@ -38,20 +38,14 @@ After first sign-in, the client should change their password when password reset
 - [ ] Apply storage migration `add_person_photo_storage` and the shared demo
   access migration so authenticated users can upload to `person-photos`
 - [ ] **Disable public sign-ups**: Authentication → Providers → Email → turn off “Allow new users to sign up”
-- [ ] Apply the label print-job migration before using the remote `/labels` to
-  `/labels/station` queue.
+## Label export
 
-## Print station
-
-- `/labels` is the normal label screen and browser-print fallback.
-- `/labels/station` is the remote queue station for a laptop on the printer.
-- `coffee.capturethis.com` stores the queue; the laptop connected to the NIIMBOT
-  owns the physical print.
-- For USB printing, run the app locally on that laptop and open
-  `http://localhost:3000/labels/station`. The hosted domain cannot access the
-  local USB printer.
-- Browser print and PNG import into the NIIMBOT desktop app remain fallback
-  paths.
+- `/labels` is the normal label screen.
+- The app exports print-ready PNG files; it does not run a laptop print station.
+- The PA saves or shares the PNG from the phone, opens the NIIMBOT app, imports
+  the image, and prints through NIIMBOT's Bluetooth flow.
+- The current 50mm x 30mm / 300 DPI preset still needs physical stock/import
+  verification before being treated as final.
 
 ## Add more staff later
 

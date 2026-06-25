@@ -1,12 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { OrderStatus, PersonType, ProductionStatus } from "./types";
-import type {
-  LabelPrintAttemptStatus,
-  LabelPrintJobPayloadV1,
-  LabelPrintJobStatus,
-  LabelPrintTransport,
-} from "./print-jobs";
 
 export type Json =
   | string
@@ -171,6 +165,47 @@ export type Database = {
           },
         ];
       };
+      production_share_tokens: {
+        Row: {
+          id: string;
+          production_id: string;
+          token_hash: string;
+          label: string | null;
+          expires_at: string | null;
+          revoked_at: string | null;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          production_id: string;
+          token_hash: string;
+          label?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          production_id?: string;
+          token_hash?: string;
+          label?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "production_share_tokens_production_id_fkey";
+            columns: ["production_id"];
+            isOneToOne: false;
+            referencedRelation: "productions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       production_roster: {
         Row: {
           id: string;
@@ -292,199 +327,16 @@ export type Database = {
           },
         ];
       };
-      printer_devices: {
-        Row: {
-          id: string;
-          staff_user_id: string;
-          name: string;
-          model: string | null;
-          transport: string;
-          native_identifier: string | null;
-          last_seen_at: string | null;
-          metadata: Json;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          staff_user_id: string;
-          name: string;
-          model?: string | null;
-          transport: string;
-          native_identifier?: string | null;
-          last_seen_at?: string | null;
-          metadata?: Json;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          staff_user_id?: string;
-          name?: string;
-          model?: string | null;
-          transport?: string;
-          native_identifier?: string | null;
-          last_seen_at?: string | null;
-          metadata?: Json;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      label_print_jobs: {
-        Row: {
-          id: string;
-          production_id: string | null;
-          order_id: string | null;
-          person_id: string | null;
-          created_by: string;
-          assigned_to: string | null;
-          status: LabelPrintJobStatus;
-          priority: number;
-          payload: LabelPrintJobPayloadV1;
-          rendered_png_path: string | null;
-          printer_family: string;
-          copies: number;
-          claimed_at: string | null;
-          printed_at: string | null;
-          error_message: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          production_id?: string | null;
-          order_id?: string | null;
-          person_id?: string | null;
-          created_by: string;
-          assigned_to?: string | null;
-          status?: LabelPrintJobStatus;
-          priority?: number;
-          payload: LabelPrintJobPayloadV1;
-          rendered_png_path?: string | null;
-          printer_family?: string;
-          copies?: number;
-          claimed_at?: string | null;
-          printed_at?: string | null;
-          error_message?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          production_id?: string | null;
-          order_id?: string | null;
-          person_id?: string | null;
-          created_by?: string;
-          assigned_to?: string | null;
-          status?: LabelPrintJobStatus;
-          priority?: number;
-          payload?: LabelPrintJobPayloadV1;
-          rendered_png_path?: string | null;
-          printer_family?: string;
-          copies?: number;
-          claimed_at?: string | null;
-          printed_at?: string | null;
-          error_message?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "label_print_jobs_order_id_fkey";
-            columns: ["order_id"];
-            isOneToOne: false;
-            referencedRelation: "orders";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "label_print_jobs_person_id_fkey";
-            columns: ["person_id"];
-            isOneToOne: false;
-            referencedRelation: "people";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "label_print_jobs_production_id_fkey";
-            columns: ["production_id"];
-            isOneToOne: false;
-            referencedRelation: "productions";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      label_print_attempts: {
-        Row: {
-          id: string;
-          job_id: string;
-          staff_user_id: string;
-          device_id: string | null;
-          status: LabelPrintAttemptStatus;
-          transport: LabelPrintTransport;
-          printer_name: string | null;
-          printer_identifier: string | null;
-          sdk_version: string | null;
-          error_code: string | null;
-          error_message: string | null;
-          started_at: string;
-          finished_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          job_id: string;
-          staff_user_id: string;
-          device_id?: string | null;
-          status: LabelPrintAttemptStatus;
-          transport: LabelPrintTransport;
-          printer_name?: string | null;
-          printer_identifier?: string | null;
-          sdk_version?: string | null;
-          error_code?: string | null;
-          error_message?: string | null;
-          started_at?: string;
-          finished_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          job_id?: string;
-          staff_user_id?: string;
-          device_id?: string | null;
-          status?: LabelPrintAttemptStatus;
-          transport?: LabelPrintTransport;
-          printer_name?: string | null;
-          printer_identifier?: string | null;
-          sdk_version?: string | null;
-          error_code?: string | null;
-          error_message?: string | null;
-          started_at?: string;
-          finished_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "label_print_attempts_device_id_fkey";
-            columns: ["device_id"];
-            isOneToOne: false;
-            referencedRelation: "printer_devices";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "label_print_attempts_job_id_fkey";
-            columns: ["job_id"];
-            isOneToOne: false;
-            referencedRelation: "label_print_jobs";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
     };
     Views: Record<string, never>;
     Functions: {
-      complete_label_print_job: {
+      create_production_share_token: {
         Args: {
-          p_job_id: string;
-          p_attempt_id?: string | null;
+          p_production_id: string;
+          p_expires_at?: string | null;
+          p_label?: string | null;
         };
-        Returns: Database["public"]["Tables"]["label_print_jobs"]["Row"];
+        Returns: string;
       };
     };
     Enums: {
