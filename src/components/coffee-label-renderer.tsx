@@ -1,6 +1,6 @@
 "use client";
 
-import { CaptureAngle } from "@/components/capture-mark";
+import { CaptureMark } from "@/components/capture-mark";
 import type { LabelDesignId } from "@/lib/label-designs";
 import type { CoffeeLabel } from "@/lib/label-copy";
 
@@ -23,7 +23,7 @@ export function ScreenLabel({
         <span>COFFEE</span>
       </div>
       <div className="screen-label-mark">
-        {designId === "y2k-smiley-seal" ? <SmileySeal /> : <CaptureAngle />}
+        <CaptureMark className="screen-label-capture-mark" title="Capture This Coffee" />
       </div>
       <div className="screen-label-main">
         <p className="screen-label-kicker">{labelKicker(designId)}</p>
@@ -57,7 +57,7 @@ export function PrintableLabel({
         <span>COFFEE</span>
       </div>
       <div className="m2-label-mark">
-        {designId === "y2k-smiley-seal" ? <SmileySeal /> : <CaptureAngle />}
+        <CaptureMark className="m2-label-capture-mark" title="Capture This Coffee" />
       </div>
       <div className="m2-label-main">
         <p className="m2-label-kicker">{labelKicker(designId)}</p>
@@ -72,24 +72,8 @@ export function PrintableLabel({
   );
 }
 
-function SmileySeal() {
-  return (
-    <svg viewBox="0 0 48 48" role="img" aria-label="Capture This Coffee smiley seal">
-      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" />
-      <circle cx="17" cy="19" r="3" fill="currentColor" />
-      <circle cx="31" cy="19" r="3" fill="currentColor" />
-      <path
-        d="M15 28c3.2 5 14.8 5 18 0"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="4"
-      />
-    </svg>
-  );
-}
-
 function labelKicker(designId: LabelDesignId) {
+  if (designId === "smiley-test") return "Print test";
   if (designId === "brutalist-ticket-stub") return "Ticketed coffee";
   if (designId === "cyber-cafe-receipt") return "Cafe receipt";
   if (designId === "y2k-smiley-seal") return "Smiley service";

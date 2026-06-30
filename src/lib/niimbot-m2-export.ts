@@ -1,10 +1,14 @@
 import m2Preset from "@/lib/niimbot-m2-preset.json";
 import type { LabelDesignId } from "@/lib/label-designs";
 import type { CoffeeLabel } from "@/lib/label-copy";
+import { captureThisSmileySrc } from "@/lib/brand-assets";
 
 export const niimbotM2ExportPreset = m2Preset;
 
 type CanvasContext = CanvasRenderingContext2D;
+type CaptureSmileyImage = CanvasImageSource;
+
+let captureThisSmileyImagePromise: Promise<HTMLImageElement> | undefined;
 
 export function niimbotM2ExportFileName(
   label: Pick<CoffeeLabel, "personName" | "title" | "orderId"> | string,
@@ -31,7 +35,8 @@ export async function renderNiimbotM2LabelPngBlob(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas export is not available in this browser.");
 
-  drawNiimbotM2Label(ctx, label, designId);
+  const captureSmiley = await loadCaptureThisSmileyImage();
+  drawNiimbotM2Label(ctx, label, designId, captureSmiley);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -41,39 +46,63 @@ export async function renderNiimbotM2LabelPngBlob(
   });
 }
 
+function loadCaptureThisSmileyImage() {
+  captureThisSmileyImagePromise ??= new Promise<HTMLImageElement>((resolve, reject) => {
+    if (typeof Image === "undefined") {
+      reject(new Error("Image loading is not available in this browser."));
+      return;
+    }
+
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not load Capture This smiley artwork."));
+    image.src = captureThisSmileySrc;
+  });
+
+  return captureThisSmileyImagePromise;
+}
+
 function drawNiimbotM2Label(
   ctx: CanvasContext,
   label: CoffeeLabel,
   designId: LabelDesignId,
+  captureSmiley: CaptureSmileyImage,
 ) {
+  if (designId === "smiley-test") {
+    drawSmileyTestLabel(ctx, label, captureSmiley);
+    return;
+  }
   if (designId === "y2k-smiley-seal") {
-    drawY2KSmileySealLabel(ctx, label);
+    drawY2KSmileySealLabel(ctx, label, captureSmiley);
     return;
   }
   if (designId === "brutalist-ticket-stub") {
-    drawBrutalistTicketStubLabel(ctx, label);
+    drawBrutalistTicketStubLabel(ctx, label, captureSmiley);
     return;
   }
   if (designId === "cyber-cafe-receipt") {
-    drawCyberCafeReceiptLabel(ctx, label);
+    drawCyberCafeReceiptLabel(ctx, label, captureSmiley);
     return;
   }
 
-  drawClassicLabel(ctx, label);
+  drawClassicLabel(ctx, label, captureSmiley);
 }
 
-function drawClassicLabel(ctx: CanvasContext, label: CoffeeLabel) {
+function drawClassicLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
-  const nameProfile = labelNameProfile(main);
+  const nameProfile = labelHeroNameProfile(main);
 
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, pixelWidth, pixelHeight);
+  resetCanvas(ctx);
 
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 5;
   ctx.strokeRect(
     safeMarginPx,
     safeMarginPx,
@@ -82,42 +111,90 @@ function drawClassicLabel(ctx: CanvasContext, label: CoffeeLabel) {
   );
 
   ctx.fillStyle = "#000000";
-  ctx.fillRect(18, 18, 56, 318);
-  drawVerticalBrand(ctx, 46, 177);
+  ctx.font = "900 14px Arial, Helvetica, sans-serif";
+  ctx.fillText("CAPTURE", 34, 48);
+  ctx.fillText("THIS", 110, 48);
+  ctx.fillText("COFFEE", 160, 48);
 
-  ctx.strokeRect(506, 38, 48, 48);
-  drawCaptureMark(ctx, 530, 62, 27);
+  drawCaptureSmiley(ctx, captureSmiley, 507, 31, 44);
 
   ctx.fillStyle = "#000000";
   ctx.font = `900 ${nameProfile.fontSize}px Arial, Helvetica, sans-serif`;
   drawFittedWrappedText(
     ctx,
     main.toUpperCase(),
-    92,
+    34,
     nameProfile.y,
-    402,
+    510,
     nameProfile.lineHeight,
+    2,
+    nameProfile.minFontSize,
+  );
+
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(34, 253);
+  ctx.lineTo(557, 253);
+  ctx.stroke();
+
+  ctx.font = "900 25px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, body, 34, 285, 523, 26, 2, 18);
+}
+
+function drawSmileyTestLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
+  const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
+  const main = label.title || label.productionClient || label.personName;
+  const body = label.bodyLines.join(" / ") || label.drink || "Have a nice day";
+  const nameProfile = labelNameProfile(main);
+
+  resetCanvas(ctx);
+
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;
+  roundedRectPath(
+    ctx,
+    safeMarginPx,
+    safeMarginPx,
+    pixelWidth - safeMarginPx * 2,
+    pixelHeight - safeMarginPx * 2,
+    150,
+  );
+  ctx.stroke();
+
+  drawCaptureSmiley(ctx, captureSmiley, 55, 82, 178);
+
+  ctx.fillStyle = "#000000";
+  ctx.font = `900 ${Math.min(nameProfile.fontSize + 2, 62)}px Arial, Helvetica, sans-serif`;
+  drawFittedWrappedText(
+    ctx,
+    main.toUpperCase(),
+    258,
+    Math.max(nameProfile.y + 16, 112),
+    276,
+    Math.max(nameProfile.lineHeight - 2, 34),
     2,
     nameProfile.minFontSize,
   );
 
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(92, 218);
-  ctx.lineTo(554, 218);
-  ctx.moveTo(92, 282);
-  ctx.lineTo(554, 282);
+  ctx.moveTo(258, 235);
+  ctx.lineTo(535, 235);
   ctx.stroke();
 
-  ctx.font = "900 22px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, body, 92, 229, 462, 22, 3, 17);
-
-  ctx.font = "900 17px Arial, Helvetica, sans-serif";
-  drawEllipsisText(ctx, label.footerStart.toUpperCase(), 92, 314, 172);
-  drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 285, 314, 270);
+  ctx.font = "900 25px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, body, 258, 267, 276, 27, 2, 18);
 }
 
-function drawY2KSmileySealLabel(ctx: CanvasContext, label: CoffeeLabel) {
+function drawY2KSmileySealLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
@@ -145,7 +222,7 @@ function drawY2KSmileySealLabel(ctx: CanvasContext, label: CoffeeLabel) {
   ctx.fillRect(18, 70, 58, 214);
   drawVerticalBrand(ctx, 47, 177);
 
-  drawSmileySeal(ctx, 508, 78, 48);
+  drawCaptureSmiley(ctx, captureSmiley, 460, 30, 96);
 
   ctx.fillStyle = "#000000";
   ctx.font = `900 ${Math.max(nameProfile.fontSize - 2, 34)}px Arial, Helvetica, sans-serif`;
@@ -176,7 +253,11 @@ function drawY2KSmileySealLabel(ctx: CanvasContext, label: CoffeeLabel) {
   drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 292, 316, 244);
 }
 
-function drawBrutalistTicketStubLabel(ctx: CanvasContext, label: CoffeeLabel) {
+function drawBrutalistTicketStubLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
@@ -206,8 +287,7 @@ function drawBrutalistTicketStubLabel(ctx: CanvasContext, label: CoffeeLabel) {
 
   ctx.fillStyle = "#000000";
   ctx.fillRect(500, 36, 52, 52);
-  ctx.strokeStyle = "#ffffff";
-  drawCaptureMark(ctx, 526, 62, 27, "#ffffff");
+  drawCaptureSmiley(ctx, captureSmiley, 504, 40, 44);
 
   ctx.fillStyle = "#000000";
   ctx.fillRect(116, 38, 174, 28);
@@ -242,7 +322,11 @@ function drawBrutalistTicketStubLabel(ctx: CanvasContext, label: CoffeeLabel) {
   drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 316, 323, 236);
 }
 
-function drawCyberCafeReceiptLabel(ctx: CanvasContext, label: CoffeeLabel) {
+function drawCyberCafeReceiptLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
@@ -277,7 +361,7 @@ function drawCyberCafeReceiptLabel(ctx: CanvasContext, label: CoffeeLabel) {
   ctx.stroke();
 
   ctx.strokeRect(508, 78, 42, 42);
-  drawCaptureMark(ctx, 529, 99, 24);
+  drawCaptureSmiley(ctx, captureSmiley, 511, 81, 36);
 
   ctx.font = `900 ${Math.max(nameProfile.fontSize - 8, 30)}px Arial, Helvetica, sans-serif`;
   drawFittedWrappedText(
@@ -405,56 +489,17 @@ function ellipsizeToWidth(ctx: CanvasContext, text: string, maxWidth: number) {
   return best;
 }
 
-function drawCaptureMark(
+function drawCaptureSmiley(
   ctx: CanvasContext,
-  centerX: number,
-  centerY: number,
+  captureSmiley: CaptureSmileyImage,
+  x: number,
+  y: number,
   size: number,
-  color = "#000000",
 ) {
   ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.rotate(-Math.PI / 4);
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(-size / 2, 0);
-  ctx.lineTo(size / 2, 0);
-  ctx.moveTo(0, -size / 2);
-  ctx.lineTo(0, size / 2);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawSmileySeal(
-  ctx: CanvasContext,
-  centerX: number,
-  centerY: number,
-  radius: number,
-) {
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.strokeStyle = "#000000";
-  ctx.fillStyle = "#ffffff";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(0, 0, radius - 8, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = "#000000";
-  ctx.beginPath();
-  ctx.arc(-15, -10, 5, 0, Math.PI * 2);
-  ctx.arc(15, -10, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.arc(0, 2, 22, 0.22 * Math.PI, 0.78 * Math.PI);
-  ctx.stroke();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(captureSmiley, x, y, size, size);
   ctx.restore();
 }
 
@@ -514,6 +559,20 @@ function labelNameProfile(value: string) {
     return { fontSize: 51, lineHeight: 44, minFontSize: 34, y: 83 };
   }
   return { fontSize: 38, lineHeight: 35, minFontSize: 26, y: 80 };
+}
+
+function labelHeroNameProfile(value: string) {
+  const length = value.trim().replace(/\s+/g, " ").length;
+  if (length <= 10) {
+    return { fontSize: 76, lineHeight: 65, minFontSize: 48, y: 164 };
+  }
+  if (length <= 20) {
+    return { fontSize: 62, lineHeight: 54, minFontSize: 42, y: 138 };
+  }
+  if (length <= 24) {
+    return { fontSize: 52, lineHeight: 46, minFontSize: 34, y: 128 };
+  }
+  return { fontSize: 40, lineHeight: 37, minFontSize: 26, y: 120 };
 }
 
 function safeFilePart(value: string) {

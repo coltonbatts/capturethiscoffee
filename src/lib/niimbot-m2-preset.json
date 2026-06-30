@@ -1,7 +1,7 @@
 {
   "id": "niimbot_m2_50x30_png",
-  "label": "NIIMBOT M2 current assumed preset",
-  "description": "Current assumed 50mm x 30mm / 300 DPI PNG for NIIMBOT app import; physical lid-label stock has not been verified yet.",
+  "label": "NIIMBOT M2 50x30mm preset",
+  "description": "Confirmed 50mm x 30mm / 300 DPI PNG for NIIMBOT app import. Physical lid-label stock verified June 30, 2026 (includes holographic silver stock).",
   "widthMm": 50,
   "heightMm": 30,
   "dpi": 300,

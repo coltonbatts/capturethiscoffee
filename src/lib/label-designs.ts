@@ -1,5 +1,10 @@
 export const labelDesigns = [
   {
+    id: "smiley-test",
+    name: "Smiley Test",
+    summary: "Large CaptureThis smiley with client name and a friendly print-test note.",
+  },
+  {
     id: "y2k-smiley-seal",
     name: "Y2K Smiley Seal",
     summary: "Round smiley seal, bold name block, chunky monochrome brand rail.",

@@ -1,41 +1,31 @@
-import type { SVGProps } from "react";
+import Image from "next/image";
+import { captureThisSmileySrc } from "@/lib/brand-assets";
 
 type CaptureMarkProps = {
   className?: string;
-  /** White tile with black angle (header / login on dark). */
+  /** Kept for older call sites; the smiley artwork is already self-contained. */
   invert?: boolean;
   title?: string;
 };
 
 export function CaptureMark({
   className = "size-10",
-  invert = false,
   title = "Capture This",
 }: CaptureMarkProps) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl ${
-        invert ? "bg-white text-black" : "bg-black text-white"
-      } ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden ${className}`}
       role="img"
       aria-label={title}
     >
-      <CaptureAngle className="h-[78%] w-[78%]" />
+      <Image
+        src={captureThisSmileySrc}
+        alt=""
+        width={750}
+        height={750}
+        className="h-full w-full object-contain"
+        priority={false}
+      />
     </span>
-  );
-}
-
-/** Inline angle from brand artwork (right angle at bottom-left). */
-export function CaptureAngle(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 1058 448"
-      fill="currentColor"
-      aria-hidden="true"
-      {...props}
-    >
-      <path d="M0 448 1058 446 2 0Z" />
-    </svg>
   );
 }

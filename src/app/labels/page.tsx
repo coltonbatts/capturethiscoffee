@@ -4,10 +4,12 @@ import Link from "next/link";
 import {
   CheckCircle2,
   Download,
+  FileSpreadsheet,
   ImageDown,
   Palette,
   RotateCcw,
   Share2,
+  Smile,
   UserRound,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -50,6 +52,9 @@ import {
   renderNiimbotM2LabelPngBlob,
 } from "@/lib/niimbot-m2-export";
 import type { CoffeeData } from "@/lib/types";
+import type { CoffeeLabel } from "@/lib/label-copy";
+
+const testLabelDesignId: LabelDesignId = "smiley-test";
 
 type ShareNavigator = Navigator & {
   canShare?: (data: { files?: File[] }) => boolean;
@@ -141,6 +146,10 @@ export default function LabelExportPage() {
     [data, productionId, selectedOrderIds],
   );
   const labels = selection?.labels || [];
+  const testLabel = useMemo(
+    () => (selection ? buildClientTestLabel(selection.client?.name || selection.production.name) : null),
+    [selection],
+  );
   const previewLabel = labels[0];
   const selectedCount = labels.length;
 
@@ -220,6 +229,27 @@ export default function LabelExportPage() {
     }
   }
 
+  async function downloadTestLabel() {
+    if (!testLabel) {
+      setError("Choose a production before exporting a test label.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const blob = await renderNiimbotM2LabelPngBlob(testLabel, testLabelDesignId);
+      downloadBlob(blob, niimbotM2ExportFileName(testLabel, testLabelDesignId));
+      setStatus(`${testLabel.title} test label PNG ready for NIIMBOT app import.`);
+    } catch (err) {
+      setError(describeDataError(err, "Could not export the test label."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function shareSelected() {
     if (!labels.length) {
       setError("Select at least one active label.");
@@ -268,6 +298,21 @@ export default function LabelExportPage() {
     }
   }
 
+  function downloadNiimbotCsv() {
+    if (!selection || !selection.items.length) {
+      setError("Select at least one active order for CSV export.");
+      return;
+    }
+
+    const csv = niimbotCsvForSelection(selection.items);
+    const fileName = `${safeFilePart(selection.production.name)}-niimbot-batch.csv`;
+    downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), fileName);
+    setError("");
+    setStatus(
+      `${selection.items.length} ${selection.items.length === 1 ? "row" : "rows"} exported for NIIMBOT batch templates.`,
+    );
+  }
+
   return (
     <AppShell title="Labels" requireAuth>
       <section className="grid gap-4 border-y border-black bg-white py-4">
@@ -277,8 +322,8 @@ export default function LabelExportPage() {
               Label export
             </h1>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
-              Save a print-ready PNG, then import it in the NIIMBOT app on the
-              phone paired to the printer.
+              Export a crew CSV for NIIMBOT batch templates, or save a print-ready
+              PNG for hero cups.
             </p>
           </div>
           <div className="rounded-lg border border-zinc-500 bg-white px-3 py-2 text-sm font-black text-black">
@@ -443,13 +488,25 @@ export default function LabelExportPage() {
             <div className="grid gap-2 sm:grid-cols-2">
               <button
                 type="button"
+                onClick={downloadNiimbotCsv}
+                disabled={busy || !selection?.items.length}
+                className={`${primaryButtonClass} min-h-14 text-base`}
+              >
+                <FileSpreadsheet size={20} aria-hidden="true" />
+                Export CSV
+              </button>
+              <button
+                type="button"
                 onClick={() => void downloadSelected()}
                 disabled={busy || !labels.length}
-                className={`${primaryButtonClass} min-h-14 text-base`}
+                className={`${secondaryButtonClass} min-h-14 text-base`}
               >
                 <Download size={20} aria-hidden="true" />
                 {busy ? "Exporting..." : "Download PNG"}
               </button>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => void shareSelected()}
@@ -459,14 +516,23 @@ export default function LabelExportPage() {
                 <Share2 size={19} aria-hidden="true" />
                 Share
               </button>
+              <button
+                type="button"
+                onClick={() => void downloadTestLabel()}
+                disabled={busy || !testLabel}
+                className={`${secondaryButtonClass} min-h-14 text-base`}
+              >
+                <Smile size={19} aria-hidden="true" />
+                Test label
+              </button>
             </div>
 
             <div className="rounded-lg border border-zinc-300 bg-white p-3 text-sm font-medium leading-6 text-zinc-700">
               <p className="font-bold text-black">Phone workflow</p>
               <ol className="mt-1 list-decimal space-y-1 pl-5">
-                <li>Preview the label here.</li>
-                <li>Download or share the PNG to the phone.</li>
-                <li>Open the NIIMBOT app, import the image, and print.</li>
+                <li>Use CSV for the full crew run in NIIMBOT batch templates.</li>
+                <li>Use PNG export for hero/client cups that need the CTC renderer.</li>
+                <li>Open the NIIMBOT app on the phone paired to the printer.</li>
               </ol>
             </div>
           </Panel>
@@ -541,4 +607,48 @@ function downloadBlob(blob: Blob, fileName: string) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function niimbotCsvForSelection(items: ActiveLabelExportItem[]) {
+  return [
+    ["crew name", "drink"],
+    ...items.map((item) => [item.person.name, formatDrink(item.order)]),
+  ]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\r\n");
+}
+
+function buildClientTestLabel(clientName: string): CoffeeLabel {
+  const title = clientName.trim() || "Capture This Coffee";
+  const bodyLines = ["Have a nice day"];
+
+  return {
+    id: `test-${safeFilePart(title)}`,
+    personName: title,
+    drink: bodyLines[0],
+    group: "",
+    productionClient: title,
+    notesStatus: "",
+    orderId: "TEST",
+    title,
+    bodyLines,
+    footerStart: "",
+    footerEnd: "",
+    lines: [title, ...bodyLines],
+  };
+}
+
+function csvCell(value: string) {
+  const normalized = value.replace(/\r?\n/g, " ").trim();
+  return `"${normalized.replace(/"/g, '""')}"`;
+}
+
+function safeFilePart(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48) || "production"
+  );
 }
