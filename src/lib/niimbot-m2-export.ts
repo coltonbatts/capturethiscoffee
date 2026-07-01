@@ -77,6 +77,10 @@ function drawNiimbotM2Label(
     drawY2KSmileySealLabel(ctx, label, captureSmiley);
     return;
   }
+  if (designId === "production-sticker-sheet") {
+    drawProductionStickerSheetLabel(ctx, label, captureSmiley);
+    return;
+  }
   if (designId === "brutalist-ticket-stub") {
     drawBrutalistTicketStubLabel(ctx, label, captureSmiley);
     return;
@@ -198,7 +202,7 @@ function drawY2KSmileySealLabel(
   const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
   const main = label.title || label.personName;
   const body = label.bodyLines.join(" / ") || label.drink;
-  const nameProfile = labelNameProfile(main);
+  const nameProfile = productionStickerNameProfile(main);
 
   resetCanvas(ctx);
 
@@ -251,6 +255,105 @@ function drawY2KSmileySealLabel(
   ctx.font = "900 16px Arial, Helvetica, sans-serif";
   drawEllipsisText(ctx, label.footerStart.toUpperCase(), 96, 316, 172);
   drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 292, 316, 244);
+}
+
+function drawProductionStickerSheetLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage,
+) {
+  const { pixelWidth, pixelHeight, safeMarginPx } = niimbotM2ExportPreset;
+  const main = label.title || label.personName;
+  const body = label.bodyLines.join(" / ") || label.drink;
+  const nameProfile = labelNameProfile(main);
+
+  resetCanvas(ctx);
+  drawPaperScanTexture(ctx);
+
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 6;
+  roundedRectPath(
+    ctx,
+    safeMarginPx,
+    safeMarginPx,
+    pixelWidth - safeMarginPx * 2,
+    pixelHeight - safeMarginPx * 2,
+    8,
+  );
+  ctx.stroke();
+
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(18, 18, 52, 318);
+  drawVerticalBrand(ctx, 44, 177);
+
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(88, 25, 344, 202);
+  ctx.strokeRect(88, 245, 446, 70);
+  ctx.beginPath();
+  ctx.moveTo(88, 68);
+  ctx.lineTo(432, 68);
+  ctx.moveTo(128, 25);
+  ctx.lineTo(128, 227);
+  ctx.moveTo(432, 25);
+  ctx.lineTo(432, 227);
+  ctx.moveTo(88, 280);
+  ctx.lineTo(534, 280);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ff6a2a";
+  ctx.fillRect(92, 29, 32, 194);
+  ctx.fillRect(440, 25, 42, 202);
+
+  ctx.fillStyle = "#000000";
+  ctx.font = "900 15px Courier New, monospace";
+  ctx.fillText("RUN LABEL / CTC", 139, 51);
+  ctx.fillText("004", 446, 50);
+
+  ctx.font = "900 12px Courier New, monospace";
+  drawEllipsisText(ctx, label.orderId || "ORDER", 490, 50, 50);
+  drawEllipsisText(ctx, label.footerStart.toUpperCase(), 139, 87, 178);
+  drawEllipsisText(ctx, label.footerEnd.toUpperCase(), 139, 105, 250);
+
+  ctx.fillStyle = "#000000";
+  ctx.font = `900 ${Math.max(nameProfile.fontSize - 2, 34)}px Arial, Helvetica, sans-serif`;
+  drawFittedWrappedText(
+    ctx,
+    main.toUpperCase(),
+    139,
+    nameProfile.y + 12,
+    286,
+    Math.max(nameProfile.lineHeight - 4, 32),
+    2,
+    nameProfile.minFontSize,
+  );
+
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "#000000";
+  ctx.beginPath();
+  ctx.moveTo(139, 196);
+  ctx.lineTo(418, 196);
+  ctx.stroke();
+
+  ctx.font = "900 19px Courier New, monospace";
+  drawFittedWrappedText(ctx, body.toUpperCase(), 101, 269, 292, 20, 1, 14);
+
+  drawBarcode(ctx, 392, 255, 126, 43);
+  drawMicroGrid(ctx, 444, 72, 28, 118);
+  drawMiniQr(ctx, 494, 79, 42);
+
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "#000000";
+  ctx.beginPath();
+  ctx.arc(515, 166, 38, 0, Math.PI * 2);
+  ctx.stroke();
+  drawCaptureSmiley(ctx, captureSmiley, 485, 136, 60);
+
+  ctx.font = "900 11px Courier New, monospace";
+  ctx.fillStyle = "#000000";
+  ctx.fillText("QC", 448, 213);
+  ctx.fillText("50X30", 491, 213);
+  drawRegistrationMarks(ctx);
 }
 
 function drawBrutalistTicketStubLabel(
@@ -513,6 +616,101 @@ function drawReceiptBlocks(ctx: CanvasContext, x: number, y: number) {
   });
 }
 
+function drawBarcode(
+  ctx: CanvasContext,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const bars = [3, 2, 6, 2, 2, 4, 8, 2, 5, 3, 2, 7, 4, 2, 6, 2, 3, 5];
+  let cursor = x;
+  ctx.fillStyle = "#000000";
+  for (const bar of bars) {
+    if (cursor > x + width) break;
+    ctx.fillRect(cursor, y, bar, height);
+    cursor += bar + 3;
+  }
+}
+
+function drawMicroGrid(ctx: CanvasContext, x: number, y: number, width: number, height: number) {
+  ctx.save();
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
+  for (let nextY = y; nextY <= y + height; nextY += 9) {
+    ctx.beginPath();
+    ctx.moveTo(x, nextY);
+    ctx.lineTo(x + width, nextY);
+    ctx.stroke();
+  }
+  for (let nextX = x; nextX <= x + width; nextX += 7) {
+    ctx.beginPath();
+    ctx.moveTo(nextX, y);
+    ctx.lineTo(nextX, y + height);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawMiniQr(ctx: CanvasContext, x: number, y: number, size: number) {
+  const cells = [
+    [1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 0, 1, 0],
+    [1, 1, 1, 0, 1, 1, 1],
+    [0, 1, 0, 1, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1],
+    [1, 0, 1, 0, 1, 1, 0],
+  ];
+  const cellSize = size / cells.length;
+  ctx.fillStyle = "#000000";
+  cells.forEach((row, rowIndex) => {
+    row.forEach((cell, columnIndex) => {
+      if (!cell) return;
+      ctx.fillRect(
+        x + columnIndex * cellSize,
+        y + rowIndex * cellSize,
+        Math.ceil(cellSize),
+        Math.ceil(cellSize),
+      );
+    });
+  });
+}
+
+function drawRegistrationMarks(ctx: CanvasContext) {
+  ctx.save();
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 2;
+  [
+    [96, 232],
+    [525, 232],
+    [96, 326],
+    [525, 326],
+  ].forEach(([x, y]) => {
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y);
+    ctx.lineTo(x + 8, y);
+    ctx.moveTo(x, y - 8);
+    ctx.lineTo(x, y + 8);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawPaperScanTexture(ctx: CanvasContext) {
+  const { pixelWidth, pixelHeight } = niimbotM2ExportPreset;
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.035)";
+  for (let y = 0; y < pixelHeight; y += 9) {
+    ctx.fillRect(0, y, pixelWidth, 1);
+  }
+  ctx.fillStyle = "rgba(0, 0, 0, 0.025)";
+  for (let x = 3; x < pixelWidth; x += 17) {
+    ctx.fillRect(x, 0, 1, pixelHeight);
+  }
+  ctx.restore();
+}
+
 function drawVerticalBrand(ctx: CanvasContext, centerX: number, centerY: number) {
   ctx.save();
   ctx.translate(centerX, centerY);
@@ -573,6 +771,20 @@ function labelHeroNameProfile(value: string) {
     return { fontSize: 52, lineHeight: 46, minFontSize: 34, y: 128 };
   }
   return { fontSize: 40, lineHeight: 37, minFontSize: 26, y: 120 };
+}
+
+function productionStickerNameProfile(value: string) {
+  const length = value.trim().replace(/\s+/g, " ").length;
+  if (length <= 10) {
+    return { fontSize: 48, lineHeight: 41, minFontSize: 34, y: 122 };
+  }
+  if (length <= 20) {
+    return { fontSize: 43, lineHeight: 37, minFontSize: 29, y: 118 };
+  }
+  if (length <= 24) {
+    return { fontSize: 36, lineHeight: 32, minFontSize: 25, y: 113 };
+  }
+  return { fontSize: 29, lineHeight: 27, minFontSize: 21, y: 110 };
 }
 
 function safeFilePart(value: string) {

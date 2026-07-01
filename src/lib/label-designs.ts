@@ -5,6 +5,11 @@ export const labelDesigns = [
     summary: "Large CaptureThis smiley with client name and a friendly print-test note.",
   },
   {
+    id: "production-sticker-sheet",
+    name: "Production Sticker Sheet",
+    summary: "Dense production-label system with barcode blocks, microcopy, and orange QC tabs.",
+  },
+  {
     id: "y2k-smiley-seal",
     name: "Y2K Smiley Seal",
     summary: "Round smiley seal, bold name block, chunky monochrome brand rail.",
@@ -28,7 +33,7 @@ export const labelDesigns = [
 
 export type LabelDesignId = (typeof labelDesigns)[number]["id"];
 
-export const defaultLabelDesignId: LabelDesignId = "y2k-smiley-seal";
+export const defaultLabelDesignId: LabelDesignId = "production-sticker-sheet";
 
 export function isLabelDesignId(value: string): value is LabelDesignId {
   return labelDesigns.some((design) => design.id === value);

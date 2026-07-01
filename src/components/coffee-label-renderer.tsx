@@ -74,6 +74,7 @@ export function PrintableLabel({
 
 function labelKicker(designId: LabelDesignId) {
   if (designId === "smiley-test") return "Print test";
+  if (designId === "production-sticker-sheet") return "Run label";
   if (designId === "brutalist-ticket-stub") return "Ticketed coffee";
   if (designId === "cyber-cafe-receipt") return "Cafe receipt";
   if (designId === "y2k-smiley-seal") return "Smiley service";
