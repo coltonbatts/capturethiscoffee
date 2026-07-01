@@ -11,6 +11,7 @@ import {
   cardClass,
   inputClass,
   primaryButtonClass,
+  secondaryButtonClass,
 } from "@/components/ui";
 import { createClientRecord, loadCoffeeData } from "@/lib/data";
 import type { CoffeeData } from "@/lib/types";
@@ -21,6 +22,7 @@ export default function ClientsPage() {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -48,6 +50,7 @@ export default function ClientsPage() {
       setData(next);
       setName("");
       setNotes("");
+      setShowAddForm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add client.");
     } finally {
@@ -57,36 +60,22 @@ export default function ClientsPage() {
 
   return (
     <AppShell title="Clients" requireAuth>
-      <form onSubmit={addClient} className="mb-4 grid gap-3">
-        <Panel className="grid gap-3 p-4">
-          <Field label="Name">
-            <input
-              className={inputClass}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Client name"
-            />
-          </Field>
-          <Field label="Notes">
-            <input
-              className={inputClass}
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder="Optional"
-            />
-          </Field>
-          <button type="submit" className={primaryButtonClass}>
-            <Plus size={18} aria-hidden="true" />
-            {saving ? "Adding…" : "Add client"}
-          </button>
-        </Panel>
-      </form>
-
       {error ? (
         <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
+
+      <div className="mb-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className={primaryButtonClass}
+        >
+          <Plus size={18} aria-hidden="true" />
+          Add client
+        </button>
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {!data ? (
@@ -123,6 +112,52 @@ export default function ClientsPage() {
           );
         })}
       </div>
+
+      {showAddForm ? (
+        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3">
+          <form
+            onSubmit={addClient}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add client"
+            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5"
+          >
+            <h2 className="text-lg font-semibold">Add client</h2>
+            <Field label="Name">
+              <input
+                className={inputClass}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Client name"
+              />
+            </Field>
+            <Field label="Notes">
+              <input
+                className={inputClass}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Optional"
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setName("");
+                  setNotes("");
+                }}
+                className={secondaryButtonClass}
+              >
+                Cancel
+              </button>
+              <button type="submit" className={primaryButtonClass} disabled={saving}>
+                {saving ? "Adding…" : "Add client"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

@@ -48,7 +48,12 @@
 - Final physical print result after phone PNG import.
 
 The current assumed preset is 50mm x 30mm at 300 DPI. Treat it as provisional
-until a physical print confirms the media and import behavior.
+until a physical print confirms the media and import behavior. Note:
+`src/lib/niimbot-m2-preset.json` currently describes this preset as
+"verified" — that claim is not backed by a recorded physical test in this
+repo. Run [docs/production-readiness-checklist.md](production-readiness-checklist.md)
+Section A to actually verify it, and update the preset description only
+once that's done.
 
 ## Client demo script
 

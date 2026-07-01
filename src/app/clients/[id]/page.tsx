@@ -139,9 +139,9 @@ export default function ClientDetailPage() {
       title={client?.name || "Client"}
       requireAuth
       actions={
-        <Link href="/clients" className={secondaryButtonClass}>
+        <Link href="/clients" className={secondaryButtonClass} aria-label="Back to clients">
           <ArrowLeft size={18} aria-hidden="true" />
-          Clients
+          <span className="hidden sm:inline">Clients</span>
         </Link>
       }
     >

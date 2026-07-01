@@ -432,15 +432,10 @@ export default function LabelExportPage() {
         <div className="grid content-start gap-4">
           <Panel className="grid gap-4 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="flex items-center gap-2 text-lg font-bold">
-                  <ImageDown size={19} aria-hidden="true" />
-                  Preview
-                </h2>
-                <p className="mt-1 text-xs font-bold uppercase tracking-normal text-zinc-500">
-                  Current assumed NIIMBOT M2 preset
-                </p>
-              </div>
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <ImageDown size={19} aria-hidden="true" />
+                Preview
+              </h2>
               <Link href="/productions" className={`${secondaryButtonClass} min-h-10 px-3`}>
                 Jobs
               </Link>
@@ -513,7 +508,7 @@ export default function LabelExportPage() {
                   className={`${primaryButtonClass} mt-1 min-h-14 text-base`}
                 >
                   <FileSpreadsheet size={20} aria-hidden="true" />
-                  Export CSV
+                  Export CSV — crew batch
                 </button>
               </div>
 
@@ -533,7 +528,7 @@ export default function LabelExportPage() {
                     className={`${secondaryButtonClass} min-h-14 text-sm`}
                   >
                     <Download size={19} aria-hidden="true" />
-                    {busy ? "Exporting…" : "Download"}
+                    {busy ? "Exporting…" : "Export PNG"}
                   </button>
                   <button
                     type="button"
@@ -556,15 +551,6 @@ export default function LabelExportPage() {
                 </button>
               </div>
             </div>
-
-            <div className="rounded-lg border border-zinc-300 bg-white p-3 text-sm font-medium leading-6 text-zinc-700">
-              <p className="font-bold text-black">Phone workflow</p>
-              <ol className="mt-1 list-decimal space-y-1 pl-5">
-                <li>Use CSV for the full crew run in NIIMBOT batch templates.</li>
-                <li>Use PNG export for hero/client cups that need the CTC renderer.</li>
-                <li>Open the NIIMBOT app on the phone paired to the printer.</li>
-              </ol>
-            </div>
           </Panel>
         </div>
       </div>
@@ -580,7 +566,7 @@ export default function LabelExportPage() {
             className={`${primaryButtonClass} text-sm`}
           >
             <FileSpreadsheet size={18} aria-hidden="true" />
-            Export CSV
+            Export CSV — crew batch
           </button>
           <button
             type="button"
@@ -589,7 +575,7 @@ export default function LabelExportPage() {
             className={`${secondaryButtonClass} text-sm`}
           >
             <Download size={18} aria-hidden="true" />
-            {busy ? "Exporting…" : "Download PNG"}
+            {busy ? "Exporting…" : "Export PNG — single cup"}
           </button>
         </div>
       </div>

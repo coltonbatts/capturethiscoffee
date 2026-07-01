@@ -37,6 +37,7 @@ export default function PeoplePage() {
   const [editForm, setEditForm] = useState<PersonForm>(emptyPersonForm("crew"));
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -75,6 +76,7 @@ export default function PeoplePage() {
       const next = await createPersonRecord(data, form);
       setData(next);
       setForm(emptyPersonForm("crew"));
+      setShowAddForm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add person.");
     } finally {
@@ -102,29 +104,29 @@ export default function PeoplePage() {
 
   return (
     <AppShell title="People" requireAuth>
-      <form onSubmit={addPerson} className="mb-4 grid gap-3">
-        <Panel className="grid gap-3 p-4">
-          <PersonFields form={form} onChange={setForm} showActive={false} />
-          <button type="submit" className={primaryButtonClass}>
-            <Plus size={18} aria-hidden="true" />
-            {saving ? "Adding…" : "Add person"}
-          </button>
-        </Panel>
-      </form>
-
       {error ? (
         <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
           {error}
         </div>
       ) : null}
 
-      <input
-        className={`${inputClass} mb-3`}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search people"
-        aria-label="Search people"
-      />
+      <div className="mb-3 flex gap-2">
+        <input
+          className={`${inputClass} flex-1`}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search people"
+          aria-label="Search people"
+        />
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className={`${primaryButtonClass} shrink-0`}
+        >
+          <Plus size={18} aria-hidden="true" />
+          Add person
+        </button>
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {!data ? (
@@ -164,6 +166,36 @@ export default function PeoplePage() {
           </article>
         ))}
       </div>
+
+      {showAddForm ? (
+        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3">
+          <form
+            onSubmit={addPerson}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add person"
+            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5"
+          >
+            <h2 className="text-lg font-semibold">Add person</h2>
+            <PersonFields form={form} onChange={setForm} showActive={false} />
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setForm(emptyPersonForm("crew"));
+                }}
+                className={secondaryButtonClass}
+              >
+                Cancel
+              </button>
+              <button type="submit" className={primaryButtonClass} disabled={saving}>
+                {saving ? "Adding…" : "Add person"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
 
       {editingPerson ? (
         <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3">
