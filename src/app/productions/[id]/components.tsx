@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { PersonPhotoField } from "@/components/person-photo-field";
 import {
   Avatar,
+  CountBadge,
   EmptyState,
   Field,
   Panel,
@@ -26,6 +27,7 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
   statusLabels,
+  statusRailStyles,
 } from "@/components/ui";
 import { formatDrink } from "@/lib/order-summary";
 import {
@@ -95,22 +97,27 @@ export function RunnerHeader({
   detail,
   runnerName,
   progress,
+  statusCounts,
   onEditDetails,
 }: {
   detail: string;
   runnerName?: string;
   progress: { percent: number; responded: number; total: number };
+  statusCounts?: Partial<Record<OrderStatus, number>>;
   onEditDetails?: () => void;
 }) {
   return (
-    <section className="mb-4 border-b border-black pb-4 no-print">
+    <section className="rule-double mb-4 pb-4 no-print">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm text-zinc-600">
+          <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
+            Live board
+          </p>
+          <p className="mt-0.5 truncate text-sm font-medium text-zinc-700">
             {detail || "Coffee orders"}
           </p>
           {runnerName ? (
-            <p className="mt-1 text-sm text-zinc-500">Runner: {runnerName}</p>
+            <p className="mt-0.5 text-sm text-zinc-500">Runner: {runnerName}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 items-start gap-2">
@@ -124,22 +131,37 @@ export function RunnerHeader({
               <Pencil size={18} aria-hidden="true" />
             </button>
           ) : null}
-          <div className="text-right text-sm font-medium text-zinc-700">
-            <span className="block text-xl leading-6 text-black">
-              {progress.percent}%
+          <div className="text-right leading-none">
+            <span className="block text-3xl font-black tabular-nums text-black">
+              {progress.percent}
+              <span className="text-lg">%</span>
             </span>
-            <span className="text-xs text-zinc-500">
+            <span className="mt-1 block text-xs font-bold uppercase tracking-normal text-zinc-500">
               {progress.responded}/{progress.total} asked
             </span>
           </div>
         </div>
       </div>
-      <div className="mt-4 h-1.5 overflow-hidden rounded-sm bg-zinc-200">
+      <div className="mt-4 h-2 overflow-hidden rounded-sm bg-zinc-200">
         <div
-          className="h-full bg-black transition-[width]"
+          className="h-full bg-accent transition-[width] duration-300"
           style={{ width: `${progress.percent}%` }}
         />
       </div>
+      {statusCounts ? (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {statuses.map((status) =>
+            statusCounts[status] ? (
+              <CountBadge
+                key={status}
+                label={statusLabels[status]}
+                count={statusCounts[status]!}
+                accent={status === "ordered"}
+              />
+            ) : null,
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -233,12 +255,17 @@ function RosterCard({
 }) {
   const { order, roster, person } = item;
   const onSet = roster.on_set_today;
+  const railColor = order ? statusRailStyles[order.status] : "bg-zinc-200";
 
   return (
     <article
-      className="w-full min-w-0 rounded-xl border border-zinc-400 bg-white p-3"
+      className="relative w-full min-w-0 overflow-hidden rounded-xl border border-zinc-400 bg-white py-3 pr-3 pl-4"
       aria-busy={pending}
     >
+      <span
+        className={`absolute inset-y-0 left-0 w-1.5 ${railColor}`}
+        aria-hidden="true"
+      />
       <div className={`flex gap-3 ${pending ? "opacity-60" : ""}`}>
         <Avatar person={person} />
         <div className="min-w-0 flex-1">
@@ -335,20 +362,22 @@ function CardActions({
 }) {
   const step = nextStep[order.status];
   const previous = previousStep[order.status];
+  const compactButtonClass =
+    "flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-lg border border-zinc-400 bg-white text-black transition active:translate-y-px hover:border-black hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
-    <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+    <div className="mt-3 grid gap-2">
       {step ? (
         <button
           type="button"
           onClick={() => onAdvance(order, step.status)}
           disabled={pending}
-          className={`${buttonClass} bg-black text-white`}
+          className={`${buttonClass} min-h-12 bg-black text-base text-white disabled:opacity-40`}
         >
           {order.status === "not_asked" ? (
-            <Check size={18} aria-hidden="true" />
+            <Check size={19} aria-hidden="true" />
           ) : (
-            <ChevronRight size={18} aria-hidden="true" />
+            <ChevronRight size={19} aria-hidden="true" />
           )}
           {step.label}
         </button>
@@ -371,32 +400,32 @@ function CardActions({
         </div>
       )}
 
-      <Link
-        href={`/labels?order=${encodeURIComponent(order.id)}`}
-        className={secondaryButtonClass}
+      <div
+        className={`grid gap-1.5 ${canManageSetup ? "grid-cols-3" : "grid-cols-2"}`}
       >
-        <Printer size={18} aria-hidden="true" />
-        Label
-      </Link>
-      <button
-        type="button"
-        onClick={() => onEdit(order)}
-        disabled={pending}
-        className={secondaryButtonClass}
-      >
-        <Pencil size={18} aria-hidden="true" />
-        Edit
-      </button>
-      {canManageSetup ? (
+        <Link
+          href={`/labels?order=${encodeURIComponent(order.id)}`}
+          className={compactButtonClass}
+        >
+          <Printer size={16} aria-hidden="true" />
+          <span className="text-[11px] font-bold">Label</span>
+        </Link>
         <button
           type="button"
-          onClick={onEditRoster}
-          className={secondaryButtonClass}
+          onClick={() => onEdit(order)}
+          disabled={pending}
+          className={compactButtonClass}
         >
-          <Pencil size={18} aria-hidden="true" />
-          Roster
+          <Pencil size={16} aria-hidden="true" />
+          <span className="text-[11px] font-bold">Edit</span>
         </button>
-      ) : null}
+        {canManageSetup ? (
+          <button type="button" onClick={onEditRoster} className={compactButtonClass}>
+            <Pencil size={16} aria-hidden="true" />
+            <span className="text-[11px] font-bold">Roster</span>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

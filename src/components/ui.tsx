@@ -1,16 +1,36 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { Ban, Check, CheckCheck, Circle, Package, Timer } from "lucide-react";
 import type { OrderStatus, Person } from "@/lib/types";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 const statusStyles: Record<OrderStatus, string> = {
-  not_asked: "bg-white text-zinc-700 border-zinc-400 border-dashed",
+  not_asked: "bg-white text-zinc-600 border-zinc-400 border-dashed",
   confirmed: "bg-white text-black border-black",
-  ordered: "bg-black text-white border-black",
-  picked_up: "bg-zinc-800 text-white border-zinc-800",
-  delivered: "bg-zinc-200 text-black border-zinc-500",
+  ordered: "bg-accent text-white border-accent",
+  picked_up: "bg-black text-white border-black",
+  delivered: "bg-zinc-900/5 text-zinc-800 border-zinc-500",
   no_order: "bg-white text-red-700 border-red-700",
+};
+
+const statusIcons: Record<OrderStatus, typeof Circle> = {
+  not_asked: Circle,
+  confirmed: Check,
+  ordered: Timer,
+  picked_up: Package,
+  delivered: CheckCheck,
+  no_order: Ban,
+};
+
+/** Left-edge rail color per status, used on roster cards for at-a-glance scanning. */
+export const statusRailStyles: Record<OrderStatus, string> = {
+  not_asked: "bg-zinc-300",
+  confirmed: "bg-black",
+  ordered: "bg-accent",
+  picked_up: "bg-black",
+  delivered: "bg-zinc-400",
+  no_order: "bg-red-700",
 };
 
 export const statusLabels: Record<OrderStatus, string> = {
@@ -23,10 +43,12 @@ export const statusLabels: Record<OrderStatus, string> = {
 };
 
 export function StatusChip({ status }: { status: OrderStatus }) {
+  const Icon = statusIcons[status];
   return (
     <span
-      className={`inline-flex min-h-7 shrink-0 items-center rounded-md border px-2.5 text-xs font-black leading-none ${statusStyles[status]}`}
+      className={`inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black leading-none ${statusStyles[status]}`}
     >
+      <Icon size={12} strokeWidth={3} aria-hidden="true" />
       {statusLabels[status]}
     </span>
   );
@@ -178,3 +200,49 @@ export const dangerButtonClass = `${buttonClass} border border-red-700 bg-white 
 
 export const cardClass =
   "block rounded-xl border border-zinc-400 bg-white p-4 transition hover:border-black active:translate-y-px";
+
+export function RosterCardSkeleton() {
+  return (
+    <div className="flex gap-3 overflow-hidden rounded-xl border border-zinc-300 bg-white p-3">
+      <div className="skeleton size-12 shrink-0 rounded-lg" />
+      <div className="grid min-w-0 flex-1 gap-2">
+        <div className="skeleton h-4 w-2/5 rounded" />
+        <div className="skeleton h-3 w-1/3 rounded" />
+        <div className="skeleton mt-2 h-9 w-full rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+export function RosterListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="grid gap-2" aria-hidden="true">
+      {Array.from({ length: rows }).map((_, index) => (
+        <RosterCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
+export function CountBadge({
+  label,
+  count,
+  accent = false,
+}: {
+  label: string;
+  count: number;
+  accent?: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-black leading-none whitespace-nowrap ${
+        accent
+          ? "border-accent bg-accent/10 text-accent-ink"
+          : "border-zinc-300 bg-white text-zinc-700"
+      }`}
+    >
+      <span className={accent ? "text-accent" : "text-black"}>{count}</span>
+      {label}
+    </span>
+  );
+}

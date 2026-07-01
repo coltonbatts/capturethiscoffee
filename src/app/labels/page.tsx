@@ -315,20 +315,24 @@ export default function LabelExportPage() {
 
   return (
     <AppShell title="Labels" requireAuth>
-      <section className="grid gap-4 border-y border-black bg-white py-4">
+      <section className="rule-double grid gap-4 pb-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black leading-tight tracking-normal text-black">
-              Label export
+            <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
+              Label workstation
+            </p>
+            <h1 className="mt-0.5 text-2xl font-black leading-tight tracking-normal text-black">
+              Export &amp; print
             </h1>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
               Export a crew CSV for NIIMBOT batch templates, or save a print-ready
               PNG for hero cups.
             </p>
           </div>
-          <div className="rounded-lg border border-zinc-500 bg-white px-3 py-2 text-sm font-black text-black">
-            {niimbotM2ExportPreset.widthMm} x {niimbotM2ExportPreset.heightMm}mm /
-            {` ${niimbotM2ExportPreset.dpi} DPI`}
+          <div className="rounded-lg border-2 border-black bg-white px-3 py-2 font-mono text-sm font-black text-black">
+            {niimbotM2ExportPreset.widthMm}×{niimbotM2ExportPreset.heightMm}mm
+            <span className="mx-1.5 text-zinc-400">/</span>
+            {niimbotM2ExportPreset.dpi} DPI
           </div>
         </div>
       </section>
@@ -475,56 +479,82 @@ export default function LabelExportPage() {
               </div>
             </div>
 
-            <div className="grid min-h-[240px] place-items-center overflow-hidden rounded-xl border border-zinc-500 bg-zinc-100 p-3 sm:min-h-[340px] sm:p-5">
+            <div
+              className="grid min-h-[240px] place-items-center overflow-hidden rounded-xl border-2 border-black p-4 sm:min-h-[340px] sm:p-6"
+              style={{
+                background:
+                  "repeating-linear-gradient(0deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), #18181b",
+              }}
+            >
               {previewLabel ? (
-                <ScreenLabel label={previewLabel} designId={designId} />
+                <div className="drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
+                  <ScreenLabel label={previewLabel} designId={designId} />
+                </div>
               ) : (
-                <p className="text-center text-sm font-bold text-zinc-600">
+                <p className="text-center text-sm font-bold text-zinc-300">
                   Select a label to preview the PNG.
                 </p>
               )}
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={downloadNiimbotCsv}
-                disabled={busy || !selection?.items.length}
-                className={`${primaryButtonClass} min-h-14 text-base`}
-              >
-                <FileSpreadsheet size={20} aria-hidden="true" />
-                Export CSV
-              </button>
-              <button
-                type="button"
-                onClick={() => void downloadSelected()}
-                disabled={busy || !labels.length}
-                className={`${secondaryButtonClass} min-h-14 text-base`}
-              >
-                <Download size={20} aria-hidden="true" />
-                {busy ? "Exporting..." : "Download PNG"}
-              </button>
-            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid content-start gap-2 rounded-xl border border-zinc-300 bg-zinc-50 p-3">
+                <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-normal text-zinc-500">
+                  <FileSpreadsheet size={14} aria-hidden="true" />
+                  CSV batch
+                </div>
+                <p className="text-xs leading-5 text-zinc-600">
+                  Full crew run, one row per person, for NIIMBOT batch templates.
+                </p>
+                <button
+                  type="button"
+                  onClick={downloadNiimbotCsv}
+                  disabled={busy || !selection?.items.length}
+                  className={`${primaryButtonClass} mt-1 min-h-14 text-base`}
+                >
+                  <FileSpreadsheet size={20} aria-hidden="true" />
+                  Export CSV
+                </button>
+              </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => void shareSelected()}
-                disabled={busy || !labels.length || !shareReady}
-                className={`${secondaryButtonClass} min-h-14 text-base`}
-              >
-                <Share2 size={19} aria-hidden="true" />
-                Share
-              </button>
-              <button
-                type="button"
-                onClick={() => void downloadTestLabel()}
-                disabled={busy || !testLabel}
-                className={`${secondaryButtonClass} min-h-14 text-base`}
-              >
-                <Smile size={19} aria-hidden="true" />
-                Test label
-              </button>
+              <div className="border-accent/50 bg-accent/5 grid content-start gap-2 rounded-xl border-2 p-3">
+                <div className="text-accent-ink flex items-center gap-1.5 text-xs font-black uppercase tracking-normal">
+                  <ImageDown size={14} aria-hidden="true" />
+                  PNG hero
+                </div>
+                <p className="text-xs leading-5 text-zinc-600">
+                  Branded, print-ready cup label from the CTC renderer.
+                </p>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void downloadSelected()}
+                    disabled={busy || !labels.length}
+                    className={`${secondaryButtonClass} min-h-14 text-sm`}
+                  >
+                    <Download size={19} aria-hidden="true" />
+                    {busy ? "Exporting…" : "Download"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void shareSelected()}
+                    disabled={busy || !labels.length || !shareReady}
+                    className={`${secondaryButtonClass} min-h-14 text-sm`}
+                  >
+                    <Share2 size={19} aria-hidden="true" />
+                    Share
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void downloadTestLabel()}
+                  disabled={busy || !testLabel}
+                  className={`${secondaryButtonClass} min-h-11 text-sm`}
+                >
+                  <Smile size={18} aria-hidden="true" />
+                  Test label
+                </button>
+              </div>
             </div>
 
             <div className="rounded-lg border border-zinc-300 bg-white p-3 text-sm font-medium leading-6 text-zinc-700">
@@ -536,6 +566,31 @@ export default function LabelExportPage() {
               </ol>
             </div>
           </Panel>
+        </div>
+      </div>
+
+      <div className="h-20 lg:hidden" aria-hidden="true" />
+
+      <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-black bg-white p-3 lg:hidden">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={downloadNiimbotCsv}
+            disabled={busy || !selection?.items.length}
+            className={`${primaryButtonClass} text-sm`}
+          >
+            <FileSpreadsheet size={18} aria-hidden="true" />
+            Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => void downloadSelected()}
+            disabled={busy || !labels.length}
+            className={`${secondaryButtonClass} text-sm`}
+          >
+            <Download size={18} aria-hidden="true" />
+            {busy ? "Exporting…" : "Download PNG"}
+          </button>
         </div>
       </div>
     </AppShell>

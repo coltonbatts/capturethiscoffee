@@ -4,7 +4,12 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
-import { EmptyState, Panel, secondaryButtonClass } from "@/components/ui";
+import {
+  EmptyState,
+  Panel,
+  RosterListSkeleton,
+  secondaryButtonClass,
+} from "@/components/ui";
 import {
   addRosterPerson,
   createPersonAndAddToRoster,
@@ -92,11 +97,23 @@ export default function ProductionDashboardPage() {
   );
   const view = useRosterView(data, production, filters);
 
+  const statusCounts = useMemo(() => {
+    const counts: Partial<Record<OrderStatus, number>> = {};
+    for (const item of view.activeItems) {
+      const status = item.order?.status || "not_asked";
+      counts[status] = (counts[status] || 0) + 1;
+    }
+    return counts;
+  }, [view.activeItems]);
+
   if (!production) {
     return (
       <AppShell title="Production">
         {state === "loading" ? (
-          <Panel className="h-40 animate-pulse bg-white/70 p-4" />
+          <div className="grid gap-4">
+            <Panel className="skeleton h-28 rounded-xl" />
+            <RosterListSkeleton />
+          </div>
         ) : state === "error" ? (
           <EmptyState
             title="Couldn't load this production"
@@ -243,6 +260,7 @@ export default function ProductionDashboardPage() {
         detail={detail}
         runnerName={production.runner_name}
         progress={view.progress}
+        statusCounts={statusCounts}
         onEditDetails={isAdmin ? openProductionEditor : undefined}
       />
 
