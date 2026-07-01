@@ -32,7 +32,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
       <header className="sticky top-0 z-30 border-b border-black bg-white no-print">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <Link href="/productions" className="flex min-w-0 items-center gap-3">
-            <CaptureMark className="size-9 rounded-lg" />
+            <CaptureMark className="size-9 rounded-lg" priority />
             <span className="block truncate text-lg font-black leading-tight">
               {title}
             </span>

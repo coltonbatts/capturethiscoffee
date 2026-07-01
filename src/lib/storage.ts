@@ -158,19 +158,41 @@ function parseUsualOrder(usualOrder = "") {
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
+  const size = ["small", "medium", "large"].find((item) =>
+    parts.some((part) => part.toLowerCase() === item),
+  );
+  const temperature = lower.includes("iced") || lower.includes("cold") ? "Iced" : lower.includes("hot") ? "Hot" : "";
+  const milk = ["oat", "almond", "whole", "cream"].find((item) =>
+    lower.includes(item),
+  );
+  const drinkPart =
+    parts.find((part) => {
+      const normalized = part.toLowerCase();
+      if (size && normalized === size) return false;
+      if (["hot", "iced"].includes(normalized)) return false;
+      if (milk && normalized === `${milk} milk`) return false;
+      return true;
+    }) || parts[0] || "";
 
   return {
-    drink_type: parts[0] || "",
-    size: ["small", "medium", "large"].find((size) => lower.includes(size)) || "",
-    temperature: lower.includes("iced") || lower.includes("cold") ? "Iced" : lower.includes("hot") ? "Hot" : "",
-    milk_type: ["oat", "almond", "whole", "cream"].find((milk) =>
-      lower.includes(milk),
-    ) || "",
+    drink_type: drinkPart,
+    size: size ? size[0].toUpperCase() + size.slice(1) : "",
+    temperature,
+    milk_type: milk ? milk[0].toUpperCase() + milk.slice(1) : "",
     sweetener: lower.includes("half sweet")
       ? "Half sweet"
       : lower.includes("sweet")
         ? "Sweetened"
         : "",
-    special_notes: parts.slice(1).join(", "),
+    special_notes: parts
+      .filter((part) => part !== drinkPart)
+      .filter((part) => {
+        const normalized = part.toLowerCase();
+        if (size && normalized === size) return false;
+        if (milk && normalized === `${milk} milk`) return false;
+        if (["hot", "iced"].includes(normalized)) return false;
+        return true;
+      })
+      .join(", "),
   };
 }

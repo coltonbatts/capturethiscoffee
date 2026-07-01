@@ -3,17 +3,91 @@ import type { Client, Order, Production, RosterOrder } from "./types";
 export function formatDrink(order?: Order) {
   if (!order || order.status === "no_order") return "No order";
 
+  let drink = cleanPart(order.drink_type);
+  let notes = cleanPart(order.special_notes);
+  const size = labelFromKnownValue(order.size, sizeLabels);
+  const temperature = labelFromKnownValue(order.temperature, temperatureLabels);
+  const milk = formatMilk(order.milk_type);
+
+  if (size && sameMeaning(drink, size)) drink = "";
+  if (temperature && sameMeaning(drink, temperature)) drink = "";
+
+  if (looksLikeDrink(notes) && (!drink || sameMeaning(drink, size))) {
+    drink = notes;
+    notes = "";
+  }
+
   const parts = [
-    order.size,
-    order.temperature,
-    order.drink_type,
-    order.milk_type ? `${order.milk_type} milk` : "",
-    order.sweetener,
-    order.caffeine && order.caffeine !== "Regular" ? order.caffeine : "",
-    order.special_notes,
+    size && !containsMeaning(drink, size) ? size : "",
+    temperature && !containsMeaning(drink, temperature) ? temperature : "",
+    drink,
+    milk && !containsMeaning(drink, milk) ? milk : "",
+    cleanPart(order.sweetener),
+    order.caffeine && order.caffeine !== "Regular" ? cleanPart(order.caffeine) : "",
+    notes,
   ].filter(Boolean);
 
   return parts.join(", ") || "Order not entered";
+}
+
+const sizeLabels: Record<string, string> = {
+  small: "Small",
+  medium: "Medium",
+  large: "Large",
+};
+
+const temperatureLabels: Record<string, string> = {
+  hot: "Hot",
+  iced: "Iced",
+};
+
+function cleanPart(value?: string) {
+  return value?.trim().replace(/\s+/g, " ") || "";
+}
+
+function labelFromKnownValue(value: string | undefined, labels: Record<string, string>) {
+  const clean = cleanPart(value);
+  if (!clean) return "";
+  return labels[normalize(clean)] || clean;
+}
+
+function formatMilk(value?: string) {
+  const clean = cleanPart(value);
+  if (!clean) return "";
+  return /\bmilk\b/i.test(clean) ? clean : `${capitalize(clean)} milk`;
+}
+
+function capitalize(value: string) {
+  return value ? value[0].toUpperCase() + value.slice(1) : value;
+}
+
+function normalize(value?: string) {
+  return cleanPart(value).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function sameMeaning(a?: string, b?: string) {
+  return Boolean(a && b && normalize(a) === normalize(b));
+}
+
+function containsMeaning(haystack?: string, needle?: string) {
+  const normalizedHaystack = ` ${normalize(haystack)} `;
+  const normalizedNeedle = normalize(needle);
+  if (!normalizedHaystack.trim() || !normalizedNeedle) return false;
+
+  if (normalizedHaystack.includes(` ${normalizedNeedle} `)) return true;
+
+  if (normalizedNeedle.endsWith(" milk")) {
+    const milkBase = normalizedNeedle.replace(/\s+milk$/, "");
+    return normalizedHaystack.includes(` ${milkBase} `);
+  }
+
+  return false;
+}
+
+function looksLikeDrink(value: string) {
+  return /\b(latte|coffee|cold brew|matcha|tea|chai|americano|cappuccino|espresso|mocha|drip|cortado|macchiato|flat white)\b/i.test(
+    value,
+  );
 }
 
 export function byPersonSummary(items: RosterOrder[]) {
