@@ -30,12 +30,10 @@ The current assumed preset is stored in
 - PNG image
 
 This is an assumed preset, not a physically verified lid-label stock. Do not
-present it as final until a physical print confirms it. `niimbot-m2-preset.json`'s
-description field currently claims this was verified on June 30, 2026 —
-that claim has no supporting record in this repo (no measurements, photos,
-or test-print notes) and should be treated as inaccurate until
+present it as final until a physical print confirms it — the preset's own
+description field says the same. Run
 [docs/production-readiness-checklist.md](production-readiness-checklist.md)
-Section A is actually completed.
+Section A to verify, then record the result here and in the preset.
 
 ## Physical Unknowns To Verify
 

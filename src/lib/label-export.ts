@@ -4,6 +4,7 @@ import {
   type CoffeeLabel,
   type LabelFormatterOptions,
 } from "./label-copy";
+import { formatDrink } from "./order-summary";
 import type { Client, CoffeeData, Production, RosterOrder } from "./types";
 
 export const defaultLabelExportOptions: LabelFormatterOptions = {
@@ -93,4 +94,23 @@ function productionStatusRank(status: Production["status"]) {
   if (status === "active") return 0;
   if (status === "planning") return 1;
   return 2;
+}
+
+/**
+ * CSV consumed by NIIMBOT batch/variable-data templates: a header row plus
+ * one "crew name","drink" row per selected order. Cells are always quoted and
+ * newlines flattened so the NIIMBOT app import never splits a row.
+ */
+export function niimbotBatchCsv(items: ActiveLabelExportItem[]) {
+  return [
+    ["crew name", "drink"],
+    ...items.map((item) => [item.person.name, formatDrink(item.order)]),
+  ]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\r\n");
+}
+
+function csvCell(value: string) {
+  const normalized = value.replace(/\r?\n/g, " ").trim();
+  return `"${normalized.replace(/"/g, '""')}"`;
 }

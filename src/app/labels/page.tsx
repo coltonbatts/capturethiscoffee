@@ -30,6 +30,7 @@ import {
   defaultLabelExportOptions,
   labelExportItemsForProduction,
   labelExportProductions,
+  niimbotBatchCsv,
   preferredLabelExportProduction,
 } from "@/lib/label-export";
 import {
@@ -76,10 +77,10 @@ export default function LabelExportPage() {
   );
 
   const loadData = useCallback(() => {
-    setError("");
-    setStatus("");
     loadCoffeeData()
       .then((next) => {
+        setError("");
+        setStatus("");
         setData(next);
         const preferred = preferredLabelExportProduction(next);
         const nextProductionId = preferred?.id || "";
@@ -100,30 +101,8 @@ export default function LabelExportPage() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    loadCoffeeData()
-      .then((next) => {
-        if (!mounted) return;
-        setData(next);
-        const preferred = preferredLabelExportProduction(next);
-        const nextProductionId = preferred?.id || "";
-        setProductionId(nextProductionId);
-        if (nextProductionId) {
-          setSelectedOrderIds(
-            labelExportItemsForProduction(next, nextProductionId)
-              .slice(0, 1)
-              .map((item) => item.order.id),
-          );
-        }
-      })
-      .catch((err: unknown) => {
-        if (mounted) setError(describeDataError(err, "Could not load labels."));
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    loadData();
+  }, [loadData]);
 
   const productions = useMemo(
     () => (data ? labelExportProductions(data) : []),
@@ -173,9 +152,13 @@ export default function LabelExportPage() {
     setStatus("");
   }
 
-  function selectAll() {
+  const allSelected = activeItems.length > 0 && selectedCount >= activeItems.length;
+
+  function toggleSelectAll() {
     setSelectedOrderIds(
-      activeItems.flatMap((item) => (item.order ? [item.order.id] : [])),
+      allSelected
+        ? []
+        : activeItems.flatMap((item) => (item.order ? [item.order.id] : [])),
     );
     setStatus("");
   }
@@ -304,7 +287,7 @@ export default function LabelExportPage() {
       return;
     }
 
-    const csv = niimbotCsvForSelection(selection.items);
+    const csv = niimbotBatchCsv(selection.items);
     const fileName = `${safeFilePart(selection.production.name)}-niimbot-batch.csv`;
     downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), fileName);
     setError("");
@@ -401,11 +384,11 @@ export default function LabelExportPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={selectAll}
+                  onClick={toggleSelectAll}
                   className={`${secondaryButtonClass} min-h-10 px-3`}
                 >
                   <CheckCircle2 size={16} aria-hidden="true" />
-                  All
+                  {allSelected ? "None" : "All"}
                 </button>
               </div>
               <div className="grid max-h-[58vh] gap-2 overflow-y-auto pr-1">
@@ -563,19 +546,19 @@ export default function LabelExportPage() {
             type="button"
             onClick={downloadNiimbotCsv}
             disabled={busy || !selection?.items.length}
-            className={`${primaryButtonClass} text-sm`}
+            className={`${primaryButtonClass} whitespace-nowrap text-sm`}
           >
             <FileSpreadsheet size={18} aria-hidden="true" />
-            Export CSV — crew batch
+            Export CSV{selectedCount ? ` · ${selectedCount}` : ""}
           </button>
           <button
             type="button"
             onClick={() => void downloadSelected()}
             disabled={busy || !labels.length}
-            className={`${secondaryButtonClass} text-sm`}
+            className={`${secondaryButtonClass} whitespace-nowrap text-sm`}
           >
             <Download size={18} aria-hidden="true" />
-            {busy ? "Exporting…" : "Export PNG — single cup"}
+            {busy ? "Exporting…" : `Export PNG${selectedCount ? ` · ${selectedCount}` : ""}`}
           </button>
         </div>
       </div>
@@ -650,15 +633,6 @@ function downloadBlob(blob: Blob, fileName: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function niimbotCsvForSelection(items: ActiveLabelExportItem[]) {
-  return [
-    ["crew name", "drink"],
-    ...items.map((item) => [item.person.name, formatDrink(item.order)]),
-  ]
-    .map((row) => row.map(csvCell).join(","))
-    .join("\r\n");
-}
-
 function buildClientTestLabel(clientName: string): CoffeeLabel {
   const title = clientName.trim() || "Capture This Coffee";
   const bodyLines = ["Have a nice day"];
@@ -677,11 +651,6 @@ function buildClientTestLabel(clientName: string): CoffeeLabel {
     footerEnd: "",
     lines: [title, ...bodyLines],
   };
-}
-
-function csvCell(value: string) {
-  const normalized = value.replace(/\r?\n/g, " ").trim();
-  return `"${normalized.replace(/"/g, '""')}"`;
 }
 
 function safeFilePart(value: string) {

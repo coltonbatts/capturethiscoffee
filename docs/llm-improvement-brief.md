@@ -1,5 +1,34 @@
 # Capture This Coffee — Engineering Brief for an LLM Collaborator
 
+> **STATUS (2026-07-01): HISTORICAL — do not work from this document.**
+> This brief predates major changes and much of it no longer matches the repo.
+> Start from `CLAUDE.md` (repo root) and
+> [docs/production-readiness-checklist.md](production-readiness-checklist.md) instead.
+> What has already been resolved since this was written:
+>
+> - **P0-A and P0-B (open anon reads/writes) are fixed.** Runner access now goes
+>   through SHA-256-hashed share tokens (`src/lib/production-share.ts`) and
+>   token-scoped API routes (`src/app/api/public/...`). Anonymous direct table
+>   reads/writes are revoked in the current migrations. Runner payloads omit
+>   dietary notes and private notes.
+> - **Phase 1 (remove the laptop print pipeline) is done.** The print-station
+>   page, USB-serial scripts, label queue, print-job API routes, direct-Bluetooth
+>   probe, and the `printer_devices`/`label_print_jobs`/`label_print_attempts`
+>   tables are all deleted. `src/app/labels/page.tsx` is now the CSV + PNG
+>   export workstation. Do not recreate any of the print-station files named below.
+> - **Phase 1b (label design) is underway.** `coffee-label-renderer.tsx` and
+>   `src/lib/niimbot-m2-export.ts` render multiple branded label designs at the
+>   50x30mm preset (still pending physical verification — see the checklist).
+> - **Tests now cover** label copy, label export selection, order summaries, and
+>   share-token sanitization/privacy (`tests/`).
+>
+> Still open, in current priority order: physical NIIMBOT verification and
+> deployment validation (the checklist's Sections A and B), then the `data.ts`
+> dual-mode consolidation (Phase 2), realtime sync (Phase 3), and splitting the
+> large UI files (Phase 5). The product history and reasoning below remain
+> useful context; the file map, line counts, and problem list do not reflect
+> the current tree.
+
 > **How to use this file:** Paste this whole document into a capable coding LLM as the
 > first message of a session. It is a self-contained map of the app: what it is, how it's
 > built, what's wrong, and the order to fix things in. Each problem cites the real file so

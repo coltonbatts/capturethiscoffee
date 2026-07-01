@@ -19,21 +19,15 @@ Each check has a **Record** line (write the actual value down) and a
 pass before real client use — do not proceed past a blocker without fixing
 it or getting sign-off from the tech lead.
 
-> **Resolved status: not yet physically verified.** [`src/lib/niimbot-m2-preset.json`](../src/lib/niimbot-m2-preset.json)
-> currently says the 50mm x 30mm / 300 DPI preset was "verified June 30,
-> 2026 (includes holographic silver stock)," but this repo contains no
-> record of an actual physical print test — no measurements, photos, or
-> notes from a real M2 print. [`docs/niimbot-m2-plan.md`](niimbot-m2-plan.md)
-> was written the same day as that description was added, and it
-> explicitly says the bench test (reading the real roll, printing a test
-> label) had **not** happened yet and lists it as the next step. Until
-> Section A below is actually run and recorded, treat the preset as
-> **assumed, not verified** — this matches [`docs/v1-readiness.md`](v1-readiness.md)
-> and [`docs/label-image-export.md`](label-image-export.md), which is the
-> correct status. This checklist is the source of truth for resolving that
-> conflict: once Section A passes, update
-> `niimbot-m2-preset.json`'s description (and the other docs, if the
-> measured size differs) to match the recorded result — not before.
+> **Preset status: assumed, not physically verified.** The 50mm x 30mm /
+> 300 DPI preset in [`src/lib/niimbot-m2-preset.json`](../src/lib/niimbot-m2-preset.json)
+> has no recorded physical print test in this repo — no measurements,
+> photos, or notes from a real M2 print. (An earlier version of that
+> file's description claimed a June 30, 2026 verification; that claim was
+> unsubstantiated and has been removed.) This checklist is the source of
+> truth: once Section A passes, update `niimbot-m2-preset.json`'s
+> description (and the numbers, if the measured size differs) to match
+> the recorded result — not before.
 
 ---
 

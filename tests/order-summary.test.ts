@@ -41,6 +41,34 @@ describe("order summaries", () => {
     );
   });
 
+  it("handles missing and declined orders with operator-readable copy", () => {
+    assert.equal(formatDrink(undefined), "No order");
+    assert.equal(formatDrink({ ...baseOrder, status: "no_order" }), "No order");
+    assert.equal(
+      formatDrink({ ...baseOrder, drink_type: "", special_notes: "  " }),
+      "Order not entered",
+    );
+  });
+
+  it("shows decaf but hides the default Regular caffeine", () => {
+    assert.equal(
+      formatDrink({ ...baseOrder, caffeine: "Decaf" }),
+      "Latte, Decaf",
+    );
+    assert.equal(formatDrink({ ...baseOrder, caffeine: "Regular" }), "Latte");
+  });
+
+  it("collapses messy whitespace in sparse hand-typed fields", () => {
+    assert.equal(
+      formatDrink({
+        ...baseOrder,
+        drink_type: "  Flat   White ",
+        milk_type: " oat ",
+      }),
+      "Flat White, Oat milk",
+    );
+  });
+
   it("keeps true preparation notes in the summary", () => {
     assert.equal(
       formatDrink({

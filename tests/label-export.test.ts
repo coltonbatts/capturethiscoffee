@@ -4,6 +4,8 @@ import {
   buildLabelExportSelection,
   labelExportItemsForProduction,
   labelExportProductions,
+  niimbotBatchCsv,
+  type ActiveLabelExportItem,
 } from "../src/lib/label-export";
 import { niimbotM2ExportFileName } from "../src/lib/niimbot-m2-export";
 import type { CoffeeData } from "../src/lib/types";
@@ -142,5 +144,50 @@ describe("label export helpers", () => {
     const fileName = niimbotM2ExportFileName(selection!.labels[0]!);
 
     assert.equal(fileName, "ava-stone-ava-niimbot-m2-50x30mm-300dpi.png");
+  });
+
+  it("keeps exported file names bounded and filesystem safe for long names", () => {
+    const fileName = niimbotM2ExportFileName(
+      "Anna-Louise Wojciechowski-Konstantinopoulos (2nd AC / B-Cam) ✨",
+    );
+    const [stem] = fileName.split("-niimbot-m2-");
+
+    assert.ok(stem.length <= 48, `expected stem <= 48 chars, got ${stem.length}`);
+    assert.match(stem, /^[a-z0-9-]+$/);
+    assert.ok(fileName.endsWith("-niimbot-m2-50x30mm-300dpi.png"));
+  });
+});
+
+describe("NIIMBOT batch CSV", () => {
+  const items = labelExportItemsForProduction(data, "prod-active");
+
+  it("writes a header row plus one quoted row per item, CRLF separated", () => {
+    assert.equal(
+      niimbotBatchCsv(items),
+      '"crew name","drink"\r\n"Ava Stone","Medium, Iced, Latte, Oat milk, No room"',
+    );
+  });
+
+  it("escapes quotes and flattens newlines so rows never split", () => {
+    const awkward: ActiveLabelExportItem = {
+      ...items[0]!,
+      person: { ...items[0]!.person, name: 'Ava "Stoney" Stone' },
+      order: {
+        ...items[0]!.order,
+        drink_type: "Latte",
+        size: "",
+        temperature: "",
+        milk_type: "",
+        special_notes: "extra hot\nno lid",
+      },
+    };
+
+    const [header, row] = niimbotBatchCsv([awkward]).split("\r\n");
+    assert.equal(header, '"crew name","drink"');
+    assert.equal(row, '"Ava ""Stoney"" Stone","Latte, extra hot no lid"');
+  });
+
+  it("exports only the header when nothing is selected", () => {
+    assert.equal(niimbotBatchCsv([]), '"crew name","drink"');
   });
 });

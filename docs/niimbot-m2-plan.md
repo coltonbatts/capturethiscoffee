@@ -8,7 +8,7 @@ The M2 is a 300 DPI thermal-transfer printer (it uses a ribbon, not direct therm
 
 The one thing I can't confirm from a desk: **which roll/tape is actually loaded in your M2 right now.** 50×30mm is a believable guess, but you need to physically read the roll. That's a two-minute check, not a research project.
 
-(Note: `niimbot-m2-preset.json`'s description was later edited to say this was "verified" the same day this plan was written — that didn't happen here or anywhere else recorded in the repo. The bench test below is still outstanding; run it via [docs/production-readiness-checklist.md](production-readiness-checklist.md) Section A.)
+(Note: `niimbot-m2-preset.json` briefly claimed this was "verified" — that claim was unsubstantiated and has been removed; the preset now correctly describes itself as assumed. The bench test below is still outstanding; run it via [docs/production-readiness-checklist.md](production-readiness-checklist.md) Section A.)
 
 ## The real batch decision (this is the crux)
 
