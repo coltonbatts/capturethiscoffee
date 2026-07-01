@@ -86,6 +86,23 @@ button {
   border-bottom: 3px double #000000;
 }
 
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.home-rise {
+  animation: home-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-rise {
+    animation: none;
+  }
+}
+
 @keyframes skeleton-sweep {
   100% {
     transform: translateX(100%);
