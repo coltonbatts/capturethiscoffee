@@ -101,6 +101,20 @@ Constants at the top of `lib/main.dart`: `kPageWidth`, `kPageHeight`, `kDensity`
 - **Queue empty** → roster members need `on_set_today` and orders not in `no_order` status.
 - **Mark printed fails** → production must be `active` (not `planning`).
 
-## TestFlight (next)
+## TestFlight
 
-Distribute via TestFlight internal testing (rebuild every 90 days). See `docs/phone-printing-investigation.md`.
+Step-by-step checklist: [docs/testflight-checklist.md](../docs/testflight-checklist.md).
+
+Quick path:
+
+```bash
+cd mobile
+flutter build ipa --release
+open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store Connect
+```
+
+- Bundle ID: `com.capturethis.ctcprinter`
+- Bump `version` in `pubspec.yaml` for each upload (`0.1.0+1`, `0.1.0+2`, …)
+- Testers need **HTTPS** production share URLs (not LAN `http://`)
+- Internal testers: no review. External testers: beta review + privacy policy URL.
+- Builds expire after **90 days** — rebuild quarterly.

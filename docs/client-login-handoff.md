@@ -6,11 +6,11 @@ Send the client this information (use a secure channel; do not post the password
 
 | Field | Value |
 |-------|--------|
-| **Login URL** | `https://YOUR_DEPLOYED_APP_URL/login` (replace with your Vercel/production URL) |
-| **Email** | `admin@example.com` |
-| **Temporary password** | See `docs/client-login-handoff.local.md` (gitignored) or the password you set in Supabase |
+| **Login URL** | `https://coffee.capturethis.com/login` |
+| **Google** | **Continue with Google** on the login page (preferred) |
+| **Email / password** | `admin@example.com` — password in `docs/client-login-handoff.local.md` (gitignored) or Supabase |
 
-After first sign-in, the client should change their password when password reset is enabled, or you can set a new password in **Supabase → Authentication → Users**.
+After first Google sign-in, set **Raw app_metadata** to `{"admin": true}` on that user in **Supabase → Authentication → Users**. Email/password users should change their temporary password when reset is enabled, or set a new password in Supabase.
 
 ## What the client can do
 

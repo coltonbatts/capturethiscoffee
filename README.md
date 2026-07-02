@@ -80,7 +80,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` or leave it unset when you want sign-in and Supabase-backed data enabled.
 6. Restart `npm run dev` after changing `.env.local`.
 7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
-8. For a controlled demo, disable public sign-ups or leave sign-ups unused and create demo users manually.
+8. For Google sign-in (`/login` → **Continue with Google**), open **Authentication > Providers > Google**, enable it, and paste a Google Cloud OAuth **Web application** client ID and secret. In Google Cloud, set the authorized redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback` (find `<project-ref>` in your Supabase project URL). In Supabase **Authentication > URL Configuration**, set **Site URL** to your deployed app origin and add redirect URLs for local and production (for example `http://localhost:3000/**` and `https://coffee.capturethis.com/**`).
+9. For a controlled demo, disable public sign-ups or leave sign-ups unused and create demo users manually.
 
 When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads and writes these Supabase tables:
 
@@ -99,13 +100,11 @@ If auth is enabled or unset but either Supabase env var is missing, the app show
 
 ## Demo users
 
-Create demo users in the Supabase dashboard:
+Create admin users in the Supabase dashboard (email/password) or sign in once with Google and promote the new user:
 
 1. Go to **Authentication > Users**.
-2. Click **Add user**.
-3. Enter a demo user email, for example owner `admin@example.com`.
-4. Set a password and confirm the user if your project requires it.
-5. Set the user's **Raw app_metadata** to `{"admin": true}`. This is required for
+2. For email/password: click **Add user**, enter a demo email (for example `admin@example.com`), set a password, and confirm the user if your project requires it. For Google: sign in at `/login` once, then find the new user in this list.
+3. Set the user's **Raw app_metadata** to `{"admin": true}`. This is required for
    anyone who needs to create or edit clients, people, productions, rosters, or
    new order drafts. Without it, the user can sign in and read data but every
    setup write fails with "Admin access required," and the app
