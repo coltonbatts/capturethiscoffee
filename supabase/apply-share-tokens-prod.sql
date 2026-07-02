@@ -151,7 +151,7 @@ begin
   values (
     p_production_id,
     pg_catalog.encode(digest(v_token, 'sha256'), 'hex'),
-    nullif(pg_catalog.trim(p_label), ''),
+    nullif(pg_catalog.btrim(p_label), ''),
     p_expires_at
   );
 
