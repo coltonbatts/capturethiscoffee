@@ -13,6 +13,7 @@ export const runnerOrderFields = [
   "special_notes",
   "vendor",
   "status",
+  "label_printed",
 ] as const;
 
 export type RunnerOrderPatch = Pick<Order, (typeof runnerOrderFields)[number]>;
@@ -58,6 +59,13 @@ export function sanitizeRunnerOrderPatch(input: unknown): PartialRunnerOrderPatc
     if (field === "status") {
       if (typeof value === "string" && orderStatuses.has(value)) {
         patch.status = value as Order["status"];
+      }
+      continue;
+    }
+
+    if (field === "label_printed") {
+      if (typeof value === "boolean") {
+        patch.label_printed = value;
       }
       continue;
     }

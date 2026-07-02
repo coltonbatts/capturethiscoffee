@@ -25,6 +25,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Copyable coffee summaries and print-ready NIIMBOT label PNG export from `/labels`
+- Native iOS printer app in `mobile/` — direct BLE printing to NIIMBOT M2_H (Phase 2)
 
 ## Day-of resilience
 
@@ -149,22 +150,43 @@ Label image export workflow: [docs/label-image-export.md](docs/label-image-expor
 
 ## Label printing
 
-Capture This Coffee generates a polished, print-ready PNG label. The NIIMBOT
-first-party app handles printer pairing and Bluetooth printing.
+Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set path** is the native **CTC Printer** iOS app (`mobile/`): it pulls a label queue from the web API, downloads server-rendered PNGs, prints over Bluetooth LE to the NIIMBOT M2_H, and marks `label_printed` on each order.
 
-The on-set workflow is:
+### CTC Printer app (recommended on set)
+
+1. Deploy or run this Next.js app with `SUPABASE_SERVICE_ROLE_KEY` set (required for public API routes).
+2. Set the production to **active** (required before `label_printed` updates stick).
+3. Generate a runner share link (SQL below) and open it on the phone, or paste the full URL into CTC Printer.
+4. In **CTC Printer**: link production → connect printer → tap **Print** per label.
+5. Force-quit the official NIIMBOT app before connecting — it holds the BLE connection.
+
+Setup, signing, and troubleshooting: [mobile/README.md](mobile/README.md).  
+Strategy and hardware notes: [docs/phone-printing-investigation.md](docs/phone-printing-investigation.md).
+
+**Local dev on a physical iPhone:** use your Mac's LAN IP in the share URL, not `localhost` (e.g. `http://192.168.1.69:3000/productions/{id}?token=…`).
+
+### Public printer API (share-token auth)
+
+Same token as the runner board — no separate auth system.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/public/productions/{id}/labels?token=…` | Label queue JSON for on-set roster |
+| `GET /api/public/orders/{orderId}/label?productionId=…&token=…` | Server-rendered PNG (`production-sticker-sheet` design) |
+| `PATCH /api/public/orders/{orderId}` | Body: `{ "productionId", "token", "patch": { "label_printed": true } }` |
+
+PNG rendering uses the same drawing code as `/labels`, via `@napi-rs/canvas` on the server (`src/lib/niimbot-m2-export-server.ts`).
+
+### Fallback: `/labels` + NIIMBOT app
+
+The web `/labels` screen still supports PNG share/download and NIIMBOT batch CSV for bulk export or when the native app is unavailable:
 
 1. Open `/labels` on the phone.
-2. Choose the production and one or more active labels.
-3. Preview the label.
-4. Tap **Share** when supported, or **Download PNG**.
-5. Open the NIIMBOT app.
-6. Import the PNG and print through NIIMBOT's Bluetooth flow.
+2. Choose the production and labels.
+3. **Share** or **Download PNG**.
+4. Import in the NIIMBOT first-party app and print.
 
-The current assumed export preset is 50mm x 30mm at 300 DPI
-(`591 x 354px`). The exact lid-label media, round versus rectangular stock,
-actual dimensions, and NIIMBOT app import scaling still need physical
-verification before being treated as final.
+The current assumed export preset is 50mm × 30mm at 300 DPI (`591×354px`). Physical roll verification is still pending — see [docs/label-image-export.md](docs/label-image-export.md).
 
 The browser never uses the service role key — it uses only
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and table/photo
@@ -178,5 +200,12 @@ The app does not automatically insert demo rows into Supabase. To test against S
 
 ```bash
 npm run lint
+npm test
 npm run build
+```
+
+The iOS printer app:
+
+```bash
+cd mobile && flutter analyze && flutter test
 ```

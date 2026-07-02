@@ -74,6 +74,7 @@ describe("production share access helpers", () => {
       {
         drink_type: "Latte",
         status: "confirmed",
+        label_printed: true,
       },
     );
 

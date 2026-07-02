@@ -1,0 +1,27 @@
+name: ctc_printer
+description: Capture This Coffee - NIIMBOT M2_H direct BLE printing (week-1 spike)
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Pinned EXACTLY on purpose: the underlying protocol lib is alpha and its
+  # author recommends exact-version pinning. Do not use ^.
+  niim_blue_flutter: 1.0.1
+  image: ^4.7.1
+  http: ^1.2.2
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/test_label.png

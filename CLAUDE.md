@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-01
+Last updated: 2026-07-02
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -18,7 +18,7 @@ Primary users:
 
 - Admin: prepares clients, people, photos, productions, and rosters.
 - Runner: works a live production through drink statuses on a phone.
-- PA / label operator: exports labels and prints through the NIIMBOT mobile app.
+- PA / label operator: prints labels via the **CTC Printer** iOS app (`mobile/`) or exports from `/labels`.
 
 Core workflow:
 
@@ -26,16 +26,17 @@ Core workflow:
 2. Runner opens a production board and confirms or edits drinks.
 3. Runner moves orders through `not_asked`, `confirmed`, `ordered`, `picked_up`, `delivered`, or `no_order`.
 4. Runner uses the Summary tab for coffee-shop handoff.
-5. Label operator uses `/labels` to export either a NIIMBOT batch CSV or print-ready PNGs.
+5. Label operator uses **CTC Printer** (`mobile/`) for direct M2_H BLE printing, or `/labels` for PNG/CSV export fallback.
 
 ## Current strategic direction
 
 The printer strategy is settled for now:
 
-- Keep the NIIMBOT M2.
+- Keep the NIIMBOT M2_H.
 - Do not rebuild a laptop print station.
-- Do not attempt custom Bluetooth printing from the web app.
-- CTC generates assets; the NIIMBOT first-party app owns printer pairing and physical printing.
+- Do not attempt custom Bluetooth printing from the web app (Safari on iOS has no Web Bluetooth).
+- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. Spike passed; Phase 2 ships label queue + server PNG API + `label_printed` sync. See `mobile/README.md` and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
+- **Fallback:** `/labels` PNG share/download or NIIMBOT batch CSV through the official NIIMBOT app.
 
 The `/labels` screen currently supports two paths:
 
