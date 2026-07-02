@@ -39,6 +39,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(supabaseConfigError);
   const [submitting, setSubmitting] = useState(false);
+  const [redirectingToGoogle, setRedirectingToGoogle] = useState(false);
 
   const needsAdmin = isSupabaseConfigured && initialized && Boolean(appUser) && !isAdmin;
 
@@ -116,6 +117,37 @@ function LoginForm() {
     }
   }
 
+  async function signInWithGoogle() {
+    if (supabaseConfigError) {
+      setError(supabaseConfigError);
+      return;
+    }
+
+    const supabase = isSupabaseConfigured ? getSupabaseBrowserClient() : null;
+    if (!supabase || submitting || redirectingToGoogle) return;
+
+    setRedirectingToGoogle(true);
+    setError("");
+
+    // Come back to this page so the existing session effect finishes the
+    // redirect to the requested destination once the OAuth code is exchanged.
+    const redirectTo = new URL("/login", window.location.origin);
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next?.startsWith("/")) {
+      redirectTo.searchParams.set("next", next);
+    }
+
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: redirectTo.toString() },
+    });
+
+    if (oauthError) {
+      setError(oauthError.message);
+      setRedirectingToGoogle(false);
+    }
+  }
+
   return (
     <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
       <section className="w-full max-w-md overflow-hidden rounded-xl border border-black bg-white text-black">
@@ -123,46 +155,70 @@ function LoginForm() {
           <CaptureMark invert className="size-11 rounded-xl" />
           <h1 className="text-xl font-semibold">Capture This</h1>
         </div>
-        <form className="grid gap-4 p-5" onSubmit={signIn}>
-          <Field label="Email">
-            <input
-              className={inputClass}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@studio.com"
-              autoComplete="email"
-              required={isSupabaseConfigured}
-            />
-          </Field>
-          <Field label="Password">
-            <input
-              className={inputClass}
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required={isSupabaseConfigured}
-            />
-          </Field>
-          {error ? (
-            <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
-              {error}
-            </div>
+        <div className="grid gap-4 p-5">
+          {isSupabaseConfigured ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void signInWithGoogle()}
+                className={secondaryButtonClass}
+                disabled={submitting || redirectingToGoogle}
+              >
+                <GoogleMark />
+                {redirectingToGoogle
+                  ? "Opening Google…"
+                  : "Continue with Google"}
+              </button>
+              <div className="flex items-center gap-3" aria-hidden="true">
+                <span className="h-px flex-1 bg-zinc-300" />
+                <span className="text-xs font-bold uppercase text-zinc-500">
+                  or
+                </span>
+                <span className="h-px flex-1 bg-zinc-300" />
+              </div>
+            </>
           ) : null}
-          <button
-            type="submit"
-            className={`${primaryButtonClass} mt-1`}
-            disabled={submitting}
-          >
-            {isSupabaseConfigured
-              ? submitting
-                ? "Signing in…"
-                : "Sign in"
-              : "Continue"}
-          </button>
-        </form>
+          <form className="grid gap-4" onSubmit={signIn}>
+            <Field label="Email">
+              <input
+                className={inputClass}
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@studio.com"
+                autoComplete="email"
+                required={isSupabaseConfigured}
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                className={inputClass}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required={isSupabaseConfigured}
+              />
+            </Field>
+            {error ? (
+              <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+                {error}
+              </div>
+            ) : null}
+            <button
+              type="submit"
+              className={`${primaryButtonClass} mt-1`}
+              disabled={submitting}
+            >
+              {isSupabaseConfigured
+                ? submitting
+                  ? "Signing in…"
+                  : "Sign in"
+                : "Continue"}
+            </button>
+          </form>
+        </div>
       </section>
     </main>
   );
@@ -217,6 +273,29 @@ function NeedsAdminNotice({
         </div>
       </section>
     </main>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4 shrink-0" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.8Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.88-3c-1.07.72-2.44 1.15-4.06 1.15-3.13 0-5.78-2.11-6.72-4.95H1.27v3.09A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29a7.21 7.21 0 0 1 0-4.58V6.62H1.27a12 12 0 0 0 0 10.76l4.01-3.09Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.76 0 3.34.6 4.59 1.79l3.44-3.44A11.98 11.98 0 0 0 1.27 6.62l4.01 3.09C6.22 6.87 8.87 4.77 12 4.77Z"
+      />
+    </svg>
   );
 }
 

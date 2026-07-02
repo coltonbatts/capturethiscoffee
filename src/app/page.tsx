@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CaptureMark } from "@/components/capture-mark";
+import { HomeAuthButton } from "@/components/home-auth-button";
 
 const stations = [
   { href: "/people", label: "People" },
@@ -12,7 +13,10 @@ const stationClass =
 
 export default function HomePage() {
   return (
-    <main className="grid min-h-dvh place-items-center px-6 py-12">
+    <main className="relative grid min-h-dvh place-items-center px-6 py-12">
+      <div className="absolute right-4 top-4">
+        <HomeAuthButton />
+      </div>
       <div className="w-full max-w-xs sm:max-w-sm">
         <div className="home-rise grid justify-items-center gap-5 text-center">
           <CaptureMark className="size-28 sm:size-32" priority />

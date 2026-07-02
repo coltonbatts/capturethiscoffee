@@ -67,10 +67,10 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             ) : isSupabaseConfigured ? (
               <Link
                 href={`/login?next=${encodeURIComponent(pathnameForLogin())}`}
-                className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
-                aria-label="Sign in"
+                className="flex min-h-11 items-center gap-1.5 rounded-lg border border-black bg-black px-3.5 text-sm font-black text-white hover:bg-zinc-800"
               >
-                <LogIn size={18} aria-hidden="true" />
+                <LogIn size={16} aria-hidden="true" />
+                Sign in
               </Link>
             ) : null}
           </div>
