@@ -3,6 +3,8 @@
 import {
   Check,
   ChevronRight,
+  Link2,
+  Loader2,
   Pencil,
   Plus,
   Printer,
@@ -99,12 +101,16 @@ export function RunnerHeader({
   progress,
   statusCounts,
   onEditDetails,
+  onCopyRunnerLink,
+  copyLinkState = "idle",
 }: {
   detail: string;
   runnerName?: string;
   progress: { percent: number; responded: number; total: number };
   statusCounts?: Partial<Record<OrderStatus, number>>;
   onEditDetails?: () => void;
+  onCopyRunnerLink?: () => void;
+  copyLinkState?: "idle" | "working" | "copied";
 }) {
   return (
     <section className="rule-double mb-4 pb-4 no-print">
@@ -121,6 +127,27 @@ export function RunnerHeader({
           ) : null}
         </div>
         <div className="flex shrink-0 items-start gap-2">
+          {onCopyRunnerLink ? (
+            <button
+              type="button"
+              onClick={onCopyRunnerLink}
+              disabled={copyLinkState === "working"}
+              className="grid size-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100 disabled:opacity-60"
+              aria-label={
+                copyLinkState === "copied"
+                  ? "Runner link copied"
+                  : "Copy runner link"
+              }
+            >
+              {copyLinkState === "working" ? (
+                <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+              ) : copyLinkState === "copied" ? (
+                <Check size={18} aria-hidden="true" />
+              ) : (
+                <Link2 size={18} aria-hidden="true" />
+              )}
+            </button>
+          ) : null}
           {onEditDetails ? (
             <button
               type="button"
