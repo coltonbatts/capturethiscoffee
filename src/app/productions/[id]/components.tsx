@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { PersonPhotoField } from "@/components/person-photo-field";
 import {
   Avatar,
@@ -546,6 +546,70 @@ function Sheet({
         </section>
       )}
     </div>
+  );
+}
+
+export function RunnerLinkSheet({
+  url,
+  onClose,
+}: {
+  url: string;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const canShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard blocked: leave the field selected so a long-press works.
+    }
+  }
+
+  return (
+    <Sheet label="Runner link">
+      <h2 className="text-lg font-semibold">Runner link</h2>
+      <p className="text-sm text-zinc-600">
+        Anyone with this link can run the board. Paste it into CTC Printer to
+        load the label queue.
+      </p>
+      <input
+        className={inputClass}
+        value={url}
+        readOnly
+        onFocus={(event) => event.target.select()}
+        aria-label="Runner link URL"
+      />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <button type="button" onClick={copy} className={primaryButtonClass}>
+          {copied ? (
+            <>
+              <Check size={16} aria-hidden="true" /> Copied
+            </>
+          ) : (
+            "Copy link"
+          )}
+        </button>
+        {canShare ? (
+          <button
+            type="button"
+            onClick={() => {
+              navigator.share({ title: "Runner link", url }).catch(() => {});
+            }}
+            className={secondaryButtonClass}
+          >
+            Share…
+          </button>
+        ) : null}
+      </div>
+      <button type="button" onClick={onClose} className={secondaryButtonClass}>
+        Done
+      </button>
+    </Sheet>
   );
 }
 

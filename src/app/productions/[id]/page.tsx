@@ -19,7 +19,7 @@ import {
   updateRosterRecord,
 } from "@/lib/data";
 import { emptyPersonForm, type PersonForm } from "@/lib/people";
-import { copyTextToClipboard, mintProductionShareLink } from "@/lib/share-links";
+import { mintProductionShareLink } from "@/lib/share-links";
 import type {
   Order,
   OrderStatus,
@@ -37,6 +37,7 @@ import {
   QuickAddPersonSheet,
   RosterEditor,
   RunnerHeader,
+  RunnerLinkSheet,
 } from "./components";
 import { useCoffeeStore } from "./use-coffee-store";
 import { useRosterView } from "./use-roster-view";
@@ -86,6 +87,7 @@ export default function ProductionDashboardPage() {
   const [copyLinkState, setCopyLinkState] = useState<"idle" | "working" | "copied">(
     "idle",
   );
+  const [runnerLink, setRunnerLink] = useState<string | null>(null);
 
   const production = data?.productions.find((item) => item.id === params.id);
   const client = data?.clients.find((item) => item.id === production?.client_id);
@@ -179,10 +181,10 @@ export default function ProductionDashboardPage() {
   function copyRunnerLink() {
     if (copyLinkState === "working") return;
     setCopyLinkState("working");
-    copyTextToClipboard(mintProductionShareLink(production!.id))
-      .then(() => {
-        setCopyLinkState("copied");
-        setTimeout(() => setCopyLinkState("idle"), 2000);
+    mintProductionShareLink(production!.id)
+      .then((url) => {
+        setCopyLinkState("idle");
+        setRunnerLink(url);
       })
       .catch((err: unknown) => {
         setCopyLinkState("idle");
@@ -371,6 +373,10 @@ export default function ProductionDashboardPage() {
           onSubmit={quickAddPerson}
           saving={saving}
         />
+      ) : null}
+
+      {runnerLink && isAdmin ? (
+        <RunnerLinkSheet url={runnerLink} onClose={() => setRunnerLink(null)} />
       ) : null}
 
       {error ? <ErrorToast message={error} onDismiss={() => setError("")} /> : null}

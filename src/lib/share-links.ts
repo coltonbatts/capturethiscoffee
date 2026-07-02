@@ -52,27 +52,3 @@ export async function mintProductionShareLink(
 
   return buildProductionShareUrl(origin, productionId, data);
 }
-
-/**
- * Copies async-produced text to the clipboard. iOS Safari only honors
- * clipboard writes that start inside the user-gesture task, so when
- * ClipboardItem accepts promises we hand it the pending value directly;
- * otherwise we await and use writeText (Chrome, Android, desktop).
- */
-export async function copyTextToClipboard(textPromise: Promise<string>) {
-  if (typeof navigator === "undefined" || !navigator.clipboard) {
-    throw new Error("Clipboard is unavailable in this browser.");
-  }
-
-  if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
-    const item = new ClipboardItem({
-      "text/plain": textPromise.then(
-        (text) => new Blob([text], { type: "text/plain" }),
-      ),
-    });
-    await navigator.clipboard.write([item]);
-    return;
-  }
-
-  await navigator.clipboard.writeText(await textPromise);
-}
