@@ -1,6 +1,5 @@
-import type { LabelDesignId } from "@/lib/label-designs";
 import type { CoffeeLabel } from "@/lib/label-copy";
-import { captureThisSmileySrc } from "@/lib/brand-assets";
+import { captureThisSmileyTransparentSrc } from "@/lib/brand-assets";
 import {
   drawNiimbotM2Label,
   niimbotM2ExportPreset,
@@ -13,7 +12,6 @@ let captureThisSmileyImagePromise: Promise<HTMLImageElement> | undefined;
 
 export function niimbotM2ExportFileName(
   label: Pick<CoffeeLabel, "personName" | "title" | "orderId"> | string,
-  designId?: LabelDesignId,
 ) {
   const title =
     typeof label === "string"
@@ -21,14 +19,10 @@ export function niimbotM2ExportFileName(
       : [label.personName || label.title, label.orderId.replace(/^#/, "")]
           .filter(Boolean)
           .join("-");
-  const designPart = designId && designId !== "classic" ? `-${designId}` : "";
-  return `${safeFilePart(title)}${designPart}-niimbot-m2-50x30mm-300dpi.png`;
+  return `${safeFilePart(title)}-niimbot-m2-50x30mm-300dpi.png`;
 }
 
-export async function renderNiimbotM2LabelPngBlob(
-  label: CoffeeLabel,
-  designId: LabelDesignId = "classic",
-) {
+export async function renderNiimbotM2LabelPngBlob(label: CoffeeLabel) {
   const canvas = document.createElement("canvas");
   canvas.width = niimbotM2ExportPreset.pixelWidth;
   canvas.height = niimbotM2ExportPreset.pixelHeight;
@@ -37,7 +31,7 @@ export async function renderNiimbotM2LabelPngBlob(
   if (!ctx) throw new Error("Canvas export is not available in this browser.");
 
   const captureSmiley = await loadCaptureThisSmileyImage();
-  drawNiimbotM2Label(ctx, label, designId, captureSmiley);
+  drawNiimbotM2Label(ctx, label, captureSmiley);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -58,7 +52,7 @@ function loadCaptureThisSmileyImage() {
     image.decoding = "async";
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Could not load Capture This smiley artwork."));
-    image.src = captureThisSmileySrc;
+    image.src = captureThisSmileyTransparentSrc;
   });
 
   return captureThisSmileyImagePromise;

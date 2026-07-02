@@ -6,7 +6,6 @@ import {
   Download,
   FileSpreadsheet,
   ImageDown,
-  Palette,
   RotateCcw,
   Share2,
   Smile,
@@ -41,21 +40,12 @@ import {
 } from "@/lib/data";
 import { formatDrink } from "@/lib/order-summary";
 import {
-  defaultLabelDesignId,
-  isLabelDesignId,
-  labelDesigns,
-  labelDesignName,
-  type LabelDesignId,
-} from "@/lib/label-designs";
-import {
   niimbotM2ExportFileName,
   niimbotM2ExportPreset,
   renderNiimbotM2LabelPngBlob,
 } from "@/lib/niimbot-m2-export";
 import type { CoffeeData } from "@/lib/types";
 import type { CoffeeLabel } from "@/lib/label-copy";
-
-const testLabelDesignId: LabelDesignId = "smiley-test";
 
 type ShareNavigator = Navigator & {
   canShare?: (data: { files?: File[] }) => boolean;
@@ -68,7 +58,6 @@ export default function LabelExportPage() {
   const [status, setStatus] = useState("");
   const [productionId, setProductionId] = useState("");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [designId, setDesignId] = useState<LabelDesignId>(defaultLabelDesignId);
   const [busy, setBusy] = useState(false);
   const [shareReady] = useState(
     () =>
@@ -163,12 +152,6 @@ export default function LabelExportPage() {
     setStatus("");
   }
 
-  function chooseDesign(nextDesignId: string) {
-    if (!isLabelDesignId(nextDesignId)) return;
-    setDesignId(nextDesignId);
-    setStatus("");
-  }
-
   async function resetDemo() {
     const next = await resetDemoCoffeeData();
     setData(next);
@@ -197,11 +180,11 @@ export default function LabelExportPage() {
 
     try {
       for (const label of labels) {
-        const blob = await renderNiimbotM2LabelPngBlob(label, designId);
-        downloadBlob(blob, niimbotM2ExportFileName(label, designId));
+        const blob = await renderNiimbotM2LabelPngBlob(label);
+        downloadBlob(blob, niimbotM2ExportFileName(label));
       }
       setStatus(
-        `${labels.length} ${labelDesignName(designId)} PNG ${
+        `${labels.length} label PNG ${
           labels.length === 1 ? "file" : "files"
         } ready for NIIMBOT app import.`,
       );
@@ -223,8 +206,8 @@ export default function LabelExportPage() {
     setStatus("");
 
     try {
-      const blob = await renderNiimbotM2LabelPngBlob(testLabel, testLabelDesignId);
-      downloadBlob(blob, niimbotM2ExportFileName(testLabel, testLabelDesignId));
+      const blob = await renderNiimbotM2LabelPngBlob(testLabel);
+      downloadBlob(blob, niimbotM2ExportFileName(testLabel));
       setStatus(`${testLabel.title} test label PNG ready for NIIMBOT app import.`);
     } catch (err) {
       setError(describeDataError(err, "Could not export the test label."));
@@ -252,8 +235,8 @@ export default function LabelExportPage() {
     try {
       const files = await Promise.all(
         labels.map(async (label) => {
-          const blob = await renderNiimbotM2LabelPngBlob(label, designId);
-          return new File([blob], niimbotM2ExportFileName(label, designId), {
+          const blob = await renderNiimbotM2LabelPngBlob(label);
+          return new File([blob], niimbotM2ExportFileName(label), {
             type: "image/png",
           });
         }),
@@ -424,39 +407,6 @@ export default function LabelExportPage() {
               </Link>
             </div>
 
-            <div className="grid gap-2">
-              <div className="flex items-center gap-2 text-sm font-black text-black">
-                <Palette size={17} aria-hidden="true" />
-                Design variant
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {labelDesigns.map((design) => (
-                  <button
-                    key={design.id}
-                    type="button"
-                    onClick={() => chooseDesign(design.id)}
-                    className={`min-h-20 rounded-lg border p-3 text-left transition active:translate-y-px ${
-                      designId === design.id
-                        ? "border-black bg-black text-white"
-                        : "border-zinc-300 bg-white text-black hover:border-black"
-                    }`}
-                    aria-pressed={designId === design.id}
-                  >
-                    <span className="block text-sm font-black leading-tight">
-                      {design.name}
-                    </span>
-                    <span
-                      className={`mt-1 block text-xs font-semibold leading-5 ${
-                        designId === design.id ? "text-zinc-200" : "text-zinc-600"
-                      }`}
-                    >
-                      {design.summary}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div
               className="grid min-h-[240px] place-items-center overflow-hidden rounded-xl border-2 border-black p-4 sm:min-h-[340px] sm:p-6"
               style={{
@@ -466,7 +416,7 @@ export default function LabelExportPage() {
             >
               {previewLabel ? (
                 <div className="drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
-                  <ScreenLabel label={previewLabel} designId={designId} />
+                  <ScreenLabel label={previewLabel} />
                 </div>
               ) : (
                 <p className="text-center text-sm font-bold text-zinc-300">

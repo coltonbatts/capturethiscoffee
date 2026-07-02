@@ -4,7 +4,6 @@ import {
   ShareTokenError,
   validateProductionShareToken,
 } from "@/lib/production-share";
-import { defaultLabelDesignId, isLabelDesignId } from "@/lib/label-designs";
 import { findCoffeeLabelForOrder } from "@/lib/printer-queue";
 import { renderNiimbotM2LabelPngBuffer } from "@/lib/niimbot-m2-export-server";
 import {
@@ -21,8 +20,7 @@ export async function GET(
     const { id: orderId } = await context.params;
     const productionId = request.nextUrl.searchParams.get("productionId") || "";
     const token = request.nextUrl.searchParams.get("token") || "";
-    const designParam = request.nextUrl.searchParams.get("design") || defaultLabelDesignId;
-    const designId = isLabelDesignId(designParam) ? designParam : defaultLabelDesignId;
+    // The legacy "design" query param is accepted but ignored: there is one label design.
 
     if (!productionId) {
       throw new ApiError("Missing productionId.", 400);
@@ -79,7 +77,7 @@ export async function GET(
     const label = findCoffeeLabelForOrder(data, productionId, orderId);
     if (!label) throw new ApiError("Label not found for this order.", 404);
 
-    const png = await renderNiimbotM2LabelPngBuffer(label, designId);
+    const png = await renderNiimbotM2LabelPngBuffer(label);
 
     return new Response(new Uint8Array(png), {
       headers: {

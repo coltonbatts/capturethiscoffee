@@ -1,15 +1,11 @@
 import { join } from "node:path";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import type { LabelDesignId } from "@/lib/label-designs";
 import type { CoffeeLabel } from "@/lib/label-copy";
 import { drawNiimbotM2Label, niimbotM2ExportPreset } from "@/lib/niimbot-m2-draw";
 
 let captureSmileyPromise: ReturnType<typeof loadImage> | undefined;
 
-export async function renderNiimbotM2LabelPngBuffer(
-  label: CoffeeLabel,
-  designId: LabelDesignId = "production-sticker-sheet",
-) {
+export async function renderNiimbotM2LabelPngBuffer(label: CoffeeLabel) {
   const canvas = createCanvas(
     niimbotM2ExportPreset.pixelWidth,
     niimbotM2ExportPreset.pixelHeight,
@@ -21,7 +17,6 @@ export async function renderNiimbotM2LabelPngBuffer(
   drawNiimbotM2Label(
     ctx as unknown as CanvasRenderingContext2D,
     label,
-    designId,
     captureSmiley as unknown as CanvasImageSource,
   );
 
@@ -30,7 +25,7 @@ export async function renderNiimbotM2LabelPngBuffer(
 
 function loadCaptureSmileyImage() {
   captureSmileyPromise ??= loadImage(
-    join(process.cwd(), "public", "capture-this-smiley.png"),
+    join(process.cwd(), "public", "capture-this-smiley-transparent.png"),
   );
   return captureSmileyPromise;
 }

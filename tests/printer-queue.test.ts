@@ -82,7 +82,7 @@ describe("printer queue helpers", () => {
     assert.equal(queue.labels.length, 1);
     assert.equal(queue.labels[0].personName, "Ava Stone");
     assert.equal(queue.labels[0].labelPrinted, false);
-    assert.equal(queue.designId, "production-sticker-sheet");
+    assert.equal(queue.designId, "smiley");
   });
 
   it("parses a production share URL into API session fields", () => {

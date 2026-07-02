@@ -1,44 +1,15 @@
 export const labelDesigns = [
   {
-    id: "smiley-test",
-    name: "Smiley Test",
-    summary: "Large CaptureThis smiley with client name and a friendly print-test note.",
-  },
-  {
-    id: "production-sticker-sheet",
-    name: "Production Sticker Sheet",
-    summary: "Dense production-label system with barcode blocks, microcopy, and orange QC tabs.",
-  },
-  {
-    id: "y2k-smiley-seal",
-    name: "Y2K Smiley Seal",
-    summary: "Round smiley seal, bold name block, chunky monochrome brand rail.",
-  },
-  {
-    id: "brutalist-ticket-stub",
-    name: "Brutalist Ticket Stub",
-    summary: "Perforated ticket language with hard rules and production-code energy.",
-  },
-  {
-    id: "cyber-cafe-receipt",
-    name: "Cyber Cafe Receipt",
-    summary: "Receipt rows, mono details, and a cafe system label feel.",
-  },
-  {
-    id: "classic",
-    name: "Classic",
-    summary: "Current Capture This Coffee export layout for continuity checks.",
+    id: "smiley",
+    name: "Smiley",
+    summary: "Name, drink, and the Capture This smiley. Nothing else.",
   },
 ] as const;
 
 export type LabelDesignId = (typeof labelDesigns)[number]["id"];
 
-export const defaultLabelDesignId: LabelDesignId = "production-sticker-sheet";
+export const defaultLabelDesignId: LabelDesignId = "smiley";
 
 export function isLabelDesignId(value: string): value is LabelDesignId {
   return labelDesigns.some((design) => design.id === value);
-}
-
-export function labelDesignName(id: LabelDesignId) {
-  return labelDesigns.find((design) => design.id === id)?.name || id;
 }
