@@ -84,9 +84,13 @@ export default function ProductionsPage() {
       title="Days"
       actions={
         isAdmin ? (
-          <Link href="/productions/new" className={primaryButtonClass}>
+          <Link
+            href="/productions/new"
+            className={`${primaryButtonClass} min-w-11 px-0 sm:px-4`}
+            aria-label="New shoot day"
+          >
             <Plus size={18} aria-hidden="true" />
-            New
+            <span className="hidden sm:inline">New</span>
           </Link>
         ) : null
       }
