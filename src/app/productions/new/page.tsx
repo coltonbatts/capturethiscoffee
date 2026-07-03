@@ -66,7 +66,7 @@ export default function NewProductionPage() {
   return (
     <AppShell title="New day" requireAuth>
       <form onSubmit={submit} className="grid gap-4">
-        <Panel className="grid gap-4 p-5">
+        <Panel className="grid gap-4 p-4 sm:p-5">
           <Field label="Day name">
             <input
               className={inputClass}
@@ -136,7 +136,7 @@ export default function NewProductionPage() {
           </Field>
         </Panel>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           <button type="button" className={secondaryButtonClass} onClick={() => router.back()}>
             Cancel
           </button>

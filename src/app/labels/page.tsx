@@ -325,7 +325,7 @@ export default function LabelExportPage() {
         </p>
       ) : null}
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(300px,0.85fr)_minmax(360px,1.15fr)]">
+      <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-[minmax(300px,0.85fr)_minmax(360px,1.15fr)]">
         <Panel className="grid content-start gap-4 p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -408,14 +408,14 @@ export default function LabelExportPage() {
             </div>
 
             <div
-              className="grid min-h-[240px] place-items-center overflow-hidden rounded-xl border-2 border-black p-4 sm:min-h-[340px] sm:p-6"
+              className="grid min-h-[210px] min-w-0 place-items-center overflow-hidden rounded-xl border-2 border-black p-3 sm:min-h-[340px] sm:p-6"
               style={{
                 background:
                   "repeating-linear-gradient(0deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), #18181b",
               }}
             >
               {previewLabel ? (
-                <div className="drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
+                <div className="grid w-full min-w-0 place-items-center drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
                   <ScreenLabel label={previewLabel} />
                 </div>
               ) : (
@@ -453,7 +453,7 @@ export default function LabelExportPage() {
                 <p className="text-xs leading-5 text-zinc-600">
                   Branded, print-ready cup label from the CTC renderer.
                 </p>
-                <div className="mt-1 grid grid-cols-2 gap-2">
+                <div className="mt-1 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => void downloadSelected()}
@@ -496,7 +496,7 @@ export default function LabelExportPage() {
             type="button"
             onClick={downloadNiimbotCsv}
             disabled={busy || !selection?.items.length}
-            className={`${primaryButtonClass} whitespace-nowrap text-sm`}
+            className={`${primaryButtonClass} px-2 text-xs min-[360px]:text-sm`}
           >
             <FileSpreadsheet size={18} aria-hidden="true" />
             Export CSV{selectedCount ? ` · ${selectedCount}` : ""}
@@ -505,7 +505,7 @@ export default function LabelExportPage() {
             type="button"
             onClick={() => void downloadSelected()}
             disabled={busy || !labels.length}
-            className={`${secondaryButtonClass} whitespace-nowrap text-sm`}
+            className={`${secondaryButtonClass} px-2 text-xs min-[360px]:text-sm`}
           >
             <Download size={18} aria-hidden="true" />
             {busy ? "Exporting…" : `Export PNG${selectedCount ? ` · ${selectedCount}` : ""}`}

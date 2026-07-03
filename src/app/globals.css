@@ -20,6 +20,8 @@
 
 html {
   background: var(--background);
+  max-width: 100%;
+  overflow-x: clip;
   scroll-padding-top: 76px;
 }
 
@@ -34,6 +36,8 @@ body {
   background-size: 14px 14px, 19px 19px, 23px 23px, 5px 5px, 7px 7px, auto;
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body::before {
@@ -140,18 +144,19 @@ button {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 18px;
-  width: 320px;
-  height: 192px;
-  padding: 18px 22px;
+  gap: 12px;
+  width: min(320px, 100%);
+  aspect-ratio: 5 / 3;
+  height: auto;
+  padding: 14px 16px;
   background: #ffffff;
   color: #000000;
   border-radius: 10px;
 }
 
 .screen-label-smiley {
-  width: 108px;
-  height: 108px;
+  width: 78px;
+  height: 78px;
   flex: none;
   object-fit: contain;
 }
@@ -164,10 +169,10 @@ button {
 
 .screen-label h3 {
   margin: 0;
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 900;
   line-height: 1.02;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   text-transform: uppercase;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -177,26 +182,58 @@ button {
 }
 
 .screen-label.label-name-short h3 {
-  font-size: 38px;
+  font-size: 32px;
 }
 
 .screen-label.label-name-long h3 {
-  font-size: 25px;
+  font-size: 22px;
 }
 
 .screen-label.label-name-compressed h3 {
-  font-size: 21px;
+  font-size: 19px;
 }
 
 .screen-label-order {
   margin: 0;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.25;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+}
+
+@media (min-width: 375px) {
+  .screen-label {
+    gap: 18px;
+    padding: 18px 22px;
+  }
+
+  .screen-label-smiley {
+    width: 108px;
+    height: 108px;
+  }
+
+  .screen-label h3 {
+    font-size: 30px;
+  }
+
+  .screen-label.label-name-short h3 {
+    font-size: 38px;
+  }
+
+  .screen-label.label-name-long h3 {
+    font-size: 25px;
+  }
+
+  .screen-label.label-name-compressed h3 {
+    font-size: 21px;
+  }
+
+  .screen-label-order {
+    font-size: 15px;
+  }
 }
 
 @media (min-width: 640px) {

@@ -157,7 +157,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`rounded-xl border border-zinc-900 bg-white ${className}`}
+      className={`min-w-0 rounded-xl border border-zinc-900 bg-white ${className}`}
     >
       {children}
     </section>
@@ -187,10 +187,10 @@ export function EmptyState({
 }
 
 export const inputClass =
-  "min-h-11 w-full rounded-lg border border-zinc-500 bg-white px-3.5 text-base text-black outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-1 focus:ring-black";
+  "min-h-11 min-w-0 w-full rounded-lg border border-zinc-500 bg-white px-3.5 text-base text-black outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-1 focus:ring-black";
 
 export const buttonClass =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-black leading-tight transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-center text-sm font-black leading-tight whitespace-normal transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:px-4";
 
 export const primaryButtonClass = `${buttonClass} border border-black bg-black text-white hover:bg-zinc-800`;
 
@@ -199,7 +199,7 @@ export const secondaryButtonClass = `${buttonClass} border border-zinc-500 bg-wh
 export const dangerButtonClass = `${buttonClass} border border-red-700 bg-white text-red-700 hover:bg-red-50`;
 
 export const cardClass =
-  "block rounded-xl border border-zinc-400 bg-white p-4 transition hover:border-black active:translate-y-px";
+  "block min-w-0 rounded-xl border border-zinc-400 bg-white p-4 transition hover:border-black active:translate-y-px";
 
 export function RosterCardSkeleton() {
   return (

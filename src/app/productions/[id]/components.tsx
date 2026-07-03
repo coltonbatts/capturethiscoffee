@@ -481,7 +481,7 @@ export function AddToRoster({
           New guest
         </button>
       </div>
-      <div className="grid grid-cols-[1fr_auto] gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
         <select
           className={inputClass}
           value={value}
@@ -521,7 +521,7 @@ function Sheet({
   onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const className =
-    "mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5";
+    "mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5";
 
   return (
     <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3 no-print">
@@ -733,7 +733,7 @@ export function OrderEditor({
           </span>
         </label>
       ) : null}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           Cancel
         </button>
@@ -821,7 +821,7 @@ export function ProductionDetailsEditor({
           placeholder="Call time, coffee shop, handoff"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           Cancel
         </button>
@@ -889,7 +889,7 @@ export function RosterEditor({
         <Trash2 size={18} aria-hidden="true" />
         Remove from this production
       </button>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           Cancel
         </button>
@@ -1035,7 +1035,7 @@ export function QuickAddPersonSheet({
           </span>
         </label>
       ) : null}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           Cancel
         </button>

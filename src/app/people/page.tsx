@@ -110,7 +110,7 @@ export default function PeoplePage() {
         </div>
       ) : null}
 
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex min-w-0 gap-2">
         <input
           className={`${inputClass} flex-1`}
           value={query}
@@ -121,7 +121,7 @@ export default function PeoplePage() {
         <button
           type="button"
           onClick={() => setShowAddForm(true)}
-          className={`${primaryButtonClass} shrink-0`}
+          className={`${primaryButtonClass} shrink-0 px-3`}
         >
           <Plus size={18} aria-hidden="true" />
           Add person
@@ -174,11 +174,11 @@ export default function PeoplePage() {
             role="dialog"
             aria-modal="true"
             aria-label="Add person"
-            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5"
+            className="mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5"
           >
             <h2 className="text-lg font-semibold">Add person</h2>
             <PersonFields form={form} onChange={setForm} showActive={false} />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
               <button
                 type="button"
                 onClick={() => {
@@ -204,11 +204,11 @@ export default function PeoplePage() {
             role="dialog"
             aria-modal="true"
             aria-label="Edit person"
-            className="mx-auto grid max-h-[90dvh] w-full max-w-xl gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-5"
+            className="mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5"
           >
             <h2 className="text-lg font-semibold">Edit person</h2>
             <PersonFields form={editForm} onChange={setEditForm} showActive />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
               <button
                 type="button"
                 onClick={() => {
