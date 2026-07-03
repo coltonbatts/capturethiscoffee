@@ -99,13 +99,14 @@ export default function ProductionsPage() {
         <div>
           <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Shoot days</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
-            Open a day to update who&apos;s on set and their orders, then export labels.
+            Open the active day to confirm drinks, track handoff, and share the
+            runner/printer link.
           </p>
         </div>
         <div className="grid gap-2 md:w-[220px]">
-          <Link href="/labels" className={`${primaryButtonClass} min-h-14 text-base`}>
+          <Link href="/labels" className={`${secondaryButtonClass} min-h-14 text-base`}>
             <ImageDown size={19} aria-hidden="true" />
-            Open labels
+            Fallback exports
           </Link>
         </div>
       </section>

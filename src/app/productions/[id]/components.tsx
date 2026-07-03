@@ -307,6 +307,7 @@ function RosterCard({
             </div>
             <div className="grid shrink-0 justify-items-end gap-1">
               {order ? <StatusChip status={order.status} /> : null}
+              {order ? <PrintStateBadge order={order} /> : null}
               {!onSet ? (
                 <span className="rounded-md border border-zinc-500 bg-white px-2.5 py-1 text-xs font-black text-zinc-700">
                   Off set
@@ -369,6 +370,35 @@ function RosterCard({
         />
       )}
     </article>
+  );
+}
+
+function PrintStateBadge({ order }: { order: Order }) {
+  const disabled = order.status === "no_order";
+  const printed = order.label_printed;
+
+  return (
+    <span
+      className={`inline-flex max-w-28 items-center gap-1 rounded-md border px-2 py-1 text-xs font-black ${
+        disabled
+          ? "border-zinc-300 bg-zinc-100 text-zinc-500"
+          : printed
+            ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+            : "border-zinc-500 bg-white text-zinc-700"
+      }`}
+      title={
+        disabled
+          ? "No label needed"
+          : printed
+            ? "Label printed"
+            : "Label not printed"
+      }
+    >
+      <Printer size={13} aria-hidden="true" />
+      <span className="truncate">
+        {disabled ? "No label" : printed ? "Printed" : "Not printed"}
+      </span>
+    </span>
   );
 }
 

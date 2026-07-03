@@ -1,6 +1,6 @@
 # Capture This Coffee SOP
 
-Last updated: 2026-06-24
+Last updated: 2026-07-03
 
 ## Purpose
 
@@ -15,13 +15,14 @@ Use this SOP for:
 
 - Setting up a production before shoot day.
 - Running the coffee workflow on set.
-- Exporting cup label PNGs for NIIMBOT app printing.
+- Printing cup labels through CTC Printer, with `/labels` as fallback export.
 - Recovering from common issues without stopping the order flow.
 - Closing out the production after the run.
 
 Related docs:
 
 - [Label image export](label-image-export.md)
+- [App experience map](app-experience-map.md)
 - [V1 readiness checklist](v1-readiness.md)
 
 ## Systems
@@ -39,24 +40,34 @@ The master website is the source of truth for:
 - Coffee orders.
 - Printed label status.
 
-Use the hosted website for admin setup, runner workflow, summaries, and label
-PNG export.
+Use the hosted website for setup, runner workflow, summaries, and fallback
+label export.
 
-### NIIMBOT App
+### CTC Printer
 
-The NIIMBOT first-party app owns printer pairing and physical Bluetooth
-printing. Capture This Coffee does not drive the NIIMBOT over USB, Bluetooth, or
-a custom queue.
+The native iOS **CTC Printer** app is the primary on-set print path. It opens
+the same runner share link, fetches the pending label queue from the public API,
+prints to the NIIMBOT M2_H over Bluetooth LE, and marks each order
+`label_printed`.
+
+### `/labels` fallback
+
+The web `/labels` screen is an authenticated fallback/advanced export screen for
+PNG download/share, CSV batch export, preview, and test labels. Use it when CTC
+Printer is unavailable or when a manual export is needed.
 
 ### Key Rule
 
-CTC generates the label image. The NIIMBOT app prints it.
+CTC Printer prints on set. `/labels` exports assets when the primary path is
+unavailable or an advanced export is needed.
 
 ## Roles
 
-### Admin
+### Signed-in operator
 
-The admin prepares the production and manages setup records.
+The signed-in operator prepares the production and manages setup records. Every
+signed-in Supabase user has full app access; older admin/staff metadata checks
+are no longer part of the current app access model.
 
 Responsibilities:
 
@@ -65,7 +76,7 @@ Responsibilities:
 - Add people and photos.
 - Create productions.
 - Build or update the production roster.
-- Confirm the label export workflow on the phone before shoot day.
+- Confirm the CTC Printer workflow on the phone before shoot day.
 - Keep credentials, Supabase settings, and environment variables private.
 
 ### Runner
@@ -80,32 +91,30 @@ Responsibilities:
 - Add guests when needed.
 - Move orders through the correct statuses.
 - Use the Summary tab for coffee-shop handoff.
-- Coordinate label export when physical labels are required.
+- Watch printed/not-printed state and coordinate with the label operator when
+  physical labels are required.
 
 ### PA / Label Operator
 
-The label operator uses the phone and NIIMBOT app.
+The label operator uses CTC Printer on the iPhone.
 
 Responsibilities:
 
-- Open `/labels` on the phone.
-- Select the production and label.
-- Confirm the preview is readable.
-- Download or share the PNG.
-- Import the PNG in the NIIMBOT app.
+- Open CTC Printer.
+- Paste or reuse the runner share link.
+- Connect the NIIMBOT M2_H.
+- Print pending labels.
+- Confirm `label_printed` updates after successful prints.
 - Inspect the physical output.
 
 ## Required Access
 
-Admins need a Supabase Auth user with admin metadata:
+Signed-in operators need a Supabase Auth user. Per `src/lib/auth.ts`, every
+signed-in user has full app access. Admin metadata such as
+`{"admin": true}` is historical and not required by the current app.
 
-```json
-{"admin": true}
-```
+Sign-in is required for setup and fallback export routes such as:
 
-Admin access is required for setup routes such as:
-
-- `/clients`
 - `/people`
 - `/labels`
 - `/productions/new`
@@ -115,7 +124,8 @@ production share link. The link token scopes reads and order edits to one
 production. Anonymous direct Supabase table reads and order updates are not
 allowed.
 
-Keep public sign-ups disabled unless intentionally onboarding new staff.
+Keep public sign-ups disabled unless intentionally onboarding new staff. Access
+control is invitation-based at the Supabase user level.
 
 ## Pre-Shoot Setup
 
@@ -124,7 +134,7 @@ Complete this at least one day before the production when possible.
 ### 1. Confirm App Configuration
 
 - Confirm the deployed app opens at `https://coffee.capturethis.com`.
-- Confirm `/login` accepts the admin account.
+- Confirm `/login` accepts the intended operator account.
 - Confirm the app uses Supabase-backed data, not local demo mode.
 - Confirm `NEXT_PUBLIC_ENABLE_AUTH` is unset or `true` in production.
 - Confirm `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are configured.
@@ -148,16 +158,14 @@ In Supabase, confirm:
 
 In the app:
 
-1. Open `/clients`.
-2. Create or confirm the client.
-3. Open `/people`.
-4. Add known crew, agency, clients, and guests when available.
-5. Upload useful person photos where helpful.
-6. Open `/productions/new`.
-7. Enter the production name, date, location, client, and runner details.
-8. Add the known roster.
-9. Save the production.
-10. Open the production page and confirm the runner board loads.
+1. Open `/people`.
+2. Add known crew, agency, clients, and guests when available.
+3. Upload useful person photos where helpful.
+4. Open `/productions/new`.
+5. Enter the production name, date, location, client, and runner details.
+6. Add the known roster.
+7. Save the production.
+8. Open the production page and confirm the runner board loads.
 
 ### 4. Verify Day-Of Flow
 
@@ -172,18 +180,18 @@ On the device the runner will use:
 7. Quick-add a guest and save a simple drink.
 8. Open the Summary tab and confirm copy/paste output is useful.
 
-### 5. Verify Label Export
+### 5. Verify CTC Printer
 
 On the phone the PA will use:
 
-1. Open `/labels`.
-2. Select the active production.
-3. Select one or more active labels.
-4. Confirm the preview is readable.
-5. Tap **Share** if available, or **Download PNG**.
-6. Open the NIIMBOT app.
-7. Import the PNG and print one physical test label.
-8. Record any scaling, cropping, or readability issue.
+1. Open or paste the runner share link in CTC Printer.
+2. Connect the NIIMBOT M2_H.
+3. Print one physical test label from the queue.
+4. Confirm the web runner board shows the label as printed.
+5. Record any scaling, cropping, readability, or `label_printed` issue.
+
+If CTC Printer is unavailable, run the fallback `/labels` PNG or CSV export
+flow in [label-image-export.md](label-image-export.md).
 
 ## Shoot-Day Startup
 
@@ -193,7 +201,7 @@ On the phone the PA will use:
 - Open the active production.
 - Confirm the roster is correct.
 - Confirm the runner can open the production page.
-- Confirm `/labels` loads on the label phone.
+- Confirm the CTC Printer phone can open the runner share link.
 
 ### Runner
 
@@ -202,12 +210,15 @@ On the phone the PA will use:
 - Confirm status taps save.
 - Confirm quick-add works if guests are expected.
 - Keep the Summary tab available for coffee-shop ordering.
+- Watch the printed/not-printed badge when coordinating with the label operator.
 
 ### Label Operator
 
-- Confirm the NIIMBOT is powered on and paired in the NIIMBOT app.
-- Open `/labels` on the phone.
-- Export and print one test label if this has not already been done that day.
+- Confirm the NIIMBOT is powered on.
+- Force-quit the official NIIMBOT app before connecting CTC Printer.
+- Open CTC Printer on the phone.
+- Refresh the queue and print one test label if this has not already been done
+  that day.
 
 ## Standard Day-Of Workflow
 
@@ -259,24 +270,23 @@ Before sending:
 - Check guest names.
 - Check any high-risk notes, such as decaf or allergies.
 
-### 5. Export Labels
+### 5. Print Labels
 
 Use labels when physical cup tracking or the Capture This Coffee brand moment is
 needed.
 
-From `/labels`:
+From CTC Printer:
 
-1. Select the production.
-2. Select the label or labels.
-3. Confirm the label preview is readable.
-4. Tap **Share** if supported, or **Download PNG**.
-5. Open the NIIMBOT app.
-6. Import the PNG and print.
-7. Inspect the physical label.
+1. Confirm the production is active.
+2. Confirm CTC Printer is linked to the runner share URL.
+3. Refresh the queue.
+4. Print each pending label.
+5. Confirm the web runner board shows the printed badge.
+6. Inspect the physical label.
 
-If a label prints incorrectly, export again or adjust import settings in the
-NIIMBOT app. Do not assume the current physical media is verified until a test
-print confirms it.
+If CTC Printer is unavailable, use `/labels` for PNG or CSV fallback export.
+Do not assume the current physical media is verified until a test print
+confirms it.
 
 ## Fallback Procedures
 
@@ -297,7 +307,16 @@ print confirms it.
 4. Refresh the production page if the order state is unclear.
 5. Reapply the change if needed.
 
-### If Share Is Unavailable
+### If CTC Printer Is Unavailable
+
+1. Open `/labels`.
+2. Select the production and labels.
+3. Use **Export CSV** for NIIMBOT batch templates, or **Export PNG** for
+   individual label assets.
+4. Import the fallback asset in the official NIIMBOT app.
+5. Test one physical label before printing a full run.
+
+### If Share Is Unavailable On `/labels`
 
 1. Use **Download PNG**.
 2. Open the downloaded image from the phone.
@@ -331,14 +350,14 @@ After the last drink run:
 - Use person photos only when they help the runner identify people.
 - Keep drink names readable and specific.
 - Do not store sensitive personal information in drink notes.
-- Do not share admin passwords in long-lived chat threads.
+- Do not share sign-in passwords in long-lived chat threads.
 
 ## Security Rules
 
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` in browser code or any `NEXT_PUBLIC_` variable.
 - Keep `.env.local` local and uncommitted.
 - Disable public sign-ups unless onboarding new users intentionally.
-- Give admin access only to people who need setup permissions.
+- Give Supabase sign-in access only to people who need setup permissions.
 - Share runner links only with the on-set team, and revoke or expire them after
   the production.
 - Do not use local demo mode for production data.
@@ -346,13 +365,13 @@ After the last drink run:
 
 ## Quality Checklist
 
-- [ ] Admin can sign in.
-- [ ] Active production opens for an admin and through the production share link.
+- [ ] Signed-in operator can sign in.
+- [ ] Active production opens for a signed-in operator and through the production share link.
 - [ ] Client, people, roster, date, location, and runner details are correct.
 - [ ] Runner can search, quick-add, edit drinks, and update statuses on the actual device.
 - [ ] Summary output is accurate enough for coffee-shop handoff.
-- [ ] `/labels` loads on the phone.
-- [ ] At least one PNG downloads or shares successfully.
-- [ ] The PNG imports into the NIIMBOT app.
-- [ ] One physical test label has printed correctly.
+- [ ] CTC Printer links to the same runner share URL.
+- [ ] CTC Printer prints one physical test label and marks `label_printed`.
+- [ ] `/labels` fallback loads on the phone.
+- [ ] At least one fallback PNG or CSV exports successfully.
 - [ ] Remaining physical unknowns are recorded before client use.

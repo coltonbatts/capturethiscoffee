@@ -2,8 +2,10 @@
 
 > **STATUS (2026-07-01): HISTORICAL — do not work from this document.**
 > This brief predates major changes and much of it no longer matches the repo.
-> Start from `CLAUDE.md` (repo root) and
-> [docs/production-readiness-checklist.md](production-readiness-checklist.md) instead.
+> Start from [README.md](../README.md),
+> [docs/app-experience-map.md](app-experience-map.md), and
+> [docs/production-readiness-checklist.md](production-readiness-checklist.md)
+> instead.
 > What has already been resolved since this was written:
 >
 > - **P0-A and P0-B (open anon reads/writes) are fixed.** Runner access now goes
@@ -19,6 +21,10 @@
 > - **Phase 1b (label design) is underway.** `coffee-label-renderer.tsx` and
 >   `src/lib/niimbot-m2-export.ts` render multiple branded label designs at the
 >   50x30mm preset (still pending physical verification — see the checklist).
+> - **Phase 2 (native CTC Printer) has shipped after this brief.** The iOS app
+>   in `mobile/` is now the primary on-set print path and `/labels` is fallback
+>   export. The older NIIMBOT-app-import-first language below is preserved only
+>   as product history.
 > - **Tests now cover** label copy, label export selection, order summaries, and
 >   share-token sanitization/privacy (`tests/`).
 >

@@ -4,6 +4,11 @@ Date: 2026-07-02
 Goal: get order data from the CTC web app onto printed M2_H labels, few taps, no laptop.
 Constraint honored throughout: iPhone on set, Safari has no Web Bluetooth, laptop path is dead.
 
+> Status as of 2026-07-03: historical strategy record. Path B shipped as the
+> native iOS **CTC Printer** app and is now the primary on-set path. Path A
+> (`/labels` PNG/CSV export through the official NIIMBOT app) remains
+> fallback/advanced export context, not the main workflow.
+
 ## TL;DR recommendation
 
 Do both, in this order:

@@ -23,8 +23,10 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Supabase Auth email/password when env vars are configured
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
-- Copyable coffee summaries and print-ready NIIMBOT label PNG export from `/labels`
-- Native iOS printer app in `mobile/` — direct BLE printing to NIIMBOT M2_H (Phase 2)
+- Copyable coffee summaries and printed-label status on the runner board
+- Native iOS printer app in `mobile/` — the primary on-set path for direct BLE
+  printing to NIIMBOT M2_H
+- Fallback/advanced NIIMBOT PNG and CSV export from `/labels`
 
 ## Day-of resilience
 
@@ -37,8 +39,9 @@ mid-shoot:
   initial load fails.
 - Status taps on the dashboard are optimistic: the change shows immediately,
   and a failed save rolls back just that one order with an error toast.
-- `/labels` keeps PNG export client-side. If native phone sharing is not
-  available, the normal Download PNG action remains available.
+- CTC Printer is the primary print path. `/labels` remains available for
+  fallback PNG/CSV export; if native phone sharing is not available, the normal
+  Download PNG action remains available.
 - Missing or unreachable people photos fall back to initials instead of a
   broken image.
 
@@ -141,9 +144,10 @@ reset role;
 Then open `/login`, sign in, and continue to `/productions`.
 
 Operating SOP: [docs/standard-operating-procedure.md](docs/standard-operating-procedure.md).
+App experience map: [docs/app-experience-map.md](docs/app-experience-map.md).
 Client onboarding checklist: [docs/client-login-handoff.md](docs/client-login-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
-Label image export workflow: [docs/label-image-export.md](docs/label-image-export.md).
+Fallback label export workflow: [docs/label-image-export.md](docs/label-image-export.md).
 
 ## Label printing
 

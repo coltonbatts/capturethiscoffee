@@ -22,6 +22,11 @@ export type LabelExportSelection = {
   labels: CoffeeLabel[];
 };
 
+export type InitialLabelExportSelection = {
+  productionId: string;
+  selectedOrderIds: string[];
+};
+
 export type ActiveLabelExportItem = RosterOrder & {
   order: NonNullable<RosterOrder["order"]>;
 };
@@ -42,6 +47,34 @@ export function preferredLabelExportProduction(data: CoffeeData) {
     labelExportProductions(data)[0] ||
     data.productions.slice().sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
   );
+}
+
+export function initialLabelExportSelection(
+  data: CoffeeData,
+  requestedOrderId = "",
+): InitialLabelExportSelection {
+  const requested = requestedOrderId.trim();
+  if (requested) {
+    for (const production of labelExportProductions(data)) {
+      const item = labelExportItemsForProduction(data, production.id).find(
+        (candidate) => candidate.order.id === requested,
+      );
+      if (item) {
+        return { productionId: production.id, selectedOrderIds: [item.order.id] };
+      }
+    }
+  }
+
+  const preferred = preferredLabelExportProduction(data);
+  if (!preferred) return { productionId: "", selectedOrderIds: [] };
+
+  const firstOrderId =
+    labelExportItemsForProduction(data, preferred.id)[0]?.order.id || "";
+
+  return {
+    productionId: preferred.id,
+    selectedOrderIds: firstOrderId ? [firstOrderId] : [],
+  };
 }
 
 export function labelExportItemsForProduction(

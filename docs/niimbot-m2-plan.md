@@ -1,5 +1,13 @@
 # Capture This Coffee — NIIMBOT M2 plan (last updated July 1, 2026)
 
+> Status as of 2026-07-03: historical fallback planning. The native iOS
+> **CTC Printer** app has shipped and is now the primary on-set print path.
+> Use [app-experience-map.md](app-experience-map.md),
+> [standard-operating-procedure.md](standard-operating-procedure.md), and
+> [production-readiness-checklist.md](production-readiness-checklist.md) for
+> current operating truth. The PNG/CSV and NIIMBOT app flows below remain useful
+> only as fallback/advanced export context.
+
 The direction is settled: keep the NIIMBOT M2, kill the laptop/print-station path, and make CTC a label-asset generator. What's left is undone groundwork — verify the printer against the app, get batch working in a way that survives a real shoot, and lock the label spec. This is that plan.
 
 ## What I verified about the M2 (from the spec sheet, not a physical print)

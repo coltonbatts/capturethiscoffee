@@ -7,10 +7,14 @@
 - Confirm `/login` signs in the client user and redirects to `/productions`.
 - Create the real client, production, runner name, shoot date, and location.
 - Add or import the day-of people before the shoot when possible.
+- Generate the runner share link and confirm the runner board opens on a second
+  device without sign-in.
 - On a phone, open the production page and verify search, quick add, order edit,
   and status taps are comfortable one-handed.
-- On a phone, open `/labels`, preview a label, and verify PNG download/share.
-- Keep the NIIMBOT mobile app installed and paired with the printer.
+- On the printer phone, open CTC Printer with the same runner share link,
+  connect the M2_H, print one label, and confirm `label_printed` appears back on
+  the runner board.
+- Keep `/labels` available as fallback/advanced PNG and CSV export.
 
 ## Supabase checklist
 
@@ -20,23 +24,35 @@
 - Confirm obsolete print-station tables are absent after the latest migration:
   `printer_devices`, `label_print_jobs`, and `label_print_attempts`.
 - Confirm the `person-photos` storage bucket and policies exist.
-- Confirm the client user can sign in and that their Supabase user has
-  `app_metadata` set to `{"admin": true}`.
+- Confirm the client user can sign in. Every signed-in user has full app access
+  per `src/lib/auth.ts`; `app_metadata.admin` is historical and not required.
 - Disable public email sign-ups unless intentionally onboarding more demo users.
 - Verify a new client, person, photo, production, roster edit, order edit, and
   label printed flag persist after refresh on a second device.
 - Do not use `NEXT_PUBLIC_ENABLE_AUTH=false` in production. That is local demo
   mode and writes only to that browser's `localStorage`.
 
-## Label export checklist
+## Primary print checklist
+
+- Deploy or run CTC with `SUPABASE_SERVICE_ROLE_KEY` set for public API routes.
+- Confirm the production status is `active`.
+- Open CTC Printer on a physical iPhone.
+- Paste the runner share link and link the production.
+- Force-quit the official NIIMBOT app before connecting.
+- Connect the NIIMBOT M2_H.
+- Print one real order label.
+- Confirm the same order shows `label_printed` in Supabase and the runner board.
+
+## Fallback label export checklist
 
 - Open `/labels` on the phone expected to handle labels.
 - Select the active production.
 - Select one or more active labels.
 - Confirm the preview is readable at small size.
-- Tap **Share** if available, or **Download PNG**.
-- Open the NIIMBOT app.
-- Import the PNG and print using NIIMBOT's Bluetooth flow.
+- Export CSV for NIIMBOT batch templates, or tap **Export PNG** / **Share** for
+  an individual label asset.
+- Open the official NIIMBOT app.
+- Import the fallback asset and print using NIIMBOT's Bluetooth flow.
 - Confirm the physical label is readable and not cropped.
 
 ## Current physical unknowns
@@ -60,18 +76,20 @@ once that's done.
 2. Open the active production from `/productions`.
 3. Search for a known person, confirm or adjust their drink, and mark ordered.
 4. Quick-add one guest, enter a simple drink, and save.
-5. Open `/labels`; show the first active label selected automatically.
-6. Download or share the PNG.
-7. Open the NIIMBOT app and import the image.
-8. Back on the production runner page, mark the same order picked up and delivered.
+5. Copy the runner link and show that it is the same link CTC Printer uses.
+6. In CTC Printer, print one pending label and mark it printed.
+7. Back on the production runner page, show the printed badge and mark the same
+   order picked up and delivered.
+8. Show `/labels` as fallback/advanced export, not the main print station.
 9. Show the Summary tab for the coffee-shop copy/paste view.
 
 ## Known limitations
 
-- Direct NIIMBOT Bluetooth printing is not implemented in CTC. The NIIMBOT app
-  owns Bluetooth pairing and physical printing.
+- CTC Printer is implemented, but Phase 2 still needs a deployed end-to-end
+  validation pass on real shoot data: API queue, physical print, and
+  `label_printed` visible on the runner board.
 - Web Share with files depends on the browser and OS. Use **Download PNG** when
-  sharing is unavailable.
+  sharing is unavailable on the `/labels` fallback screen.
 - The current export preset has not yet been physically verified against the
   final lid-label media.
 - Offline production mode is not guaranteed with Supabase auth. Local demo mode
@@ -82,8 +100,9 @@ once that's done.
 
 - Verify the exact NIIMBOT M2 model, firmware, label roll, and mobile OS.
 - Print a vendor-app test label.
-- Export a Capture This Coffee PNG from `/labels` on the phone.
-- Import that PNG into the NIIMBOT app.
+- Print one Capture This Coffee label from CTC Printer.
+- If testing fallback export, export a PNG or CSV from `/labels` and import it
+  into the NIIMBOT app.
 - Record whether the app preserves 50mm x 30mm sizing or needs manual scaling.
 - Confirm the label is readable after condensation handling on a cold cup.
 - Record the final media, dimensions, DPI behavior, and any app import settings.

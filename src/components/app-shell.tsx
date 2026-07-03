@@ -40,8 +40,8 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
           <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
             <Link
               href="/labels"
-              className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100"
-              aria-label="Open label workstation"
+              className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:border-black hover:bg-zinc-100 hover:text-black"
+              aria-label="Open fallback label exports"
             >
               <Printer size={18} aria-hidden="true" />
             </Link>

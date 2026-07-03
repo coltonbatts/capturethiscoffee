@@ -1,17 +1,20 @@
-# Label Image Export
+# Fallback Label Image Export
 
 Capture This Coffee no longer runs a laptop print station, USB serial worker,
-custom print queue, or custom NIIMBOT Bluetooth flow.
+or web print queue. The primary on-set print path is now the native iOS
+**CTC Printer** app in `mobile/`, which fetches server-rendered PNGs through the
+share-token API, prints to the NIIMBOT M2_H over BLE, and marks
+`label_printed`.
 
-The app's job is to generate a polished, print-ready PNG label. The PA prints it
-through NIIMBOT's first-party app on the phone paired to the printer.
+This document covers the fallback `/labels` export workflow for cases where CTC
+Printer is unavailable or an advanced PNG/CSV export is needed.
 
-## On-Set Workflow
+## Fallback On-Set Workflow
 
 1. Open `/labels` on the phone.
 2. Choose the production and one or more active labels.
 3. Preview the label.
-4. Tap **Share** when the phone supports sharing PNG files, or **Download PNG**.
+4. Tap **Share** when the phone supports sharing PNG files, or **Export PNG**.
 5. Open the NIIMBOT app.
 6. Import the PNG and save it as a template (My Templates).
 7. Repeat steps 1-6 for each cup. Import/save is still one at a time — there is no bulk-import of multiple external PNGs at once.
@@ -19,7 +22,7 @@ through NIIMBOT's first-party app on the phone paired to the printer.
 
 Note: NIIMBOT's Batch Print does not accept templates built from a CSV/data source — that's a separate batch mechanism (see "Physical Unknowns" below) and the two don't combine.
 
-## Current Export Preset
+## Current Fallback Export Preset
 
 The current assumed preset is stored in
 `src/lib/niimbot-m2-preset.json`:

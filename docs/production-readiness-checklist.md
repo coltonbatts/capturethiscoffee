@@ -1,18 +1,19 @@
 # Production Readiness Checklist
 
-Last updated: 2026-07-01 (added A3a — Batch Print timing test for saved-template path)
+Last updated: 2026-07-03 (aligned print/auth readiness with CTC Printer primary path)
 
 This checklist exists to close out the two P0 blockers before Capture This
 Coffee is used on a real paid shoot:
 
-1. **NIIMBOT M2 label validation** — confirm the label PNG/CSV workflow
-   actually works on the real printer and real label stock.
+1. **CTC Printer + NIIMBOT M2 label validation** — confirm the native printer
+   app can print real labels and mark `label_printed`, and that fallback
+   `/labels` export still works when needed.
 2. **Production deployment validation** — confirm the hosted app is wired to
    Supabase correctly and that access control actually holds.
 
 The two sections are independent. Section A can be run by a non-engineer
 (PA / label operator) with a phone and the printer. Section B needs
-Supabase dashboard access and is an admin/engineer task.
+Supabase dashboard access and is an operator/engineer task.
 
 Each check has a **Record** line (write the actual value down) and a
 **Pass/fail** line (what makes it pass). Anything marked **BLOCKER** must
@@ -31,13 +32,15 @@ it or getting sign-off from the tech lead.
 
 ---
 
-## Section A — NIIMBOT M2 label validation (on set, phone + printer)
+## Section A — CTC Printer and NIIMBOT M2 validation (on set, phone + printer)
 
 **Who runs this:** PA / label operator. No engineering background needed.
 
 **What you need:**
-- A phone with `/labels` access (signed in as admin, or via a share link an admin gave you).
-- The NIIMBOT M2 printer, powered on and paired in the NIIMBOT app.
+- A physical iPhone with CTC Printer installed.
+- A runner share link for an active production.
+- A signed-in web session for fallback `/labels` testing.
+- The NIIMBOT M2 printer, powered on.
 - The actual label roll currently loaded in the printer.
 - A ruler or tape measure.
 
@@ -60,50 +63,58 @@ assumed preset of **50mm x 30mm**. Fail (blocker) if it does not match —
 stop and flag to the tech lead before printing further tests, since every
 downstream export assumes this size.
 
-### A2. Export a PNG label from `/labels` on the phone
+### A2. Print one label through CTC Printer — BLOCKER
+
+Steps:
+1. Confirm the production is `active`.
+2. Open CTC Printer on the iPhone.
+3. Paste or reuse the runner share link (`/productions/{id}?token=...`).
+4. Force-quit the official NIIMBOT app before connecting.
+5. Connect the NIIMBOT M2_H.
+6. Refresh the queue.
+7. Print one real order label.
+8. Confirm CTC Printer marks the order `label_printed`.
+9. Refresh the web runner board and confirm the same order shows printed state.
+
+**Record:**
+- Phone model / OS: _____
+- CTC Printer build/version: _____
+- Queue loaded? Y/N
+- Printed order/person: _____
+- `label_printed` visible in web app after refresh? Y/N
+
+**Pass/fail:** Pass if the queue loads, the label prints legibly, CTC Printer
+does not hang, and `label_printed` is visible back in the web app. Fail
+(blocker) if any of those steps fail.
+
+### A3. Validate `/labels` fallback PNG export
 
 Steps:
 1. Open `/labels` on the phone.
 2. Choose the correct production.
-3. Select one active label (any real crew/client order works).
+3. Select one active label.
 4. Confirm the on-screen preview is readable at a glance — name legible, drink text not cut off.
-5. Tap **Share** if the button is available, otherwise tap **Download PNG**.
+5. Tap **Share** if the button is available, otherwise tap **Export PNG**.
 6. Confirm the file actually lands somewhere you can open it (Photos, Files, or the share sheet target).
+7. Optionally import the PNG in the official NIIMBOT app and print one fallback test label.
 
 **Record:**
-- Phone model / OS: _____
 - Browser used: _____
 - Share available? Y/N
-- Which path used (Share / Download PNG): _____
-
-**Pass/fail:** Pass if the PNG downloads or shares without an error, and
-the exported image visually matches the on-screen preview (no cropping,
-no missing text) when opened outside the browser.
-
-### A3. Import and print the PNG in the NIIMBOT app — BLOCKER
-
-Steps:
-1. Open the NIIMBOT app on the same phone.
-2. Import the PNG from step A2 as a custom image.
-3. Set the media/label size in the NIIMBOT app to match the roll from A1.
-4. Print **one** physical test label.
-5. Inspect the printed cup label directly against the roll.
-
-**Record:**
+- Which path used (Share / Export PNG): _____
 - NIIMBOT app import/scaling setting used (fit / fill / stretch / manual mm): _____
 - Final printed size (measure the actual print): _____ mm x _____ mm
 - Cropped? Y/N — where: _____
 - Blurry or too light? Y/N
 - Centered / off-center: _____
 
-**Pass/fail:** Pass if the printed label is not cropped, is legible at
-arm's length, and matches the intended 50mm x 30mm (or corrected size from
-A1). Fail (blocker) on any cropping or illegibility — do not proceed to a
-full batch print until this passes.
+**Pass/fail:** Pass if the fallback PNG exports or shares without an error, and
+any optional NIIMBOT-app print is not cropped and is legible at arm's length.
+Fail if fallback export is unavailable or produces a blank/cropped asset.
 
-### A3a. Save-as-template + Batch Print timing
+### A3a. Historical fallback: save-as-template + Batch Print timing
 
-The NIIMBOT app has a separate batch mechanism from the CSV path in A5: it
+As a fallback, the NIIMBOT app has a separate batch mechanism from the CSV path in A5: it
 lets you multi-select several already-saved templates in **My Templates**
 and print them all in one pass via **Batch Print**. This step tests whether
 that's fast enough to use for a full crew run of fully custom, on-brand
@@ -127,8 +138,8 @@ Steps:
 lead/PA judgment call, but flag if it's much over ~15-20 seconds per cup)
 and Batch Print produces correct, uncorrupted output for the whole stack.
 Fail if templates get mixed up, sizing breaks in batch mode, or the
-per-cup save time makes this impractical for a real crew count — if so,
-Path B (CSV, see A5) becomes the primary crew-run path instead.
+per-cup save time makes this impractical for a real crew count. This affects
+fallback viability only; CTC Printer remains the primary crew-run path.
 
 ### A4. Condensation / durability check
 
@@ -145,7 +156,7 @@ Steps:
 text smears or the label lifts — this is a stock/ribbon issue to raise
 with the tech lead, not something to fix by re-exporting.
 
-### A5. Export and validate the CSV batch path (Path B — separate from A3a's Batch Print)
+### A5. Export and validate the fallback CSV batch path
 
 Steps:
 1. In `/labels`, select several (3+) active orders for the same production.
@@ -181,7 +192,7 @@ Once A1–A5 are done, hand the recorded values to whoever maintains the app:
 
 ---
 
-## Section B — Production deployment validation (admin/engineer, Supabase dashboard + terminal)
+## Section B — Production deployment validation (operator/engineer, Supabase dashboard + terminal)
 
 **Who runs this:** Whoever has admin access to the Supabase project and the
 hosting platform. Do this before the first paid client uses the app, and
@@ -239,25 +250,30 @@ and table_name in ('printer_devices', 'label_print_jobs', 'label_print_attempts'
 file has been applied. Fail (blocker) if old print-station tables still
 exist or a migration is missing — RLS policies may be inconsistent.
 
-### B3. Admin auth checks
+### B3. Operator auth checks
 
 Steps:
-1. In Supabase, go to **Authentication > Users** and open the intended admin user.
-2. Confirm **Raw app_metadata** includes `{"admin": true}` (or `staff: true` / `role: "admin"`, per `src/lib/auth.ts`).
-3. Sign in at `/login` as that user. Confirm it redirects to `/productions`.
-4. While signed in as that admin, open `/people`, `/clients`, `/labels`, and `/productions/new` directly. Confirm all load (not redirected to `/login`).
+1. In Supabase, go to **Authentication > Users** and confirm the intended
+   operator user exists.
+2. Sign in at `/login` as that user. Confirm it redirects to `/productions`.
+3. While signed in as that operator, open `/people`, `/labels`, and
+   `/productions/new` directly. Confirm all load (not redirected to `/login`).
+   Every signed-in user has full access per `src/lib/auth.ts`; admin/staff
+   `app_metadata` is historical and no longer required.
 5. Sign out. While signed out, try opening `/people` directly. Confirm it redirects to `/login`.
-6. If you have a second Supabase user *without* admin metadata, sign in as them and try `/people`. Confirm the app blocks setup writes or the proxy redirects them off protected routes.
+6. If you have a second Supabase user, sign in as them and confirm they have the
+   same full app access. Use Supabase invite/sign-up controls, not app metadata,
+   to decide who can access the app.
 
 **Record:**
-- Admin user metadata confirmed correct? Y/N
-- Protected routes load for admin? Y/N
+- Operator user exists? Y/N
+- Protected routes load for signed-in operator? Y/N
 - Protected routes redirect for signed-out visitor? Y/N
-- Non-admin signed-in user blocked from setup writes? Y/N
+- Second signed-in user has full app access, if tested? Y/N
 
-**Pass/fail:** Pass if all six steps behave as described. Fail if a
-signed-out visitor or non-admin user can reach `/people`, `/clients`,
-`/labels`, or `/productions/new` and perform setup writes.
+**Pass/fail:** Pass if signed-in users can use the app and signed-out visitors
+are redirected. Fail if a signed-out visitor can reach `/people`, `/labels`, or
+`/productions/new` and perform setup writes.
 
 ### B4. RLS checks — BLOCKER
 
@@ -271,19 +287,19 @@ update public.orders set status = 'confirmed' where true; -- expect: permission 
 reset role;
 ```
 
-Also confirm, as a signed-in **non-admin authenticated** user (not
-`anon`), that direct table writes to `clients`, `people`, `productions`,
-`production_roster`, and `orders` are rejected — only
-`current_user_is_admin()` should pass the RLS `with check`.
+Also confirm, as a signed-in authenticated user, that setup writes to `clients`,
+`people`, `productions`, `production_roster`, and `orders` are allowed according
+to the current full-access policy. This intentionally differs from older
+admin-only RLS language.
 
 **Record:**
 - All three `anon` queries returned "permission denied"? Y/N
-- Non-admin authenticated write attempts also rejected? Y/N
+- Signed-in authenticated setup write accepted? Y/N
 
-**Pass/fail:** Pass only if every query above is denied exactly as shown.
-Fail (blocker) if any anonymous read/write succeeds — this means direct
-table access is open and the token-scoped API routes are not the only way
-in.
+**Pass/fail:** Pass only if every anonymous query above is denied exactly as
+shown and signed-in setup writes work. Fail (blocker) if any anonymous
+read/write succeeds — this means direct table access is open and the
+token-scoped API routes are not the only way in.
 
 ### B5. Public runner share-token flow — test on a second device — BLOCKER
 
@@ -292,7 +308,7 @@ would: on a **second device**, in a **private/incognito window**, with
 **no admin session**.
 
 Steps:
-1. On the admin device, in the Supabase SQL editor, generate a token for a real (or test) production:
+1. On the signed-in operator device, in the Supabase SQL editor, generate a token for a real (or test) production:
    ```sql
    select public.create_production_share_token(
      '<production-id>'::uuid,
@@ -302,13 +318,13 @@ Steps:
    ```
 2. On the second device, open `/productions/<production-id>?token=<returned-token>` in a private window (not signed in).
 3. Confirm the runner board loads: roster, names, drink orders visible.
-4. Confirm private fields are **not** present — dietary notes and person notes should not appear anywhere in the runner view (check by comparing to a person you know has notes set in `/people` as admin).
+4. Confirm private fields are **not** present — dietary notes and person notes should not appear anywhere in the runner view (check by comparing to a person you know has notes set in `/people` while signed in).
 5. Confirm `usual_order` **does** show, since it's the intentional operational prompt.
 6. Tap a status change (e.g. mark an order "ordered"). Confirm it saves and persists after a refresh.
 7. Edit a drink field (e.g. `drink_type`) from the second device. Confirm it saves.
 8. Try to load the same URL with an obviously wrong token (e.g. change one character). Confirm it fails with an error, not silent access.
-9. If you have a way to test it: mark the production `complete` as admin, then retry a status tap from the second device. Confirm the PATCH is rejected ("Production is not active").
-10. As admin, revoke the token (`update production_share_tokens set revoked_at = now() where id = '<id>'`) and retry the runner link. Confirm access is now denied.
+9. If you have a way to test it: mark the production `complete` as a signed-in operator, then retry a status tap from the second device. Confirm the PATCH is rejected ("Production is not active").
+10. Revoke the token (`update production_share_tokens set revoked_at = now() where id = '<id>'`) and retry the runner link. Confirm access is now denied.
 
 **Record:**
 - Runner board loaded on second device without login? Y/N

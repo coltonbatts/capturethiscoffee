@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildLabelExportSelection,
+  initialLabelExportSelection,
   labelExportItemsForProduction,
   labelExportProductions,
   niimbotBatchCsv,
@@ -34,6 +35,15 @@ const data: CoffeeData = {
       name: "No Order",
       type: "crew",
       department: "Production",
+      usual_order: "",
+      active: true,
+      created_at: "2026-06-01T12:00:00.000Z",
+    },
+    {
+      id: "person-3",
+      name: "Parker Plan",
+      type: "crew",
+      department: "Grip",
       usual_order: "",
       active: true,
       created_at: "2026-06-01T12:00:00.000Z",
@@ -80,6 +90,14 @@ const data: CoffeeData = {
       on_set_today: true,
       sort_order: 1,
     },
+    {
+      id: "roster-3",
+      production_id: "prod-planning",
+      person_id: "person-3",
+      group_label: "Grip",
+      on_set_today: true,
+      sort_order: 1,
+    },
   ],
   orders: [
     {
@@ -106,6 +124,17 @@ const data: CoffeeData = {
       roster_id: "roster-2",
       person_id: "person-2",
       status: "no_order",
+      label_printed: false,
+      created_at: "2026-06-01T12:00:00.000Z",
+      updated_at: "2026-06-01T12:00:00.000Z",
+    },
+    {
+      id: "order-planning",
+      production_id: "prod-planning",
+      roster_id: "roster-3",
+      person_id: "person-3",
+      drink_type: "Cold brew",
+      status: "confirmed",
       label_printed: false,
       created_at: "2026-06-01T12:00:00.000Z",
       updated_at: "2026-06-01T12:00:00.000Z",
@@ -137,6 +166,20 @@ describe("label export helpers", () => {
     assert.equal(selection?.labels.length, 1);
     assert.equal(selection?.labels[0]?.title, "Ava Stone");
     assert.match(selection?.labels[0]?.drink || "", /Iced/i);
+  });
+
+  it("uses a requested order id as the initial label selection", () => {
+    assert.deepEqual(initialLabelExportSelection(data, "order-planning"), {
+      productionId: "prod-planning",
+      selectedOrderIds: ["order-planning"],
+    });
+  });
+
+  it("falls back to the preferred production when the requested order cannot be exported", () => {
+    assert.deepEqual(initialLabelExportSelection(data, "order-none"), {
+      productionId: "prod-active",
+      selectedOrderIds: ["order-ava"],
+    });
   });
 
   it("names exported files by person and order", () => {

@@ -27,10 +27,10 @@ import {
   buildLabelExportSelection,
   type ActiveLabelExportItem,
   defaultLabelExportOptions,
+  initialLabelExportSelection,
   labelExportItemsForProduction,
   labelExportProductions,
   niimbotBatchCsv,
-  preferredLabelExportProduction,
 } from "@/lib/label-export";
 import {
   describeDataError,
@@ -53,6 +53,10 @@ type ShareNavigator = Navigator & {
 };
 
 export default function LabelExportPage() {
+  const [requestedOrderId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("order") || "";
+  });
   const [data, setData] = useState<CoffeeData | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -71,23 +75,17 @@ export default function LabelExportPage() {
         setError("");
         setStatus("");
         setData(next);
-        const preferred = preferredLabelExportProduction(next);
-        const nextProductionId = preferred?.id || "";
+        const initialSelection = initialLabelExportSelection(next, requestedOrderId);
+        const nextProductionId = initialSelection.productionId;
         setProductionId((current) => current || nextProductionId);
-        if (nextProductionId) {
-          setSelectedOrderIds((current) =>
-            current.length
-              ? current
-              : labelExportItemsForProduction(next, nextProductionId)
-                  .slice(0, 1)
-                  .flatMap((item) => (item.order ? [item.order.id] : [])),
-          );
-        }
+        setSelectedOrderIds((current) =>
+          current.length ? current : initialSelection.selectedOrderIds,
+        );
       })
       .catch((err: unknown) => {
         setError(describeDataError(err, "Could not load labels."));
       });
-  }, []);
+  }, [requestedOrderId]);
 
   useEffect(() => {
     loadData();
@@ -155,16 +153,9 @@ export default function LabelExportPage() {
   async function resetDemo() {
     const next = await resetDemoCoffeeData();
     setData(next);
-    const preferred = preferredLabelExportProduction(next);
-    const nextProductionId = preferred?.id || "";
-    setProductionId(nextProductionId);
-    setSelectedOrderIds(
-      nextProductionId
-        ? labelExportItemsForProduction(next, nextProductionId)
-            .slice(0, 1)
-            .flatMap((item) => (item.order ? [item.order.id] : []))
-        : [],
-    );
+    const initialSelection = initialLabelExportSelection(next, requestedOrderId);
+    setProductionId(initialSelection.productionId);
+    setSelectedOrderIds(initialSelection.selectedOrderIds);
     setStatus("Demo data reset on this device.");
   }
 
@@ -285,14 +276,15 @@ export default function LabelExportPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
-              Label workstation
+              Fallback exports
             </p>
             <h1 className="mt-0.5 text-2xl font-black leading-tight tracking-normal text-black">
-              Export &amp; print
+              PNG &amp; CSV export
             </h1>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
-              Export a crew CSV for NIIMBOT batch templates, or save a print-ready
-              PNG for hero cups.
+              CTC Printer is the primary on-set print path. Use this screen for
+              fallback NIIMBOT app import, CSV batch templates, previews, and
+              test labels.
             </p>
           </div>
           <div className="rounded-lg border-2 border-black bg-white px-3 py-2 font-mono text-sm font-black text-black">
@@ -403,7 +395,7 @@ export default function LabelExportPage() {
                 Preview
               </h2>
               <Link href="/productions" className={`${secondaryButtonClass} min-h-10 px-3`}>
-                Jobs
+                Days
               </Link>
             </div>
 
@@ -451,7 +443,7 @@ export default function LabelExportPage() {
                   PNG hero
                 </div>
                 <p className="text-xs leading-5 text-zinc-600">
-                  Branded, print-ready cup label from the CTC renderer.
+                  Individual label asset for fallback NIIMBOT app import.
                 </p>
                 <div className="mt-1 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
                   <button
