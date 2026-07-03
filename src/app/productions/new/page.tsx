@@ -16,10 +16,8 @@ import type { CoffeeData } from "@/lib/types";
 export default function NewProductionPage() {
   const router = useRouter();
   const [data, setData] = useState<CoffeeData | null>(null);
-  const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
   const [form, setForm] = useState({
     name: "",
-    client_id: "",
     new_client_name: "",
     shoot_date: new Date().toISOString().slice(0, 10),
     location: "",
@@ -33,12 +31,7 @@ export default function NewProductionPage() {
     let mounted = true;
     loadCoffeeData()
       .then((next) => {
-        if (!mounted) return;
-        setData(next);
-        setForm((current) => ({
-          ...current,
-          client_id: next.clients[0]?.id || "",
-        }));
+        if (mounted) setData(next);
       })
       .catch((err: Error) => {
         if (mounted) setError(err.message);
@@ -52,35 +45,29 @@ export default function NewProductionPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!data || !form.name.trim() || saving) return;
-    if (clientMode === "existing" && !form.client_id) {
-      setError("Choose a client or create a new one.");
-      return;
-    }
-    if (clientMode === "new" && !form.new_client_name.trim()) {
-      setError("Enter a client name.");
-      return;
-    }
 
     setSaving(true);
     setError("");
     try {
+      // A production always needs a client for label branding; a blank field
+      // falls back to the day name (repeat names reuse the same client row).
       const { production } = await createProductionRecord(data, {
         ...form,
-        new_client_name:
-          clientMode === "new" ? form.new_client_name : undefined,
+        client_id: "",
+        new_client_name: form.new_client_name.trim() || form.name.trim(),
       });
       router.push(`/productions/${production.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create production.");
+      setError(err instanceof Error ? err.message : "Could not create the day.");
       setSaving(false);
     }
   }
 
   return (
-    <AppShell title="New production" requireAuth>
+    <AppShell title="New day" requireAuth>
       <form onSubmit={submit} className="grid gap-4">
         <Panel className="grid gap-4 p-5">
-          <Field label="Production name">
+          <Field label="Day name">
             <input
               className={inputClass}
               value={form.name}
@@ -96,57 +83,16 @@ export default function NewProductionPage() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-500 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setClientMode("existing")}
-              className={`min-h-11 rounded-md text-sm font-black ${
-                clientMode === "existing" ? "bg-black text-white" : "text-zinc-600"
-              }`}
-            >
-              Existing client
-            </button>
-            <button
-              type="button"
-              onClick={() => setClientMode("new")}
-              className={`min-h-11 rounded-md text-sm font-black ${
-                clientMode === "new" ? "bg-black text-white" : "text-zinc-600"
-              }`}
-            >
-              New client
-            </button>
-          </div>
-
-          {clientMode === "existing" ? (
-            <Field label="Client">
-              <select
-                className={inputClass}
-                value={form.client_id}
-                onChange={(event) =>
-                  setForm({ ...form, client_id: event.target.value })
-                }
-                required={clientMode === "existing"}
-              >
-                {data?.clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          ) : (
-            <Field label="Client name">
-              <input
-                className={inputClass}
-                value={form.new_client_name}
-                onChange={(event) =>
-                  setForm({ ...form, new_client_name: event.target.value })
-                }
-                placeholder="Client name"
-                required={clientMode === "new"}
-              />
-            </Field>
-          )}
+          <Field label="Client / brand (optional, shows on labels)">
+            <input
+              className={inputClass}
+              value={form.new_client_name}
+              onChange={(event) =>
+                setForm({ ...form, new_client_name: event.target.value })
+              }
+              placeholder="Client or brand name"
+            />
+          </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Shoot date">

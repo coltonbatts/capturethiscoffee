@@ -1,14 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAdminAppUser } from "@/lib/auth";
 import {
   isAuthDisabled,
   supabaseConfigError,
   type Database,
 } from "@/lib/supabase";
 
-const protectedPathPattern =
-  /^\/(people|clients|labels|productions\/new)(\/|$)/;
+const protectedPathPattern = /^\/(people|labels|productions\/new)(\/|$)/;
 
 export async function proxy(request: NextRequest) {
   if (isAuthDisabled) {
@@ -53,17 +51,14 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if ((!user || !isAdminAppUser(user)) && protectedPathPattern.test(pathname)) {
+  if (!user && protectedPathPattern.test(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Only admins get bounced off the login page. A signed-in non-admin stays
-  // here so the login page can explain that the account needs admin access,
-  // instead of silently looping back to a protected route.
-  if (user && isAdminAppUser(user) && pathname === "/login") {
+  if (user && pathname === "/login") {
     return NextResponse.redirect(new URL("/productions", request.url));
   }
 
@@ -74,7 +69,6 @@ export const config = {
   matcher: [
     "/productions/:path*",
     "/people/:path*",
-    "/clients/:path*",
     "/labels/:path*",
     "/login",
   ],

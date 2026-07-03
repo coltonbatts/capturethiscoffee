@@ -16,11 +16,10 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 ## What is in this MVP
 
 - Private demo login at `/login` when auth is enabled
-- Production list at `/productions`
-- Production creation at `/productions/new`
+- Shoot-day list at `/productions`
+- Day creation at `/productions/new` (optional client/brand name for label branding)
 - Runner dashboard at `/productions/[id]`
 - People at `/people`
-- Clients at `/clients`
 - Supabase Auth email/password when env vars are configured
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
@@ -62,10 +61,10 @@ The app redirects `/` to `/productions`.
    model the app actually relies on:
    - **Event-day runner access is token scoped** — a production share token can
      read only that production's runner payload through the app API.
-   - **Setup writes require an admin** — creating or editing clients, people,
-     productions, rosters, and new order drafts requires a signed-in user with
-     `app_metadata.admin = true` (`staff`/`role` are also accepted; see
-     `src/lib/auth.ts`).
+   - **Setup writes require sign-in** — creating or editing clients, people,
+     productions, rosters, and new order drafts requires any signed-in Supabase
+     user (since `20260703120000_authenticated_full_access.sql`; admin
+     app_metadata is no longer required).
    - **Live order updates are token scoped** — runners can update operational
      fields on existing orders only through a valid share token for that active
      production.
@@ -100,20 +99,19 @@ If auth is enabled or unset but either Supabase env var is missing, the app show
 
 ## Demo users
 
-Create admin users in the Supabase dashboard (email/password) or sign in once with Google and promote the new user:
+Create users in the Supabase dashboard (email/password) or have them sign in once with Google:
 
 1. Go to **Authentication > Users**.
-2. For email/password: click **Add user**, enter a demo email (for example `admin@example.com`), set a password, and confirm the user if your project requires it. For Google: sign in at `/login` once, then find the new user in this list.
-3. Set the user's **Raw app_metadata** to `{"admin": true}`. This is required for
-   anyone who needs to create or edit clients, people, productions, rosters, or
-   new order drafts. Without it, the user can sign in and read data but every
-   setup write fails with "Admin access required," and the app
-   proxy redirects them away from `/people`, `/clients`, `/labels`, and
-   `/productions/new`.
+2. For email/password: click **Add user**, enter an email, set a password, and confirm the user if your project requires it. For Google: sign in at `/login` once, then find the new user in this list.
+
+That's it — any signed-in user has full access (no app_metadata needed). Access
+control is invitation-based: keep public sign-ups disabled so only people you
+add can get in.
 
 Runners do not need an account for the day-of flow, but they do need a
 production share link. Anonymous visitors cannot read crew/order tables directly
-or update orders directly through Supabase. Generate a share token as an admin:
+or update orders directly through Supabase. Use the **Copy runner link** button
+on a production board, or generate a share token in SQL:
 
 ```sql
 select public.create_production_share_token(
@@ -128,7 +126,7 @@ The token authorizes only that production. It omits private person notes and
 dietary notes. It does include `usual_order` because the runner screen uses it
 as the operational prompt for confirming drinks quickly. Order edits are limited
 to operational drink/status fields on active productions.
-Keep public sign-ups disabled so only invited admins can be created.
+Keep public sign-ups disabled so only invited users can be created.
 
 Manual RLS checks after applying migrations:
 

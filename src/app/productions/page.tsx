@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ImageDown, Plus, RotateCcw } from "lucide-react";
+import { ImageDown, Plus, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
@@ -23,9 +23,12 @@ type ProductionCard = {
   client?: { name: string };
   orders: { status: OrderStatus }[];
   remaining: number;
-  activeLabels: number;
-  responded: number;
-  progress: number;
+};
+
+const statusRank: Record<Production["status"], number> = {
+  active: 0,
+  planning: 1,
+  complete: 2,
 };
 
 export default function ProductionsPage() {
@@ -53,7 +56,13 @@ export default function ProductionsPage() {
 
     return data.productions
       .slice()
-      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .sort((a, b) => {
+        const rank = statusRank[a.status] - statusRank[b.status];
+        if (rank !== 0) return rank;
+        const dateA = a.shoot_date || a.created_at;
+        const dateB = b.shoot_date || b.created_at;
+        return dateB.localeCompare(dateA);
+      })
       .map((production) => {
         const client = data.clients.find((item) => item.id === production.client_id);
         const orders = data.orders.filter(
@@ -61,27 +70,9 @@ export default function ProductionsPage() {
         );
         const remaining = orders.filter((order) => order.status === "not_asked").length;
 
-        const activeLabels = orders.filter((order) => order.status !== "no_order").length;
-        const responded = orders.filter((order) => order.status !== "not_asked").length;
-        const progress = orders.length ? Math.round((responded / orders.length) * 100) : 0;
-
-        return {
-          production,
-          client,
-          orders,
-          remaining,
-          activeLabels,
-          responded,
-          progress,
-        };
+        return { production, client, orders, remaining };
       });
   }, [data]);
-
-  const featuredCard = useMemo(() => chooseFeaturedCard(cards), [cards]);
-  const otherCards = useMemo(
-    () => cards.filter((card) => card.production.id !== featuredCard?.production.id),
-    [cards, featuredCard],
-  );
 
   async function resetDemoData() {
     const next = await resetDemoCoffeeData();
@@ -90,7 +81,7 @@ export default function ProductionsPage() {
 
   return (
     <AppShell
-      title="Jobs"
+      title="Days"
       actions={
         isAdmin ? (
           <Link href="/productions/new" className={primaryButtonClass}>
@@ -102,9 +93,9 @@ export default function ProductionsPage() {
     >
       <section className="mb-4 grid gap-3 border-y border-black bg-white py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
-          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Orders</h1>
+          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Shoot days</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
-            Review the active coffee run, update order status, and export labels.
+            Open a day to update who&apos;s on set and their orders, then export labels.
           </p>
         </div>
         <div className="grid gap-2 md:w-[220px]">
@@ -140,71 +131,21 @@ export default function ProductionsPage() {
             <Panel key={item} className="h-32 animate-pulse bg-zinc-100 p-4" />
           ))}
         </div>
-      ) : featuredCard ? (
-        <div className="grid gap-4">
-          <Link
-            href={`/productions/${featuredCard.production.id}`}
-            className="group block rounded-xl border border-black bg-black p-4 text-white transition active:translate-y-px md:p-5"
-          >
-            <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-              <div className="min-w-0">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-md border border-white/30 px-2.5 py-1 text-xs font-black text-white">
-                  <CheckCircle2 size={14} aria-hidden="true" />
-                  Client review path
-                </div>
-                <h2 className="text-2xl font-black leading-tight">
-                  {featuredCard.production.name}
-                </h2>
-                <p className="mt-1 text-sm font-medium leading-6 text-zinc-300">
-                  {productionDetail(featuredCard)}
-                </p>
-              </div>
-              <div className="grid gap-2 text-sm md:min-w-64">
-                <MetricRow label="Asked" value={`${featuredCard.progress}%`} />
-                <MetricRow label="Orders" value={`${featuredCard.responded}/${featuredCard.orders.length}`} />
-                <MetricRow label="Labels" value={`${featuredCard.activeLabels} active`} />
-              </div>
-            </div>
-            <div className="mt-5 h-1.5 overflow-hidden rounded-sm bg-white/20">
-              <div
-                className="h-full bg-white transition-[width]"
-                style={{ width: `${featuredCard.progress}%` }}
-              />
-            </div>
-            <div className="mt-4 flex items-center justify-between gap-3 text-sm font-black">
-              <span>{featuredCard.remaining ? `${featuredCard.remaining} left to ask` : "Ready for handoff review"}</span>
-              <span className="inline-flex items-center gap-1">
-                Open run
-                <ArrowRight size={16} aria-hidden="true" className="transition group-hover:translate-x-0.5" />
-              </span>
-            </div>
-          </Link>
-
-          {otherCards.length ? (
-            <section className="grid gap-2">
-              <div className="grid gap-1 sm:flex sm:items-center sm:justify-between sm:gap-3">
-                <h2 className="text-sm font-black uppercase tracking-normal text-zinc-600">
-                  Other jobs
-                </h2>
-                <span className="text-sm font-medium text-zinc-500">
-                  Keep these out of the client walkthrough unless needed.
-                </span>
-              </div>
-              {otherCards.map((card) => (
-                <ProductionListItem key={card.production.id} card={card} />
-              ))}
-            </section>
-          ) : null}
+      ) : cards.length ? (
+        <div className="grid gap-2">
+          {cards.map((card) => (
+            <ProductionListItem key={card.production.id} card={card} />
+          ))}
         </div>
       ) : (
         <EmptyState
-          title="No jobs yet"
-          description="Create a production to start confirming orders."
+          title="No days yet"
+          description="Create a shoot day to start confirming orders."
           action={
             isAdmin ? (
               <Link href="/productions/new" className={primaryButtonClass}>
                 <Plus size={18} aria-hidden="true" />
-                New job
+                New day
               </Link>
             ) : undefined
           }
@@ -225,33 +166,19 @@ function ProductionListItem({ card }: { card: ProductionCard }) {
           <h2 className="truncate text-lg font-semibold">{card.production.name}</h2>
           <p className="truncate text-sm text-zinc-600">{productionDetail(card)}</p>
         </div>
-        <span className="shrink-0 rounded-md border border-zinc-500 px-2.5 py-1 text-sm font-black text-zinc-900">
-          {card.remaining ? `${card.remaining} left` : `${card.orders.length} done`}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {card.production.status !== "complete" ? (
+            <span className="rounded-md border border-black bg-black px-2.5 py-1 text-xs font-black uppercase text-white">
+              {card.production.status === "active" ? "Active" : "Planning"}
+            </span>
+          ) : null}
+          <span className="rounded-md border border-zinc-500 px-2.5 py-1 text-sm font-black text-zinc-900">
+            {card.remaining ? `${card.remaining} left` : `${card.orders.length} done`}
+          </span>
+        </div>
       </div>
     </Link>
   );
-}
-
-function MetricRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-white/20 px-3 py-2">
-      <span className="text-zinc-300">{label}</span>
-      <span className="font-black text-white">{value}</span>
-    </div>
-  );
-}
-
-function chooseFeaturedCard(cards: ProductionCard[]) {
-  return cards
-    .slice()
-    .sort((a, b) => reviewScore(b) - reviewScore(a))[0];
-}
-
-function reviewScore(card: ProductionCard) {
-  const placeholderPenalty = /\b(test|cool guys?|demo)\b/i.test(card.production.name) ? -20 : 0;
-  const statusScore = card.production.status === "active" ? 30 : card.production.status === "planning" ? 15 : 0;
-  return statusScore + card.orders.length * 3 + card.activeLabels * 2 + card.progress / 10 + placeholderPenalty;
 }
 
 function productionDetail(card: ProductionCard) {

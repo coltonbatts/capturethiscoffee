@@ -114,7 +114,7 @@ export default function ProductionDashboardPage() {
 
   if (!production) {
     return (
-      <AppShell title="Production">
+      <AppShell title="Day">
         {state === "loading" ? (
           <div className="grid gap-4">
             <Panel className="skeleton h-28 rounded-xl" />
@@ -122,7 +122,7 @@ export default function ProductionDashboardPage() {
           </div>
         ) : state === "error" ? (
           <EmptyState
-            title="Couldn't load this production"
+            title="Couldn't load this day"
             description={error}
             action={
               <button type="button" onClick={reload} className={secondaryButtonClass}>
@@ -131,7 +131,7 @@ export default function ProductionDashboardPage() {
             }
           />
         ) : (
-          <EmptyState title="Production not found" />
+          <EmptyState title="Day not found" />
         )}
       </AppShell>
     );

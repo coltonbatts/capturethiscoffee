@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -16,13 +16,15 @@ Capture This Coffee is a mobile-first coffee-runner app for production shoots. I
 
 Primary users:
 
-- Admin: prepares clients, people, photos, productions, and rosters.
+- Team member (any signed-in user): prepares people, photos, shoot days, and rosters.
 - Runner: works a live production through drink statuses on a phone.
 - PA / label operator: prints labels via the **CTC Printer** iOS app (`mobile/`) or exports from `/labels`.
 
+The app has two primary sections — **Day** (`/productions`: the shoot day, everyone on set and what they ordered) and **Labels** (`/labels`) — plus **People** (`/people`) as the crew database. The Clients admin UI was removed 2026-07-03; the `clients` table remains and a day's optional client/brand name is used only for label branding.
+
 Core workflow:
 
-1. Admin signs in and creates client/people/production/roster.
+1. A team member signs in and creates people/day/roster.
 2. Runner opens a production board and confirms or edits drinks.
 3. Runner moves orders through `not_asked`, `confirmed`, `ordered`, `picked_up`, `delivered`, or `no_order`.
 4. Runner uses the Summary tab for coffee-shop handoff.
@@ -91,7 +93,7 @@ Server API routes also require `SUPABASE_SERVICE_ROLE_KEY`. That key is used onl
 
 ```text
 src/proxy.ts
-  Next 16 proxy. Gates admin setup routes behind Supabase admin auth.
+  Next 16 proxy. Gates setup routes behind Supabase sign-in (any user).
 
 src/app/
   layout.tsx
@@ -104,8 +106,6 @@ src/app/
   productions/[id]/use-coffee-store.ts
   productions/[id]/use-roster-view.ts
   people/page.tsx
-  clients/page.tsx
-  clients/[id]/page.tsx
   labels/page.tsx
   api/public/productions/[id]/route.ts
   api/public/orders/[id]/route.ts
@@ -141,10 +141,13 @@ supabase/
   migrations/*.sql
 
 tests/
+  auth.test.ts
   label-copy.test.ts
   label-export.test.ts
   order-summary.test.ts
+  printer-queue.test.ts
   production-share.test.ts
+  share-links.test.ts
 ```
 
 ## Data model
@@ -171,11 +174,11 @@ Important fields:
 
 ## Auth and access model
 
-Admin access:
+Team access (since 2026-07-03):
 
-- Admin users are Supabase Auth users with app metadata such as `{"admin": true}`.
-- `src/lib/auth.ts` recognizes admin/staff metadata variants.
-- `src/proxy.ts` protects `/people`, `/clients`, `/labels`, and `/productions/new`.
+- Any signed-in Supabase Auth user has full access. Admin/staff app metadata is no longer required or consulted.
+- `src/lib/auth.ts` keeps the `isAdminAppUser` name for compatibility, but it now just means "signed in" (same for the `isAdmin` flag from `useAppAuth`).
+- `src/proxy.ts` protects `/people`, `/labels`, and `/productions/new` behind sign-in.
 
 Runner access:
 
@@ -194,7 +197,7 @@ Supabase RLS:
 
 - Base schema and policies are in `supabase/schema.sql`.
 - Apply migrations in `supabase/migrations` in filename order.
-- Current intended posture: anonymous direct table reads/writes are revoked; admins manage setup data; runner access goes through token-scoped API routes.
+- Current intended posture: anonymous direct table reads/writes are revoked; any authenticated user manages all data (`20260703120000_authenticated_full_access.sql`); runner access goes through token-scoped API routes. `public.current_user_is_admin()` stays defined in case access needs re-tightening later.
 
 ## UI and design conventions
 
@@ -276,7 +279,7 @@ Before real client use:
 - Confirm `SUPABASE_SERVICE_ROLE_KEY` is set for public API routes.
 - Confirm RLS is active.
 - Confirm anonymous direct table reads/writes fail.
-- Confirm admin users can manage setup data.
+- Confirm signed-in users can manage setup data (apply `20260703120000_authenticated_full_access.sql`).
 - Confirm share-token runner links work on a second device.
 
 ### P1 - Reduce data-layer complexity

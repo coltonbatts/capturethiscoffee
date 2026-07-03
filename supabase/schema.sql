@@ -194,61 +194,62 @@ drop policy if exists "Staff can manage clients" on clients;
 drop policy if exists "Authenticated users can manage clients" on clients;
 drop policy if exists "Public can read active clients" on clients;
 drop policy if exists "Admins can manage clients" on clients;
-create policy "Admins can manage clients"
+create policy "Authenticated users can manage clients"
 on clients for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage people" on people;
 drop policy if exists "Staff can manage people" on people;
 drop policy if exists "Authenticated users can manage people" on people;
 drop policy if exists "Public can read active people" on people;
 drop policy if exists "Admins can manage people" on people;
-create policy "Admins can manage people"
+create policy "Authenticated users can manage people"
 on people for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage client people" on client_people;
 drop policy if exists "Staff can manage client people" on client_people;
 drop policy if exists "Authenticated users can manage client people" on client_people;
 drop policy if exists "Admins can manage client people" on client_people;
-create policy "Admins can manage client people"
+create policy "Authenticated users can manage client people"
 on client_people for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage productions" on productions;
 drop policy if exists "Staff can manage productions" on productions;
 drop policy if exists "Authenticated users can manage productions" on productions;
 drop policy if exists "Public can read visible productions" on productions;
 drop policy if exists "Admins can manage productions" on productions;
-create policy "Admins can manage productions"
+create policy "Authenticated users can manage productions"
 on productions for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Admins can manage production share tokens" on production_share_tokens;
-create policy "Admins can manage production share tokens"
+drop policy if exists "Authenticated users can manage production share tokens" on production_share_tokens;
+create policy "Authenticated users can manage production share tokens"
 on production_share_tokens for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage production roster" on production_roster;
 drop policy if exists "Staff can manage production roster" on production_roster;
 drop policy if exists "Authenticated users can manage production roster" on production_roster;
 drop policy if exists "Public can read roster for visible productions" on production_roster;
 drop policy if exists "Admins can manage production roster" on production_roster;
-create policy "Admins can manage production roster"
+create policy "Authenticated users can manage production roster"
 on production_roster for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Internal staff can manage orders" on orders;
 drop policy if exists "Staff can manage orders" on orders;
@@ -256,21 +257,21 @@ drop policy if exists "Authenticated users can manage orders" on orders;
 drop policy if exists "Public can read orders for visible productions" on orders;
 drop policy if exists "Public can update operational order fields" on orders;
 drop policy if exists "Admins can manage orders" on orders;
-create policy "Admins can manage orders"
+create policy "Authenticated users can manage orders"
 on orders for all
 to authenticated
-using (public.current_user_is_admin())
-with check (public.current_user_is_admin());
+using (true)
+with check (true);
 
 drop policy if exists "Public can read person photos" on storage.objects;
 drop policy if exists "Staff can manage person photos" on storage.objects;
 drop policy if exists "Authenticated users can manage person photos" on storage.objects;
 drop policy if exists "Admins can manage person photos" on storage.objects;
-create policy "Admins can manage person photos"
+create policy "Authenticated users can manage person photos"
 on storage.objects for all
 to authenticated
-using (bucket_id = 'person-photos' and public.current_user_is_admin())
-with check (bucket_id = 'person-photos' and public.current_user_is_admin());
+using (bucket_id = 'person-photos')
+with check (bucket_id = 'person-photos');
 
 create or replace function public.create_production_share_token(
   p_production_id uuid,
@@ -285,8 +286,8 @@ as $$
 declare
   v_token text;
 begin
-  if public.current_user_is_admin() is not true then
-    raise exception 'Admin access required';
+  if auth.uid() is null and auth.role() <> 'service_role' then
+    raise exception 'Authentication required';
   end if;
 
   if not exists (

@@ -3,31 +3,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const AUTH_ACCESS_MESSAGE = "Sign in to continue.";
 
-type AppMetadata = {
-  admin?: unknown;
-  staff?: unknown;
-  role?: unknown;
-  roles?: unknown;
-};
-
 export function isAuthenticatedAppUser(user: User | null | undefined): boolean {
   return Boolean(user);
 }
 
+// Every signed-in user has full access (2026-07-03). app_metadata admin/staff
+// flags are no longer consulted; the name is kept so existing call sites and
+// the `isAdmin` provider flag keep working without churn.
 export function isAdminAppUser(user: User | null | undefined): boolean {
-  if (!user) return false;
-
-  const metadata = user.app_metadata as AppMetadata;
-  const roles = Array.isArray(metadata.roles) ? metadata.roles : [];
-
-  return (
-    metadata.admin === true ||
-    metadata.staff === true ||
-    metadata.role === "admin" ||
-    metadata.role === "staff" ||
-    roles.includes("admin") ||
-    roles.includes("staff")
-  );
+  return isAuthenticatedAppUser(user);
 }
 
 export async function getVerifiedAppUser(supabase: SupabaseClient) {
@@ -47,10 +31,6 @@ export async function requireFreshAppSession(supabase: SupabaseClient) {
   const user = await getVerifiedAppUser(supabase);
   if (!user) {
     throw new Error(AUTH_ACCESS_MESSAGE);
-  }
-
-  if (!isAdminAppUser(user)) {
-    throw new Error("Admin access required.");
   }
 }
 

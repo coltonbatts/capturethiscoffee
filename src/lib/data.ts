@@ -348,6 +348,13 @@ export async function updatePersonRecord(
   return next;
 }
 
+function findClientByName(data: CoffeeData, name: string) {
+  const normalized = name.trim().toLowerCase();
+  return data.clients.find(
+    (item) => item.active && item.name.trim().toLowerCase() === normalized,
+  );
+}
+
 export async function createProductionRecord(
   current: CoffeeData,
   input: NewProductionInput,
@@ -365,18 +372,24 @@ export async function createProductionRecord(
     let client = current.clients.find((item) => item.id === clientId);
 
     if (newClientName) {
-      const { data, error } = await supabase
-        .from("clients")
-        .insert({
-          name: newClientName,
-          active: true,
-        })
-        .select("*")
-        .single();
+      const existing = findClientByName(current, newClientName);
+      if (existing) {
+        client = existing;
+        clientId = existing.id;
+      } else {
+        const { data, error } = await supabase
+          .from("clients")
+          .insert({
+            name: newClientName,
+            active: true,
+          })
+          .select("*")
+          .single();
 
-      if (error) throwSupabaseWriteError(error);
-      client = mapClient(data);
-      clientId = client.id;
+        if (error) throwSupabaseWriteError(error);
+        client = mapClient(data);
+        clientId = client.id;
+      }
     }
 
     const { data: productionRow, error: productionError } = await supabase
@@ -445,15 +458,21 @@ export async function createProductionRecord(
   let client = nextData.clients.find((item) => item.id === clientId);
 
   if (newClientName) {
-    client = {
-      id: createId("client"),
-      name: newClientName,
-      notes: "",
-      active: true,
-      created_at: now,
-    };
-    nextData.clients.unshift(client);
-    clientId = client.id;
+    const existing = findClientByName(nextData, newClientName);
+    if (existing) {
+      client = existing;
+      clientId = existing.id;
+    } else {
+      client = {
+        id: createId("client"),
+        name: newClientName,
+        notes: "",
+        active: true,
+        created_at: now,
+      };
+      nextData.clients.unshift(client);
+      clientId = client.id;
+    }
   }
 
   const production: Production = {
