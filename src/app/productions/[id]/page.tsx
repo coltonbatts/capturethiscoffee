@@ -272,6 +272,7 @@ export default function ProductionDashboardPage() {
     <AppShell title={production.name}>
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
         <DayHeader
+          productionName={production.name}
           detail={detail}
           runnerName={production.runner_name}
           progress={view.progress}
