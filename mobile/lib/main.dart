@@ -3,6 +3,8 @@
 // Phase 2: load a production share link, fetch server-rendered label PNGs,
 // print over BLE, and mark label_printed via the public order PATCH route.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:niim_blue_flutter/niim_blue_flutter.dart';
@@ -18,6 +20,7 @@ const int kDensity = 3;
 const int kLabelType = 1;
 
 const _sessionPrefsKey = 'ctc_production_session';
+const _queueRefreshInterval = Duration(seconds: 10);
 
 void main() => runApp(const PrinterApp());
 
@@ -44,7 +47,7 @@ class PrinterHome extends StatefulWidget {
   State<PrinterHome> createState() => _PrinterHomeState();
 }
 
-class _PrinterHomeState extends State<PrinterHome> {
+class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   final NiimbotBluetoothClient _client = NiimbotBluetoothClient();
   final List<String> _log = [];
   final _linkController = TextEditingController();
@@ -52,6 +55,9 @@ class _PrinterHomeState extends State<PrinterHome> {
   ProductionSession? _session;
   CtcApi? _api;
   PrinterQueue? _queue;
+  Timer? _queueRefreshTimer;
+  DateTime? _lastQueueRefreshAt;
+  String _queueSignature = '';
   bool _showPrinted = false;
   bool _connected = false;
   bool _busy = false;
@@ -60,14 +66,24 @@ class _PrinterHomeState extends State<PrinterHome> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _restoreSession();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopQueueRefreshTimer();
     _linkController.dispose();
     _client.disconnect();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _session != null) {
+      unawaited(_refreshQueue(silent: true));
+    }
   }
 
   Future<void> _restoreSession() async {
@@ -79,6 +95,7 @@ class _PrinterHomeState extends State<PrinterHome> {
       _loadingSession = false;
     });
     if (saved != null) {
+      _startQueueRefreshTimer();
       await _refreshQueue(silent: true);
     }
   }
@@ -127,18 +144,36 @@ class _PrinterHomeState extends State<PrinterHome> {
     setState(() {
       _session = session;
       _api = CtcApi(session);
+      _queueSignature = '';
     });
+    _startQueueRefreshTimer();
   }
 
   Future<void> _clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_sessionPrefsKey);
+    _stopQueueRefreshTimer();
     setState(() {
       _session = null;
       _api = null;
       _queue = null;
+      _lastQueueRefreshAt = null;
+      _queueSignature = '';
       _linkController.clear();
     });
+  }
+
+  void _startQueueRefreshTimer() {
+    _stopQueueRefreshTimer();
+    _queueRefreshTimer = Timer.periodic(_queueRefreshInterval, (_) {
+      if (!mounted || _busy || _api == null) return;
+      unawaited(_refreshQueue(silent: true));
+    });
+  }
+
+  void _stopQueueRefreshTimer() {
+    _queueRefreshTimer?.cancel();
+    _queueRefreshTimer = null;
   }
 
   Future<void> _linkProduction() => _run('Link production', () async {
@@ -158,8 +193,24 @@ class _PrinterHomeState extends State<PrinterHome> {
 
     Future<void> action() async {
       final queue = await api.fetchQueue();
-      setState(() => _queue = queue);
-      _logLine('Queue: ${queue.labels.length} labels for ${queue.productionName}.');
+      if (!mounted) return;
+
+      final nextSignature = _signatureForQueue(queue);
+      final changed = nextSignature != _queueSignature;
+      final pendingCount =
+          queue.labels.where((label) => !label.labelPrinted).length;
+
+      setState(() {
+        _queue = queue;
+        _queueSignature = nextSignature;
+        _lastQueueRefreshAt = DateTime.now();
+      });
+
+      if (!silent || changed) {
+        _logLine(
+          'Queue: ${queue.labels.length} labels, $pendingCount to print for ${queue.productionName}.',
+        );
+      }
     }
 
     if (silent) {
@@ -172,6 +223,18 @@ class _PrinterHomeState extends State<PrinterHome> {
     }
 
     await _run('Refresh queue', action);
+  }
+
+  String _signatureForQueue(PrinterQueue queue) => queue.labels
+      .map((label) =>
+          '${label.orderId}|${label.drink}|${label.status}|${label.labelPrinted}')
+      .join('\n');
+
+  String _timeLabel(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    final second = value.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 
   Future<void> _printPage(PrintPage page) async {
@@ -194,7 +257,8 @@ class _PrinterHomeState extends State<PrinterHome> {
     }
   }
 
-  Future<void> _printLabel(QueueLabel item) => _run('Print ${item.personName}', () async {
+  Future<void> _printLabel(QueueLabel item) =>
+      _run('Print ${item.personName}', () async {
         if (!_connected) {
           throw Exception('Connect to the printer first.');
         }
@@ -282,6 +346,9 @@ class _PrinterHomeState extends State<PrinterHome> {
     final visible = _visibleLabels;
     final pendingCount =
         queue?.labels.where((label) => !label.labelPrinted).length ?? 0;
+    final lastRefreshed = _lastQueueRefreshAt == null
+        ? 'Not refreshed yet'
+        : 'Updated ${_timeLabel(_lastQueueRefreshAt!)}';
 
     return Scaffold(
       appBar: AppBar(
@@ -325,11 +392,16 @@ class _PrinterHomeState extends State<PrinterHome> {
                   label: const Text('Disconnect'),
                 ),
                 FilterChip(
-                  label: Text(_showPrinted ? 'Showing all' : '$pendingCount to print'),
+                  label: Text(
+                      _showPrinted ? 'Showing all' : '$pendingCount to print'),
                   selected: _showPrinted,
                   onSelected: _busy
                       ? null
                       : (value) => setState(() => _showPrinted = value),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.sync, size: 18),
+                  label: Text('Auto-refresh on · $lastRefreshed'),
                 ),
               ],
             ),
@@ -366,10 +438,12 @@ class _PrinterHomeState extends State<PrinterHome> {
                         subtitle: Text('${item.drink}\n${item.group}'),
                         isThreeLine: true,
                         trailing: item.labelPrinted
-                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            ? const Icon(Icons.check_circle,
+                                color: Colors.green)
                             : FilledButton(
-                                onPressed:
-                                    _busy || !_connected ? null : () => _printLabel(item),
+                                onPressed: _busy || !_connected
+                                    ? null
+                                    : () => _printLabel(item),
                                 child: const Text('Print'),
                               ),
                       );

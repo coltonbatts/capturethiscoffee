@@ -70,7 +70,11 @@ export async function GET(
     const queue = buildPrinterQueue(data, production.id);
     if (!queue) throw new ApiError("Production not found.", 404);
 
-    return Response.json(queue);
+    return Response.json(queue, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
     if (error instanceof ShareTokenError) {
       return Response.json({ error: error.message }, { status: error.status });

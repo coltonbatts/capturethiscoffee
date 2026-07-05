@@ -79,20 +79,23 @@ class CtcApi {
       );
 
   Future<PrinterQueue> fetchQueue() async {
-    final response = await http.get(_queueUri());
+    final response = await http.get(_queueUri(), headers: _noCacheHeaders);
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode != 200) {
-      throw Exception(body['error'] as String? ?? 'Could not load label queue.');
+      throw Exception(
+          body['error'] as String? ?? 'Could not load label queue.');
     }
     return PrinterQueue.fromJson(body);
   }
 
   Future<Uint8List> fetchLabelPng(String orderId, String designId) async {
-    final response = await http.get(_labelUri(orderId, designId));
+    final response =
+        await http.get(_labelUri(orderId, designId), headers: _noCacheHeaders);
     if (response.statusCode != 200) {
       try {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
-        throw Exception(body['error'] as String? ?? 'Could not load label PNG.');
+        throw Exception(
+            body['error'] as String? ?? 'Could not load label PNG.');
       } catch (_) {
         throw Exception('Could not load label PNG (${response.statusCode}).');
       }
@@ -112,7 +115,13 @@ class CtcApi {
     );
     if (response.statusCode != 200) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      throw Exception(body['error'] as String? ?? 'Could not mark label printed.');
+      throw Exception(
+          body['error'] as String? ?? 'Could not mark label printed.');
     }
   }
 }
+
+const _noCacheHeaders = {
+  'Cache-Control': 'no-cache',
+  'Pragma': 'no-cache',
+};
