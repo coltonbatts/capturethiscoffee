@@ -526,8 +526,28 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                         subtitle: Text('${item.drink}\n${item.group}'),
                         isThreeLine: true,
                         trailing: item.labelPrinted
-                            ? const Icon(Icons.check_circle,
-                                color: Colors.green)
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.green),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: _busy || !_connected
+                                        ? null
+                                        : () => _printLabel(item),
+                                    icon: const Icon(Icons.print, size: 16),
+                                    label: const Text('Reprint'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                ],
+                              )
                             : FilledButton(
                                 onPressed: _busy || !_connected
                                     ? null
