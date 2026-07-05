@@ -41,7 +41,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             <Link
               href="/labels"
               className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:border-black hover:bg-zinc-100 hover:text-black"
-              aria-label="Open fallback label exports"
+              aria-label="Open label printing"
             >
               <Printer size={18} aria-hidden="true" />
             </Link>

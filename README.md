@@ -1,6 +1,6 @@
 # Capture This Coffee
 
-Mobile-first coffee runner app for Capture This production shoots. Built for fast scanning on set—not internal ops docs.
+Mobile-first coffee runner app for Capture This production shoots. Put today's people in the roster, collect their drinks, print their labels. Built for fast scanning on set—not internal ops docs.
 
 ## Design
 
@@ -23,10 +23,10 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Supabase Auth email/password when env vars are configured
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
-- Copyable coffee summaries and printed-label status on the runner board
+- Drink-collection progress ("12 of 20 drinks in") and printed-label state on the day board
 - Native iOS printer app in `mobile/` — the primary on-set path for direct BLE
   printing to NIIMBOT M2_H
-- Fallback/advanced NIIMBOT PNG and CSV export from `/labels`
+- Batch NIIMBOT PNG and CSV export from `/labels` (whole day preselected; unprinted quick-select)
 
 ## Day-of resilience
 
@@ -37,7 +37,7 @@ mid-shoot:
   signal, then try again" message instead of raw fetch errors, and the runner
   dashboard and `/labels` workstation both have a **Try again** retry when the
   initial load fails.
-- Status taps on the dashboard are optimistic: the change shows immediately,
+- Order taps on the day board are optimistic: the change shows immediately,
   and a failed save rolls back just that one order with an error toast.
 - CTC Printer is the primary print path. `/labels` remains available for
   fallback PNG/CSV export; if native phone sharing is not available, the normal

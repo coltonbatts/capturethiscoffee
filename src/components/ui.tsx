@@ -1,58 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Ban, Check, CheckCheck, Circle, Package, Timer } from "lucide-react";
-import type { OrderStatus, Person } from "@/lib/types";
+import type { Person } from "@/lib/types";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
-
-const statusStyles: Record<OrderStatus, string> = {
-  not_asked: "bg-white text-zinc-600 border-zinc-400 border-dashed",
-  confirmed: "bg-white text-black border-black",
-  ordered: "bg-accent text-white border-accent",
-  picked_up: "bg-black text-white border-black",
-  delivered: "bg-zinc-900/5 text-zinc-800 border-zinc-500",
-  no_order: "bg-white text-red-700 border-red-700",
-};
-
-const statusIcons: Record<OrderStatus, typeof Circle> = {
-  not_asked: Circle,
-  confirmed: Check,
-  ordered: Timer,
-  picked_up: Package,
-  delivered: CheckCheck,
-  no_order: Ban,
-};
-
-/** Left-edge rail color per status, used on roster cards for at-a-glance scanning. */
-export const statusRailStyles: Record<OrderStatus, string> = {
-  not_asked: "bg-zinc-300",
-  confirmed: "bg-black",
-  ordered: "bg-accent",
-  picked_up: "bg-black",
-  delivered: "bg-zinc-400",
-  no_order: "bg-red-700",
-};
-
-export const statusLabels: Record<OrderStatus, string> = {
-  not_asked: "Not asked",
-  confirmed: "Confirmed",
-  ordered: "Ordered",
-  picked_up: "Picked up",
-  delivered: "Delivered",
-  no_order: "No order",
-};
-
-export function StatusChip({ status }: { status: OrderStatus }) {
-  const Icon = statusIcons[status];
-  return (
-    <span
-      className={`inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-black leading-none ${statusStyles[status]}`}
-    >
-      <Icon size={12} strokeWidth={3} aria-hidden="true" />
-      {statusLabels[status]}
-    </span>
-  );
-}
 
 export function Avatar({ person }: { person: Person }) {
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);

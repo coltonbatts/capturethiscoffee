@@ -1,13 +1,14 @@
 # Capture This Coffee SOP
 
-Last updated: 2026-07-03
+Last updated: 2026-07-05
 
 ## Purpose
 
-Capture This Coffee is the live coffee order system for a production day. It
-tracks clients, people, productions, crew drink orders, order status, and label
-asset export. The goal is simple: every person gets the right drink, the runner
-knows what is next, and label creation does not require a laptop print station.
+Capture This Coffee is the drink-order tool for a production day. The whole
+workflow is one sentence: put today's people on the roster, collect their
+drinks, print their labels. Each roster person either still needs their drink
+order taken, has a drink captured, or is marked "no drink." Once drinks are
+captured, labels print as a batch.
 
 ## Scope
 
@@ -86,13 +87,10 @@ The runner operates the day-of coffee board.
 Responsibilities:
 
 - Open the active production.
-- Search for people.
-- Confirm or edit drink orders.
+- Search for people, or filter to "Needs order."
+- Take each person's drink order, or mark "No drink" if they decline.
 - Add guests when needed.
-- Move orders through the correct statuses.
-- Use the Summary tab for coffee-shop handoff.
-- Watch printed/not-printed state and coordinate with the label operator when
-  physical labels are required.
+- Coordinate with the label operator once drinks are captured.
 
 ### PA / Label Operator
 
@@ -173,12 +171,11 @@ On the device the runner will use:
 
 1. Open the active production.
 2. Search for a known person.
-3. Edit or confirm their drink.
-4. Mark the order ordered.
-5. Mark the order picked up.
-6. Mark the order delivered.
-7. Quick-add a guest and save a simple drink.
-8. Open the Summary tab and confirm copy/paste output is useful.
+3. Tap **Take order**, enter a drink, and save.
+4. Mark another person **No drink** and confirm the progress count updates.
+5. Quick-add a guest and save a simple drink.
+6. Confirm the header shows the captured count and the **Print labels** batch
+   action.
 
 ### 5. Verify CTC Printer
 
@@ -206,11 +203,11 @@ flow in [label-image-export.md](label-image-export.md).
 ### Runner
 
 - Open the active production on the runner device.
-- Confirm search works.
-- Confirm status taps save.
+- Confirm search and the "Needs order" filter work.
+- Confirm taking an order saves.
 - Confirm quick-add works if guests are expected.
-- Keep the Summary tab available for coffee-shop ordering.
-- Watch the printed/not-printed badge when coordinating with the label operator.
+- Watch the captured count and printed badges when coordinating with the label
+  operator.
 
 ### Label Operator
 
@@ -232,12 +229,14 @@ On the production page:
 4. Add a clear name and group.
 5. Add a photo only if it helps identification and does not slow the line.
 
-### 2. Confirm the Drink
+### 2. Take the Order
 
-1. Confirm the current drink with the person.
-2. Edit the drink if needed.
-3. Keep the drink text short enough to read on a label.
-4. Add notes only when they prevent a real mistake.
+1. Tap **Take order** (the editor prefills from their usual order).
+2. Confirm the drink with the person and edit as needed.
+3. Save. The person now counts as captured.
+4. If they don't want anything, tap **No drink** instead.
+5. Keep the drink text short enough to read on a label.
+6. Add notes only when they prevent a real mistake.
 
 Good drink text examples:
 
@@ -246,34 +245,19 @@ Good drink text examples:
 - `Iced vanilla latte, almond`
 - `Matcha, oat, light ice`
 
-### 3. Move the Order Through Statuses
+### 3. Watch the Progress Count
 
-Use statuses consistently:
+The header shows drinks captured out of the roster total, plus who still needs
+an order. Use the "Needs order" filter to sweep the remaining people. The day
+is collected when everyone is either captured or marked no drink.
 
-- `Not asked`: Drink has not been confirmed yet.
-- `Confirmed`: Drink exists but has not been ordered yet.
-- `Ordered`: Drink has been sent to the coffee shop or runner queue.
-- `Picked up`: Drink has been received from the coffee shop.
-- `Delivered`: Drink has reached the person.
-
-Only mark a drink delivered after handoff.
-
-### 4. Use Summary for Coffee-Shop Handoff
-
-Use the Summary tab when sending the grouped order to the coffee shop.
-
-Before sending:
-
-- Check for duplicates.
-- Check milk alternatives.
-- Check hot versus iced.
-- Check guest names.
-- Check any high-risk notes, such as decaf or allergies.
-
-### 5. Print Labels
+### 4. Print Labels
 
 Use labels when physical cup tracking or the Capture This Coffee brand moment is
 needed.
+
+Printing is batch-oriented: the queue and the `/labels` screen both cover every
+captured drink for the day, and "unprinted" selection keeps reprints cheap.
 
 From CTC Printer:
 
@@ -281,8 +265,11 @@ From CTC Printer:
 2. Confirm CTC Printer is linked to the runner share URL.
 3. Refresh the queue.
 4. Print each pending label.
-5. Confirm the web runner board shows the printed badge.
+5. Confirm the web day board shows the printed badge.
 6. Inspect the physical label.
+
+From the web (signed-in), tap **Print labels** on the production page to open
+the batch on `/labels` with every captured drink preselected.
 
 If CTC Printer is unavailable, use `/labels` for PNG or CSV fallback export.
 Do not assume the current physical media is verified until a test print
@@ -335,8 +322,8 @@ confirms it.
 
 After the last drink run:
 
-1. Confirm all delivered drinks are marked delivered.
-2. Export or copy any needed Summary information.
+1. Confirm everyone on the roster is captured or marked no drink.
+2. Export any label assets still needed.
 3. Note any duplicate people, missing photos, bad drink names, label media
    issues, or workflow gaps.
 4. Power down the NIIMBOT.
@@ -368,8 +355,7 @@ After the last drink run:
 - [ ] Signed-in operator can sign in.
 - [ ] Active production opens for a signed-in operator and through the production share link.
 - [ ] Client, people, roster, date, location, and runner details are correct.
-- [ ] Runner can search, quick-add, edit drinks, and update statuses on the actual device.
-- [ ] Summary output is accurate enough for coffee-shop handoff.
+- [ ] Runner can search, quick-add, take orders, and mark no-drink on the actual device.
 - [ ] CTC Printer links to the same runner share URL.
 - [ ] CTC Printer prints one physical test label and marks `label_printed`.
 - [ ] `/labels` fallback loads on the phone.

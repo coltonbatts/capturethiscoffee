@@ -16,12 +16,13 @@ import {
   loadCoffeeData,
   resetDemoCoffeeData,
 } from "@/lib/data";
-import type { CoffeeData, OrderStatus, Production } from "@/lib/types";
+import { isOrderCaptured } from "@/lib/order-progress";
+import type { CoffeeData, Production } from "@/lib/types";
 
 type ProductionCard = {
   production: Production;
   client?: { name: string };
-  orders: { status: OrderStatus }[];
+  captured: number;
   remaining: number;
 };
 
@@ -68,9 +69,10 @@ export default function ProductionsPage() {
         const orders = data.orders.filter(
           (order) => order.production_id === production.id,
         );
+        const captured = orders.filter((order) => isOrderCaptured(order)).length;
         const remaining = orders.filter((order) => order.status === "not_asked").length;
 
-        return { production, client, orders, remaining };
+        return { production, client, captured, remaining };
       });
   }, [data]);
 
@@ -99,14 +101,14 @@ export default function ProductionsPage() {
         <div>
           <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Shoot days</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
-            Open the active day to confirm drinks, track handoff, and share the
-            runner/printer link.
+            Put today&apos;s people on the roster, collect their drinks, print
+            their labels.
           </p>
         </div>
         <div className="grid gap-2 md:w-[220px]">
           <Link href="/labels" className={`${secondaryButtonClass} min-h-14 text-base`}>
             <ImageDown size={19} aria-hidden="true" />
-            Fallback exports
+            Print labels
           </Link>
         </div>
       </section>
@@ -178,7 +180,9 @@ function ProductionListItem({ card }: { card: ProductionCard }) {
             </span>
           ) : null}
           <span className="rounded-md border border-zinc-500 px-2.5 py-1 text-sm font-black text-zinc-900">
-            {card.remaining ? `${card.remaining} left` : `${card.orders.length} done`}
+            {card.remaining
+              ? `${card.remaining} ${card.remaining === 1 ? "drink" : "drinks"} needed`
+              : `${card.captured} ${card.captured === 1 ? "drink" : "drinks"} in`}
           </span>
         </div>
       </div>

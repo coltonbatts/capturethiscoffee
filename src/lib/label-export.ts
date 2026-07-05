@@ -4,6 +4,7 @@ import {
   type CoffeeLabel,
   type LabelFormatterOptions,
 } from "./label-copy";
+import { isOrderCaptured } from "./order-progress";
 import { formatDrink } from "./order-summary";
 import type { Client, CoffeeData, Production, RosterOrder } from "./types";
 
@@ -49,9 +50,15 @@ export function preferredLabelExportProduction(data: CoffeeData) {
   );
 }
 
+/**
+ * Batch-first initial selection: a requested single order narrows to that
+ * label (reprint/one-off), a requested production selects its whole batch,
+ * and otherwise the preferred production's full batch is selected.
+ */
 export function initialLabelExportSelection(
   data: CoffeeData,
   requestedOrderId = "",
+  requestedProductionId = "",
 ): InitialLabelExportSelection {
   const requested = requestedOrderId.trim();
   if (requested) {
@@ -65,16 +72,25 @@ export function initialLabelExportSelection(
     }
   }
 
-  const preferred = preferredLabelExportProduction(data);
+  const requestedProduction = data.productions.find(
+    (production) => production.id === requestedProductionId.trim(),
+  );
+  const preferred = requestedProduction || preferredLabelExportProduction(data);
   if (!preferred) return { productionId: "", selectedOrderIds: [] };
-
-  const firstOrderId =
-    labelExportItemsForProduction(data, preferred.id)[0]?.order.id || "";
 
   return {
     productionId: preferred.id,
-    selectedOrderIds: firstOrderId ? [firstOrderId] : [],
+    selectedOrderIds: labelExportItemsForProduction(data, preferred.id).map(
+      (item) => item.order.id,
+    ),
   };
+}
+
+/** Order ids in the batch whose label has not been printed yet. */
+export function unprintedOrderIds(items: ActiveLabelExportItem[]) {
+  return items
+    .filter((item) => !item.order.label_printed)
+    .map((item) => item.order.id);
 }
 
 export function labelExportItemsForProduction(
@@ -102,7 +118,9 @@ export function labelExportItemsForProduction(
 export function isActiveLabelExportItem(
   item: RosterOrder,
 ): item is ActiveLabelExportItem {
-  return Boolean(item.order && item.order.status !== "no_order");
+  // Only captured drinks get labels; people still waiting to order or who
+  // declined a drink stay out of the batch.
+  return isOrderCaptured(item.order);
 }
 
 export function buildLabelExportSelection(

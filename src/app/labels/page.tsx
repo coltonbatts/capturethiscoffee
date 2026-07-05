@@ -31,12 +31,14 @@ import {
   labelExportItemsForProduction,
   labelExportProductions,
   niimbotBatchCsv,
+  unprintedOrderIds,
 } from "@/lib/label-export";
 import {
   describeDataError,
   isSupabaseBacked,
   loadCoffeeData,
   resetDemoCoffeeData,
+  updateOrderRecord,
 } from "@/lib/data";
 import { formatDrink } from "@/lib/order-summary";
 import {
@@ -57,6 +59,10 @@ export default function LabelExportPage() {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("order") || "";
   });
+  const [requestedProductionId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("production") || "";
+  });
   const [data, setData] = useState<CoffeeData | null>(null);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -75,7 +81,11 @@ export default function LabelExportPage() {
         setError("");
         setStatus("");
         setData(next);
-        const initialSelection = initialLabelExportSelection(next, requestedOrderId);
+        const initialSelection = initialLabelExportSelection(
+          next,
+          requestedOrderId,
+          requestedProductionId,
+        );
         const nextProductionId = initialSelection.productionId;
         setProductionId((current) => current || nextProductionId);
         setSelectedOrderIds((current) =>
@@ -85,7 +95,7 @@ export default function LabelExportPage() {
       .catch((err: unknown) => {
         setError(describeDataError(err, "Could not load labels."));
       });
-  }, [requestedOrderId]);
+  }, [requestedOrderId, requestedProductionId]);
 
   useEffect(() => {
     loadData();
@@ -121,12 +131,11 @@ export default function LabelExportPage() {
 
   function chooseProduction(nextProductionId: string) {
     setProductionId(nextProductionId);
+    // Batch by default: switching production selects its whole label run.
     const nextItems = data
       ? labelExportItemsForProduction(data, nextProductionId)
       : [];
-    setSelectedOrderIds(
-      nextItems.slice(0, 1).flatMap((item) => (item.order ? [item.order.id] : [])),
-    );
+    setSelectedOrderIds(nextItems.map((item) => item.order.id));
     setStatus("");
   }
 
@@ -140,6 +149,7 @@ export default function LabelExportPage() {
   }
 
   const allSelected = activeItems.length > 0 && selectedCount >= activeItems.length;
+  const unprintedIds = useMemo(() => unprintedOrderIds(activeItems), [activeItems]);
 
   function toggleSelectAll() {
     setSelectedOrderIds(
@@ -148,6 +158,31 @@ export default function LabelExportPage() {
         : activeItems.flatMap((item) => (item.order ? [item.order.id] : [])),
     );
     setStatus("");
+  }
+
+  function selectUnprinted() {
+    setSelectedOrderIds(unprintedIds);
+    setStatus("");
+  }
+
+  /**
+   * Best-effort bookkeeping after a successful export so "Unprinted" stays
+   * meaningful for reprints. Failures never turn a completed export into an
+   * error.
+   */
+  async function markLabelsPrinted(orderIds: string[]) {
+    if (!data) return;
+    try {
+      let next = data;
+      for (const orderId of orderIds) {
+        const order = next.orders.find((item) => item.id === orderId);
+        if (!order || order.label_printed) continue;
+        next = await updateOrderRecord(next, orderId, { label_printed: true });
+      }
+      setData(next);
+    } catch {
+      // Leave the printed flags as-is; the export itself already succeeded.
+    }
   }
 
   async function resetDemo() {
@@ -179,6 +214,7 @@ export default function LabelExportPage() {
           labels.length === 1 ? "file" : "files"
         } ready for NIIMBOT app import.`,
       );
+      await markLabelsPrinted(labels.map((label) => label.id));
     } catch (err) {
       setError(describeDataError(err, "Could not export the selected label."));
     } finally {
@@ -247,6 +283,7 @@ export default function LabelExportPage() {
         text: "Print-ready Capture This Coffee label PNGs.",
       });
       setStatus("Shared PNG label file.");
+      await markLabelsPrinted(labels.map((label) => label.id));
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setError(describeDataError(err, "Could not share the selected label."));
@@ -276,15 +313,15 @@ export default function LabelExportPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
-              Fallback exports
+              Step 3
             </p>
             <h1 className="mt-0.5 text-2xl font-black leading-tight tracking-normal text-black">
-              PNG &amp; CSV export
+              Print the labels
             </h1>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
-              CTC Printer is the primary on-set print path. Use this screen for
-              fallback NIIMBOT app import, CSV batch templates, previews, and
-              test labels.
+              Export the whole batch of captured drinks. On set, CTC Printer
+              prints these directly; here you can export PNGs or a CSV for the
+              NIIMBOT app.
             </p>
           </div>
           <div className="rounded-lg border-2 border-black bg-white px-3 py-2 font-mono text-sm font-black text-black">
@@ -353,18 +390,29 @@ export default function LabelExportPage() {
 
           {activeItems.length ? (
             <>
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-bold text-zinc-600">
-                  {selectedCount} selected / {activeItems.length} active
+                  {selectedCount} of {activeItems.length} labels selected
                 </p>
-                <button
-                  type="button"
-                  onClick={toggleSelectAll}
-                  className={`${secondaryButtonClass} min-h-10 px-3`}
-                >
-                  <CheckCircle2 size={16} aria-hidden="true" />
-                  {allSelected ? "None" : "All"}
-                </button>
+                <div className="flex gap-1.5">
+                  {unprintedIds.length && unprintedIds.length < activeItems.length ? (
+                    <button
+                      type="button"
+                      onClick={selectUnprinted}
+                      className={`${secondaryButtonClass} min-h-10 px-3`}
+                    >
+                      Unprinted ({unprintedIds.length})
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className={`${secondaryButtonClass} min-h-10 px-3`}
+                  >
+                    <CheckCircle2 size={16} aria-hidden="true" />
+                    {allSelected ? "None" : "All"}
+                  </button>
+                </div>
               </div>
               <div className="grid max-h-[58vh] gap-2 overflow-y-auto pr-1">
                 {activeItems.map((item) =>
@@ -542,14 +590,27 @@ function LabelChoice({
         >
           {formatDrink(item.order)}
         </span>
-        <span
-          className={`mt-2 inline-flex max-w-full rounded-md border px-2 py-1 text-xs font-bold ${
-            selected
-              ? "border-white/30 bg-white/10 text-white"
-              : "border-zinc-300 bg-zinc-100 text-zinc-700"
-          }`}
-        >
-          <span className="truncate">{group}</span>
+        <span className="mt-2 flex max-w-full flex-wrap gap-1.5">
+          <span
+            className={`inline-flex max-w-full rounded-md border px-2 py-1 text-xs font-bold ${
+              selected
+                ? "border-white/30 bg-white/10 text-white"
+                : "border-zinc-300 bg-zinc-100 text-zinc-700"
+            }`}
+          >
+            <span className="truncate">{group}</span>
+          </span>
+          {item.order.label_printed ? (
+            <span
+              className={`inline-flex rounded-md border px-2 py-1 text-xs font-bold ${
+                selected
+                  ? "border-white/30 bg-white/10 text-white"
+                  : "border-emerald-700 bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              Printed
+            </span>
+          ) : null}
         </span>
       </span>
       <span

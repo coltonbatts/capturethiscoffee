@@ -41,7 +41,7 @@ export default function HomePage() {
             className="home-rise grid min-h-11 place-items-center border-[3px] border-black bg-white text-sm font-black uppercase tracking-tight text-black shadow-[3px_3px_0_#000] transition-[background-color,color,transform,box-shadow] duration-100 hover:bg-black hover:text-white active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
             style={{ animationDelay: `${120 + stations.length * 90}ms` }}
           >
-            Fallback exports
+            Print labels
           </Link>
         </nav>
       </div>

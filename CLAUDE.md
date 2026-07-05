@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-03
+Last updated: 2026-07-05
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -12,23 +12,24 @@ This repo uses Next.js `16.2.6`, which has breaking changes versus older Next.js
 
 ## Product summary
 
-Capture This Coffee is a mobile-first coffee-runner app for production shoots. It manages clients, people, productions, rosters, live drink orders, coffee-shop summaries, and branded cup-label exports.
+Capture This Coffee is a mobile-first coffee-runner app for production shoots. One sentence: put today's people in the roster, collect their drinks, print their labels.
 
 Primary users:
 
 - Team member (any signed-in user): prepares people, photos, shoot days, and rosters.
-- Runner: works a live production through drink statuses on a phone.
-- PA / label operator: prints labels via the **CTC Printer** iOS app (`mobile/`) or exports from `/labels`.
+- Runner: goes around set collecting each person's drink order on a phone.
+- PA / label operator: prints the captured drinks as a batch via the **CTC Printer** iOS app (`mobile/`) or exports from `/labels`.
 
 The app has two primary sections — **Day** (`/productions`: the shoot day, everyone on set and what they ordered) and **Labels** (`/labels`) — plus **People** (`/people`) as the crew database. The Clients admin UI was removed 2026-07-03; the `clients` table remains and a day's optional client/brand name is used only for label branding.
 
 Core workflow:
 
 1. A team member signs in and creates people/day/roster.
-2. Runner opens a production board and confirms or edits drinks.
-3. Runner moves orders through `not_asked`, `confirmed`, `ordered`, `picked_up`, `delivered`, or `no_order`.
-4. Runner uses the Summary tab for coffee-shop handoff.
-5. Label operator uses **CTC Printer** (`mobile/`) for direct M2_H BLE printing, or `/labels` for PNG/CSV export fallback.
+2. Runner opens the production roster, taps a person, takes their drink order (or marks "No drink").
+3. The board tracks one progress metric: drinks captured out of roster total.
+4. Once drinks are captured, labels print as a batch: **CTC Printer** (`mobile/`) for direct M2_H BLE printing, or `/labels` for batch PNG/CSV export.
+
+Simplified collection model (since 2026-07-05): the UI exposes only "needs order", "captured", "no drink", and a printed flag. The database still stores the wider legacy `OrderStatus` enum (`confirmed`/`ordered`/`picked_up`/`delivered` all render as captured; `src/lib/order-progress.ts` is the mapping). Do not reintroduce delivery-pipeline status UI (confirmed → ordered → picked up → delivered) — it was removed deliberately.
 
 ## Current strategic direction
 
@@ -128,7 +129,9 @@ src/lib/
   seed.ts
   people.ts
   person-photo-upload.ts
+  order-progress.ts
   order-summary.ts
+  printer-queue.ts
   label-copy.ts
   label-export.ts
   label-designs.ts
@@ -144,6 +147,7 @@ tests/
   auth.test.ts
   label-copy.test.ts
   label-export.test.ts
+  order-progress.test.ts
   order-summary.test.ts
   printer-queue.test.ts
   production-share.test.ts
@@ -168,7 +172,7 @@ Important fields:
 
 - `Person` includes name, type, role, department, company, photo URL, usual order, dietary notes, notes, and active flag.
 - `Production` has status `planning`, `active`, or `complete`.
-- `Order` has drink fields plus status and `label_printed`.
+- `Order` has drink fields plus status and `label_printed`. The stored `OrderStatus` enum is wider than the UI: the app distinguishes only needs-order (`not_asked`), captured (any other non-skip status), and skipped (`no_order`) via `src/lib/order-progress.ts`.
 
 `src/lib/data.ts` is the main browser data layer. It is large and intentionally supports both Supabase and local demo mode. Be careful when changing it: many functions have a Supabase branch and a localStorage branch.
 
@@ -237,9 +241,11 @@ Design constraints:
 
 Existing tests cover:
 
+- `tests/order-progress.test.ts`
 - `tests/order-summary.test.ts`
 - `tests/label-copy.test.ts`
 - `tests/label-export.test.ts`
+- `tests/printer-queue.test.ts`
 - `tests/production-share.test.ts`
 
 Run:

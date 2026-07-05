@@ -6,6 +6,7 @@ import {
   labelExportItemsForProduction,
   labelExportProductions,
   niimbotBatchCsv,
+  unprintedOrderIds,
   type ActiveLabelExportItem,
 } from "../src/lib/label-export";
 import { niimbotM2ExportFileName } from "../src/lib/niimbot-m2-export";
@@ -44,6 +45,24 @@ const data: CoffeeData = {
       name: "Parker Plan",
       type: "crew",
       department: "Grip",
+      usual_order: "",
+      active: true,
+      created_at: "2026-06-01T12:00:00.000Z",
+    },
+    {
+      id: "person-4",
+      name: "Nell Notyet",
+      type: "crew",
+      department: "Art",
+      usual_order: "",
+      active: true,
+      created_at: "2026-06-01T12:00:00.000Z",
+    },
+    {
+      id: "person-5",
+      name: "Pat Printed",
+      type: "crew",
+      department: "Sound",
       usual_order: "",
       active: true,
       created_at: "2026-06-01T12:00:00.000Z",
@@ -98,6 +117,22 @@ const data: CoffeeData = {
       on_set_today: true,
       sort_order: 1,
     },
+    {
+      id: "roster-4",
+      production_id: "prod-active",
+      person_id: "person-4",
+      group_label: "Art",
+      on_set_today: true,
+      sort_order: 3,
+    },
+    {
+      id: "roster-5",
+      production_id: "prod-active",
+      person_id: "person-5",
+      group_label: "Sound",
+      on_set_today: true,
+      sort_order: 4,
+    },
   ],
   orders: [
     {
@@ -139,6 +174,27 @@ const data: CoffeeData = {
       created_at: "2026-06-01T12:00:00.000Z",
       updated_at: "2026-06-01T12:00:00.000Z",
     },
+    {
+      id: "order-not-asked",
+      production_id: "prod-active",
+      roster_id: "roster-4",
+      person_id: "person-4",
+      status: "not_asked",
+      label_printed: false,
+      created_at: "2026-06-01T12:00:00.000Z",
+      updated_at: "2026-06-01T12:00:00.000Z",
+    },
+    {
+      id: "order-printed",
+      production_id: "prod-active",
+      roster_id: "roster-5",
+      person_id: "person-5",
+      drink_type: "Drip",
+      status: "delivered",
+      label_printed: true,
+      created_at: "2026-06-01T12:00:00.000Z",
+      updated_at: "2026-06-01T12:00:00.000Z",
+    },
   ],
 };
 
@@ -150,12 +206,13 @@ describe("label export helpers", () => {
     );
   });
 
-  it("selects only on-set orders with active label content", () => {
+  it("selects only captured drinks: no_order and not_asked stay out of the batch", () => {
     const items = labelExportItemsForProduction(data, "prod-active");
 
-    assert.equal(items.length, 1);
-    assert.equal(items[0]?.person.name, "Ava Stone");
-    assert.equal(items[0]?.order?.id, "order-ava");
+    assert.deepEqual(
+      items.map((item) => item.order.id),
+      ["order-ava", "order-printed"],
+    );
   });
 
   it("builds labels for the selected order ids only", () => {
@@ -175,11 +232,30 @@ describe("label export helpers", () => {
     });
   });
 
-  it("falls back to the preferred production when the requested order cannot be exported", () => {
+  it("falls back to the preferred production's full batch when the requested order cannot be exported", () => {
     assert.deepEqual(initialLabelExportSelection(data, "order-none"), {
       productionId: "prod-active",
-      selectedOrderIds: ["order-ava"],
+      selectedOrderIds: ["order-ava", "order-printed"],
     });
+  });
+
+  it("selects a requested production's whole batch", () => {
+    assert.deepEqual(initialLabelExportSelection(data, "", "prod-planning"), {
+      productionId: "prod-planning",
+      selectedOrderIds: ["order-planning"],
+    });
+  });
+
+  it("selects the whole batch of the preferred production by default", () => {
+    assert.deepEqual(initialLabelExportSelection(data), {
+      productionId: "prod-active",
+      selectedOrderIds: ["order-ava", "order-printed"],
+    });
+  });
+
+  it("lists only unprinted labels for reprint-safe batch selection", () => {
+    const items = labelExportItemsForProduction(data, "prod-active");
+    assert.deepEqual(unprintedOrderIds(items), ["order-ava"]);
   });
 
   it("names exported files by person and order", () => {
@@ -207,7 +283,7 @@ describe("NIIMBOT batch CSV", () => {
   it("writes a header row plus one quoted row per item, CRLF separated", () => {
     assert.equal(
       niimbotBatchCsv(items),
-      '"crew name","drink"\r\n"Ava Stone","Medium, Iced, Latte, Oat milk, No room"',
+      '"crew name","drink"\r\n"Ava Stone","Medium, Iced, Latte, Oat milk, No room"\r\n"Pat Printed","Drip"',
     );
   });
 

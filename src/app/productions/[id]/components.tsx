@@ -2,13 +2,12 @@
 
 import {
   Check,
-  ChevronRight,
+  CircleSlash,
   Link2,
   Loader2,
   Pencil,
   Plus,
   Printer,
-  RotateCcw,
   Search,
   Trash2,
   X,
@@ -22,15 +21,14 @@ import {
   EmptyState,
   Field,
   Panel,
-  StatusChip,
   buttonClass,
   dangerButtonClass,
   inputClass,
   primaryButtonClass,
   secondaryButtonClass,
-  statusLabels,
-  statusRailStyles,
 } from "@/components/ui";
+import type { CaptureProgress } from "@/lib/order-progress";
+import { isOrderCaptured, isOrderSkipped } from "@/lib/order-progress";
 import { formatDrink } from "@/lib/order-summary";
 import {
   groupSuggestions,
@@ -40,36 +38,10 @@ import {
 } from "@/lib/people";
 import type {
   Order,
-  OrderStatus,
   Production,
   ProductionRoster,
   RosterOrder,
 } from "@/lib/types";
-
-export const statuses = Object.keys(statusLabels) as OrderStatus[];
-
-/**
- * The next forward step in a runner's loop. A single primary tap walks an
- * order not_asked → confirmed → ordered → picked_up → delivered, so the two
- * middle states (which used to be reachable only through the Status-tab
- * dropdown) are now one thumb-tap away at the counter and at hand-off.
- */
-const nextStep: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> =
-  {
-    not_asked: { status: "confirmed", label: "Confirm" },
-    confirmed: { status: "ordered", label: "Mark ordered" },
-    ordered: { status: "picked_up", label: "Mark picked up" },
-    picked_up: { status: "delivered", label: "Mark delivered" },
-  };
-
-const previousStep: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>> =
-  {
-    confirmed: { status: "not_asked", label: "Back to not asked" },
-    ordered: { status: "confirmed", label: "Back to confirmed" },
-    picked_up: { status: "ordered", label: "Back to ordered" },
-    delivered: { status: "picked_up", label: "Reopen delivery" },
-    no_order: { status: "confirmed", label: "Reopen order" },
-  };
 
 export function ErrorToast({
   message,
@@ -95,19 +67,24 @@ export function ErrorToast({
   );
 }
 
-export function RunnerHeader({
+/**
+ * Top of the day board. Answers: what day is this, how many people are on
+ * the roster, how many drinks are captured, and what to do next — collect
+ * the missing drinks or print the labels.
+ */
+export function DayHeader({
   detail,
   runnerName,
   progress,
-  statusCounts,
+  printHref,
   onEditDetails,
   onCopyRunnerLink,
   copyLinkState = "idle",
 }: {
   detail: string;
   runnerName?: string;
-  progress: { percent: number; responded: number; total: number };
-  statusCounts?: Partial<Record<OrderStatus, number>>;
+  progress: CaptureProgress;
+  printHref?: string;
   onEditDetails?: () => void;
   onCopyRunnerLink?: () => void;
   copyLinkState?: "idle" | "working" | "copied";
@@ -117,7 +94,7 @@ export function RunnerHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
-            Live board
+            Drink orders
           </p>
           <p className="mt-0.5 truncate text-sm font-medium text-zinc-700">
             {detail || "Coffee orders"}
@@ -160,11 +137,11 @@ export function RunnerHeader({
           ) : null}
           <div className="text-right leading-none">
             <span className="block text-3xl font-black tabular-nums text-black">
-              {progress.percent}
-              <span className="text-lg">%</span>
+              {progress.captured}
+              <span className="text-lg text-zinc-500">/{progress.total}</span>
             </span>
             <span className="mt-1 block text-xs font-bold uppercase tracking-normal text-zinc-500">
-              {progress.responded}/{progress.total} asked
+              drinks in
             </span>
           </div>
         </div>
@@ -175,19 +152,35 @@ export function RunnerHeader({
           style={{ width: `${progress.percent}%` }}
         />
       </div>
-      {statusCounts ? (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {statuses.map((status) =>
-            statusCounts[status] ? (
-              <CountBadge
-                key={status}
-                label={statusLabels[status]}
-                count={statusCounts[status]!}
-                accent={status === "ordered"}
-              />
-            ) : null,
-          )}
-        </div>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {progress.needed ? (
+          <CountBadge
+            label={progress.needed === 1 ? "needs order" : "need orders"}
+            count={progress.needed}
+            accent
+          />
+        ) : null}
+        {progress.skipped ? (
+          <CountBadge label="no drink" count={progress.skipped} />
+        ) : null}
+        {progress.printed ? (
+          <CountBadge label="printed" count={progress.printed} />
+        ) : null}
+        {!progress.needed && progress.captured ? (
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 text-xs font-black leading-none text-emerald-800">
+            <Check size={12} strokeWidth={3} aria-hidden="true" />
+            All drinks captured
+          </span>
+        ) : null}
+      </div>
+      {printHref && progress.captured ? (
+        <Link
+          href={printHref}
+          className={`${primaryButtonClass} mt-3 min-h-12 w-full text-base`}
+        >
+          <Printer size={19} aria-hidden="true" />
+          Print labels ({progress.captured})
+        </Link>
       ) : null}
     </section>
   );
@@ -196,14 +189,27 @@ export function RunnerHeader({
 export function SearchRoster({
   query,
   onQuery,
+  needsOnly,
+  onNeedsOnly,
+  neededCount,
   count,
   total,
 }: {
   query: string;
   onQuery: (value: string) => void;
+  needsOnly: boolean;
+  onNeedsOnly: (value: boolean) => void;
+  neededCount: number;
   count: number;
   total: number;
 }) {
+  const chipClass = (active: boolean) =>
+    `inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-black transition ${
+      active
+        ? "border-black bg-black text-white"
+        : "border-zinc-400 bg-white text-zinc-700 hover:border-black"
+    }`;
+
   return (
     <div className="mb-4 grid gap-2 no-print">
       <label className="relative block">
@@ -220,26 +226,48 @@ export function SearchRoster({
           aria-label="Search roster"
         />
       </label>
-      <div className="text-sm text-zinc-600">
-        {query.trim() ? `${count} of ${total} people` : `${total} people on set`}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1.5" role="group" aria-label="Filter roster">
+          <button
+            type="button"
+            onClick={() => onNeedsOnly(false)}
+            className={chipClass(!needsOnly)}
+            aria-pressed={!needsOnly}
+          >
+            Everyone ({total})
+          </button>
+          <button
+            type="button"
+            onClick={() => onNeedsOnly(true)}
+            className={chipClass(needsOnly)}
+            aria-pressed={needsOnly}
+          >
+            Needs order ({neededCount})
+          </button>
+        </div>
+        {query.trim() ? (
+          <span className="text-sm text-zinc-600">
+            {count} of {total} people
+          </span>
+        ) : null}
       </div>
     </div>
   );
 }
 
-export function PeopleTab({
+export function RosterList({
   items,
   pendingOrders,
   canManageSetup,
-  onAdvance,
-  onEdit,
+  onTakeOrder,
+  onNoDrink,
   onEditRoster,
 }: {
   items: RosterOrder[];
   pendingOrders: ReadonlySet<string>;
   canManageSetup: boolean;
-  onAdvance: (order: Order, status: OrderStatus) => void;
-  onEdit: (order: Order) => void;
+  onTakeOrder: (order: Order) => void;
+  onNoDrink: (order: Order) => void;
   onEditRoster: (item: RosterOrder) => void;
 }) {
   return (
@@ -247,7 +275,7 @@ export function PeopleTab({
       {!items.length ? (
         <EmptyState
           title="No matching people"
-          description="Clear the search to see everyone on set."
+          description="Clear the search or filter to see everyone on set."
         />
       ) : null}
       {items.map((item) => (
@@ -256,8 +284,8 @@ export function PeopleTab({
           item={item}
           pending={item.order ? pendingOrders.has(item.order.id) : false}
           canManageSetup={canManageSetup}
-          onAdvance={onAdvance}
-          onEdit={onEdit}
+          onTakeOrder={onTakeOrder}
+          onNoDrink={onNoDrink}
           onEditRoster={onEditRoster}
         />
       ))}
@@ -269,20 +297,25 @@ function RosterCard({
   item,
   pending,
   canManageSetup,
-  onAdvance,
-  onEdit,
+  onTakeOrder,
+  onNoDrink,
   onEditRoster,
 }: {
   item: RosterOrder;
   pending: boolean;
   canManageSetup: boolean;
-  onAdvance: (order: Order, status: OrderStatus) => void;
-  onEdit: (order: Order) => void;
+  onTakeOrder: (order: Order) => void;
+  onNoDrink: (order: Order) => void;
   onEditRoster: (item: RosterOrder) => void;
 }) {
   const { order, roster, person } = item;
-  const onSet = roster.on_set_today;
-  const railColor = order ? statusRailStyles[order.status] : "bg-zinc-200";
+  const captured = isOrderCaptured(order);
+  const skipped = isOrderSkipped(order);
+  const railColor = captured
+    ? "bg-accent"
+    : skipped
+      ? "bg-zinc-400"
+      : "bg-zinc-200";
 
   return (
     <article
@@ -306,31 +339,38 @@ function RosterCard({
               </p>
             </div>
             <div className="grid shrink-0 justify-items-end gap-1">
-              {order ? <StatusChip status={order.status} /> : null}
-              {order ? <PrintStateBadge order={order} /> : null}
-              {!onSet ? (
-                <span className="rounded-md border border-zinc-500 bg-white px-2.5 py-1 text-xs font-black text-zinc-700">
-                  Off set
+              {captured && order?.label_printed ? (
+                <span className="inline-flex items-center gap-1 rounded-md border border-emerald-700 bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-800">
+                  <Printer size={13} aria-hidden="true" />
+                  Printed
+                </span>
+              ) : null}
+              {skipped ? (
+                <span className="inline-flex items-center gap-1 rounded-md border border-zinc-500 bg-white px-2 py-1 text-xs font-black text-zinc-700">
+                  <CircleSlash size={13} aria-hidden="true" />
+                  No drink
                 </span>
               ) : null}
             </div>
           </div>
-          <div className="mt-3 grid gap-1 text-sm leading-5">
-            <p className="text-zinc-600">
-              <span className="font-medium text-zinc-500">Usual: </span>
-              {person.usual_order || "—"}
-            </p>
-            <p className="font-medium text-zinc-900">
-              <span className="font-medium text-zinc-500">Today: </span>
-              {formatDrink(order)}
-            </p>
+          <div className="mt-2 text-sm leading-5">
+            {captured ? (
+              <p className="font-medium text-zinc-900">{formatDrink(order)}</p>
+            ) : skipped ? (
+              <p className="text-zinc-500">Doesn&apos;t want a drink today.</p>
+            ) : (
+              <p className="text-zinc-600">
+                <span className="font-medium text-zinc-500">Usual: </span>
+                {person.usual_order || "—"}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       {!order ? (
         // Partial data: roster row exists but its order never landed. Surface
-        // it instead of silently rendering nothing (the old `return null`).
+        // it instead of silently rendering nothing.
         <div className="mt-3 grid gap-2">
           <p className="rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-zinc-800">
             No order record yet. Remove and re-add this person to rebuild it.
@@ -346,26 +386,15 @@ function RosterCard({
             </button>
           ) : null}
         </div>
-      ) : !onSet ? (
-        <div className="mt-3 grid gap-2">
-          {canManageSetup ? (
-            <button
-              type="button"
-              onClick={() => onEditRoster(item)}
-              className={secondaryButtonClass}
-            >
-              <Pencil size={18} aria-hidden="true" />
-              Edit roster
-            </button>
-          ) : null}
-        </div>
       ) : (
         <CardActions
           order={order}
+          captured={captured}
+          skipped={skipped}
           pending={pending}
           canManageSetup={canManageSetup}
-          onAdvance={onAdvance}
-          onEdit={onEdit}
+          onTakeOrder={onTakeOrder}
+          onNoDrink={onNoDrink}
           onEditRoster={() => onEditRoster(item)}
         />
       )}
@@ -373,116 +402,126 @@ function RosterCard({
   );
 }
 
-function PrintStateBadge({ order }: { order: Order }) {
-  const disabled = order.status === "no_order";
-  const printed = order.label_printed;
-
-  return (
-    <span
-      className={`inline-flex max-w-28 items-center gap-1 rounded-md border px-2 py-1 text-xs font-black ${
-        disabled
-          ? "border-zinc-300 bg-zinc-100 text-zinc-500"
-          : printed
-            ? "border-emerald-700 bg-emerald-50 text-emerald-800"
-            : "border-zinc-500 bg-white text-zinc-700"
-      }`}
-      title={
-        disabled
-          ? "No label needed"
-          : printed
-            ? "Label printed"
-            : "Label not printed"
-      }
-    >
-      <Printer size={13} aria-hidden="true" />
-      <span className="truncate">
-        {disabled ? "No label" : printed ? "Printed" : "Not printed"}
-      </span>
-    </span>
-  );
-}
-
 function CardActions({
   order,
+  captured,
+  skipped,
   pending,
   canManageSetup,
-  onAdvance,
-  onEdit,
+  onTakeOrder,
+  onNoDrink,
   onEditRoster,
 }: {
   order: Order;
+  captured: boolean;
+  skipped: boolean;
   pending: boolean;
   canManageSetup: boolean;
-  onAdvance: (order: Order, status: OrderStatus) => void;
-  onEdit: (order: Order) => void;
+  onTakeOrder: (order: Order) => void;
+  onNoDrink: (order: Order) => void;
   onEditRoster: () => void;
 }) {
-  const step = nextStep[order.status];
-  const previous = previousStep[order.status];
   const compactButtonClass =
     "flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-lg border border-zinc-400 bg-white text-black transition active:translate-y-px hover:border-black hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50";
 
+  // Secondary fallback tools under the main action. Batch printing on the
+  // day board header is the primary print path; per-person label links stay
+  // here for reprints and one-offs.
+  const compactActions: ReactNode[] = [];
+  if (captured) {
+    if (canManageSetup) {
+      compactActions.push(
+        <Link
+          key="label"
+          href={`/labels?order=${encodeURIComponent(order.id)}`}
+          className={compactButtonClass}
+        >
+          <Printer size={16} aria-hidden="true" />
+          <span className="text-[11px] font-bold">
+            {order.label_printed ? "Reprint label" : "Label"}
+          </span>
+        </Link>,
+      );
+    }
+    compactActions.push(
+      <button
+        key="no-drink"
+        type="button"
+        onClick={() => onNoDrink(order)}
+        disabled={pending}
+        className={compactButtonClass}
+      >
+        <CircleSlash size={16} aria-hidden="true" />
+        <span className="text-[11px] font-bold">No drink</span>
+      </button>,
+    );
+  }
+  if (canManageSetup) {
+    compactActions.push(
+      <button
+        key="roster"
+        type="button"
+        onClick={onEditRoster}
+        className={compactButtonClass}
+      >
+        <Pencil size={16} aria-hidden="true" />
+        <span className="text-[11px] font-bold">Roster</span>
+      </button>,
+    );
+  }
+
   return (
     <div className="mt-3 grid gap-2">
-      {step ? (
+      {captured ? (
         <button
           type="button"
-          onClick={() => onAdvance(order, step.status)}
+          onClick={() => onTakeOrder(order)}
           disabled={pending}
-          className={`${buttonClass} min-h-12 bg-black text-base text-white disabled:opacity-40`}
+          className={secondaryButtonClass}
         >
-          {order.status === "not_asked" ? (
-            <Check size={19} aria-hidden="true" />
-          ) : (
-            <ChevronRight size={19} aria-hidden="true" />
-          )}
-          {step.label}
+          <Pencil size={18} aria-hidden="true" />
+          Edit order
         </button>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="grid min-h-11 place-items-center rounded-lg border border-zinc-500 bg-zinc-200 px-3 text-sm font-black text-black">
-            {statusLabels[order.status]}
-          </div>
-          {previous ? (
+        <div
+          className={`grid gap-2 ${skipped ? "" : "sm:grid-cols-[minmax(0,1fr)_auto]"}`}
+        >
+          <button
+            type="button"
+            onClick={() => onTakeOrder(order)}
+            disabled={pending}
+            className={`${buttonClass} min-h-12 border border-black bg-black text-base text-white hover:bg-zinc-800 disabled:opacity-40`}
+          >
+            <Plus size={19} aria-hidden="true" />
+            Take order
+          </button>
+          {!skipped ? (
             <button
               type="button"
-              onClick={() => onAdvance(order, previous.status)}
+              onClick={() => onNoDrink(order)}
               disabled={pending}
               className={secondaryButtonClass}
             >
-              <RotateCcw size={18} aria-hidden="true" />
-              {previous.label}
+              <CircleSlash size={18} aria-hidden="true" />
+              No drink
             </button>
           ) : null}
         </div>
       )}
 
-      <div
-        className={`grid gap-1.5 ${canManageSetup ? "grid-cols-3" : "grid-cols-2"}`}
-      >
-        <Link
-          href={`/labels?order=${encodeURIComponent(order.id)}`}
-          className={compactButtonClass}
+      {compactActions.length ? (
+        <div
+          className={`grid gap-1.5 ${
+            compactActions.length === 3
+              ? "grid-cols-3"
+              : compactActions.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-1"
+          }`}
         >
-          <Printer size={16} aria-hidden="true" />
-          <span className="text-[11px] font-bold">Label</span>
-        </Link>
-        <button
-          type="button"
-          onClick={() => onEdit(order)}
-          disabled={pending}
-          className={compactButtonClass}
-        >
-          <Pencil size={16} aria-hidden="true" />
-          <span className="text-[11px] font-bold">Edit</span>
-        </button>
-        {canManageSetup ? (
-          <button type="button" onClick={onEditRoster} className={compactButtonClass}>
-            <Pencil size={16} aria-hidden="true" />
-            <span className="text-[11px] font-bold">Roster</span>
-          </button>
-        ) : null}
-      </div>
+          {compactActions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -604,8 +643,8 @@ export function RunnerLinkSheet({
     <Sheet label="Runner link">
       <h2 className="text-lg font-semibold">Runner link</h2>
       <p className="text-sm text-zinc-600">
-        Anyone with this link can run the board. Paste it into CTC Printer to
-        load the label queue.
+        Anyone with this link can collect drink orders. Paste it into CTC
+        Printer to load the label queue.
       </p>
       <input
         className={inputClass}
@@ -644,6 +683,7 @@ export function RunnerLinkSheet({
 }
 
 export function OrderEditor({
+  title,
   draft,
   updateUsualOrder,
   canUpdateUsualOrder = true,
@@ -653,6 +693,7 @@ export function OrderEditor({
   onSave,
   saving,
 }: {
+  title: string;
   draft: Partial<Order>;
   updateUsualOrder: boolean;
   canUpdateUsualOrder?: boolean;
@@ -663,8 +704,8 @@ export function OrderEditor({
   saving: boolean;
 }) {
   return (
-    <Sheet label="Edit order">
-      <h2 className="text-lg font-semibold">Edit order</h2>
+    <Sheet label={title}>
+      <h2 className="text-lg font-semibold">{title}</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Drink">
           <input
@@ -733,21 +774,6 @@ export function OrderEditor({
           onChange={(event) => onChange({ ...draft, special_notes: event.target.value })}
           placeholder="No room, extra hot, separate cup"
         />
-      </Field>
-      <Field label="Status">
-        <select
-          className={inputClass}
-          value={draft.status || "confirmed"}
-          onChange={(event) =>
-            onChange({ ...draft, status: event.target.value as OrderStatus })
-          }
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {statusLabels[status]}
-            </option>
-          ))}
-        </select>
       </Field>
       {canUpdateUsualOrder ? (
         <label className="flex min-h-11 items-start gap-3 rounded-lg border border-zinc-500 p-3 text-sm text-zinc-700">
@@ -906,7 +932,7 @@ export function RosterEditor({
         <span>
           <span className="block font-semibold text-black">On set today</span>
           <span className="text-zinc-600">
-            Turn off to keep them out of coffee ordering and summaries.
+            Turn off to keep them out of coffee ordering and labels.
           </span>
         </span>
       </label>

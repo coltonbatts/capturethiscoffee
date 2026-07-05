@@ -18,11 +18,11 @@ import {
   updateProductionRecord,
   updateRosterRecord,
 } from "@/lib/data";
+import { isOrderCaptured } from "@/lib/order-progress";
 import { emptyPersonForm, type PersonForm } from "@/lib/people";
 import { mintProductionShareLink } from "@/lib/share-links";
 import type {
   Order,
-  OrderStatus,
   Production,
   ProductionRoster,
   RosterOrder,
@@ -32,11 +32,11 @@ import {
   ErrorToast,
   SearchRoster,
   OrderEditor,
-  PeopleTab,
+  RosterList,
   ProductionDetailsEditor,
   QuickAddPersonSheet,
   RosterEditor,
-  RunnerHeader,
+  DayHeader,
   RunnerLinkSheet,
 } from "./components";
 import { useCoffeeStore } from "./use-coffee-store";
@@ -61,10 +61,12 @@ export default function ProductionDashboardPage() {
 
   // Filter state lives here so typing in search never re-renders the modals.
   const [query, setQuery] = useState("");
+  const [needsOnly, setNeedsOnly] = useState(false);
 
   // Editor/sheet state.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Order>>({});
+  const [editorTitle, setEditorTitle] = useState("Edit order");
   const [updateUsualOrder, setUpdateUsualOrder] = useState(false);
   const [editingRosterId, setEditingRosterId] = useState<string | null>(null);
   const [rosterDraft, setRosterDraft] = useState<Partial<ProductionRoster>>({});
@@ -92,25 +94,8 @@ export default function ProductionDashboardPage() {
   const production = data?.productions.find((item) => item.id === params.id);
   const client = data?.clients.find((item) => item.id === production?.client_id);
 
-  const filters = useMemo(
-    () => ({
-      query,
-      groupFilter: "all",
-      statusFilter: "all" as const,
-      rosterStateFilter: "on_set" as const,
-    }),
-    [query],
-  );
+  const filters = useMemo(() => ({ query, needsOnly }), [query, needsOnly]);
   const view = useRosterView(data, production, filters);
-
-  const statusCounts = useMemo(() => {
-    const counts: Partial<Record<OrderStatus, number>> = {};
-    for (const item of view.activeItems) {
-      const status = item.order?.status || "not_asked";
-      counts[status] = (counts[status] || 0) + 1;
-    }
-    return counts;
-  }, [view.activeItems]);
 
   if (!production) {
     return (
@@ -137,14 +122,15 @@ export default function ProductionDashboardPage() {
     );
   }
 
-  function advance(order: Order, status: OrderStatus) {
-    void patchOrder(order.id, { status });
-  }
-
-  function openOrderEditor(order: Order) {
+  function takeOrder(order: Order) {
+    setEditorTitle(isOrderCaptured(order) ? "Edit order" : "Take order");
     setEditingId(order.id);
     setDraft(order);
     setUpdateUsualOrder(false);
+  }
+
+  function markNoDrink(order: Order) {
+    void patchOrder(order.id, { status: "no_order" });
   }
 
   function openRosterEditor(item: RosterOrder) {
@@ -197,12 +183,18 @@ export default function ProductionDashboardPage() {
   async function saveDraft() {
     if (!editingId) return;
     const id = editingId;
+    // Saving the editor always captures the drink. Legacy pipeline statuses
+    // on old rows are preserved; needs-order and no-drink become captured.
+    const status =
+      draft.status && draft.status !== "not_asked" && draft.status !== "no_order"
+        ? draft.status
+        : "confirmed";
     const ok = await run(
       (base) =>
         saveOrderDraft(
           base,
           id,
-          { ...draft, status: (draft.status || "confirmed") as OrderStatus },
+          { ...draft, status },
           {
             updateUsualOrder: isAdmin && updateUsualOrder,
             productionId: production!.id,
@@ -278,11 +270,15 @@ export default function ProductionDashboardPage() {
 
   return (
     <AppShell title={production.name}>
-      <RunnerHeader
+      <DayHeader
         detail={detail}
         runnerName={production.runner_name}
         progress={view.progress}
-        statusCounts={statusCounts}
+        printHref={
+          isAdmin
+            ? `/labels?production=${encodeURIComponent(production.id)}`
+            : undefined
+        }
         onEditDetails={isAdmin ? openProductionEditor : undefined}
         onCopyRunnerLink={
           isAdmin && production.status !== "complete" ? copyRunnerLink : undefined
@@ -293,16 +289,19 @@ export default function ProductionDashboardPage() {
       <SearchRoster
         query={query}
         onQuery={setQuery}
+        needsOnly={needsOnly}
+        onNeedsOnly={setNeedsOnly}
+        neededCount={view.progress.needed}
         count={view.filteredItems.length}
         total={view.progress.total}
       />
 
-      <PeopleTab
+      <RosterList
         items={view.filteredItems}
         pendingOrders={pendingOrders}
         canManageSetup={isAdmin}
-        onAdvance={advance}
-        onEdit={openOrderEditor}
+        onTakeOrder={takeOrder}
+        onNoDrink={markNoDrink}
         onEditRoster={openRosterEditor}
       />
 
@@ -326,6 +325,7 @@ export default function ProductionDashboardPage() {
 
       {editingId ? (
         <OrderEditor
+          title={editorTitle}
           draft={draft}
           updateUsualOrder={updateUsualOrder}
           canUpdateUsualOrder={isAdmin}
