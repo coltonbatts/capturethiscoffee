@@ -30,7 +30,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-30 border-b border-black bg-white no-print">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:px-6">
           <Link href="/" className="flex min-w-0 shrink-0 items-center gap-3">
             <CaptureMark className="size-9 rounded-lg" priority />
             <span className="hidden truncate text-lg font-black leading-tight sm:block">
@@ -40,7 +40,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
           <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
             <Link
               href="/labels"
-              className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:border-black hover:bg-zinc-100 hover:text-black"
+              className="hidden sm:grid min-h-11 min-w-11 place-items-center rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:border-black hover:bg-zinc-100 hover:text-black"
               aria-label="Open label printing"
             >
               <Printer size={18} aria-hidden="true" />
@@ -77,7 +77,7 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-4 md:py-7">{children}</main>
+      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 md:py-7">{children}</main>
     </div>
   );
 }
