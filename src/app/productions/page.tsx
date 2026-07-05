@@ -1,13 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { ImageDown, Plus, RotateCcw } from "lucide-react";
+import {
+  ImageDown,
+  Plus,
+  RotateCcw,
+  Sliders,
+  ChevronUp,
+  ChevronDown,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
 import {
   EmptyState,
   Panel,
+  Field,
+  inputClass,
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/ui";
@@ -15,6 +26,8 @@ import {
   isSupabaseBacked,
   loadCoffeeData,
   resetDemoCoffeeData,
+  removeProductionRecord,
+  updateProductionRecord,
 } from "@/lib/data";
 import { isOrderCaptured } from "@/lib/order-progress";
 import type { CoffeeData, Production } from "@/lib/types";
@@ -24,6 +37,17 @@ type ProductionCard = {
   client?: { name: string };
   captured: number;
   remaining: number;
+};
+
+type EditDraft = {
+  id: string;
+  name: string;
+  new_client_name: string;
+  shoot_date: string;
+  location: string;
+  runner_name: string;
+  notes: string;
+  status: Production["status"];
 };
 
 const statusRank: Record<Production["status"], number> = {
@@ -36,6 +60,22 @@ export default function ProductionsPage() {
   const { isAdmin } = useAppAuth();
   const [data, setData] = useState<CoffeeData | null>(null);
   const [error, setError] = useState("");
+  const [customOrder, setCustomOrder] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("capture-this-coffee-production-order");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // fallback
+        }
+      }
+    }
+    return [];
+  });
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [editingProduction, setEditingProduction] = useState<EditDraft | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -55,30 +95,118 @@ export default function ProductionsPage() {
   const cards = useMemo(() => {
     if (!data) return [];
 
-    return data.productions
-      .slice()
-      .sort((a, b) => {
+    const sortedProductions = data.productions.slice();
+    if (customOrder.length > 0) {
+      const validIds = new Set(data.productions.map((p) => p.id));
+      const filteredOrder = customOrder.filter((id) => validIds.has(id));
+      const missingIds = data.productions
+        .filter((p) => !filteredOrder.includes(p.id))
+        .map((p) => p.id);
+      const finalOrder = [...filteredOrder, ...missingIds];
+
+      sortedProductions.sort((a, b) => {
+        return finalOrder.indexOf(a.id) - finalOrder.indexOf(b.id);
+      });
+    } else {
+      sortedProductions.sort((a, b) => {
         const rank = statusRank[a.status] - statusRank[b.status];
         if (rank !== 0) return rank;
         const dateA = a.shoot_date || a.created_at;
         const dateB = b.shoot_date || b.created_at;
         return dateB.localeCompare(dateA);
-      })
-      .map((production) => {
-        const client = data.clients.find((item) => item.id === production.client_id);
-        const orders = data.orders.filter(
-          (order) => order.production_id === production.id,
-        );
-        const captured = orders.filter((order) => isOrderCaptured(order)).length;
-        const remaining = orders.filter((order) => order.status === "not_asked").length;
-
-        return { production, client, captured, remaining };
       });
-  }, [data]);
+    }
+
+    return sortedProductions.map((production) => {
+      const client = data.clients.find((item) => item.id === production.client_id);
+      const orders = data.orders.filter(
+        (order) => order.production_id === production.id,
+      );
+      const captured = orders.filter((order) => isOrderCaptured(order)).length;
+      const remaining = orders.filter((order) => order.status === "not_asked").length;
+
+      return { production, client, captured, remaining };
+    });
+  }, [data, customOrder]);
 
   async function resetDemoData() {
     const next = await resetDemoCoffeeData();
     setData(next);
+    localStorage.removeItem("capture-this-coffee-production-order");
+    setCustomOrder([]);
+  }
+
+  function moveProduction(productionId: string, direction: "up" | "down") {
+    const ids = cards.map((c) => c.production.id);
+    const index = ids.indexOf(productionId);
+    if (index === -1) return;
+
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= ids.length) return;
+
+    const nextIds = [...ids];
+    const temp = nextIds[index];
+    nextIds[index] = nextIds[newIndex];
+    nextIds[newIndex] = temp;
+
+    localStorage.setItem("capture-this-coffee-production-order", JSON.stringify(nextIds));
+    setCustomOrder(nextIds);
+  }
+
+  function openProductionEditor(production: Production, clientName = "") {
+    setEditingProduction({
+      id: production.id,
+      name: production.name,
+      new_client_name: clientName,
+      shoot_date: production.shoot_date,
+      location: production.location || "",
+      runner_name: production.runner_name || "",
+      notes: production.notes || "",
+      status: production.status,
+    });
+  }
+
+  async function saveProductionEdit() {
+    if (!editingProduction || !data) return;
+    setSaving(true);
+    setError("");
+    try {
+      const next = await updateProductionRecord(data, editingProduction.id, {
+        name: editingProduction.name,
+        new_client_name: editingProduction.new_client_name,
+        shoot_date: editingProduction.shoot_date,
+        location: editingProduction.location,
+        runner_name: editingProduction.runner_name,
+        notes: editingProduction.notes,
+        status: editingProduction.status,
+      });
+      setData(next);
+      setEditingProduction(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save details.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(productionId: string, name: string) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${name}"? This will delete all orders and members linked to this day.`,
+      )
+    ) {
+      return;
+    }
+    setError("");
+    try {
+      const next = await removeProductionRecord(data!, productionId);
+      setData(next);
+      const nextOrder = customOrder.filter((id) => id !== productionId);
+      localStorage.setItem("capture-this-coffee-production-order", JSON.stringify(nextOrder));
+      setCustomOrder(nextOrder);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete day.");
+    }
   }
 
   return (
@@ -86,20 +214,31 @@ export default function ProductionsPage() {
       title="Days"
       actions={
         isAdmin ? (
-          <Link
-            href="/productions/new"
-            className={`${primaryButtonClass} min-w-11 px-0 sm:px-4`}
-            aria-label="New shoot day"
-          >
-            <Plus size={18} aria-hidden="true" />
-            <span className="hidden sm:inline">New</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsCustomizing(!isCustomizing)}
+              className={`${secondaryButtonClass} hidden sm:flex items-center gap-1.5`}
+              aria-label="Customize list order and settings"
+            >
+              <Sliders size={16} aria-hidden="true" />
+              <span>{isCustomizing ? "Done" : "Customize"}</span>
+            </button>
+            <Link
+              href="/productions/new"
+              className={`${primaryButtonClass} min-w-11 px-0 sm:px-4`}
+              aria-label="New day"
+            >
+              <Plus size={18} aria-hidden="true" />
+              <span className="hidden sm:inline">New</span>
+            </Link>
+          </div>
         ) : null
       }
     >
       <section className="mb-4 grid gap-3 border-y border-black bg-white py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
-          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Shoot days</h1>
+          <h1 className="text-2xl font-black leading-tight tracking-normal text-black">Days</h1>
           <p className="mt-1 text-sm font-medium leading-6 text-zinc-600">
             Put today&apos;s people on the roster, collect their drinks, print
             their labels.
@@ -140,14 +279,24 @@ export default function ProductionsPage() {
         </div>
       ) : cards.length ? (
         <div className="grid gap-2">
-          {cards.map((card) => (
-            <ProductionListItem key={card.production.id} card={card} />
+          {cards.map((card, idx) => (
+            <ProductionListItem
+              key={card.production.id}
+              card={card}
+              isCustomizing={isCustomizing}
+              onMoveUp={() => moveProduction(card.production.id, "up")}
+              onMoveDown={() => moveProduction(card.production.id, "down")}
+              onEdit={() => openProductionEditor(card.production, card.client?.name || "")}
+              onDelete={() => handleDelete(card.production.id, card.production.name)}
+              isFirst={idx === 0}
+              isLast={idx === cards.length - 1}
+            />
           ))}
         </div>
       ) : (
         <EmptyState
           title="No days yet"
-          description="Create a shoot day to start confirming orders."
+          description="Create a day to start confirming orders."
           action={
             isAdmin ? (
               <Link href="/productions/new" className={primaryButtonClass}>
@@ -158,34 +307,263 @@ export default function ProductionsPage() {
           }
         />
       )}
+
+      {/* Add spacing at the bottom on mobile to account for the sticky bottom nav bar */}
+      <div className="h-20 sm:hidden" />
+
+      {/* Mobile Sticky Bottom Nav Bar */}
+      {isAdmin && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black bg-white/95 p-3 backdrop-blur-sm sm:hidden no-print shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-2.5">
+            <Link
+              href="/productions/new"
+              className={`${primaryButtonClass} flex-1 min-h-12 text-sm uppercase tracking-wider`}
+            >
+              <Plus size={18} aria-hidden="true" />
+              New Day
+            </Link>
+            <Link
+              href="/labels"
+              className={`${secondaryButtonClass} flex-1 min-h-12 text-sm uppercase tracking-wider`}
+            >
+              <ImageDown size={18} aria-hidden="true" />
+              Labels
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsCustomizing(!isCustomizing)}
+              className={`${secondaryButtonClass} flex-1 min-h-12 text-sm uppercase tracking-wider ${
+                isCustomizing ? "bg-black text-white hover:bg-zinc-800" : ""
+              }`}
+            >
+              <Sliders size={18} aria-hidden="true" />
+              {isCustomizing ? "Done" : "Sort"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Production Details Modal */}
+      {editingProduction && (
+        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3 no-print">
+          <div className="mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5">
+            <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit Day Details</h2>
+            <Field label="Day name">
+              <input
+                className={inputClass}
+                value={editingProduction.name}
+                onChange={(event) =>
+                  setEditingProduction({ ...editingProduction, name: event.target.value })
+                }
+                required
+                autoFocus
+              />
+            </Field>
+            <Field label="Client / brand (optional, shows on labels)">
+              <input
+                className={inputClass}
+                value={editingProduction.new_client_name}
+                onChange={(event) =>
+                  setEditingProduction({ ...editingProduction, new_client_name: event.target.value })
+                }
+                placeholder="Client or brand name"
+              />
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Shoot date">
+                <input
+                  className={inputClass}
+                  type="date"
+                  value={editingProduction.shoot_date}
+                  onChange={(event) =>
+                    setEditingProduction({ ...editingProduction, shoot_date: event.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Runner">
+                <input
+                  className={inputClass}
+                  value={editingProduction.runner_name}
+                  onChange={(event) =>
+                    setEditingProduction({ ...editingProduction, runner_name: event.target.value })
+                  }
+                  placeholder="Runner name"
+                />
+              </Field>
+            </div>
+            <Field label="Location">
+              <input
+                className={inputClass}
+                value={editingProduction.location}
+                onChange={(event) =>
+                  setEditingProduction({ ...editingProduction, location: event.target.value })
+                }
+                placeholder="Studio or address"
+              />
+            </Field>
+            <Field label="Status">
+              <select
+                className={inputClass}
+                value={editingProduction.status}
+                onChange={(event) =>
+                  setEditingProduction({
+                    ...editingProduction,
+                    status: event.target.value as Production["status"],
+                  })
+                }
+              >
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="complete">Complete</option>
+              </select>
+            </Field>
+            <Field label="Notes">
+              <textarea
+                className={`${inputClass} min-h-20 py-3`}
+                value={editingProduction.notes}
+                onChange={(event) =>
+                  setEditingProduction({ ...editingProduction, notes: event.target.value })
+                }
+                placeholder="Call time, coffee shop, handoff"
+              />
+            </Field>
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setEditingProduction(null)}
+                className={secondaryButtonClass}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveProductionEdit}
+                disabled={saving || !editingProduction.name.trim()}
+                className={primaryButtonClass}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
 
-function ProductionListItem({ card }: { card: ProductionCard }) {
+function ProductionListItem({
+  card,
+  isCustomizing,
+  onMoveUp,
+  onMoveDown,
+  onEdit,
+  onDelete,
+  isFirst,
+  isLast,
+}: {
+  card: ProductionCard;
+  isCustomizing: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}) {
+  const content = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="min-w-0 flex-1">
+        <h2 className="text-lg font-black uppercase tracking-tight text-black truncate">
+          {card.production.name}
+        </h2>
+        <p className="mt-0.5 text-sm text-zinc-600 truncate">{productionDetail(card)}</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {card.production.status !== "complete" ? (
+          <span className="rounded-md border border-black bg-black px-2.5 py-1 text-xs font-black uppercase text-white">
+            {card.production.status === "active" ? "Active" : "Planning"}
+          </span>
+        ) : (
+          <span className="rounded-md border border-zinc-300 bg-zinc-100 px-2.5 py-1 text-xs font-bold uppercase text-zinc-500">
+            Complete
+          </span>
+        )}
+        <span className="rounded-md border border-zinc-500 bg-white px-2.5 py-1 text-sm font-black text-zinc-900">
+          {card.remaining
+            ? `${card.remaining} ${card.remaining === 1 ? "drink" : "drinks"} needed`
+            : `${card.captured} ${card.captured === 1 ? "drink" : "drinks"} in`}
+        </span>
+      </div>
+
+      {isCustomizing && (
+        <div className="mt-3 flex items-center justify-end gap-2 border-t border-zinc-200 pt-3 sm:mt-0 sm:border-t-0 sm:pt-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMoveUp?.();
+            }}
+            disabled={isFirst}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-black active:translate-y-px disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Move Up"
+          >
+            <ChevronUp size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMoveDown?.();
+            }}
+            disabled={isLast}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-black active:translate-y-px disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Move Down"
+          >
+            <ChevronDown size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            className="flex h-10 px-3 items-center justify-center gap-1.5 rounded-lg border border-zinc-400 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-black active:translate-y-px"
+            aria-label="Edit Day"
+          >
+            <Settings size={16} />
+            <span className="text-xs font-bold uppercase">Edit</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-700 bg-white text-red-700 hover:bg-red-50 active:translate-y-px"
+            aria-label="Delete Day"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (isCustomizing) {
+    return <div className="block rounded-xl border border-zinc-400 bg-white p-4">{content}</div>;
+  }
+
   return (
     <Link
       href={`/productions/${card.production.id}`}
       className="block rounded-xl border border-zinc-400 bg-white p-4 transition hover:border-black active:translate-y-px"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold">{card.production.name}</h2>
-          <p className="truncate text-sm text-zinc-600">{productionDetail(card)}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {card.production.status !== "complete" ? (
-            <span className="rounded-md border border-black bg-black px-2.5 py-1 text-xs font-black uppercase text-white">
-              {card.production.status === "active" ? "Active" : "Planning"}
-            </span>
-          ) : null}
-          <span className="rounded-md border border-zinc-500 px-2.5 py-1 text-sm font-black text-zinc-900">
-            {card.remaining
-              ? `${card.remaining} ${card.remaining === 1 ? "drink" : "drinks"} needed`
-              : `${card.captured} ${card.captured === 1 ? "drink" : "drinks"} in`}
-          </span>
-        </div>
-      </div>
+      {content}
     </Link>
   );
 }

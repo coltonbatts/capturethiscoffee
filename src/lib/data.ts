@@ -68,6 +68,8 @@ type NewProductionInput = {
 
 type UpdateProductionInput = {
   name?: string;
+  client_id?: string;
+  new_client_name?: string;
   shoot_date?: string;
   location?: string;
   runner_name?: string;
@@ -527,9 +529,49 @@ export async function updateProductionRecord(
   const name = input.name === undefined ? production.name : input.name.trim();
   if (!name) throw new Error("Production name is required.");
 
+  let clientId = input.client_id === undefined ? production.client_id : input.client_id;
+  let nextClients = current.clients;
+  const newClientName = input.new_client_name?.trim();
+
+  const supabase = await getWritableSupabase();
+
+  if (newClientName) {
+    const existing = findClientByName(current, newClientName);
+    if (existing) {
+      clientId = existing.id;
+    } else {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("clients")
+          .insert({
+            name: newClientName,
+            active: true,
+          })
+          .select("*")
+          .single();
+
+        if (error) throwSupabaseWriteError(error);
+        const newClient = mapClient(data);
+        clientId = newClient.id;
+        nextClients = [newClient, ...current.clients];
+      } else {
+        const newClient = {
+          id: createId("client"),
+          name: newClientName,
+          notes: "",
+          active: true,
+          created_at: new Date().toISOString(),
+        };
+        clientId = newClient.id;
+        nextClients = [newClient, ...current.clients];
+      }
+    }
+  }
+
   const patch: Production = {
     ...production,
     name,
+    client_id: clientId,
     shoot_date:
       input.shoot_date === undefined
         ? production.shoot_date
@@ -544,12 +586,12 @@ export async function updateProductionRecord(
     status: input.status ?? production.status,
   };
 
-  const supabase = await getWritableSupabase();
   if (supabase) {
     const { data, error } = await supabase
       .from("productions")
       .update({
         name: patch.name,
+        client_id: patch.client_id,
         shoot_date: blankToNull(patch.shoot_date),
         location: blankToNull(patch.location),
         runner_name: blankToNull(patch.runner_name),
@@ -564,6 +606,7 @@ export async function updateProductionRecord(
     const updated = mapProduction(data);
     return {
       ...current,
+      clients: nextClients,
       productions: current.productions.map((item) =>
         item.id === updated.id ? updated : item,
       ),
@@ -572,6 +615,7 @@ export async function updateProductionRecord(
 
   const next = {
     ...current,
+    clients: nextClients,
     productions: current.productions.map((item) =>
       item.id === productionId ? patch : item,
     ),
@@ -1204,6 +1248,37 @@ function withoutRoster(current: CoffeeData, rosterId: string): CoffeeData {
     ),
     orders: current.orders.filter((order) => order.roster_id !== rosterId),
   };
+}
+
+export async function removeProductionRecord(
+  current: CoffeeData,
+  productionId: string,
+): Promise<CoffeeData> {
+  const supabase = await getWritableSupabase();
+  if (supabase) {
+    const { error } = await supabase
+      .from("productions")
+      .delete()
+      .eq("id", productionId);
+
+    if (error) throwSupabaseWriteError(error);
+
+    return {
+      ...current,
+      productions: current.productions.filter((p) => p.id !== productionId),
+      production_roster: current.production_roster.filter((r) => r.production_id !== productionId),
+      orders: current.orders.filter((o) => o.production_id !== productionId),
+    };
+  }
+
+  const next = {
+    ...current,
+    productions: current.productions.filter((p) => p.id !== productionId),
+    production_roster: current.production_roster.filter((r) => r.production_id !== productionId),
+    orders: current.orders.filter((o) => o.production_id !== productionId),
+  };
+  saveCoffeeData(next);
+  return next;
 }
 
 function defaultRosterPeople(data: CoffeeData, clientId: string) {
