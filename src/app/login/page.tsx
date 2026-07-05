@@ -6,8 +6,6 @@ import { CaptureMark } from "@/components/capture-mark";
 import {
   Field,
   inputClass,
-  primaryButtonClass,
-  secondaryButtonClass,
 } from "@/components/ui";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { AUTH_ACCESS_MESSAGE } from "@/lib/auth";
@@ -17,12 +15,19 @@ import {
   supabaseConfigError,
 } from "@/lib/supabase";
 
+// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
+const customPrimaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+
+const customSecondaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
+
 export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8">
-          <CaptureMark invert className="size-11 animate-pulse rounded-xl" />
+        <main className="grid min-h-dvh place-items-center px-4 py-8">
+          <CaptureMark className="size-11 animate-pulse rounded-xl" />
         </main>
       }
     >
@@ -117,8 +122,6 @@ function LoginForm() {
     setRedirectingToGoogle(true);
     setError("");
 
-    // Come back to this page so the existing session effect finishes the
-    // redirect to the requested destination once the OAuth code is exchanged.
     const redirectTo = new URL("/login", window.location.origin);
     const next = new URLSearchParams(window.location.search).get("next");
     if (next?.startsWith("/")) {
@@ -137,11 +140,11 @@ function LoginForm() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-zinc-950 px-4 py-8 text-white">
-      <section className="w-full max-w-md overflow-hidden rounded-xl border border-black bg-white text-black">
-        <div className="flex items-center gap-3 border-b border-black bg-black p-5 text-white">
+    <main className="grid min-h-dvh place-items-center px-4 py-8">
+      <section className="w-full max-w-md overflow-hidden rounded-xl border-[3px] border-black bg-white text-black shadow-[6px_6px_0_#000]">
+        <div className="flex items-center gap-3 border-b-[3px] border-black bg-black p-5 text-white">
           <CaptureMark invert className="size-11 rounded-xl" />
-          <h1 className="text-xl font-semibold">Capture This</h1>
+          <h1 className="text-xl font-black uppercase tracking-tight text-white">Capture This</h1>
         </div>
         <div className="grid gap-4 p-5">
           {isSupabaseConfigured ? (
@@ -149,20 +152,22 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => void signInWithGoogle()}
-                className={secondaryButtonClass}
+                className={`${customSecondaryBtn} w-full`}
                 disabled={submitting || redirectingToGoogle}
               >
                 <GoogleMark />
-                {redirectingToGoogle
-                  ? "Opening Google…"
-                  : "Continue with Google"}
+                <span>
+                  {redirectingToGoogle
+                    ? "Opening Google…"
+                    : "Continue with Google"}
+                </span>
               </button>
               <div className="flex items-center gap-3" aria-hidden="true">
-                <span className="h-px flex-1 bg-zinc-300" />
-                <span className="text-xs font-bold uppercase text-zinc-500">
+                <span className="h-0.5 flex-1 bg-zinc-300" />
+                <span className="text-xs font-black uppercase text-zinc-500">
                   or
                 </span>
-                <span className="h-px flex-1 bg-zinc-300" />
+                <span className="h-0.5 flex-1 bg-zinc-300" />
               </div>
             </>
           ) : null}
@@ -196,7 +201,7 @@ function LoginForm() {
             ) : null}
             <button
               type="submit"
-              className={`${primaryButtonClass} mt-1`}
+              className={`${customPrimaryBtn} mt-1 w-full`}
               disabled={submitting}
             >
               {isSupabaseConfigured

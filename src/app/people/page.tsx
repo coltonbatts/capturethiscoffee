@@ -9,10 +9,7 @@ import {
   EmptyState,
   Field,
   Panel,
-  cardClass,
   inputClass,
-  primaryButtonClass,
-  secondaryButtonClass,
 } from "@/components/ui";
 import {
   createPersonRecord,
@@ -28,6 +25,13 @@ import {
   type PersonForm,
 } from "@/lib/people";
 import type { CoffeeData, Person } from "@/lib/types";
+
+// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
+const customPrimaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+
+const customSecondaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
 
 export default function PeoplePage() {
   const [data, setData] = useState<CoffeeData | null>(null);
@@ -103,129 +107,145 @@ export default function PeoplePage() {
   }
 
   return (
-    <AppShell title="People" requireAuth>
-      {error ? (
-        <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
-          {error}
-        </div>
-      ) : null}
+    <AppShell title="Setup" requireAuth>
+      {/* Center Layout Container for a Clean Studio Vibe */}
+      <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
+        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
+          <h1 className="text-2xl font-black uppercase tracking-tight text-black">People Setup</h1>
+          <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+            Create or edit crew members, guests, and client contacts. Manage their usual coffee orders.
+          </p>
+        </section>
 
-      <div className="mb-3 flex min-w-0 gap-2">
-        <input
-          className={`${inputClass} flex-1`}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search people"
-          aria-label="Search people"
-        />
-        <button
-          type="button"
-          onClick={() => setShowAddForm(true)}
-          className={`${primaryButtonClass} shrink-0 px-3`}
-        >
-          <Plus size={18} aria-hidden="true" />
-          Add person
-        </button>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {!data ? (
-          [0, 1, 2, 3, 4, 5].map((item) => (
-            <Panel key={item} className="h-28 animate-pulse bg-zinc-100 p-4" />
-          ))
-        ) : !people.length ? (
-          <EmptyState title="No people found" description="Add someone or clear your search." />
+        {error ? (
+          <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+            {error}
+          </div>
         ) : null}
-        {people.map((person) => (
-          <article key={person.id} className={`${cardClass} flex gap-3`}>
-            <Avatar person={person} />
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-lg font-semibold">{person.name}</h2>
-              <p className="truncate text-sm text-zinc-600">
-                {[person.role, person.department].filter(Boolean).join(" · ") ||
-                  personTypeLabel(person.type)}
-              </p>
-              {person.company ? (
-                <p className="truncate text-sm text-zinc-500">{person.company}</p>
-              ) : null}
-              <p className="mt-2 text-sm leading-5 text-zinc-700">
-                {person.usual_order || "No usual order"}
-              </p>
+
+        <div className="mb-4 flex min-w-0 gap-3">
+          <input
+            className={`${inputClass} flex-1 rounded-lg border-[3px] border-black px-3.5 text-base font-medium`}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search people..."
+            aria-label="Search people"
+          />
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className={customPrimaryBtn + " shrink-0"}
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>Add</span>
+          </button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {!data ? (
+            [0, 1, 2, 3, 4, 5].map((item) => (
+              <Panel key={item} className="h-28 animate-pulse bg-zinc-100 p-4 border-[3px] border-black shadow-[4px_4px_0_#000]" />
+            ))
+          ) : !people.length ? (
+            <div className="sm:col-span-2">
+              <EmptyState title="No people found" description="Add someone or clear your search." />
             </div>
-            <button
-              type="button"
-              className={`${secondaryButtonClass} size-11 shrink-0 px-0`}
-              onClick={() => {
-                setEditingPerson(person);
-                setEditForm(personToForm(person));
-              }}
-              aria-label={`Edit ${person.name}`}
-            >
-              <Pencil size={18} aria-hidden="true" />
-            </button>
-          </article>
-        ))}
+          ) : null}
+          {data &&
+            people.map((person) => (
+              <article
+                key={person.id}
+                className="flex gap-4 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] hover:shadow-[6px_6px_0_#000] transition-[transform,box-shadow] duration-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000] min-w-0"
+              >
+                <Avatar person={person} />
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate text-lg font-black uppercase tracking-tight text-black">{person.name}</h2>
+                  <p className="truncate text-xs font-bold uppercase text-zinc-500 mt-0.5">
+                    {[person.role, person.department].filter(Boolean).join(" · ") ||
+                      personTypeLabel(person.type)}
+                  </p>
+                  {person.company && (
+                    <p className="truncate text-xs font-semibold text-zinc-400 mt-0.5">{person.company}</p>
+                  )}
+                  <p className="mt-2.5 text-sm font-semibold text-zinc-700 truncate">
+                    {person.usual_order || "No usual order"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 transition active:translate-y-px shrink-0"
+                  onClick={() => {
+                    setEditingPerson(person);
+                    setEditForm(personToForm(person));
+                  }}
+                  aria-label={`Edit ${person.name}`}
+                >
+                  <Pencil size={16} aria-hidden="true" />
+                </button>
+              </article>
+            ))}
+        </div>
       </div>
 
-      {showAddForm ? (
-        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3">
+      {showAddForm && (
+        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
           <form
             onSubmit={addPerson}
             role="dialog"
             aria-modal="true"
             aria-label="Add person"
-            className="mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5"
+            className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]"
           >
-            <h2 className="text-lg font-semibold">Add person</h2>
+            <h2 className="text-lg font-black uppercase tracking-tight text-black">Add person</h2>
             <PersonFields form={form} onChange={setForm} showActive={false} />
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
               <button
                 type="button"
                 onClick={() => {
                   setShowAddForm(false);
                   setForm(emptyPersonForm("crew"));
                 }}
-                className={secondaryButtonClass}
+                className={customSecondaryBtn}
               >
                 Cancel
               </button>
-              <button type="submit" className={primaryButtonClass} disabled={saving}>
+              <button type="submit" className={customPrimaryBtn} disabled={saving}>
                 {saving ? "Adding…" : "Add person"}
               </button>
             </div>
           </form>
         </div>
-      ) : null}
+      )}
 
-      {editingPerson ? (
-        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-3">
+      {editingPerson && (
+        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
           <form
             onSubmit={savePersonEdit}
             role="dialog"
             aria-modal="true"
             aria-label="Edit person"
-            className="mx-auto grid max-h-[90dvh] w-full max-w-xl min-w-0 gap-3 overflow-y-auto rounded-t-xl border border-black bg-white p-4 sm:p-5"
+            className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]"
           >
-            <h2 className="text-lg font-semibold">Edit person</h2>
+            <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit person</h2>
             <PersonFields form={editForm} onChange={setEditForm} showActive />
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
               <button
                 type="button"
                 onClick={() => {
                   setEditingPerson(null);
                   setEditForm(emptyPersonForm("crew"));
                 }}
-                className={secondaryButtonClass}
+                className={customSecondaryBtn}
               >
                 Cancel
               </button>
-              <button type="submit" className={primaryButtonClass} disabled={saving}>
+              <button type="submit" className={customPrimaryBtn} disabled={saving}>
                 {saving ? "Saving…" : "Save person"}
               </button>
             </div>
           </form>
         </div>
-      ) : null}
+      )}
     </AppShell>
   );
 }
@@ -328,17 +348,17 @@ function PersonFields({
           placeholder="Identification or relationship notes"
         />
       </Field>
-      {showActive ? (
-        <label className="flex min-h-11 items-center gap-3 rounded-lg border border-zinc-500 px-3.5 text-sm font-medium text-zinc-700">
+      {showActive && (
+        <label className="flex min-h-11 items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3.5 text-sm font-black text-black">
           <input
             type="checkbox"
             checked={form.active}
             onChange={(event) => onChange({ ...form, active: event.target.checked })}
             className="size-4 accent-black"
           />
-          Active
+          <span>Active</span>
         </label>
-      ) : null}
+      )}
       <datalist id="person-group-suggestions">
         {groupSuggestions.map((group) => (
           <option key={group} value={group} />

@@ -270,116 +270,118 @@ export default function ProductionDashboardPage() {
 
   return (
     <AppShell title={production.name}>
-      <DayHeader
-        detail={detail}
-        runnerName={production.runner_name}
-        progress={view.progress}
-        printHref={
-          isAdmin
-            ? `/labels?production=${encodeURIComponent(production.id)}`
-            : undefined
-        }
-        onEditDetails={isAdmin ? openProductionEditor : undefined}
-        onCopyRunnerLink={
-          isAdmin && production.status !== "complete" ? copyRunnerLink : undefined
-        }
-        copyLinkState={copyLinkState}
-      />
-
-      <SearchRoster
-        query={query}
-        onQuery={setQuery}
-        needsOnly={needsOnly}
-        onNeedsOnly={setNeedsOnly}
-        neededCount={view.progress.needed}
-        count={view.filteredItems.length}
-        total={view.progress.total}
-      />
-
-      <RosterList
-        items={view.filteredItems}
-        pendingOrders={pendingOrders}
-        canManageSetup={isAdmin}
-        onTakeOrder={takeOrder}
-        onNoDrink={markNoDrink}
-        onEditRoster={openRosterEditor}
-      />
-
-      {isAdmin ? (
-        <AddToRoster
-          people={view.peopleNotOnRoster.map((person) => ({
-            id: person.id,
-            label: `${person.name} - ${person.department || person.type}`,
-          }))}
-          value={personToAdd}
-          onChange={setPersonToAdd}
-          onAdd={addPerson}
-          onNewGuest={() => {
-            setQuickAddForm(emptyPersonForm("guest"));
-            setLinkQuickAddToClient(false);
-            setQuickAddOpen(true);
-          }}
-          saving={saving}
+      <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
+        <DayHeader
+          detail={detail}
+          runnerName={production.runner_name}
+          progress={view.progress}
+          printHref={
+            isAdmin
+              ? `/labels?production=${encodeURIComponent(production.id)}`
+              : undefined
+          }
+          onEditDetails={isAdmin ? openProductionEditor : undefined}
+          onCopyRunnerLink={
+            isAdmin && production.status !== "complete" ? copyRunnerLink : undefined
+          }
+          copyLinkState={copyLinkState}
         />
-      ) : null}
 
-      {editingId ? (
-        <OrderEditor
-          title={editorTitle}
-          draft={draft}
-          updateUsualOrder={updateUsualOrder}
-          canUpdateUsualOrder={isAdmin}
-          onChange={setDraft}
-          onUpdateUsualOrder={setUpdateUsualOrder}
-          onCancel={closeOrderEditor}
-          onSave={saveDraft}
-          saving={saving}
+        <SearchRoster
+          query={query}
+          onQuery={setQuery}
+          needsOnly={needsOnly}
+          onNeedsOnly={setNeedsOnly}
+          neededCount={view.progress.needed}
+          count={view.filteredItems.length}
+          total={view.progress.total}
         />
-      ) : null}
 
-      {editingRosterId && isAdmin ? (
-        <RosterEditor
-          draft={rosterDraft}
-          onChange={setRosterDraft}
-          onCancel={closeRosterEditor}
-          onRemove={removeRoster}
-          onSave={saveRoster}
-          saving={saving}
+        <RosterList
+          items={view.filteredItems}
+          pendingOrders={pendingOrders}
+          canManageSetup={isAdmin}
+          onTakeOrder={takeOrder}
+          onNoDrink={markNoDrink}
+          onEditRoster={openRosterEditor}
         />
-      ) : null}
 
-      {editingProduction && isAdmin ? (
-        <ProductionDetailsEditor
-          draft={productionDraft}
-          onChange={setProductionDraft}
-          onCancel={closeProductionEditor}
-          onSave={saveProductionDetails}
-          saving={saving}
-        />
-      ) : null}
+        {isAdmin ? (
+          <AddToRoster
+            people={view.peopleNotOnRoster.map((person) => ({
+              id: person.id,
+              label: `${person.name} - ${person.department || person.type}`,
+            }))}
+            value={personToAdd}
+            onChange={setPersonToAdd}
+            onAdd={addPerson}
+            onNewGuest={() => {
+              setQuickAddForm(emptyPersonForm("guest"));
+              setLinkQuickAddToClient(false);
+              setQuickAddOpen(true);
+            }}
+            saving={saving}
+          />
+        ) : null}
 
-      {quickAddOpen && isAdmin ? (
-        <QuickAddPersonSheet
-          form={quickAddForm}
-          clientName={client?.name || "this client"}
-          linkToClient={linkQuickAddToClient}
-          onChange={setQuickAddForm}
-          onLinkToClientChange={setLinkQuickAddToClient}
-          onCancel={() => {
-            setQuickAddOpen(false);
-            setQuickAddForm(emptyPersonForm("guest"));
-            setLinkQuickAddToClient(false);
-          }}
-          onSubmit={quickAddPerson}
-          saving={saving}
-        />
-      ) : null}
+        {editingId ? (
+          <OrderEditor
+            title={editorTitle}
+            draft={draft}
+            updateUsualOrder={updateUsualOrder}
+            canUpdateUsualOrder={isAdmin}
+            onChange={setDraft}
+            onUpdateUsualOrder={setUpdateUsualOrder}
+            onCancel={closeOrderEditor}
+            onSave={saveDraft}
+            saving={saving}
+          />
+        ) : null}
 
-      {runnerLink && isAdmin ? (
-        <RunnerLinkSheet url={runnerLink} onClose={() => setRunnerLink(null)} />
-      ) : null}
+        {editingRosterId && isAdmin ? (
+          <RosterEditor
+            draft={rosterDraft}
+            onChange={setRosterDraft}
+            onCancel={closeRosterEditor}
+            onRemove={removeRoster}
+            onSave={saveRoster}
+            saving={saving}
+          />
+        ) : null}
 
-      {error ? <ErrorToast message={error} onDismiss={() => setError("")} /> : null}
+        {editingProduction && isAdmin ? (
+          <ProductionDetailsEditor
+            draft={productionDraft}
+            onChange={setProductionDraft}
+            onCancel={closeProductionEditor}
+            onSave={saveProductionDetails}
+            saving={saving}
+          />
+        ) : null}
+
+        {quickAddOpen && isAdmin ? (
+          <QuickAddPersonSheet
+            form={quickAddForm}
+            clientName={client?.name || "this client"}
+            linkToClient={linkQuickAddToClient}
+            onChange={setQuickAddForm}
+            onLinkToClientChange={setLinkQuickAddToClient}
+            onCancel={() => {
+              setQuickAddOpen(false);
+              setQuickAddForm(emptyPersonForm("guest"));
+              setLinkQuickAddToClient(false);
+            }}
+            onSubmit={quickAddPerson}
+            saving={saving}
+          />
+        ) : null}
+
+        {runnerLink && isAdmin ? (
+          <RunnerLinkSheet url={runnerLink} onClose={() => setRunnerLink(null)} />
+        ) : null}
+
+        {error ? <ErrorToast message={error} onDismiss={() => setError("")} /> : null}
+      </div>
     </AppShell>
   );
 }

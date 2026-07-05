@@ -6,26 +6,21 @@ import {
   Clipboard,
   Download,
   FileSpreadsheet,
-  ImageDown,
-  Link2,
   Loader2,
   Printer,
   RotateCcw,
   Share2,
   Smile,
-  UserRound,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ScreenLabel } from "@/components/coffee-label-renderer";
+import { useAppAuth } from "@/components/app-auth-provider";
 import {
   Avatar,
   EmptyState,
   Field,
-  Panel,
   inputClass,
-  primaryButtonClass,
-  secondaryButtonClass,
 } from "@/components/ui";
 import {
   buildLabelExportSelection,
@@ -41,14 +36,12 @@ import {
   describeDataError,
   isSupabaseBacked,
   loadCoffeeData,
-  resetDemoCoffeeData,
   updateOrderRecord,
 } from "@/lib/data";
 import { mintProductionShareLink } from "@/lib/share-links";
 import { formatDrink } from "@/lib/order-summary";
 import {
   niimbotM2ExportFileName,
-  niimbotM2ExportPreset,
   renderNiimbotM2LabelPngBlob,
 } from "@/lib/niimbot-m2-export";
 import type { CoffeeData } from "@/lib/types";
@@ -59,7 +52,15 @@ type ShareNavigator = Navigator & {
   share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
 };
 
+// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
+const customPrimaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+
+const customSecondaryBtn =
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
+
 export default function LabelExportPage() {
+  const { isAdmin } = useAppAuth();
   const [requestedOrderId] = useState(() => {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("order") || "";
@@ -141,7 +142,6 @@ export default function LabelExportPage() {
 
   function chooseProduction(nextProductionId: string) {
     setProductionId(nextProductionId);
-    // Batch by default: switching production selects its whole label run.
     const nextItems = data
       ? labelExportItemsForProduction(data, nextProductionId)
       : [];
@@ -171,10 +171,10 @@ export default function LabelExportPage() {
       try {
         await writeClipboardText(url);
         setPrinterLinkState("copied");
-        setStatus("CTC Printer link copied. Paste it into CTC Printer and tap Link production.");
+        setStatus("CTC Printer link copied to clipboard.");
       } catch {
         setPrinterLinkState("idle");
-        setStatus("CTC Printer link created. Select the link below and paste it into CTC Printer.");
+        setStatus("Printer link created. Select and copy it below.");
       }
     } catch (err) {
       setPrinterLinkState("idle");
@@ -219,11 +219,6 @@ export default function LabelExportPage() {
     setStatus("");
   }
 
-  /**
-   * Best-effort bookkeeping after a successful export so "Unprinted" stays
-   * meaningful for reprints. Failures never turn a completed export into an
-   * error.
-   */
   async function markLabelsPrinted(orderIds: string[]) {
     if (!data) return;
     try {
@@ -235,18 +230,10 @@ export default function LabelExportPage() {
       }
       setData(next);
     } catch {
-      // Leave the printed flags as-is; the export itself already succeeded.
+      // Ignore printing flag updates on export
     }
   }
 
-  async function resetDemo() {
-    const next = await resetDemoCoffeeData();
-    setData(next);
-    const initialSelection = initialLabelExportSelection(next, requestedOrderId);
-    setProductionId(initialSelection.productionId);
-    setSelectedOrderIds(initialSelection.selectedOrderIds);
-    setStatus("Demo data reset on this device.");
-  }
 
   async function downloadSelected() {
     if (!labels.length) {
@@ -266,7 +253,7 @@ export default function LabelExportPage() {
       setStatus(
         `${labels.length} label PNG ${
           labels.length === 1 ? "file" : "files"
-        } ready for NIIMBOT app import.`,
+        } ready for import.`,
       );
       await markLabelsPrinted(labels.map((label) => label.id));
     } catch (err) {
@@ -289,7 +276,7 @@ export default function LabelExportPage() {
     try {
       const blob = await renderNiimbotM2LabelPngBlob(testLabel);
       downloadBlob(blob, niimbotM2ExportFileName(testLabel));
-      setStatus(`${testLabel.title} test label PNG ready for NIIMBOT app import.`);
+      setStatus(`${testLabel.title} test label PNG downloaded.`);
     } catch (err) {
       setError(describeDataError(err, "Could not export the test label."));
     } finally {
@@ -305,7 +292,7 @@ export default function LabelExportPage() {
 
     const shareNavigator = navigator as ShareNavigator;
     if (typeof shareNavigator.share !== "function") {
-      setStatus("Sharing is not available here. Use Download PNG instead.");
+      setStatus("Sharing is not available here. Use Download instead.");
       return;
     }
 
@@ -327,16 +314,16 @@ export default function LabelExportPage() {
         typeof shareNavigator.canShare === "function" &&
         !shareNavigator.canShare({ files })
       ) {
-        setStatus("This browser cannot share PNG files. Use Download PNG instead.");
+        setStatus("This device cannot share these files. Use Download instead.");
         return;
       }
 
       await shareNavigator.share({
         files,
         title: "Capture This Coffee labels",
-        text: "Print-ready Capture This Coffee label PNGs.",
+        text: "Print-ready label PNGs.",
       });
-      setStatus("Shared PNG label file.");
+      setStatus("Shared label files.");
       await markLabelsPrinted(labels.map((label) => label.id));
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -357,209 +344,166 @@ export default function LabelExportPage() {
     downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), fileName);
     setError("");
     setStatus(
-      `${selection.items.length} ${selection.items.length === 1 ? "row" : "rows"} exported for NIIMBOT batch templates.`,
+      `${selection.items.length} ${selection.items.length === 1 ? "row" : "rows"} exported.`,
     );
   }
 
   return (
     <AppShell title="Labels" requireAuth>
-      <section className="rule-double grid gap-4 pb-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-normal text-zinc-500">
-              Step 3
-            </p>
-            <h1 className="mt-0.5 text-2xl font-black leading-tight tracking-normal text-black">
-              Send labels to CTC Printer
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
-              Take the orders here, copy the production link, paste it into CTC
-              Printer, and print from the phone connected to the NIIMBOT.
-            </p>
-          </div>
-          <div className="rounded-lg border-2 border-black bg-white px-3 py-2 font-mono text-sm font-black text-black">
-            {niimbotM2ExportPreset.widthMm}×{niimbotM2ExportPreset.heightMm}mm
-            <span className="mx-1.5 text-zinc-400">/</span>
-            {niimbotM2ExportPreset.dpi} DPI
-          </div>
-        </div>
-      </section>
-
-      {error ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
-          <span>{error}</span>
-          {!data ? (
-            <button
-              type="button"
-              onClick={loadData}
-              className={`${secondaryButtonClass} min-h-10 px-3`}
-            >
-              <RotateCcw size={16} aria-hidden="true" />
-              Try again
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      {status ? (
-        <p className="mt-4 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
-          {status}
-        </p>
-      ) : null}
-
-      <Panel className="mt-4 grid gap-4 border-2 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="flex items-center gap-2 text-xl font-black">
-              <Printer size={22} aria-hidden="true" />
-              CTC Printer
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">
-              {selectedProduction
-                ? `${selectedProduction.name}: ${activeItems.length} printable labels, ${unprintedIds.length} not yet printed.`
-                : "Choose a production to link the printer app."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void copyPrinterLink()}
-            disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
-            className={`${primaryButtonClass} min-h-14 text-base`}
-          >
-            {printerLinkState === "working" ? (
-              <Loader2 size={20} className="animate-spin" aria-hidden="true" />
-            ) : printerLinkState === "copied" ? (
-              <CheckCircle2 size={20} aria-hidden="true" />
-            ) : (
-              <Clipboard size={20} aria-hidden="true" />
-            )}
-            {printerLinkState === "working"
-              ? "Creating link..."
-              : printerLinkState === "copied"
-                ? "Printer link copied"
-                : "Copy CTC Printer link"}
-          </button>
-        </div>
-
-        <Field label="Production to print">
-          <select
-            className={inputClass}
-            value={productionId}
-            onChange={(event) => chooseProduction(event.target.value)}
-            disabled={!productions.length}
-          >
-            {productions.map((production) => (
-              <option key={production.id} value={production.id}>
-                {production.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        {printerLink ? (
-          <div className="grid gap-2">
-            <label
-              htmlFor="ctc-printer-link"
-              className="text-xs font-black uppercase tracking-normal text-zinc-600"
-            >
-              Paste this into CTC Printer
-            </label>
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <input
-                id="ctc-printer-link"
-                readOnly
-                value={printerLink}
-                className={`${inputClass} font-mono text-sm`}
-                onFocus={(event) => event.currentTarget.select()}
-              />
-              <button
-                type="button"
-                onClick={() => void copyExistingPrinterLink(printerLink)}
-                className={`${secondaryButtonClass} min-h-11`}
-              >
-                <Clipboard size={18} aria-hidden="true" />
-                Copy again
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {!isSupabaseBacked ? (
-          <p className="rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm font-bold text-amber-900">
-            CTC Printer links are only available when the app is connected to
-            Supabase. Local demo mode can still export fallback PNGs and CSVs.
-          </p>
-        ) : null}
-
-        <div className="grid gap-2 sm:grid-cols-3">
-          <PrinterStep
-            icon={<Clipboard size={18} aria-hidden="true" />}
-            title="Copy link"
-            detail="Creates a token for this production."
-          />
-          <PrinterStep
-            icon={<Link2 size={18} aria-hidden="true" />}
-            title="Paste in CTC Printer"
-            detail="Tap Link production in the iPhone app."
-          />
-          <PrinterStep
-            icon={<Printer size={18} aria-hidden="true" />}
-            title="Print queue"
-            detail="The app pulls labels and marks them printed."
-          />
-        </div>
-      </Panel>
-
-      <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-[minmax(300px,0.85fr)_minmax(360px,1.15fr)]">
-        <Panel className="grid content-start gap-4 p-4">
+      {/* Center Layout Container for a Clean Studio Vibe */}
+      <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
+        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <UserRound size={19} aria-hidden="true" />
-              Fallback selection
-            </h2>
-            {!isSupabaseBacked ? (
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black uppercase tracking-tight text-black">Labels</h1>
+              <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+                Manage print queues, select drink labels, and connect to CTC Printer.
+              </p>
+            </div>
+            <Link href="/productions" className={`${customSecondaryBtn} hidden sm:inline-flex min-h-11 py-0 px-4 text-xs`}>
+              Days
+            </Link>
+          </div>
+        </section>
+
+        {error ? (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+            <span>{error}</span>
+            {!data && (
               <button
                 type="button"
-                onClick={() => void resetDemo()}
-                className={`${secondaryButtonClass} min-w-11 px-3`}
-                aria-label="Reset demo data"
+                onClick={loadData}
+                className={`${customSecondaryBtn} min-h-10 px-3 py-0 text-xs`}
               >
-                <RotateCcw size={18} aria-hidden="true" />
+                <RotateCcw size={14} aria-hidden="true" />
+                Retry
               </button>
-            ) : null}
+            )}
           </div>
-          <p className="text-sm font-semibold leading-6 text-zinc-600">
-            These checkboxes only control PNG and CSV fallback exports. CTC
-            Printer pulls the production queue from the link above.
-          </p>
+        ) : null}
 
-          {activeItems.length ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-bold text-zinc-600">
-                  {selectedCount} of {activeItems.length} labels selected
-                </p>
-                <div className="flex gap-1.5">
-                  {unprintedIds.length && unprintedIds.length < activeItems.length ? (
-                    <button
-                      type="button"
-                      onClick={selectUnprinted}
-                      className={`${secondaryButtonClass} min-h-10 px-3`}
-                    >
-                      Unprinted ({unprintedIds.length})
-                    </button>
-                  ) : null}
+        {status ? (
+          <p className="mb-4 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
+            {status}
+          </p>
+        ) : null}
+
+        {/* Printer Connection Card */}
+        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Printer size={22} className="text-black" />
+              <h2 className="text-lg font-black uppercase tracking-tight text-black">CTC Printer Connection</h2>
+            </div>
+            <p className="text-sm font-semibold text-zinc-600">
+              {selectedProduction
+                ? `${selectedProduction.name}: ${activeItems.length} labels, ${unprintedIds.length} remaining.`
+                : "Choose a production day to load the printer queue."}
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+              <Field label="Selected Day">
+                <select
+                  className={inputClass}
+                  value={productionId}
+                  onChange={(event) => chooseProduction(event.target.value)}
+                  disabled={!productions.length}
+                >
+                  {productions.map((production) => (
+                    <option key={production.id} value={production.id}>
+                      {production.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => void copyPrinterLink()}
+                  disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
+                  className={`${customPrimaryBtn} w-full min-h-11 h-11 py-0 px-3 text-xs`}
+                >
+                  {printerLinkState === "working" ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : printerLinkState === "copied" ? (
+                    <CheckCircle2 size={16} />
+                  ) : (
+                    <Clipboard size={16} />
+                  )}
+                  {printerLinkState === "working"
+                    ? "Linking..."
+                    : printerLinkState === "copied"
+                      ? "Link Copied"
+                      : "Copy Link"}
+                </button>
+              </div>
+            </div>
+
+            {printerLink && (
+              <div className="grid gap-1.5 border-t border-zinc-200 pt-3">
+                <label
+                  htmlFor="ctc-printer-link"
+                  className="text-xs font-black uppercase tracking-normal text-zinc-500"
+                >
+                  Link URL (Paste into CTC Printer iPhone App)
+                </label>
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <input
+                    id="ctc-printer-link"
+                    readOnly
+                    value={printerLink}
+                    className={`${inputClass} font-mono text-sm bg-zinc-50`}
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
                   <button
                     type="button"
-                    onClick={toggleSelectAll}
-                    className={`${secondaryButtonClass} min-h-10 px-3`}
+                    onClick={() => void copyExistingPrinterLink(printerLink)}
+                    className={`${customSecondaryBtn} min-h-11 h-11 py-0 px-3 text-xs`}
                   >
-                    <CheckCircle2 size={16} aria-hidden="true" />
-                    {allSelected ? "None" : "All"}
+                    <Clipboard size={16} />
+                    Copy Again
                   </button>
                 </div>
               </div>
-              <div className="grid max-h-[58vh] gap-2 overflow-y-auto pr-1">
+            )}
+
+            {!isSupabaseBacked && (
+              <p className="rounded-lg border-[3px] border-zinc-400 bg-zinc-100 p-3 text-xs font-bold text-zinc-800 leading-normal">
+                Printer linking requires a Supabase database backend. In local demo mode, use the Download fallback exports below.
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* Labels Selection & Preview Section */}
+        <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] items-start">
+          {/* Print Queue / Checkboxes Card */}
+          <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3 min-w-0">
+              <h2 className="text-lg font-black uppercase tracking-tight text-black flex-1 truncate">Print Queue</h2>
+              <div className="flex gap-1.5 shrink-0">
+                {unprintedIds.length > 0 && unprintedIds.length < activeItems.length && (
+                  <button
+                    type="button"
+                    onClick={selectUnprinted}
+                    className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
+                  >
+                    Unprinted ({unprintedIds.length})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
+                >
+                  {allSelected ? "Clear" : "All"}
+                </button>
+              </div>
+            </div>
+
+            {activeItems.length ? (
+              <div className="grid max-h-[50dvh] gap-3 overflow-y-auto pr-1">
                 {activeItems.map((item) =>
                   item.order ? (
                     <LabelChoice
@@ -571,163 +515,123 @@ export default function LabelExportPage() {
                   ) : null,
                 )}
               </div>
-            </>
-          ) : (
-            <EmptyState
-              title="No active labels"
-              description="This production has no on-set orders ready for label export."
-            />
-          )}
-        </Panel>
+            ) : (
+              <EmptyState
+                title="No active labels"
+                description="This day roster has no confirmed coffee orders ready."
+              />
+            )}
+          </section>
 
-        <div className="grid content-start gap-4">
-          <Panel className="grid gap-4 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <ImageDown size={19} aria-hidden="true" />
-                Preview and fallback exports
-              </h2>
-              <Link href="/productions" className={`${secondaryButtonClass} min-h-10 px-3`}>
-                Days
-              </Link>
-            </div>
+          {/* Fallback Exports / Preview Column */}
+          <div className="flex flex-col gap-6">
+            <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
+              <h2 className="text-lg font-black uppercase tracking-tight text-black">Preview</h2>
 
-            <div
-              className="grid min-h-[210px] min-w-0 place-items-center overflow-hidden rounded-xl border-2 border-black p-3 sm:min-h-[340px] sm:p-6"
-              style={{
-                background:
-                  "repeating-linear-gradient(0deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), #18181b",
-              }}
-            >
-              {previewLabel ? (
-                <div className="grid w-full min-w-0 place-items-center drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]">
-                  <ScreenLabel label={previewLabel} />
-                </div>
-              ) : (
-                <p className="text-center text-sm font-bold text-zinc-300">
-                  Select a label to preview the PNG.
-                </p>
-              )}
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="grid content-start gap-2 rounded-xl border border-zinc-300 bg-zinc-50 p-3">
-                <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-normal text-zinc-500">
-                  <FileSpreadsheet size={14} aria-hidden="true" />
-                  Fallback CSV
-                </div>
-                <p className="text-xs leading-5 text-zinc-600">
-                  For NIIMBOT batch templates when CTC Printer is unavailable.
-                </p>
-                <button
-                  type="button"
-                  onClick={downloadNiimbotCsv}
-                  disabled={busy || !selection?.items.length}
-                  className={`${secondaryButtonClass} mt-1 min-h-14 text-base`}
-                >
-                  <FileSpreadsheet size={20} aria-hidden="true" />
-                  Export CSV
-                </button>
+              <div
+                className="grid aspect-[5/3] w-full min-w-0 place-items-center overflow-hidden rounded-xl border-[3px] border-black p-4"
+                style={{
+                  background:
+                    "repeating-linear-gradient(0deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), #18181b",
+                }}
+              >
+                {previewLabel ? (
+                  <div className="w-full min-w-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex justify-center">
+                    <ScreenLabel label={previewLabel} />
+                  </div>
+                ) : (
+                  <p className="text-center text-xs font-black text-zinc-400 uppercase tracking-wider">
+                    Select a drink to preview
+                  </p>
+                )}
               </div>
 
-              <div className="border-accent/50 bg-accent/5 grid content-start gap-2 rounded-xl border-2 p-3">
-                <div className="text-accent-ink flex items-center gap-1.5 text-xs font-black uppercase tracking-normal">
-                  <ImageDown size={14} aria-hidden="true" />
-                  Fallback PNG
-                </div>
-                <p className="text-xs leading-5 text-zinc-600">
-                  Individual label asset for manual NIIMBOT app import.
-                </p>
-                <div className="mt-1 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => void downloadSelected()}
-                    disabled={busy || !labels.length}
-                    className={`${secondaryButtonClass} min-h-14 text-sm`}
-                  >
-                    <Download size={19} aria-hidden="true" />
-                    {busy ? "Exporting…" : "Export PNG"}
-                  </button>
+              <div className="grid gap-2">
+                <button
+                  type="button"
+                  onClick={() => void downloadSelected()}
+                  disabled={busy || !labels.length}
+                  className={customPrimaryBtn + " w-full"}
+                >
+                  <Download size={18} />
+                  {busy ? "Exporting..." : `Download PNGs (${selectedCount})`}
+                </button>
+
+                {shareReady && (
                   <button
                     type="button"
                     onClick={() => void shareSelected()}
-                    disabled={busy || !labels.length || !shareReady}
-                    className={`${secondaryButtonClass} min-h-14 text-sm`}
+                    disabled={busy || !labels.length}
+                    className={customSecondaryBtn + " w-full"}
                   >
-                    <Share2 size={19} aria-hidden="true" />
+                    <Share2 size={18} />
                     Share
                   </button>
+                )}
+
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={downloadNiimbotCsv}
+                    disabled={busy || !selection?.items.length}
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border-[2px] border-zinc-400 bg-white text-zinc-600 font-bold text-xs uppercase tracking-wider hover:border-black hover:text-black transition"
+                  >
+                    <FileSpreadsheet size={14} />
+                    CSV Export
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void downloadTestLabel()}
+                    disabled={busy || !testLabel}
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border-[2px] border-zinc-400 bg-white text-zinc-600 font-bold text-xs uppercase tracking-wider hover:border-black hover:text-black transition"
+                  >
+                    <Smile size={14} />
+                    Test Label
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void downloadTestLabel()}
-                  disabled={busy || !testLabel}
-                  className={`${secondaryButtonClass} min-h-11 text-sm`}
-                >
-                  <Smile size={18} aria-hidden="true" />
-                  Test label
-                </button>
               </div>
-            </div>
-          </Panel>
+            </section>
+          </div>
         </div>
       </div>
 
-      <div className="h-20 lg:hidden" aria-hidden="true" />
+      {/* Add spacing at the bottom on mobile to account for the sticky bottom nav bar */}
+      <div className="h-24 sm:hidden" />
 
-      <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-black bg-white p-3 lg:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-2 min-[420px]:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-          <button
-            type="button"
-            onClick={() => void copyPrinterLink()}
-            disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
-            className={`${primaryButtonClass} px-2 text-xs min-[360px]:text-sm`}
-          >
-            {printerLinkState === "working" ? (
-              <Loader2 size={18} className="animate-spin" aria-hidden="true" />
-            ) : printerLinkState === "copied" ? (
-              <CheckCircle2 size={18} aria-hidden="true" />
-            ) : (
-              <Clipboard size={18} aria-hidden="true" />
-            )}
-            {printerLinkState === "copied" ? "Link copied" : "Copy printer link"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void downloadSelected()}
-            disabled={busy || !labels.length}
-            className={`${secondaryButtonClass} px-2 text-xs min-[360px]:text-sm`}
-          >
-            <Download size={18} aria-hidden="true" />
-            {busy ? "Exporting…" : `Export PNG${selectedCount ? ` · ${selectedCount}` : ""}`}
-          </button>
+      {/* Mobile Sticky Bottom Nav Bar (Thumb Zone) */}
+      {isAdmin && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[3px] border-black bg-white/95 p-4 backdrop-blur-sm sm:hidden no-print shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => void copyPrinterLink()}
+              disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
+              className={`${
+                printerLinkState === "copied" ? customPrimaryBtn : customSecondaryBtn
+              } flex-1`}
+            >
+              {printerLinkState === "working" ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : printerLinkState === "copied" ? (
+                <CheckCircle2 size={18} />
+              ) : (
+                <Clipboard size={18} />
+              )}
+              {printerLinkState === "copied" ? "Link Copied" : "Copy Link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void downloadSelected()}
+              disabled={busy || !labels.length}
+              className={customPrimaryBtn + " flex-1"}
+            >
+              <Download size={18} />
+              {busy ? "Exporting…" : `PNG (${selectedCount})`}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </AppShell>
-  );
-}
-
-function PrinterStep({
-  icon,
-  title,
-  detail,
-}: {
-  icon: ReactNode;
-  title: string;
-  detail: string;
-}) {
-  return (
-    <div className="grid min-h-24 grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-zinc-300 bg-zinc-50 p-3">
-      <span className="grid size-9 place-items-center rounded-lg border border-black bg-white text-black">
-        {icon}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-black text-black">{title}</span>
-        <span className="mt-1 block text-sm font-semibold leading-5 text-zinc-600">
-          {detail}
-        </span>
-      </span>
-    </div>
   );
 }
 
@@ -746,55 +650,55 @@ function LabelChoice({
     <button
       type="button"
       onClick={onToggle}
-      className={`grid min-h-24 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border p-3 text-left transition active:translate-y-px ${
+      className={`grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] p-3 text-left transition active:translate-y-px ${
         selected
-          ? "border-black bg-black text-white"
-          : "border-zinc-300 bg-white text-black hover:border-black"
+          ? "border-black bg-black text-white shadow-[2px_2px_0_#000]"
+          : "border-black bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]"
       }`}
       aria-pressed={selected}
     >
       <Avatar person={item.person} />
-      <span className="min-w-0">
-        <span className="block truncate text-base font-black leading-tight">
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-base font-black uppercase tracking-tight leading-tight">
           {item.person.name}
         </span>
         <span
-          className={`mt-1 block truncate text-sm font-semibold ${
-            selected ? "text-zinc-200" : "text-zinc-600"
+          className={`mt-0.5 block truncate text-xs font-semibold leading-tight ${
+            selected ? "text-zinc-300" : "text-zinc-600"
           }`}
         >
           {formatDrink(item.order)}
         </span>
         <span className="mt-2 flex max-w-full flex-wrap gap-1.5">
           <span
-            className={`inline-flex max-w-full rounded-md border px-2 py-1 text-xs font-bold ${
+            className={`inline-flex max-w-full rounded-md border-2 px-1.5 py-0.5 text-[10px] font-bold leading-none uppercase ${
               selected
                 ? "border-white/30 bg-white/10 text-white"
-                : "border-zinc-300 bg-zinc-100 text-zinc-700"
+                : "border-black bg-zinc-100 text-zinc-700"
             }`}
           >
             <span className="truncate">{group}</span>
           </span>
-          {item.order.label_printed ? (
+          {item.order.label_printed && (
             <span
-              className={`inline-flex rounded-md border px-2 py-1 text-xs font-bold ${
+              className={`inline-flex rounded-md border-2 px-1.5 py-0.5 text-[10px] font-bold leading-none uppercase ${
                 selected
                   ? "border-white/30 bg-white/10 text-white"
-                  : "border-emerald-700 bg-emerald-50 text-emerald-800"
+                  : "border-black bg-emerald-100 text-emerald-800"
               }`}
             >
               Printed
             </span>
-          ) : null}
+          )}
         </span>
       </span>
       <span
-        className={`grid size-7 place-items-center rounded-md border ${
-          selected ? "border-white bg-white text-black" : "border-zinc-400 bg-white"
+        className={`grid size-7 place-items-center rounded-md border-2 shrink-0 ${
+          selected ? "border-white bg-white text-black" : "border-black bg-white"
         }`}
         aria-hidden="true"
       >
-        {selected ? <CheckCircle2 size={18} /> : null}
+        {selected ? <CheckCircle2 size={16} /> : null}
       </span>
     </button>
   );
