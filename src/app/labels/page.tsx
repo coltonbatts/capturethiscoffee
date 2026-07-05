@@ -3,15 +3,19 @@
 import Link from "next/link";
 import {
   CheckCircle2,
+  Clipboard,
   Download,
   FileSpreadsheet,
   ImageDown,
+  Link2,
+  Loader2,
+  Printer,
   RotateCcw,
   Share2,
   Smile,
   UserRound,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ScreenLabel } from "@/components/coffee-label-renderer";
 import {
@@ -40,6 +44,7 @@ import {
   resetDemoCoffeeData,
   updateOrderRecord,
 } from "@/lib/data";
+import { mintProductionShareLink } from "@/lib/share-links";
 import { formatDrink } from "@/lib/order-summary";
 import {
   niimbotM2ExportFileName,
@@ -69,6 +74,10 @@ export default function LabelExportPage() {
   const [productionId, setProductionId] = useState("");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [printerLink, setPrinterLink] = useState("");
+  const [printerLinkState, setPrinterLinkState] = useState<
+    "idle" | "working" | "copied"
+  >("idle");
   const [shareReady] = useState(
     () =>
       typeof navigator !== "undefined" &&
@@ -122,6 +131,7 @@ export default function LabelExportPage() {
     [data, productionId, selectedOrderIds],
   );
   const labels = selection?.labels || [];
+  const selectedProduction = selection?.production;
   const testLabel = useMemo(
     () => (selection ? buildClientTestLabel(selection.client?.name || selection.production.name) : null),
     [selection],
@@ -137,6 +147,50 @@ export default function LabelExportPage() {
       : [];
     setSelectedOrderIds(nextItems.map((item) => item.order.id));
     setStatus("");
+  }
+
+  async function copyPrinterLink() {
+    if (!productionId) {
+      setError("Choose a production before linking CTC Printer.");
+      return;
+    }
+    if (!isSupabaseBacked) {
+      setError("CTC Printer links need the Supabase-backed app, not local demo mode.");
+      return;
+    }
+
+    setPrinterLinkState("working");
+    setError("");
+    setStatus("");
+
+    try {
+      const url = await mintProductionShareLink(productionId, {
+        label: "ctc-printer",
+      });
+      setPrinterLink(url);
+      try {
+        await writeClipboardText(url);
+        setPrinterLinkState("copied");
+        setStatus("CTC Printer link copied. Paste it into CTC Printer and tap Link production.");
+      } catch {
+        setPrinterLinkState("idle");
+        setStatus("CTC Printer link created. Select the link below and paste it into CTC Printer.");
+      }
+    } catch (err) {
+      setPrinterLinkState("idle");
+      setError(describeDataError(err, "Could not create the CTC Printer link."));
+    }
+  }
+
+  async function copyExistingPrinterLink(url: string) {
+    try {
+      await writeClipboardText(url);
+      setPrinterLinkState("copied");
+      setStatus("CTC Printer link copied.");
+      setError("");
+    } catch (err) {
+      setError(describeDataError(err, "Could not copy the CTC Printer link."));
+    }
   }
 
   function toggleOrder(orderId: string) {
@@ -316,12 +370,11 @@ export default function LabelExportPage() {
               Step 3
             </p>
             <h1 className="mt-0.5 text-2xl font-black leading-tight tracking-normal text-black">
-              Print the labels
+              Send labels to CTC Printer
             </h1>
             <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-zinc-600">
-              Export the whole batch of captured drinks. On set, CTC Printer
-              prints these directly; here you can export PNGs or a CSV for the
-              NIIMBOT app.
+              Take the orders here, copy the production link, paste it into CTC
+              Printer, and print from the phone connected to the NIIMBOT.
             </p>
           </div>
           <div className="rounded-lg border-2 border-black bg-white px-3 py-2 font-mono text-sm font-black text-black">
@@ -354,12 +407,115 @@ export default function LabelExportPage() {
         </p>
       ) : null}
 
+      <Panel className="mt-4 grid gap-4 border-2 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-xl font-black">
+              <Printer size={22} aria-hidden="true" />
+              CTC Printer
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">
+              {selectedProduction
+                ? `${selectedProduction.name}: ${activeItems.length} printable labels, ${unprintedIds.length} not yet printed.`
+                : "Choose a production to link the printer app."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void copyPrinterLink()}
+            disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
+            className={`${primaryButtonClass} min-h-14 text-base`}
+          >
+            {printerLinkState === "working" ? (
+              <Loader2 size={20} className="animate-spin" aria-hidden="true" />
+            ) : printerLinkState === "copied" ? (
+              <CheckCircle2 size={20} aria-hidden="true" />
+            ) : (
+              <Clipboard size={20} aria-hidden="true" />
+            )}
+            {printerLinkState === "working"
+              ? "Creating link..."
+              : printerLinkState === "copied"
+                ? "Printer link copied"
+                : "Copy CTC Printer link"}
+          </button>
+        </div>
+
+        <Field label="Production to print">
+          <select
+            className={inputClass}
+            value={productionId}
+            onChange={(event) => chooseProduction(event.target.value)}
+            disabled={!productions.length}
+          >
+            {productions.map((production) => (
+              <option key={production.id} value={production.id}>
+                {production.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        {printerLink ? (
+          <div className="grid gap-2">
+            <label
+              htmlFor="ctc-printer-link"
+              className="text-xs font-black uppercase tracking-normal text-zinc-600"
+            >
+              Paste this into CTC Printer
+            </label>
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <input
+                id="ctc-printer-link"
+                readOnly
+                value={printerLink}
+                className={`${inputClass} font-mono text-sm`}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <button
+                type="button"
+                onClick={() => void copyExistingPrinterLink(printerLink)}
+                className={`${secondaryButtonClass} min-h-11`}
+              >
+                <Clipboard size={18} aria-hidden="true" />
+                Copy again
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {!isSupabaseBacked ? (
+          <p className="rounded-lg border border-amber-700 bg-amber-50 p-3 text-sm font-bold text-amber-900">
+            CTC Printer links are only available when the app is connected to
+            Supabase. Local demo mode can still export fallback PNGs and CSVs.
+          </p>
+        ) : null}
+
+        <div className="grid gap-2 sm:grid-cols-3">
+          <PrinterStep
+            icon={<Clipboard size={18} aria-hidden="true" />}
+            title="Copy link"
+            detail="Creates a token for this production."
+          />
+          <PrinterStep
+            icon={<Link2 size={18} aria-hidden="true" />}
+            title="Paste in CTC Printer"
+            detail="Tap Link production in the iPhone app."
+          />
+          <PrinterStep
+            icon={<Printer size={18} aria-hidden="true" />}
+            title="Print queue"
+            detail="The app pulls labels and marks them printed."
+          />
+        </div>
+      </Panel>
+
       <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-[minmax(300px,0.85fr)_minmax(360px,1.15fr)]">
         <Panel className="grid content-start gap-4 p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-lg font-bold">
               <UserRound size={19} aria-hidden="true" />
-              Select labels
+              Fallback selection
             </h2>
             {!isSupabaseBacked ? (
               <button
@@ -372,21 +528,10 @@ export default function LabelExportPage() {
               </button>
             ) : null}
           </div>
-
-          <Field label="Production">
-            <select
-              className={inputClass}
-              value={productionId}
-              onChange={(event) => chooseProduction(event.target.value)}
-              disabled={!productions.length}
-            >
-              {productions.map((production) => (
-                <option key={production.id} value={production.id}>
-                  {production.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <p className="text-sm font-semibold leading-6 text-zinc-600">
+            These checkboxes only control PNG and CSV fallback exports. CTC
+            Printer pulls the production queue from the link above.
+          </p>
 
           {activeItems.length ? (
             <>
@@ -440,7 +585,7 @@ export default function LabelExportPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <ImageDown size={19} aria-hidden="true" />
-                Preview
+                Preview and fallback exports
               </h2>
               <Link href="/productions" className={`${secondaryButtonClass} min-h-10 px-3`}>
                 Days
@@ -469,29 +614,29 @@ export default function LabelExportPage() {
               <div className="grid content-start gap-2 rounded-xl border border-zinc-300 bg-zinc-50 p-3">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-normal text-zinc-500">
                   <FileSpreadsheet size={14} aria-hidden="true" />
-                  CSV batch
+                  Fallback CSV
                 </div>
                 <p className="text-xs leading-5 text-zinc-600">
-                  Full crew run, one row per person, for NIIMBOT batch templates.
+                  For NIIMBOT batch templates when CTC Printer is unavailable.
                 </p>
                 <button
                   type="button"
                   onClick={downloadNiimbotCsv}
                   disabled={busy || !selection?.items.length}
-                  className={`${primaryButtonClass} mt-1 min-h-14 text-base`}
+                  className={`${secondaryButtonClass} mt-1 min-h-14 text-base`}
                 >
                   <FileSpreadsheet size={20} aria-hidden="true" />
-                  Export CSV — crew batch
+                  Export CSV
                 </button>
               </div>
 
               <div className="border-accent/50 bg-accent/5 grid content-start gap-2 rounded-xl border-2 p-3">
                 <div className="text-accent-ink flex items-center gap-1.5 text-xs font-black uppercase tracking-normal">
                   <ImageDown size={14} aria-hidden="true" />
-                  PNG hero
+                  Fallback PNG
                 </div>
                 <p className="text-xs leading-5 text-zinc-600">
-                  Individual label asset for fallback NIIMBOT app import.
+                  Individual label asset for manual NIIMBOT app import.
                 </p>
                 <div className="mt-1 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
                   <button
@@ -531,15 +676,21 @@ export default function LabelExportPage() {
       <div className="h-20 lg:hidden" aria-hidden="true" />
 
       <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-black bg-white p-3 lg:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-2 min-[420px]:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <button
             type="button"
-            onClick={downloadNiimbotCsv}
-            disabled={busy || !selection?.items.length}
+            onClick={() => void copyPrinterLink()}
+            disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
             className={`${primaryButtonClass} px-2 text-xs min-[360px]:text-sm`}
           >
-            <FileSpreadsheet size={18} aria-hidden="true" />
-            Export CSV{selectedCount ? ` · ${selectedCount}` : ""}
+            {printerLinkState === "working" ? (
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+            ) : printerLinkState === "copied" ? (
+              <CheckCircle2 size={18} aria-hidden="true" />
+            ) : (
+              <Clipboard size={18} aria-hidden="true" />
+            )}
+            {printerLinkState === "copied" ? "Link copied" : "Copy printer link"}
           </button>
           <button
             type="button"
@@ -553,6 +704,30 @@ export default function LabelExportPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function PrinterStep({
+  icon,
+  title,
+  detail,
+}: {
+  icon: ReactNode;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <div className="grid min-h-24 grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg border border-zinc-300 bg-zinc-50 p-3">
+      <span className="grid size-9 place-items-center rounded-lg border border-black bg-white text-black">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-black text-black">{title}</span>
+        <span className="mt-1 block text-sm font-semibold leading-5 text-zinc-600">
+          {detail}
+        </span>
+      </span>
+    </div>
   );
 }
 
@@ -634,6 +809,13 @@ function downloadBlob(blob: Blob, fileName: string) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function writeClipboardText(value: string) {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error("Clipboard access is unavailable. Select and copy the link manually.");
+  }
+  await navigator.clipboard.writeText(value);
 }
 
 function buildClientTestLabel(clientName: string): CoffeeLabel {
