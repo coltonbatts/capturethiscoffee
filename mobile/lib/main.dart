@@ -247,7 +247,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
   Future<void> _printPage(PrintPage page) async {
     _client.stopHeartbeat();
-    _client.setPacketInterval(0);
+    _client.setPacketInterval(15);
     try {
       final encoded = page.toEncodedImage();
       final task = _client.createPrintTask(PrintOptions(
