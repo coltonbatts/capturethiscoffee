@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# generated presentation decks and screenshots
+/outputs/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
