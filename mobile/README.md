@@ -89,7 +89,10 @@ flutter run
 
 ## Print tuning
 
-Constants at the top of `lib/main.dart`: `kPageWidth`, `kPageHeight`, `kDensity`. If server PNGs (591×354) look offset on stock, adjust these and re-run.
+Constants at the top of `lib/main.dart`: `kPrintheadWidth`, `kDensity`, and
+`kMinimumTextSideInkPixels`. The app scales server PNGs to the M2_H printhead
+width while preserving aspect ratio. If output is too light/dark, adjust
+`kDensity` and re-run.
 
 ## Known quirks / troubleshooting
 

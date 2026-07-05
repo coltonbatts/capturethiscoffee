@@ -13,11 +13,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ctc_api.dart';
 import 'production_session.dart';
 
-// M2_H @ 300 DPI — tunable if physical output needs adjustment.
-const int kPageWidth = 560;
-const int kPageHeight = 352;
+// M2_H @ 300 DPI. The library metadata reports a 567-dot printhead for model
+// 4608, while the server PNG is 591x354 with safe margins for 50x30mm stock.
+const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
+const int kMinimumTextSideInkPixels = 300;
 
 const _sessionPrefsKey = 'ctc_production_session';
 const _queueRefreshInterval = Duration(seconds: 10);
@@ -45,6 +46,13 @@ class PrinterHome extends StatefulWidget {
 
   @override
   State<PrinterHome> createState() => _PrinterHomeState();
+}
+
+class _LabelPrintSize {
+  const _LabelPrintSize(this.width, this.height);
+
+  final int width;
+  final int height;
 }
 
 class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
@@ -241,6 +249,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     _client.stopHeartbeat();
     _client.setPacketInterval(0);
     try {
+      final encoded = page.toEncodedImage();
       final task = _client.createPrintTask(PrintOptions(
         totalPages: 1,
         density: kDensity,
@@ -250,7 +259,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         throw Exception('Printer model not detected.');
       }
       await task.printInit();
-      await task.printPage(page.toEncodedImage(), 1);
+      await task.printPage(encoded, 1);
       await task.waitForFinished();
     } finally {
       _client.startHeartbeat();
@@ -274,25 +283,104 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         if (decoded == null) {
           throw Exception('Could not decode label PNG.');
         }
-        _logLine('PNG ${decoded.width}x${decoded.height}. Printing…');
+        final printSize = _printSizeFor(decoded);
+        final textSideInk = _countTextSideInk(decoded);
+        _logLine(
+          'PNG ${decoded.width}x${decoded.height}; '
+          'print ${printSize.width}x${printSize.height}; '
+          'text-side ink $textSideInk.',
+        );
 
-        final page = PrintPage(kPageWidth, kPageHeight);
+        final page = PrintPage(printSize.width, printSize.height);
         page.addImageFromBuffer(ImageFromBufferOptions(
           buffer: bytes,
-          x: kPageWidth ~/ 2,
-          y: kPageHeight ~/ 2,
-          width: kPageWidth,
-          height: kPageHeight,
+          x: printSize.width ~/ 2,
+          y: printSize.height ~/ 2,
+          width: printSize.width,
+          height: printSize.height,
           align: HAlignment.center,
           vAlign: VAlignment.middle,
           threshold: 128,
         ));
+        if (textSideInk < kMinimumTextSideInkPixels) {
+          _logLine(
+            'PNG text area looks blank; adding emergency name/drink overlay.',
+          );
+          await _addEmergencyTextOverlay(page, item, printSize);
+        }
         await _printPage(page);
 
         _logLine('Marking label_printed…');
         await api.markLabelPrinted(item.orderId);
         await _refreshQueue(silent: true);
       });
+
+  _LabelPrintSize _printSizeFor(img.Image decoded) {
+    final width =
+        decoded.width > kPrintheadWidth ? kPrintheadWidth : decoded.width;
+    final height = (decoded.height * width / decoded.width).round();
+    return _LabelPrintSize(width, height);
+  }
+
+  int _countTextSideInk(img.Image decoded) {
+    final startX = (decoded.width * 0.44).round();
+    var count = 0;
+
+    for (var y = 0; y < decoded.height; y += 1) {
+      for (var x = startX; x < decoded.width; x += 1) {
+        final pixel = decoded.getPixel(x, y);
+        if (pixel.a.toInt() == 0) continue;
+
+        final luminance =
+            (pixel.r.toInt() + pixel.g.toInt() + pixel.b.toInt()) ~/ 3;
+        if (luminance < 180) count += 1;
+      }
+    }
+
+    return count;
+  }
+
+  Future<void> _addEmergencyTextOverlay(
+    PrintPage page,
+    QueueLabel item,
+    _LabelPrintSize printSize,
+  ) async {
+    final name = item.personName.trim().toUpperCase();
+    final drink = item.drink.trim();
+    final textX = (printSize.width * 0.46).round();
+
+    if (name.isNotEmpty) {
+      await page.addText(
+        name,
+        TextOptions(
+          x: textX,
+          y: (printSize.height * 0.26).round(),
+          fontSize: _emergencyNameFontSize(name),
+          fontWeight: FontWeight.w900,
+        ),
+      );
+    }
+
+    if (drink.isNotEmpty) {
+      await page.addText(
+        drink,
+        TextOptions(
+          x: textX,
+          y: (printSize.height * 0.66).round(),
+          fontSize: 26,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
+  }
+
+  int _emergencyNameFontSize(String value) {
+    final length = value.replaceAll(RegExp(r'\s+'), ' ').trim().length;
+    if (length <= 10) return 58;
+    if (length <= 20) return 46;
+    if (length <= 24) return 38;
+    return 30;
+  }
 
   List<QueueLabel> get _visibleLabels {
     final labels = _queue?.labels ?? [];
