@@ -349,7 +349,7 @@ export default function LabelExportPage() {
   }
 
   return (
-    <AppShell title="Labels" requireAuth>
+    <AppShell title="Labels" breadcrumbs={[{ label: "Labels" }]} requireAuth>
       {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
         <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">

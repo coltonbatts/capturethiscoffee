@@ -22,7 +22,7 @@ html {
   background: var(--background);
   max-width: 100%;
   overflow-x: hidden;
-  scroll-padding-top: 76px;
+  scroll-padding-top: 112px;
   width: 100%;
 }
 

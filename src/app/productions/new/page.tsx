@@ -66,7 +66,14 @@ export default function NewProductionPage() {
   }
 
   return (
-    <AppShell title="New day" requireAuth>
+    <AppShell
+      title="New day"
+      breadcrumbs={[
+        { label: "Days", href: "/productions" },
+        { label: "New day" },
+      ]}
+      requireAuth
+    >
       {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0">
         <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">

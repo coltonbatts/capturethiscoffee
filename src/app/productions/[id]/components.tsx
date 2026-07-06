@@ -96,15 +96,6 @@ export function DayHeader({
 }) {
   return (
     <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] no-print">
-      {/* Breadcrumb Trail */}
-      <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-xs font-black uppercase tracking-tight text-zinc-500">
-        <Link href="/productions" className="hover:text-black transition">
-          Days
-        </Link>
-        <span className="text-zinc-400">/</span>
-        <span className="text-black truncate max-w-40">{productionName}</span>
-      </nav>
-
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-balance text-2xl font-black uppercase leading-tight tracking-tight text-black">

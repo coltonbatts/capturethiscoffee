@@ -99,7 +99,13 @@ export default function ProductionDashboardPage() {
 
   if (!production) {
     return (
-      <AppShell title="Day">
+      <AppShell
+        title="Day"
+        breadcrumbs={[
+          { label: "Days", href: "/productions" },
+          { label: "Day" },
+        ]}
+      >
         {state === "loading" ? (
           <div className="grid gap-4">
             <Panel className="skeleton h-28 rounded-xl" />
@@ -269,7 +275,13 @@ export default function ProductionDashboardPage() {
     .join(" · ");
 
   return (
-    <AppShell title={production.name}>
+    <AppShell
+      title={production.name}
+      breadcrumbs={[
+        { label: "Days", href: "/productions" },
+        { label: production.name },
+      ]}
+    >
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
         <DayHeader
           productionName={production.name}

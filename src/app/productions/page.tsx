@@ -217,6 +217,7 @@ export default function ProductionsPage() {
   return (
     <AppShell
       title="Days"
+      breadcrumbs={[{ label: "Days" }]}
       actions={
         isAdmin ? (
           <div className="flex items-center gap-2">

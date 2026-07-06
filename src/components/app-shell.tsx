@@ -9,14 +9,26 @@ import { CaptureMark } from "@/components/capture-mark";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
 type AppShellProps = {
   title: string;
   actions?: ReactNode;
+  breadcrumbs?: BreadcrumbItem[];
   requireAuth?: boolean;
   children: ReactNode;
 };
 
-export function AppShell({ title, actions, requireAuth = false, children }: AppShellProps) {
+export function AppShell({
+  title,
+  actions,
+  breadcrumbs = [],
+  requireAuth = false,
+  children,
+}: AppShellProps) {
   const auth = useShellAuth(requireAuth);
 
   if (!auth.ready) {
@@ -75,10 +87,51 @@ export function AppShell({ title, actions, requireAuth = false, children }: AppS
             ) : null}
           </div>
         </div>
+        {breadcrumbs.length ? <ShellBreadcrumbs items={breadcrumbs} /> : null}
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 md:py-7">{children}</main>
     </div>
+  );
+}
+
+function ShellBreadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="border-t border-zinc-200 bg-white"
+    >
+      <ol className="mx-auto flex max-w-6xl items-center gap-1.5 overflow-x-auto px-4 py-2 text-[11px] font-black uppercase leading-none tracking-wide text-zinc-500 sm:px-6 sm:text-xs">
+        {items.map((item, index) => {
+          const isCurrent = index === items.length - 1;
+
+          return (
+            <li key={`${item.href || item.label}-${index}`} className="flex min-w-0 shrink-0 items-center gap-1.5">
+              {index > 0 ? (
+                <span className="text-zinc-300" aria-hidden="true">
+                  /
+                </span>
+              ) : null}
+              {item.href && !isCurrent ? (
+                <Link
+                  href={item.href}
+                  className="rounded-sm text-zinc-500 transition hover:text-black focus-visible:text-black"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span
+                  aria-current={isCurrent ? "page" : undefined}
+                  className="max-w-[60vw] truncate text-black sm:max-w-xs"
+                >
+                  {item.label}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
