@@ -44,6 +44,12 @@ import {
   niimbotM2ExportFileName,
   renderNiimbotM2LabelPngBlob,
 } from "@/lib/niimbot-m2-export";
+import {
+  defaultLabelDesignId,
+  isLabelDesignId,
+  labelDesigns,
+  type LabelDesignId,
+} from "@/lib/label-designs";
 import type { CoffeeData } from "@/lib/types";
 import type { CoffeeLabel } from "@/lib/label-copy";
 
@@ -84,6 +90,21 @@ export default function LabelExportPage() {
       typeof navigator !== "undefined" &&
       typeof (navigator as ShareNavigator).share === "function",
   );
+  const [designId, setDesignId] = useState<LabelDesignId>(() => {
+    if (typeof window === "undefined") return defaultLabelDesignId;
+    const stored = window.localStorage.getItem(labelDesignStorageKey) || "";
+    return isLabelDesignId(stored) ? stored : defaultLabelDesignId;
+  });
+
+  function chooseDesign(nextDesignId: LabelDesignId) {
+    setDesignId(nextDesignId);
+    setStatus("");
+    try {
+      window.localStorage.setItem(labelDesignStorageKey, nextDesignId);
+    } catch {
+      // Design preference persistence is best-effort only.
+    }
+  }
 
   const loadData = useCallback(() => {
     loadCoffeeData()
@@ -247,7 +268,7 @@ export default function LabelExportPage() {
 
     try {
       for (const label of labels) {
-        const blob = await renderNiimbotM2LabelPngBlob(label);
+        const blob = await renderNiimbotM2LabelPngBlob(label, designId);
         downloadBlob(blob, niimbotM2ExportFileName(label));
       }
       setStatus(
@@ -274,7 +295,7 @@ export default function LabelExportPage() {
     setStatus("");
 
     try {
-      const blob = await renderNiimbotM2LabelPngBlob(testLabel);
+      const blob = await renderNiimbotM2LabelPngBlob(testLabel, designId);
       downloadBlob(blob, niimbotM2ExportFileName(testLabel));
       setStatus(`${testLabel.title} test label PNG downloaded.`);
     } catch (err) {
@@ -303,7 +324,7 @@ export default function LabelExportPage() {
     try {
       const files = await Promise.all(
         labels.map(async (label) => {
-          const blob = await renderNiimbotM2LabelPngBlob(label);
+          const blob = await renderNiimbotM2LabelPngBlob(label, designId);
           return new File([blob], niimbotM2ExportFileName(label), {
             type: "image/png",
           });
@@ -528,6 +549,25 @@ export default function LabelExportPage() {
             <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
               <h2 className="text-lg font-black uppercase tracking-tight text-black">Preview</h2>
 
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Label design">
+                {labelDesigns.map((design) => (
+                  <button
+                    key={design.id}
+                    type="button"
+                    onClick={() => chooseDesign(design.id)}
+                    aria-pressed={designId === design.id}
+                    title={design.summary}
+                    className={`inline-flex min-h-10 items-center justify-center rounded-lg border-[3px] border-black px-2.5 text-xs font-black uppercase tracking-wider transition active:translate-y-px ${
+                      designId === design.id
+                        ? "bg-black text-white"
+                        : "bg-white text-black hover:bg-zinc-100"
+                    }`}
+                  >
+                    {design.name}
+                  </button>
+                ))}
+              </div>
+
               <div
                 className="grid aspect-[5/3] w-full min-w-0 place-items-center overflow-hidden rounded-xl border-[3px] border-black p-4"
                 style={{
@@ -537,7 +577,7 @@ export default function LabelExportPage() {
               >
                 {previewLabel ? (
                   <div className="w-full min-w-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex justify-center">
-                    <ScreenLabel label={previewLabel} />
+                    <ScreenLabel label={previewLabel} design={designId} />
                   </div>
                 ) : (
                   <p className="text-center text-xs font-black text-zinc-400 uppercase tracking-wider">
@@ -703,6 +743,8 @@ function LabelChoice({
     </button>
   );
 }
+
+const labelDesignStorageKey = "ctc-label-design";
 
 function downloadBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);

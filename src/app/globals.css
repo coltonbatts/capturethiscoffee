@@ -206,6 +206,56 @@ button {
   overflow: hidden;
 }
 
+/* Knockout design: full-bleed black, white type. Mirrors the PNG export. */
+.screen-label.screen-label-knockout {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0;
+  background: #000000;
+  color: #ffffff;
+}
+
+.screen-label-knockout .screen-label-wordmark {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.1;
+}
+
+.screen-label-knockout h3 {
+  -webkit-line-clamp: 1;
+}
+
+.screen-label-knockout .screen-label-rule {
+  margin: 4px 0;
+  border: 0;
+  border-top: 2px solid #ffffff;
+}
+
+.screen-label-knockout .screen-label-order {
+  -webkit-line-clamp: 1;
+  text-transform: uppercase;
+}
+
+.screen-label-knockout .screen-label-footer {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screen-label-knockout .screen-label-footer span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (min-width: 375px) {
   .screen-label {
     gap: 18px;
@@ -235,6 +285,14 @@ button {
 
   .screen-label-order {
     font-size: 15px;
+  }
+
+  .screen-label-knockout .screen-label-wordmark {
+    font-size: 17px;
+  }
+
+  .screen-label-knockout .screen-label-footer {
+    font-size: 11px;
   }
 }
 
@@ -270,6 +328,14 @@ button {
 
   .screen-label-order {
     font-size: 20px;
+  }
+
+  .screen-label-knockout .screen-label-wordmark {
+    font-size: 22px;
+  }
+
+  .screen-label-knockout .screen-label-footer {
+    font-size: 13px;
   }
 }
 

@@ -1,5 +1,6 @@
 import m2Preset from "@/lib/niimbot-m2-preset.json";
 import type { CoffeeLabel } from "@/lib/label-copy";
+import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
 
 export const niimbotM2ExportPreset = m2Preset;
 
@@ -7,13 +8,27 @@ type CanvasContext = CanvasRenderingContext2D;
 type CaptureSmileyImage = CanvasImageSource;
 
 /**
- * The one Capture This Coffee label: smiley, name, drink.
- * 50x30mm @ 300 DPI (591x354px), monochrome-friendly.
+ * Capture This Coffee label designs, 50x30mm @ 300 DPI (591x354px),
+ * monochrome-friendly. "smiley": smiley, name, drink on white.
+ * "knockout": full-bleed black, white wordmark/name/drink.
  */
 export function drawNiimbotM2Label(
   ctx: CanvasContext,
   label: CoffeeLabel,
-  captureSmiley: CaptureSmileyImage,
+  captureSmiley: CaptureSmileyImage | null,
+  designId: LabelDesignId = defaultLabelDesignId,
+) {
+  if (designId === "knockout") {
+    drawKnockoutLabel(ctx, label);
+    return;
+  }
+  drawSmileyLabel(ctx, label, captureSmiley);
+}
+
+function drawSmileyLabel(
+  ctx: CanvasContext,
+  label: CoffeeLabel,
+  captureSmiley: CaptureSmileyImage | null,
 ) {
   const { pixelHeight } = niimbotM2ExportPreset;
   const name = (label.personName || label.title).trim();
@@ -23,7 +38,9 @@ export function drawNiimbotM2Label(
   resetCanvas(ctx);
 
   const smileySize = 208;
-  drawCaptureSmiley(ctx, captureSmiley, 34, (pixelHeight - smileySize) / 2, smileySize);
+  if (captureSmiley) {
+    drawCaptureSmiley(ctx, captureSmiley, 34, (pixelHeight - smileySize) / 2, smileySize);
+  }
 
   const textX = 274;
   const textWidth = 283;
@@ -43,6 +60,60 @@ export function drawNiimbotM2Label(
 
   ctx.font = "700 27px Arial, Helvetica, sans-serif";
   drawFittedWrappedText(ctx, drink, textX, 262, textWidth, 29, 2, 18);
+}
+
+/**
+ * Knockout: full-bleed black, white type. Wordmark top-left, name as the
+ * hero, rule, drink line, production + order id along the bottom.
+ */
+function drawKnockoutLabel(ctx: CanvasContext, label: CoffeeLabel) {
+  const { pixelWidth, pixelHeight } = niimbotM2ExportPreset;
+  const name = (label.personName || label.title).trim();
+  const drink = (label.drink || label.bodyLines.join(" / ")).trim();
+  const footerStart = (label.productionClient || "CAPTURE THIS COFFEE").toUpperCase();
+  const footerEnd = label.orderId.trim();
+
+  const textX = 34;
+  const textRight = pixelWidth - 34;
+  const textWidth = textRight - textX;
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, pixelWidth, pixelHeight);
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#ffffff";
+
+  // Wordmark (placeholder for the brand script).
+  ctx.font = "italic 900 40px Arial, Helvetica, sans-serif";
+  drawEllipsisText(ctx, "Capture This", textX, 66, textWidth);
+
+  // Name hero: single line, shrink to fit (floor low enough that even long
+  // full names stay whole instead of truncating).
+  ctx.font = "900 94px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, name.toUpperCase(), textX, 186, textWidth, 94, 1, 26);
+
+  // Rule.
+  ctx.fillRect(textX, 208, textWidth, 3);
+
+  // Drink: single line, shrink to fit.
+  ctx.font = "700 32px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, drink.toUpperCase(), textX, 262, textWidth, 34, 1, 18);
+
+  // Footer: production/client left, order id right.
+  ctx.font = "700 20px Arial, Helvetica, sans-serif";
+  const footerY = pixelHeight - 30;
+  const footerEndWidth = footerEnd ? ctx.measureText(footerEnd).width : 0;
+  drawEllipsisText(
+    ctx,
+    footerStart,
+    textX,
+    footerY,
+    textWidth - (footerEndWidth ? footerEndWidth + 24 : 0),
+  );
+  if (footerEnd) {
+    ctx.fillText(footerEnd, textRight - footerEndWidth, footerY);
+  }
 }
 
 function resetCanvas(ctx: CanvasContext) {

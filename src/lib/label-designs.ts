@@ -4,6 +4,11 @@ export const labelDesigns = [
     name: "Smiley",
     summary: "Name, drink, and the Capture This smiley. Nothing else.",
   },
+  {
+    id: "knockout",
+    name: "Knockout",
+    summary: "Full-bleed black with white type. Wordmark, name, drink.",
+  },
 ] as const;
 
 export type LabelDesignId = (typeof labelDesigns)[number]["id"];

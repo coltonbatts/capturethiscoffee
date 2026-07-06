@@ -1,5 +1,6 @@
 import type { CoffeeLabel } from "@/lib/label-copy";
 import { captureThisSmileyTransparentSrc } from "@/lib/brand-assets";
+import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
 import {
   drawNiimbotM2Label,
   niimbotM2ExportPreset,
@@ -22,7 +23,10 @@ export function niimbotM2ExportFileName(
   return `${safeFilePart(title)}-niimbot-m2-50x30mm-300dpi.png`;
 }
 
-export async function renderNiimbotM2LabelPngBlob(label: CoffeeLabel) {
+export async function renderNiimbotM2LabelPngBlob(
+  label: CoffeeLabel,
+  designId: LabelDesignId = defaultLabelDesignId,
+) {
   const canvas = document.createElement("canvas");
   canvas.width = niimbotM2ExportPreset.pixelWidth;
   canvas.height = niimbotM2ExportPreset.pixelHeight;
@@ -30,8 +34,9 @@ export async function renderNiimbotM2LabelPngBlob(label: CoffeeLabel) {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas export is not available in this browser.");
 
-  const captureSmiley = await loadCaptureThisSmileyImage();
-  drawNiimbotM2Label(ctx, label, captureSmiley);
+  const captureSmiley =
+    designId === "smiley" ? await loadCaptureThisSmileyImage() : null;
+  drawNiimbotM2Label(ctx, label, captureSmiley, designId);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
