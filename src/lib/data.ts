@@ -192,6 +192,60 @@ export async function loadRunnerCoffeeData(
   return body.data;
 }
 
+export async function loadProductionCoffeeData(
+  productionId: string,
+): Promise<CoffeeData> {
+  const supabase = getPublicSupabase();
+  if (!productionId || !supabase) return loadCoffeeData();
+
+  const { data: production, error: productionError } = await supabase
+    .from("productions")
+    .select("*")
+    .eq("id", productionId)
+    .maybeSingle();
+
+  if (productionError) throw new Error(productionError.message);
+  if (!production) throw new Error("Production not found.");
+
+  const [clientResult, rosterResult, ordersResult] = await Promise.all([
+    supabase.from("clients").select("*").eq("id", production.client_id).maybeSingle(),
+    supabase
+      .from("production_roster")
+      .select("*")
+      .eq("production_id", production.id)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("orders")
+      .select("*")
+      .eq("production_id", production.id)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const firstError = [
+    clientResult.error,
+    rosterResult.error,
+    ordersResult.error,
+  ].find(Boolean);
+  if (firstError) throw new Error(firstError.message);
+
+  const roster = rosterResult.data || [];
+  const personIds = Array.from(new Set(roster.map((item) => item.person_id)));
+  const peopleResult = personIds.length
+    ? await supabase.from("people").select("*").in("id", personIds)
+    : { data: [], error: null };
+
+  if (peopleResult.error) throw new Error(peopleResult.error.message);
+
+  return {
+    clients: clientResult.data ? [mapClient(clientResult.data)] : [],
+    people: (peopleResult.data || []).map(mapPerson),
+    client_people: [],
+    productions: [mapProduction(production)],
+    production_roster: roster.map(mapRoster),
+    orders: (ordersResult.data || []).map(mapOrder),
+  };
+}
+
 export async function resetDemoCoffeeData(): Promise<CoffeeData> {
   const next = cloneSeedData();
   saveCoffeeData(next);

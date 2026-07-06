@@ -4,15 +4,86 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   describeDataError,
   loadCoffeeData,
+  loadProductionCoffeeData,
   loadRunnerCoffeeData,
   updateOrderRecord,
 } from "@/lib/data";
+import {
+  getSupabaseBrowserClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase";
 import type { CoffeeData, Order } from "@/lib/types";
 
 type LoadState = "loading" | "ready" | "error";
+type FetchMode = "replace" | "merge";
+
+const syncPollIntervalMs = 10_000;
 
 function errorMessage(err: unknown, fallback: string) {
   return describeDataError(err, fallback);
+}
+
+function mergeById<T extends { id: string }>(current: T[], incoming: T[]) {
+  if (!incoming.length) return current;
+
+  const nextById = new Map(current.map((item) => [item.id, item]));
+  for (const item of incoming) nextById.set(item.id, item);
+  return Array.from(nextById.values());
+}
+
+function mergeProductionOrders(
+  current: Order[],
+  incoming: Order[],
+  productionId: string,
+  pendingOrderIds: ReadonlySet<string>,
+) {
+  const currentById = new Map(current.map((order) => [order.id, order]));
+  const incomingProductionOrders = incoming.filter(
+    (order) => order.production_id === productionId,
+  );
+  const incomingIds = new Set(incomingProductionOrders.map((order) => order.id));
+  const pendingOnlyLocal = current.filter(
+    (order) =>
+      order.production_id === productionId &&
+      pendingOrderIds.has(order.id) &&
+      !incomingIds.has(order.id),
+  );
+
+  return [
+    ...current.filter((order) => order.production_id !== productionId),
+    ...incomingProductionOrders.map((order) =>
+      pendingOrderIds.has(order.id) ? currentById.get(order.id) || order : order,
+    ),
+    ...pendingOnlyLocal,
+  ];
+}
+
+function mergeProductionCoffeeData(
+  current: CoffeeData,
+  incoming: CoffeeData,
+  productionId: string,
+  pendingOrderIds: ReadonlySet<string>,
+): CoffeeData {
+  return {
+    clients: mergeById(current.clients, incoming.clients),
+    people: mergeById(current.people, incoming.people),
+    client_people: current.client_people,
+    productions: mergeById(current.productions, incoming.productions),
+    production_roster: [
+      ...current.production_roster.filter(
+        (item) => item.production_id !== productionId,
+      ),
+      ...incoming.production_roster.filter(
+        (item) => item.production_id === productionId,
+      ),
+    ],
+    orders: mergeProductionOrders(
+      current.orders,
+      incoming.orders,
+      productionId,
+      pendingOrderIds,
+    ),
+  };
 }
 
 /**
@@ -32,6 +103,7 @@ function errorMessage(err: unknown, fallback: string) {
  * freshest snapshot via `dataRef`.
  */
 export function useCoffeeStore(options: { productionId: string; shareToken: string }) {
+  const { productionId, shareToken } = options;
   const [data, setData] = useState<CoffeeData | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
@@ -42,30 +114,46 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
 
   // Always-fresh snapshot so async commits never read a stale closure.
   const dataRef = useRef<CoffeeData | null>(null);
+  const pendingOrdersRef = useRef<ReadonlySet<string>>(new Set());
   const mounted = useRef(true);
 
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
 
-  const fetchData = useCallback(() => {
-    const load =
-      options.shareToken && options.productionId
-        ? loadRunnerCoffeeData(options.productionId, options.shareToken)
-        : loadCoffeeData();
+  const fetchData = useCallback(
+    (mode: FetchMode = "replace") => {
+      const load =
+        shareToken && productionId
+          ? loadRunnerCoffeeData(productionId, shareToken)
+          : mode === "merge" && productionId
+            ? loadProductionCoffeeData(productionId)
+            : loadCoffeeData();
 
-    load
-      .then((next) => {
-        if (!mounted.current) return;
-        setData(next);
-        setState("ready");
-      })
-      .catch((err: unknown) => {
-        if (!mounted.current) return;
-        setError(errorMessage(err, "Could not load this production."));
-        setState("error");
-      });
-  }, [options.productionId, options.shareToken]);
+      return load
+        .then((next) => {
+          if (!mounted.current) return;
+          setData((current) =>
+            mode === "merge" && current
+              ? mergeProductionCoffeeData(
+                  current,
+                  next,
+                  productionId,
+                  pendingOrdersRef.current,
+                )
+              : next,
+          );
+          setState("ready");
+        })
+        .catch((err: unknown) => {
+          if (!mounted.current) return;
+          if (mode === "merge") return;
+          setError(errorMessage(err, "Could not load this production."));
+          setState("error");
+        });
+    },
+    [productionId, shareToken],
+  );
 
   // Retry path — on shoot day a single dropped request must never leave the
   // dashboard permanently stuck on an error screen.
@@ -84,11 +172,70 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
     };
   }, [fetchData]);
 
+  useEffect(() => {
+    if (state !== "ready" || !productionId || !isSupabaseConfigured) return;
+
+    let inFlight = false;
+    let queued = false;
+    let pollTimer: number | null = null;
+
+    const refresh = () => {
+      if (inFlight) {
+        queued = true;
+        return;
+      }
+
+      inFlight = true;
+      void fetchData("merge").finally(() => {
+        inFlight = false;
+        if (queued && mounted.current) {
+          queued = false;
+          refresh();
+        }
+      });
+    };
+
+    pollTimer = window.setInterval(refresh, syncPollIntervalMs);
+
+    if (shareToken) {
+      return () => {
+        if (pollTimer) window.clearInterval(pollTimer);
+      };
+    }
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return () => {
+        if (pollTimer) window.clearInterval(pollTimer);
+      };
+    }
+
+    const channel = supabase
+      .channel(`production-orders:${productionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `production_id=eq.${productionId}`,
+        },
+        refresh,
+      )
+      .subscribe();
+
+    return () => {
+      if (pollTimer) window.clearInterval(pollTimer);
+      void supabase.removeChannel(channel);
+    };
+  }, [fetchData, productionId, shareToken, state]);
+
   const markPending = useCallback((id: string, on: boolean) => {
     setPendingOrders((prev) => {
       const next = new Set(prev);
       if (on) next.add(id);
       else next.delete(id);
+      pendingOrdersRef.current = next;
       return next;
     });
   }, []);
@@ -118,8 +265,8 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
 
       try {
         const result = await updateOrderRecord(base, orderId, patch, {
-          productionId: options.productionId,
-          shareToken: options.shareToken,
+          productionId,
+          shareToken,
         });
         const serverOrder = result.orders.find((order) => order.id === orderId);
         if (serverOrder && mounted.current) {
@@ -153,7 +300,7 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
         if (mounted.current) markPending(orderId, false);
       }
     },
-    [markPending, options.productionId, options.shareToken],
+    [markPending, productionId, shareToken],
   );
 
   const run = useCallback(
