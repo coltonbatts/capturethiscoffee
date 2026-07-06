@@ -40,10 +40,10 @@ import type {
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
 const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-white transition hover:bg-zinc-800 active:translate-y-px disabled:opacity-50";
 
 const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-black transition hover:bg-zinc-100 active:translate-y-px disabled:opacity-50";
 
 export function ErrorToast({
   message,
@@ -106,10 +106,10 @@ export function DayHeader({
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-black uppercase tracking-tight text-black truncate">
+          <h1 className="text-balance text-2xl font-black uppercase leading-tight tracking-tight text-black">
             {productionName}
           </h1>
-          <p className="mt-1 text-sm font-semibold leading-normal text-zinc-600 truncate">
+          <p className="mt-1 text-sm font-semibold leading-normal text-zinc-600">
             {detail || "Coffee orders"}
           </p>
           {runnerName && (
@@ -330,55 +330,66 @@ function RosterCard({
     : skipped
       ? "bg-zinc-400"
       : "bg-amber-400";
+  const roleLine = [person.role, roster.group_label || person.department]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <article
-      className="relative w-full min-w-0 overflow-hidden rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] hover:shadow-[6px_6px_0_#000] transition-[transform,box-shadow] duration-100 min-w-0"
+      className="relative w-full min-w-0 overflow-hidden rounded-xl border-[3px] border-black bg-white p-4 shadow-[4px_4px_0_#000] transition-[transform,box-shadow] duration-100 hover:shadow-[6px_6px_0_#000] sm:p-5"
       aria-busy={pending}
     >
       <span
         className={`absolute inset-y-0 left-0 w-2.5 ${railColor} border-r-[3px] border-black`}
         aria-hidden="true"
       />
-      <div className={`flex gap-3 pl-2.5 ${pending ? "opacity-60" : ""}`}>
-        <Avatar person={person} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="truncate text-lg font-black uppercase tracking-tight text-black">{person.name}</h2>
-              <p className="truncate text-xs font-bold uppercase text-zinc-500 mt-0.5">
-                {[person.role, roster.group_label || person.department]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            </div>
-            <div className="grid shrink-0 justify-items-end gap-1">
-              {captured && order?.label_printed ? (
-                <span className="inline-flex items-center gap-1 rounded-md border-2 border-emerald-700 bg-emerald-50 px-1.5 py-0.5 text-2xs font-bold uppercase text-emerald-800">
-                  <Printer size={12} aria-hidden="true" />
-                  Printed
-                </span>
-              ) : null}
-              {skipped ? (
-                <span className="inline-flex items-center gap-1 rounded-md border-2 border-black bg-zinc-100 px-1.5 py-0.5 text-2xs font-bold uppercase text-zinc-700">
-                  <CircleSlash size={12} aria-hidden="true" />
-                  No drink
-                </span>
-              ) : null}
-            </div>
+      <div
+        className={`grid grid-cols-[3rem_minmax(0,1fr)] gap-x-3 gap-y-3 pl-2.5 sm:grid-cols-[3.25rem_minmax(0,1fr)] ${
+          pending ? "opacity-60" : ""
+        }`}
+      >
+        <div className="pt-0.5">
+          <Avatar person={person} />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-balance text-[1.35rem] font-black uppercase leading-[1.03] tracking-tight text-black sm:text-2xl">
+            {person.name}
+          </h2>
+          {roleLine ? (
+            <p className="mt-1 text-xs font-black uppercase leading-snug tracking-wide text-zinc-500">
+              {roleLine}
+            </p>
+          ) : null}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {captured && order?.label_printed ? (
+              <span className="inline-flex items-center gap-1 rounded-md border-2 border-emerald-700 bg-emerald-50 px-2 py-1 text-[0.68rem] font-black uppercase leading-none tracking-wide text-emerald-800">
+                <Printer size={12} aria-hidden="true" />
+                Printed
+              </span>
+            ) : null}
+            {skipped ? (
+              <span className="inline-flex items-center gap-1 rounded-md border-2 border-black bg-zinc-100 px-2 py-1 text-[0.68rem] font-black uppercase leading-none tracking-wide text-zinc-700">
+                <CircleSlash size={12} aria-hidden="true" />
+                No drink
+              </span>
+            ) : null}
           </div>
-          <div className="mt-2 text-sm leading-normal">
-            {captured ? (
-              <p className="font-bold text-black">{formatDrink(order)}</p>
-            ) : skipped ? (
-              <p className="text-zinc-500 font-semibold">Doesn&apos;t want a drink today.</p>
-            ) : (
-              <p className="text-zinc-600 font-semibold">
-                <span className="font-bold text-zinc-400 uppercase text-xs">Usual: </span>
-                {person.usual_order || "—"}
-              </p>
-            )}
-          </div>
+        </div>
+        <div className="col-span-2 rounded-lg border-2 border-zinc-200 bg-zinc-50 px-3 py-2.5 text-[0.95rem] leading-snug">
+          {captured ? (
+            <p className="font-black text-black">{formatDrink(order)}</p>
+          ) : skipped ? (
+            <p className="font-bold text-zinc-600">
+              Doesn&apos;t want a drink today.
+            </p>
+          ) : (
+            <p className="font-semibold text-zinc-700">
+              <span className="text-xs font-black uppercase tracking-wide text-zinc-500">
+                Usual:{" "}
+              </span>
+              {person.usual_order || "—"}
+            </p>
+          )}
         </div>
       </div>
 
@@ -436,7 +447,7 @@ function CardActions({
   onEditRoster: () => void;
 }) {
   const compactButtonClass =
-    "flex min-h-12 items-center justify-center gap-1.5 rounded-lg border-[3px] border-black bg-white text-black font-black text-xs uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50";
+    "flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border-[3px] border-black bg-white px-2 text-center text-[0.72rem] font-black uppercase leading-none tracking-wide text-black transition hover:bg-zinc-100 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:text-xs";
 
   const compactActions: ReactNode[] = [];
   if (captured) {
@@ -448,7 +459,7 @@ function CardActions({
           className={compactButtonClass}
         >
           <Printer size={14} aria-hidden="true" />
-          <span>
+          <span className="whitespace-nowrap">
             {order.label_printed ? "Reprint" : "Label"}
           </span>
         </Link>,
@@ -463,7 +474,7 @@ function CardActions({
         className={compactButtonClass}
       >
         <CircleSlash size={14} aria-hidden="true" />
-        <span>No drink</span>
+        <span className="whitespace-nowrap">No drink</span>
       </button>,
     );
   }
@@ -491,12 +502,10 @@ function CardActions({
           className={customSecondaryBtn + " w-full"}
         >
           <Pencil size={16} aria-hidden="true" />
-          <span>Edit order</span>
+          <span className="whitespace-nowrap">Edit order</span>
         </button>
       ) : (
-        <div
-          className={`grid gap-2 ${skipped ? "" : "grid-cols-2"}`}
-        >
+        <div className={`grid gap-2 ${skipped ? "" : "grid-cols-2"}`}>
           <button
             type="button"
             onClick={() => onTakeOrder(order)}
@@ -504,7 +513,7 @@ function CardActions({
             className={customPrimaryBtn + " w-full"}
           >
             <Plus size={16} aria-hidden="true" />
-            <span>Take order</span>
+            <span className="whitespace-nowrap">Take order</span>
           </button>
           {!skipped ? (
             <button
@@ -514,7 +523,7 @@ function CardActions({
               className={customSecondaryBtn + " w-full"}
             >
               <CircleSlash size={16} aria-hidden="true" />
-              <span>No drink</span>
+              <span className="whitespace-nowrap">No drink</span>
             </button>
           ) : null}
         </div>
@@ -555,11 +564,13 @@ export function AddToRoster({
   return (
     <Panel className="mt-6 p-5 border-[3px] border-black bg-white shadow-[4px_4px_0_#000] no-print">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black uppercase tracking-tight text-black">Add to roster</h2>
+        <h2 className="text-lg font-black uppercase leading-tight tracking-tight text-black">
+          Add to roster
+        </h2>
         <button
           type="button"
           onClick={onNewGuest}
-          className={`${customSecondaryBtn} min-h-10 py-0 px-3.5 text-xs`}
+          className={`${customSecondaryBtn} min-h-10 whitespace-nowrap px-3 py-0 text-xs`}
         >
           <Plus size={16} aria-hidden="true" />
           <span>New guest</span>

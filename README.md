@@ -8,6 +8,7 @@ The UI is intentionally minimal and contemporary:
 
 - **Rounded surfaces** — panels, inputs, buttons, and chips use `rounded-xl` / `rounded-2xl` (print labels stay sharp)
 - **Calm typography** — Geist Sans for UI; sentence case; one clear title per screen
+- **Name-first runner cards** — people names and production names wrap instead of truncating, with role/status/drink details kept secondary for fast scanning on set
 - **Short copy** — no eyebrow kickers, demo banners, or Supabase jargon in normal use; labels and actions only where they prevent mistakes
 - **Black / white / zinc** — brand mark via `CaptureMark` (`src/components/capture-mark.tsx`); shared tokens in `src/components/ui.tsx`
 
@@ -24,6 +25,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
 - Supabase schema and RLS in `supabase/schema.sql`
 - Drink-collection progress ("12 of 20 drinks in") and printed-label state on the day board
+- Clean mobile roster cards with full person names, compact status badges, and consistent order-management actions
 - Native iOS printer app in `mobile/` — the primary on-set path for direct BLE
   printing to NIIMBOT M2_H
 - Batch NIIMBOT PNG and CSV export from `/labels` (whole day preselected; unprinted quick-select)
