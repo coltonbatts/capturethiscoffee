@@ -9,6 +9,7 @@ import {
   EmptyState,
   Field,
   Panel,
+  Sheet,
   inputClass,
 } from "@/components/ui";
 import {
@@ -28,10 +29,10 @@ import type { CoffeeData, Person } from "@/lib/types";
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
 const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
 
 const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
 
 export default function PeoplePage() {
   const [data, setData] = useState<CoffeeData | null>(null);
@@ -104,6 +105,16 @@ export default function PeoplePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function closeAddForm() {
+    setShowAddForm(false);
+    setForm(emptyPersonForm("crew"));
+  }
+
+  function closeEditForm() {
+    setEditingPerson(null);
+    setEditForm(emptyPersonForm("crew"));
   }
 
   return (
@@ -188,63 +199,45 @@ export default function PeoplePage() {
       </div>
 
       {showAddForm && (
-        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
-          <form
-            onSubmit={addPerson}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Add person"
-            className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]"
-          >
-            <h2 className="text-lg font-black uppercase tracking-tight text-black">Add person</h2>
-            <PersonFields form={form} onChange={setForm} showActive={false} />
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setForm(emptyPersonForm("crew"));
-                }}
-                className={customSecondaryBtn}
-              >
+        <Sheet
+          title="Add person"
+          asForm
+          onSubmit={addPerson}
+          onClose={closeAddForm}
+          footer={
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={closeAddForm} className={customSecondaryBtn}>
                 Cancel
               </button>
               <button type="submit" className={customPrimaryBtn} disabled={saving}>
                 {saving ? "Adding…" : "Add person"}
               </button>
             </div>
-          </form>
-        </div>
+          }
+        >
+          <PersonFields form={form} onChange={setForm} showActive={false} />
+        </Sheet>
       )}
 
       {editingPerson && (
-        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
-          <form
-            onSubmit={savePersonEdit}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Edit person"
-            className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]"
-          >
-            <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit person</h2>
-            <PersonFields form={editForm} onChange={setEditForm} showActive />
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingPerson(null);
-                  setEditForm(emptyPersonForm("crew"));
-                }}
-                className={customSecondaryBtn}
-              >
+        <Sheet
+          title="Edit person"
+          asForm
+          onSubmit={savePersonEdit}
+          onClose={closeEditForm}
+          footer={
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={closeEditForm} className={customSecondaryBtn}>
                 Cancel
               </button>
               <button type="submit" className={customPrimaryBtn} disabled={saving}>
                 {saving ? "Saving…" : "Save person"}
               </button>
             </div>
-          </form>
-        </div>
+          }
+        >
+          <PersonFields form={editForm} onChange={setEditForm} showActive />
+        </Sheet>
       )}
     </AppShell>
   );
@@ -261,15 +254,16 @@ function PersonFields({
 }) {
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Name">
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={(event) => onChange({ ...form, name: event.target.value })}
-            placeholder="Name"
-          />
-        </Field>
+      <Field label="Name">
+        <input
+          className={inputClass}
+          value={form.name}
+          onChange={(event) => onChange({ ...form, name: event.target.value })}
+          placeholder="Name"
+          autoFocus
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-2.5">
         <Field label="Type">
           <select
             className={inputClass}
@@ -285,8 +279,6 @@ function PersonFields({
             ))}
           </select>
         </Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Role">
           <input
             className={inputClass}
@@ -306,20 +298,15 @@ function PersonFields({
             placeholder="Camera, Client"
           />
         </Field>
+        <Field label="Company">
+          <input
+            className={inputClass}
+            value={form.company}
+            onChange={(event) => onChange({ ...form, company: event.target.value })}
+            placeholder="Capture This, agency"
+          />
+        </Field>
       </div>
-      <Field label="Company">
-        <input
-          className={inputClass}
-          value={form.company}
-          onChange={(event) => onChange({ ...form, company: event.target.value })}
-          placeholder="Capture This, agency, client"
-        />
-      </Field>
-      <PersonPhotoField
-        value={form.photo_url}
-        personName={form.name}
-        onChange={(photo_url) => onChange({ ...form, photo_url })}
-      />
       <Field label="Usual order">
         <input
           className={inputClass}
@@ -340,21 +327,26 @@ function PersonFields({
           placeholder="Oat milk, dairy-free"
         />
       </Field>
+      <PersonPhotoField
+        value={form.photo_url}
+        personName={form.name}
+        onChange={(photo_url) => onChange({ ...form, photo_url })}
+      />
       <Field label="Notes">
         <textarea
-          className={`${inputClass} min-h-20 py-3`}
+          className={`${inputClass} min-h-16 py-2.5`}
           value={form.notes}
           onChange={(event) => onChange({ ...form, notes: event.target.value })}
           placeholder="Identification or relationship notes"
         />
       </Field>
       {showActive && (
-        <label className="flex min-h-11 items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3.5 text-sm font-black text-black">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-black text-black">
           <input
             type="checkbox"
             checked={form.active}
             onChange={(event) => onChange({ ...form, active: event.target.checked })}
-            className="size-4 accent-black"
+            className="size-4 shrink-0 accent-black"
           />
           <span>Active</span>
         </label>

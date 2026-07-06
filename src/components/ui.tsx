@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import type { Person } from "@/lib/types";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -91,10 +92,96 @@ export function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5 text-xs font-black uppercase tracking-normal text-zinc-600">
+    <label className="grid min-w-0 gap-1 text-xs font-black uppercase tracking-normal text-zinc-600">
       {label}
       {children}
     </label>
+  );
+}
+
+/**
+ * Modal edit sheet: flush bottom sheet on phones, centered dialog on larger
+ * screens. Header (title + close) and footer (actions) stay pinned so the
+ * primary action is always reachable; only the fields scroll.
+ */
+export function Sheet({
+  title,
+  onClose,
+  footer,
+  children,
+  asForm,
+  onSubmit,
+}: {
+  title: string;
+  onClose: () => void;
+  footer: ReactNode;
+  children: ReactNode;
+  asForm?: boolean;
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  const titleId = useId();
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  const panelClass =
+    "mx-auto flex max-h-[92dvh] w-full max-w-md min-w-0 flex-col overflow-hidden rounded-t-2xl border-[3px] border-b-0 border-black bg-white sm:max-h-[85dvh] sm:rounded-xl sm:border-b-[3px] sm:shadow-[6px_6px_0_#000]";
+
+  const inner = (
+    <>
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b-[3px] border-black px-4 py-2.5">
+        <h2
+          id={titleId}
+          className="min-w-0 truncate text-lg font-black uppercase leading-tight tracking-tight text-black"
+        >
+          {title}
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid size-11 shrink-0 place-items-center rounded-lg border-2 border-black bg-white text-black transition hover:bg-zinc-100 active:translate-y-px"
+          aria-label="Close"
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
+      </header>
+      <div className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto overscroll-contain p-4">
+        {children}
+      </div>
+      <footer className="shrink-0 border-t-[3px] border-black p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3">
+        {footer}
+      </footer>
+    </>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 grid items-end bg-black/55 pt-10 no-print sm:items-center sm:p-4">
+      {asForm ? (
+        <form
+          onSubmit={onSubmit}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className={panelClass}
+        >
+          {inner}
+        </form>
+      ) : (
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className={panelClass}
+        >
+          {inner}
+        </section>
+      )}
+    </div>
   );
 }
 

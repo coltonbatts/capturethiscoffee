@@ -20,6 +20,7 @@ import {
   CountBadge,
   Field,
   Panel,
+  Sheet,
   inputClass,
 } from "@/components/ui";
 import type { CaptureProgress } from "@/lib/order-progress";
@@ -604,46 +605,6 @@ export function AddToRoster({
   );
 }
 
-function Sheet({
-  label,
-  children,
-  asForm,
-  onSubmit,
-}: {
-  label: string;
-  children: ReactNode;
-  asForm?: boolean;
-  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
-}) {
-  const className =
-    "mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]";
-
-  return (
-    <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
-      {asForm ? (
-        <form
-          onSubmit={onSubmit}
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-          className={className}
-        >
-          {children}
-        </form>
-      ) : (
-        <section
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-          className={className}
-        >
-          {children}
-        </section>
-      )}
-    </div>
-  );
-}
-
 export function RunnerLinkSheet({
   url,
   onClose,
@@ -678,26 +639,18 @@ export function RunnerLinkSheet({
   }
 
   return (
-    <Sheet label="Runner link">
-      <h2 className="text-lg font-black uppercase tracking-tight text-black">Runner link</h2>
-      <p className="text-sm font-semibold leading-relaxed text-zinc-600">
-        Anyone with this link can take drink orders for today. Paste this link into CTC Printer to sync the printing queue.
-      </p>
-      <div className="grid gap-2">
-        <input
-          readOnly
-          value={url}
-          className={`${inputClass} font-mono text-sm bg-zinc-50`}
-          onFocus={(event) => event.currentTarget.select()}
-        />
-        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+    <Sheet
+      title="Runner link"
+      onClose={onClose}
+      footer={
+        <div className={`grid gap-2 ${canShare ? "grid-cols-2" : ""}`}>
           <button
             type="button"
             onClick={() => void copy()}
-            className={copied ? customPrimaryBtn : customSecondaryBtn}
+            className={copied ? customPrimaryBtn : canShare ? customSecondaryBtn : customPrimaryBtn}
           >
             {copied ? <Check size={16} /> : <Link2 size={16} />}
-            <span>{copied ? "Copied" : "Copy Link"}</span>
+            <span>{copied ? "Copied" : "Copy link"}</span>
           </button>
           {canShare ? (
             <button type="button" onClick={() => void share()} className={customPrimaryBtn}>
@@ -706,10 +659,18 @@ export function RunnerLinkSheet({
             </button>
           ) : null}
         </div>
-      </div>
-      <button type="button" onClick={onClose} className={`${customSecondaryBtn} w-full mt-2`}>
-        Done
-      </button>
+      }
+    >
+      <p className="text-sm font-semibold leading-relaxed text-zinc-600">
+        Anyone with this link can take drink orders for today. Paste this link into CTC Printer to sync the printing queue.
+      </p>
+      <input
+        readOnly
+        value={url}
+        className={`${inputClass} font-mono text-sm bg-zinc-50`}
+        onFocus={(event) => event.currentTarget.select()}
+        aria-label="Runner link URL"
+      />
     </Sheet>
   );
 }
@@ -736,17 +697,37 @@ export function OrderEditor({
   saving: boolean;
 }) {
   return (
-    <Sheet label={title}>
-      <h2 className="text-lg font-black uppercase tracking-tight text-black">{title}</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Drink">
-          <input
-            className={inputClass}
-            value={draft.drink_type || ""}
-            onChange={(event) => onChange({ ...draft, drink_type: event.target.value })}
-            placeholder="Latte, cold brew, drip"
-          />
-        </Field>
+    <Sheet
+      title={title}
+      onClose={onCancel}
+      footer={
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onCancel} className={customSecondaryBtn}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            className={customPrimaryBtn}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save order"}
+          </button>
+        </div>
+      }
+    >
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="col-span-2">
+          <Field label="Drink">
+            <input
+              className={inputClass}
+              value={draft.drink_type || ""}
+              onChange={(event) => onChange({ ...draft, drink_type: event.target.value })}
+              placeholder="Latte, cold brew, drip"
+              autoFocus
+            />
+          </Field>
+        </div>
         <Field label="Size">
           <select
             className={inputClass}
@@ -775,7 +756,7 @@ export function OrderEditor({
             className={inputClass}
             value={draft.milk_type || ""}
             onChange={(event) => onChange({ ...draft, milk_type: event.target.value })}
-            placeholder="Oat, almond, whole"
+            placeholder="Oat, whole"
           />
         </Field>
         <Field label="Sweetener">
@@ -783,37 +764,39 @@ export function OrderEditor({
             className={inputClass}
             value={draft.sweetener || ""}
             onChange={(event) => onChange({ ...draft, sweetener: event.target.value })}
-            placeholder="Half sweet, vanilla"
+            placeholder="Vanilla"
           />
         </Field>
-        <Field label="Caffeine">
-          <select
-            className={inputClass}
-            value={draft.caffeine || "Regular"}
-            onChange={(event) => onChange({ ...draft, caffeine: event.target.value })}
-          >
-            <option>Regular</option>
-            <option>Decaf</option>
-            <option>Half-caf</option>
-            <option>No caffeine</option>
-          </select>
-        </Field>
+        <div className="col-span-2">
+          <Field label="Caffeine">
+            <select
+              className={inputClass}
+              value={draft.caffeine || "Regular"}
+              onChange={(event) => onChange({ ...draft, caffeine: event.target.value })}
+            >
+              <option>Regular</option>
+              <option>Decaf</option>
+              <option>Half-caf</option>
+              <option>No caffeine</option>
+            </select>
+          </Field>
+        </div>
       </div>
       <Field label="Special notes">
         <textarea
-          className={`${inputClass} min-h-20 py-3`}
+          className={`${inputClass} min-h-16 py-2.5`}
           value={draft.special_notes || ""}
           onChange={(event) => onChange({ ...draft, special_notes: event.target.value })}
           placeholder="No room, extra hot, separate cup"
         />
       </Field>
       {canUpdateUsualOrder && (
-        <label className="flex min-h-11 items-center gap-3 rounded-lg border-[3px] border-black bg-white p-3 text-sm font-bold text-black cursor-pointer">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
           <input
             type="checkbox"
             checked={updateUsualOrder}
             onChange={(event) => onUpdateUsualOrder(event.target.checked)}
-            className="size-4 accent-black"
+            className="size-4 shrink-0 accent-black"
           />
           <span>
             <span className="block font-black text-xs uppercase tracking-tight text-black">Save as usual order</span>
@@ -821,19 +804,6 @@ export function OrderEditor({
           </span>
         </label>
       )}
-      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-        <button type="button" onClick={onCancel} className={customSecondaryBtn}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className={customPrimaryBtn}
-          disabled={saving}
-        >
-          {saving ? "Saving…" : "Save order"}
-        </button>
-      </div>
     </Sheet>
   );
 }
@@ -860,8 +830,25 @@ export function ProductionDetailsEditor({
   saving: boolean;
 }) {
   return (
-    <Sheet label="Edit production details">
-      <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit production</h2>
+    <Sheet
+      title="Edit production"
+      onClose={onCancel}
+      footer={
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onCancel} className={customSecondaryBtn}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            className={customPrimaryBtn}
+            disabled={saving || !draft.name.trim()}
+          >
+            {saving ? "Saving…" : "Save details"}
+          </button>
+        </div>
+      }
+    >
       <Field label="Production name">
         <input
           className={inputClass}
@@ -871,7 +858,7 @@ export function ProductionDetailsEditor({
           required
         />
       </Field>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2.5">
         <Field label="Shoot date">
           <input
             className={inputClass}
@@ -903,25 +890,12 @@ export function ProductionDetailsEditor({
       </Field>
       <Field label="Notes">
         <textarea
-          className={`${inputClass} min-h-20 py-3`}
+          className={`${inputClass} min-h-16 py-2.5`}
           value={draft.notes}
           onChange={(event) => onChange({ ...draft, notes: event.target.value })}
           placeholder="Call time, coffee shop, handoff"
         />
       </Field>
-      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-        <button type="button" onClick={onCancel} className={customSecondaryBtn}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className={customPrimaryBtn}
-          disabled={saving || !draft.name.trim()}
-        >
-          {saving ? "Saving..." : "Save details"}
-        </button>
-      </div>
     </Sheet>
   );
 }
@@ -942,8 +916,25 @@ export function RosterEditor({
   saving: boolean;
 }) {
   return (
-    <Sheet label="Edit roster">
-      <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit roster</h2>
+    <Sheet
+      title="Edit roster"
+      onClose={onCancel}
+      footer={
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onCancel} className={customSecondaryBtn}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            className={customPrimaryBtn}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save roster"}
+          </button>
+        </div>
+      }
+    >
       <Field label="Production group">
         <input
           className={inputClass}
@@ -954,12 +945,12 @@ export function RosterEditor({
           autoFocus
         />
       </Field>
-      <label className="flex min-h-11 items-center gap-3 rounded-lg border-[3px] border-black bg-white p-3 text-sm font-bold text-black cursor-pointer">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
         <input
           type="checkbox"
           checked={draft.on_set_today ?? true}
           onChange={(event) => onChange({ ...draft, on_set_today: event.target.checked })}
-          className="size-4 accent-black"
+          className="size-4 shrink-0 accent-black"
         />
         <span>
           <span className="block font-black text-xs uppercase tracking-tight text-black">On set today</span>
@@ -971,25 +962,12 @@ export function RosterEditor({
       <button
         type="button"
         onClick={onRemove}
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-red-700 bg-red-50 text-red-700 font-black text-sm uppercase tracking-wider hover:bg-red-100 transition active:translate-y-px disabled:opacity-50 w-full"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-2 border-red-700 bg-white px-3 text-sm font-black uppercase tracking-wider text-red-700 transition hover:bg-red-50 active:translate-y-px disabled:opacity-50"
         disabled={saving}
       >
         <Trash2 size={16} aria-hidden="true" />
         <span>Remove from Day</span>
       </button>
-      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-        <button type="button" onClick={onCancel} className={customSecondaryBtn}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          className={customPrimaryBtn}
-          disabled={saving}
-        >
-          {saving ? "Saving…" : "Save roster"}
-        </button>
-      </div>
       <datalist id="roster-group-suggestions">
         {groupSuggestions.map((group) => (
           <option key={group} value={group} />
@@ -1021,18 +999,36 @@ export function QuickAddPersonSheet({
   const canLinkToClient = form.type === "client_contact" || form.type === "agency";
 
   return (
-    <Sheet label="Quick add person" asForm onSubmit={onSubmit}>
-      <h2 className="text-lg font-black uppercase tracking-tight text-black">Quick add person</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Name">
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={(event) => onChange({ ...form, name: event.target.value })}
-            placeholder="Name"
-            autoFocus
-          />
-        </Field>
+    <Sheet
+      title="Quick add person"
+      onClose={onCancel}
+      asForm
+      onSubmit={onSubmit}
+      footer={
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={onCancel} className={customSecondaryBtn}>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={customPrimaryBtn}
+            disabled={saving || !form.name.trim()}
+          >
+            {saving ? "Saving…" : "Add to roster"}
+          </button>
+        </div>
+      }
+    >
+      <Field label="Name">
+        <input
+          className={inputClass}
+          value={form.name}
+          onChange={(event) => onChange({ ...form, name: event.target.value })}
+          placeholder="Name"
+          autoFocus
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-2.5">
         <Field label="Type">
           <select
             className={inputClass}
@@ -1050,8 +1046,6 @@ export function QuickAddPersonSheet({
             ))}
           </select>
         </Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Role">
           <input
             className={inputClass}
@@ -1069,20 +1063,15 @@ export function QuickAddPersonSheet({
             placeholder="Client, Camera"
           />
         </Field>
+        <Field label="Company">
+          <input
+            className={inputClass}
+            value={form.company}
+            onChange={(event) => onChange({ ...form, company: event.target.value })}
+            placeholder="Company"
+          />
+        </Field>
       </div>
-      <Field label="Company">
-        <input
-          className={inputClass}
-          value={form.company}
-          onChange={(event) => onChange({ ...form, company: event.target.value })}
-          placeholder="Company"
-        />
-      </Field>
-      <PersonPhotoField
-        value={form.photo_url}
-        personName={form.name}
-        onChange={(photo_url) => onChange({ ...form, photo_url })}
-      />
       <Field label="Usual order">
         <input
           className={inputClass}
@@ -1099,21 +1088,26 @@ export function QuickAddPersonSheet({
           placeholder="Oat milk, no dairy"
         />
       </Field>
+      <PersonPhotoField
+        value={form.photo_url}
+        personName={form.name}
+        onChange={(photo_url) => onChange({ ...form, photo_url })}
+      />
       <Field label="Notes">
         <textarea
-          className={`${inputClass} min-h-20 py-3`}
+          className={`${inputClass} min-h-16 py-2.5`}
           value={form.notes}
           onChange={(event) => onChange({ ...form, notes: event.target.value })}
           placeholder="Where to find them or identifying details"
         />
       </Field>
       {canLinkToClient && (
-        <label className="flex min-h-11 items-center gap-3 rounded-lg border-[3px] border-black bg-white p-3 text-sm font-bold text-black cursor-pointer">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
           <input
             type="checkbox"
             checked={linkToClient}
             onChange={(event) => onLinkToClientChange(event.target.checked)}
-            className="size-4 accent-black"
+            className="size-4 shrink-0 accent-black"
           />
           <span>
             <span className="block font-black text-xs uppercase tracking-tight text-black">Link to {clientName}</span>
@@ -1123,18 +1117,6 @@ export function QuickAddPersonSheet({
           </span>
         </label>
       )}
-      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 pt-2">
-        <button type="button" onClick={onCancel} className={customSecondaryBtn}>
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className={customPrimaryBtn}
-          disabled={saving || !form.name.trim()}
-        >
-          {saving ? "Saving…" : "Add to roster"}
-        </button>
-      </div>
       <datalist id="quick-add-group-suggestions">
         {groupSuggestions.map((group) => (
           <option key={group} value={group} />

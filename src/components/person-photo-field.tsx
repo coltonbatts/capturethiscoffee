@@ -40,8 +40,8 @@ export function PersonPhotoField({
 
   return (
     <div className="grid gap-2">
-      <div className="grid gap-3 rounded-lg border border-zinc-500 bg-white p-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
-        <div className="grid size-24 place-items-center overflow-hidden rounded-lg bg-white ring-1 ring-black">
+      <div className="flex items-center gap-3 rounded-lg border border-zinc-500 bg-white p-2.5">
+        <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-white ring-1 ring-black">
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase/local photos are dynamic.
             <img
@@ -51,44 +51,42 @@ export function PersonPhotoField({
               referrerPolicy="no-referrer"
             />
           ) : (
-            <ImagePlus size={30} className="text-zinc-500" aria-hidden="true" />
+            <ImagePlus size={22} className="text-zinc-500" aria-hidden="true" />
           )}
         </div>
 
-        <div className="grid min-w-0 gap-2">
-          <div>
-            <p className="text-sm font-bold text-black">Person photo</p>
-            <p className="mt-0.5 text-sm leading-5 text-zinc-600">
-              Upload a face photo for roster cards and label selection.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="grid min-w-0 flex-1 gap-1">
+          <p className="text-xs font-black uppercase tracking-normal text-zinc-600">
+            Photo
+          </p>
+          <div className="flex gap-2">
             <label
               htmlFor={inputId}
-              className={`${secondaryButtonClass} min-h-12 cursor-pointer`}
+              className={`${secondaryButtonClass} flex-1 cursor-pointer`}
             >
-              <Upload size={18} aria-hidden="true" />
-              {uploading ? "Uploading..." : "Upload"}
+              <Upload size={16} aria-hidden="true" />
+              {uploading ? "Uploading…" : "Upload"}
             </label>
             <button
               type="button"
               onClick={() => setShowUrl((current) => !current)}
-              className={`${secondaryButtonClass} min-h-12`}
+              className={`${secondaryButtonClass} flex-1`}
+              aria-expanded={showUrl}
             >
-              <LinkIcon size={18} aria-hidden="true" />
+              <LinkIcon size={16} aria-hidden="true" />
               URL
             </button>
+            {value ? (
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="inline-flex min-h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-red-700 bg-white text-red-700 transition hover:bg-red-50 active:translate-y-px"
+                aria-label="Remove photo"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+              </button>
+            ) : null}
           </div>
-          {value ? (
-            <button
-              type="button"
-              onClick={() => onChange("")}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-red-700 bg-white px-3 text-sm font-bold text-red-700 hover:bg-red-50"
-            >
-              <Trash2 size={17} aria-hidden="true" />
-              Remove photo
-            </button>
-          ) : null}
         </div>
       </div>
 
