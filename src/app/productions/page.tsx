@@ -293,6 +293,7 @@ export default function ProductionsPage() {
                 key={card.production.id}
                 card={card}
                 isCustomizing={isCustomizing}
+                canDelete={isAdmin}
                 onMoveUp={() => moveProduction(card.production.id, "up")}
                 onMoveDown={() => moveProduction(card.production.id, "down")}
                 onEdit={() => openProductionEditor(card.production, card.client?.name || "")}
@@ -458,6 +459,7 @@ export default function ProductionsPage() {
 function ProductionListItem({
   card,
   isCustomizing,
+  canDelete,
   onMoveUp,
   onMoveDown,
   onEdit,
@@ -467,6 +469,7 @@ function ProductionListItem({
 }: {
   card: ProductionCard;
   isCustomizing: boolean;
+  canDelete: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onEdit?: () => void;
@@ -541,22 +544,27 @@ function ProductionListItem({
             <Settings size={16} />
             <span className="text-xs font-black uppercase">Edit</span>
           </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onDelete?.();
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border-[3px] border-red-700 bg-white text-red-700 hover:bg-red-50 active:translate-y-px transition"
-            aria-label="Delete Day"
-          >
-            <Trash2 size={18} />
-          </button>
         </div>
       )}
     </div>
   );
+
+  const deleteButton =
+    canDelete && onDelete ? (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDelete();
+        }}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-[3px] border-red-700 bg-white text-red-700 transition hover:bg-red-50 active:translate-y-px"
+        aria-label={`Delete ${card.production.name}`}
+        title="Delete day"
+      >
+        <Trash2 size={18} aria-hidden="true" />
+      </button>
+    ) : null;
 
   const cardStyle =
     "block w-full min-w-0 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] transition-[transform,box-shadow,border-color] duration-100 hover:shadow-[6px_6px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000]";
@@ -565,13 +573,25 @@ function ProductionListItem({
     "block w-full min-w-0 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]";
 
   if (isCustomizing) {
-    return <div className={customizingCardStyle}>{content}</div>;
+    return (
+      <div className={customizingCardStyle}>
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="min-w-0 flex-1">{content}</div>
+          {deleteButton}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Link href={`/productions/${card.production.id}`} className={cardStyle}>
-      {content}
-    </Link>
+    <div className={cardStyle}>
+      <div className="flex min-w-0 items-start gap-3">
+        <Link href={`/productions/${card.production.id}`} className="min-w-0 flex-1">
+          {content}
+        </Link>
+        {deleteButton}
+      </div>
+    </div>
   );
 }
 

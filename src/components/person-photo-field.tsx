@@ -96,7 +96,6 @@ export function PersonPhotoField({
         id={inputId}
         type="file"
         accept="image/*"
-        capture="environment"
         className="sr-only"
         onChange={(event) => void onFileChange(event)}
         disabled={disabled || uploading}
