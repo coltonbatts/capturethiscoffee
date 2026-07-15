@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 567 340" width="567" height="340">
+  <rect width="567" height="340" fill="#ffffff"/>
+  <rect x="12" y="12" width="543" height="316" fill="none" stroke="#000" stroke-width="6"/>
+  <!-- perforation -->
+  <line x1="424" y1="26" x2="424" y2="314" stroke="#000" stroke-width="4" stroke-dasharray="4 14" stroke-linecap="round"/>
+  <circle cx="424" cy="12" r="15" fill="#ffffff" stroke="#000" stroke-width="5"/>
+  <circle cx="424" cy="328" r="15" fill="#ffffff" stroke="#000" stroke-width="5"/>
+  <!-- main body -->
+  <text x="36" y="64" font-family="Arial" font-size="16" font-weight="bold" letter-spacing="4" fill="#000">CAPTURE THIS PRESENTS</text>
+  <text x="34" y="160" font-family="Arial" font-size="60" font-weight="bold" letter-spacing="-1" fill="#000">COLD BREW</text>
+  <text x="34" y="212" font-family="Arial" font-size="27" letter-spacing="2" fill="#000">SAM K. — ADMIT ONE</text>
+  <line x1="34" y1="248" x2="394" y2="248" stroke="#000" stroke-width="2"/>
+  <text x="34" y="292" font-family="Arial" font-size="18" letter-spacing="3" fill="#000">UA SHOOT · DAY 2 · 12:40P</text>
+  <!-- stub -->
+  <g transform="translate(496 170) rotate(-90)">
+    <text x="0" y="0" font-family="Arial" font-size="17" letter-spacing="4" fill="#000" text-anchor="middle">ORDER</text>
+    <text x="0" y="48" font-family="Arial" font-size="52" font-weight="bold" fill="#000" text-anchor="middle">№ 021</text>
+  </g>
+</svg>

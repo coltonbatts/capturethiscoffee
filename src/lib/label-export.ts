@@ -1,20 +1,15 @@
+import type { CoffeeLabel, LabelFormatterOptions } from "./label-copy";
 import {
-  buildCoffeeLabels,
-  defaultLabelFields,
-  type CoffeeLabel,
-  type LabelFormatterOptions,
-} from "./label-copy";
-import { isOrderCaptured } from "./order-progress";
+  buildPrintableCoffeeLabels,
+  defaultPrintableLabelOptions,
+  isPrintableLabelItem,
+  printableLabelItemsForProduction,
+  type PrintableLabelItem,
+} from "./label-preparation";
 import { formatDrink } from "./order-summary";
 import type { Client, CoffeeData, Production, RosterOrder } from "./types";
 
-export const defaultLabelExportOptions: LabelFormatterOptions = {
-  style: "standard",
-  fields: {
-    ...defaultLabelFields,
-    notesStatus: false,
-  },
-};
+export const defaultLabelExportOptions = defaultPrintableLabelOptions;
 
 export type LabelExportSelection = {
   production: Production;
@@ -28,9 +23,7 @@ export type InitialLabelExportSelection = {
   selectedOrderIds: string[];
 };
 
-export type ActiveLabelExportItem = RosterOrder & {
-  order: NonNullable<RosterOrder["order"]>;
-};
+export type ActiveLabelExportItem = PrintableLabelItem;
 
 export function labelExportProductions(data: CoffeeData) {
   return data.productions
@@ -97,30 +90,13 @@ export function labelExportItemsForProduction(
   data: CoffeeData,
   productionId: string,
 ): ActiveLabelExportItem[] {
-  return data.production_roster
-    .filter((roster) => roster.production_id === productionId && roster.on_set_today)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .flatMap((roster) => {
-      const person = data.people.find((item) => item.id === roster.person_id);
-      if (!person) return [];
-
-      return [
-        {
-          roster,
-          person,
-          order: data.orders.find((order) => order.roster_id === roster.id),
-        },
-      ];
-    })
-    .filter(isActiveLabelExportItem);
+  return printableLabelItemsForProduction(data, productionId);
 }
 
 export function isActiveLabelExportItem(
   item: RosterOrder,
 ): item is ActiveLabelExportItem {
-  // Only captured drinks get labels; people still waiting to order or who
-  // declined a drink stay out of the batch.
-  return isOrderCaptured(item.order);
+  return isPrintableLabelItem(item);
 }
 
 export function buildLabelExportSelection(
@@ -136,7 +112,7 @@ export function buildLabelExportSelection(
   const allItems = labelExportItemsForProduction(data, productionId);
   const selected = new Set(selectedOrderIds);
   const items = allItems.filter((item) => item.order && selected.has(item.order.id));
-  const labels = buildCoffeeLabels(production, client, items, options);
+  const labels = buildPrintableCoffeeLabels(production, client, items, options);
 
   return { production, client, items, labels };
 }

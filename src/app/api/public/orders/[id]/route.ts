@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server";
 import {
-  mapRunnerOrder,
   sanitizeRunnerOrderPatch,
   ShareTokenError,
   validateProductionShareToken,
@@ -10,6 +9,7 @@ import {
   getSupabaseServiceRoleClient,
   jsonError,
 } from "@/lib/supabase-server";
+import { toRunnerOrder } from "@/server/productions/dto";
 
 export async function PATCH(
   request: NextRequest,
@@ -56,7 +56,7 @@ export async function PATCH(
     if (error) throw new ApiError(error.message, 500);
     if (!data) throw new ApiError("Order not found.", 404);
 
-    return Response.json({ order: mapRunnerOrder(data) });
+    return Response.json({ order: toRunnerOrder(data) });
   } catch (error) {
     if (error instanceof ShareTokenError) {
       return Response.json({ error: error.message }, { status: error.status });

@@ -1,15 +1,12 @@
-import {
-  buildCoffeeLabels,
-  defaultLabelFields,
-  type CoffeeLabel,
-} from "@/lib/label-copy";
+import type { CoffeeLabel } from "@/lib/label-copy";
 import { defaultLabelDesignId } from "@/lib/label-designs";
 import {
-  defaultLabelExportOptions,
-  labelExportItemsForProduction,
-} from "@/lib/label-export";
+  buildPrintableCoffeeLabels,
+  printableLabelItemsForProduction,
+  type PrintableLabelItem,
+} from "@/lib/label-preparation";
 import { formatDrink } from "@/lib/order-summary";
-import type { CoffeeData, Order } from "@/lib/types";
+import type { Client, CoffeeData, Order, Production } from "@/lib/types";
 
 export type PrinterQueueItem = {
   orderId: string;
@@ -34,7 +31,7 @@ export function buildPrinterQueue(data: CoffeeData, productionId: string): Print
   const production = data.productions.find((item) => item.id === productionId);
   if (!production) return null;
 
-  const items = labelExportItemsForProduction(data, productionId);
+  const items = printableLabelItemsForProduction(data, productionId);
   const labels = items.map((item) => ({
     orderId: item.order.id,
     personName: item.person.name,
@@ -64,20 +61,25 @@ export function findCoffeeLabelForOrder(
   if (!production) return null;
 
   const client = data.clients.find((item) => item.id === production.client_id);
-  const items = labelExportItemsForProduction(data, productionId).filter(
+  const items = printableLabelItemsForProduction(data, productionId).filter(
     (item) => item.order.id === orderId,
   );
   if (!items.length) return null;
 
-  const labels = buildCoffeeLabels(production, client, items, {
-    ...defaultLabelExportOptions,
-    fields: {
-      ...defaultLabelFields,
-      notesStatus: false,
-    },
-  });
+  const labels = buildPrintableCoffeeLabels(production, client, items);
 
   return labels[0] || null;
+}
+
+export function buildCoffeeLabelForOrder(context: {
+  production: Pick<Production, "name">;
+  client: Pick<Client, "name"> | undefined;
+  item: PrintableLabelItem;
+}): CoffeeLabel | null {
+  return (
+    buildPrintableCoffeeLabels(context.production, context.client, [context.item])[0] ||
+    null
+  );
 }
 
 export function parseProductionShareUrl(raw: string) {

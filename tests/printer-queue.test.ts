@@ -78,11 +78,68 @@ const sampleData: CoffeeData = {
 describe("printer queue helpers", () => {
   it("builds a queue from runner-scoped production data", () => {
     const queue = buildPrinterQueue(sampleData, "prod-1");
-    assert.ok(queue);
-    assert.equal(queue.labels.length, 1);
-    assert.equal(queue.labels[0].personName, "Ava Stone");
-    assert.equal(queue.labels[0].labelPrinted, false);
-    assert.equal(queue.designId, "smiley");
+    assert.deepEqual(queue, {
+      production: {
+        id: "prod-1",
+        name: "Launch shoot",
+        status: "active",
+      },
+      designId: "smiley",
+      labels: [
+        {
+          orderId: "order-1",
+          personName: "Ava Stone",
+          drink: "Iced, Latte, Oat milk",
+          group: "Camera",
+          status: "confirmed",
+          labelPrinted: false,
+        },
+      ],
+    });
+  });
+
+  it("keeps uncaptured and off-set orders out of the printer queue", () => {
+    const data: CoffeeData = {
+      ...sampleData,
+      production_roster: [
+        ...sampleData.production_roster,
+        {
+          id: "roster-2",
+          production_id: "prod-1",
+          person_id: "person-1",
+          group_label: "Camera",
+          on_set_today: true,
+          sort_order: 2,
+        },
+        {
+          id: "roster-3",
+          production_id: "prod-1",
+          person_id: "person-1",
+          group_label: "Camera",
+          on_set_today: false,
+          sort_order: 3,
+        },
+      ],
+      orders: [
+        ...sampleData.orders,
+        {
+          ...sampleData.orders[0]!,
+          id: "order-2",
+          roster_id: "roster-2",
+          status: "not_asked",
+        },
+        {
+          ...sampleData.orders[0]!,
+          id: "order-3",
+          roster_id: "roster-3",
+        },
+      ],
+    };
+
+    assert.deepEqual(
+      buildPrinterQueue(data, "prod-1")?.labels.map((item) => item.orderId),
+      ["order-1"],
+    );
   });
 
   it("parses a production share URL into API session fields", () => {
