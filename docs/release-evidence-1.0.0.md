@@ -12,8 +12,8 @@ status change.
 |---|---|---|
 | GitHub repository | `https://github.com/coltonbatts/capturethiscoffee.git` | Verified |
 | Starting branch/commit | `main` / `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified |
-| Release branch | `codex/release-1.0.0` | Pending creation |
-| Release commit | To be recorded after intentional commit | Pending |
+| Release branch | `codex/release-1.0.0` | Created |
+| Release-candidate implementation commit | `a451f64` | Committed intentionally; exact build-5 application source |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
 | Live Vercel deployment | `dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64` | READY |
