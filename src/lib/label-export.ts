@@ -37,10 +37,7 @@ export function labelExportProductions(data: CoffeeData) {
 }
 
 export function preferredLabelExportProduction(data: CoffeeData) {
-  return (
-    labelExportProductions(data)[0] ||
-    data.productions.slice().sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
-  );
+  return labelExportProductions(data)[0];
 }
 
 /**
@@ -65,7 +62,7 @@ export function initialLabelExportSelection(
     }
   }
 
-  const requestedProduction = data.productions.find(
+  const requestedProduction = labelExportProductions(data).find(
     (production) => production.id === requestedProductionId.trim(),
   );
   const preferred = requestedProduction || preferredLabelExportProduction(data);
@@ -77,6 +74,39 @@ export function initialLabelExportSelection(
       (item) => item.order.id,
     ),
   };
+}
+
+/**
+ * Keeps an operator's current queue selection when refreshed server props still
+ * contain it. If the chosen day disappears, or every previously selected order
+ * disappears, fall back to the current preferred batch.
+ */
+export function reconcileLabelExportSelection(
+  data: CoffeeData,
+  current: InitialLabelExportSelection,
+): InitialLabelExportSelection {
+  const productionStillExists = labelExportProductions(data).some(
+    (production) => production.id === current.productionId,
+  );
+  if (!productionStillExists) return initialLabelExportSelection(data);
+
+  const validOrderIds = new Set(
+    labelExportItemsForProduction(data, current.productionId).map(
+      (item) => item.order.id,
+    ),
+  );
+  const selectedOrderIds = current.selectedOrderIds.filter((id) =>
+    validOrderIds.has(id),
+  );
+
+  if (current.selectedOrderIds.length > 0 && selectedOrderIds.length === 0) {
+    return {
+      productionId: current.productionId,
+      selectedOrderIds: Array.from(validOrderIds),
+    };
+  }
+
+  return { productionId: current.productionId, selectedOrderIds };
 }
 
 /** Order ids in the batch whose label has not been printed yet. */

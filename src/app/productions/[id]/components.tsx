@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { PersonPhotoField } from "@/components/person-photo-field";
 import {
   Avatar,
@@ -603,8 +603,11 @@ export function RunnerLinkSheet({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const canShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const canShare = useSyncExternalStore(
+    subscribeToWebShareCapability,
+    getWebShareSnapshot,
+    getServerWebShareSnapshot,
+  );
 
   async function copy() {
     try {
@@ -663,6 +666,18 @@ export function RunnerLinkSheet({
       />
     </Sheet>
   );
+}
+
+function subscribeToWebShareCapability() {
+  return () => {};
+}
+
+function getWebShareSnapshot() {
+  return typeof navigator.share === "function";
+}
+
+function getServerWebShareSnapshot() {
+  return false;
 }
 
 export function OrderEditor({

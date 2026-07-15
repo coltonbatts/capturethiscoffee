@@ -6,6 +6,7 @@ import {
   labelExportItemsForProduction,
   labelExportProductions,
   niimbotBatchCsv,
+  reconcileLabelExportSelection,
   unprintedOrderIds,
   type ActiveLabelExportItem,
 } from "../src/lib/label-export";
@@ -254,6 +255,57 @@ describe("label export helpers", () => {
       productionId: "prod-active",
       selectedOrderIds: ["order-ava", "order-printed"],
     });
+  });
+
+  it("preserves a valid user selection when refreshed label props arrive", () => {
+    assert.deepEqual(
+      reconcileLabelExportSelection(data, {
+        productionId: "prod-active",
+        selectedOrderIds: ["order-printed"],
+      }),
+      {
+        productionId: "prod-active",
+        selectedOrderIds: ["order-printed"],
+      },
+    );
+  });
+
+  it("repairs an invalidated order selection with the remaining valid batch", () => {
+    const refreshed = {
+      ...data,
+      orders: data.orders.filter((order) => order.id !== "order-printed"),
+    };
+
+    assert.deepEqual(
+      reconcileLabelExportSelection(refreshed, {
+        productionId: "prod-active",
+        selectedOrderIds: ["order-printed"],
+      }),
+      { productionId: "prod-active", selectedOrderIds: ["order-ava"] },
+    );
+  });
+
+  it("falls back to the preferred batch when the selected production disappears", () => {
+    const refreshed = {
+      ...data,
+      productions: data.productions.filter(
+        (production) => production.id !== "prod-active",
+      ),
+      production_roster: data.production_roster.filter(
+        (roster) => roster.production_id !== "prod-active",
+      ),
+      orders: data.orders.filter(
+        (order) => order.production_id !== "prod-active",
+      ),
+    };
+
+    assert.deepEqual(
+      reconcileLabelExportSelection(refreshed, {
+        productionId: "prod-active",
+        selectedOrderIds: ["order-ava"],
+      }),
+      { productionId: "prod-planning", selectedOrderIds: ["order-planning"] },
+    );
   });
 
   it("lists only unprinted labels for reprint-safe batch selection", () => {

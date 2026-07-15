@@ -51,9 +51,18 @@ aliased to `https://coffee.capturethis.com`.
 | CTC Printer, NIIMBOT, and fallback physical output | No iPhone, installed CTC Printer build, loaded stock, or NIIMBOT was available to this audit | Unverified |
 
 Current sync behavior is intentional: the authenticated operator production
-board listens to Supabase Realtime order changes and keeps a 10-second polling
-fallback; the public token runner uses a 10-second public API poll. This phase
-does not move the public runner onto direct Supabase Realtime.
+board listens to Supabase Realtime order changes as a notification only and
+keeps a 10-second polling fallback. Both signals refresh production-scoped
+Server Component data; pending optimistic order edits win during prop
+reconciliation. The public token runner still uses a 10-second public API poll
+and never receives direct Supabase table access.
+
+Phase 5 moved signed-in operator table reads and writes behind request-scoped
+anon-key server clients and authenticated Server Actions. The service role is
+still exclusive to token-scoped public runner/printer APIs. Browser Supabase
+use remains intentional for auth/session observation, Realtime notification,
+and person-photo Storage; person table updates after a photo upload use the
+Server Action boundary.
 
 ### Minimal remaining access and hardware handoff
 

@@ -98,13 +98,19 @@ src/app/
   page.tsx
   login/page.tsx
   productions/page.tsx
+  productions/productions-client.tsx
   productions/new/page.tsx
+  productions/new/new-production-client.tsx
   productions/[id]/page.tsx
+  productions/[id]/production-dashboard-client.tsx
   productions/[id]/components.tsx
   productions/[id]/use-coffee-store.ts
   productions/[id]/use-roster-view.ts
   people/page.tsx
+  people/people-client.tsx
   labels/page.tsx
+  labels/labels-client.tsx
+  operator-actions.ts
   api/public/productions/[id]/route.ts
   api/public/orders/[id]/route.ts
 
@@ -116,8 +122,10 @@ src/components/
   ui.tsx
 
 src/lib/
-  data.ts
   types.ts
+  operator-inputs.ts
+  operator-validation.ts
+  operator-production-reconciliation.ts
   auth.ts
   supabase.ts
   supabase-server.ts
@@ -133,6 +141,15 @@ src/lib/
   label-designs.ts
   niimbot-m2-export.ts
   niimbot-m2-preset.json
+
+src/server/operator/
+  context.ts
+  clients.ts
+  people.ts
+  productions.ts
+  roster.ts
+  orders.ts
+  queries.ts
   brand-assets.ts
 
 supabase/
@@ -170,9 +187,14 @@ Important fields:
 - `Production` has status `planning`, `active`, or `complete`.
 - `Order` has drink fields plus status and `label_printed`. The stored `OrderStatus` enum is wider than the UI: the app distinguishes only needs-order (`not_asked`), captured (any other non-skip status), and skipped (`no_order`) via `src/lib/order-progress.ts`.
 
-`src/lib/data.ts` is the session-bound browser data layer for authenticated
-operator operations. It has one persistence path: Supabase. Token-scoped
-runner/printer operations stay in public API routes and DTO-focused clients.
+Authenticated operator table access lives in the server-only domain DAL under
+`src/server/operator/`, and mutations enter through
+`src/app/operator-actions.ts`. Each DAL operation creates a request-scoped
+anon-key client from the signed-in cookie session and verifies the user. The
+browser Supabase client remains only for auth/session observation, Realtime as
+a refresh notification, and the documented person-photo Storage exception.
+Token-scoped runner/printer operations stay in public API routes and
+DTO-focused clients.
 
 ## Auth and access model
 
@@ -286,12 +308,14 @@ Before real client use:
 - Confirm signed-in users can manage setup data (apply `20260703120000_authenticated_full_access.sql`).
 - Confirm share-token runner links work on a second device.
 
-### P1 - Continue the operator DAL migration
+### Completed - operator DAL migration (Phase 5)
 
-Supabase is now the only runtime source of truth, but authenticated operator
-reads and writes still use the session-bound browser client. A later phase can
-move those operations into server-only DAL functions and Server Actions while
-preserving the current DTO and token API contracts.
+Authenticated operator pages receive initial data from Server Components,
+operator table mutations use authenticated Server Actions, and
+`src/lib/data.ts` has been removed. The production board refreshes scoped
+server props on Realtime notifications and every 10 seconds, preserving pending
+optimistic orders during reconciliation. Public runner/printer APIs are
+unchanged.
 
 ### P1 - Consider public-runner realtime after production proof
 
@@ -348,7 +372,7 @@ Local/private:
 ## Suggested first Claude prompt
 
 ```text
-You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/lib/data.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/page.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.6, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: CTC exports CSV/PNG assets and the NIIMBOT app prints them.
+You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/page.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.6, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: CTC exports CSV/PNG assets and the NIIMBOT app prints them.
 ```
 
 ## Before handing work back

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import {
@@ -34,49 +33,13 @@ describe("Supabase runtime configuration", () => {
     assert.equal(configured.status, "configured");
   });
 
-  it("rejects data loads and writes without creating a browser-local database", () => {
-    const script = `
-      globalThis.window = {
-        localStorage: {
-          writes: 0,
-          getItem() { return null },
-          setItem() { this.writes += 1 },
-        },
-      };
-      const data = await import('./src/lib/data.ts');
-      const empty = { clients: [], people: [], client_people: [], productions: [], production_roster: [], orders: [] };
-      const results = [];
-      for (const operation of [
-        () => data.loadCoffeeData(),
-        () => data.createClientRecord(empty, { name: 'No local record' }),
-      ]) {
-        try { await operation(); results.push('resolved'); }
-        catch (error) { results.push(error instanceof Error ? error.message : String(error)); }
-      }
-      process.stdout.write(JSON.stringify({ results, writes: window.localStorage.writes }));
-    `;
-    const env = { ...process.env };
-    delete env.NEXT_PUBLIC_SUPABASE_URL;
-    delete env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    delete env.NEXT_PUBLIC_ENABLE_AUTH;
-    const child = spawnSync(
-      process.execPath,
-      ["--import", "tsx", "--input-type=module", "--eval", script],
-      { cwd: process.cwd(), env, encoding: "utf8" },
+  it("removes the browser CRUD module instead of falling back to local data", () => {
+    assert.equal(
+      sourceFilesFor(join(process.cwd(), "src/lib")).some((file) =>
+        file.endsWith("/data.ts"),
+      ),
+      false,
     );
-
-    assert.equal(child.status, 0, child.stderr);
-    const result = JSON.parse(child.stdout) as {
-      results: string[];
-      writes: number;
-    };
-    assert.equal(result.writes, 0);
-    assert.equal(result.results.length, 2);
-    for (const message of result.results) {
-      assert.notEqual(message, "resolved");
-      assert.match(message, /NEXT_PUBLIC_SUPABASE_URL/);
-      assert.match(message, /NEXT_PUBLIC_SUPABASE_ANON_KEY/);
-    }
   });
 
   it("keeps capability URL construction independent of operator auth config", () => {
@@ -120,7 +83,10 @@ describe("runtime source boundaries", () => {
       localStorageFiles
         .map((file) => file.replace(`${process.cwd()}/`, ""))
         .sort(),
-      ["src/app/labels/page.tsx", "src/app/productions/page.tsx"],
+      [
+        "src/app/labels/labels-client.tsx",
+        "src/app/productions/productions-client.tsx",
+      ],
     );
     assert.match(combinedSource, /capture-this-coffee-production-order/);
     assert.match(combinedSource, /ctc-label-design/);
@@ -166,4 +132,8 @@ function allFiles(directory: string): string[] {
     const path = join(directory, entry);
     return statSync(path).isDirectory() ? allFiles(path) : [path];
   });
+}
+
+function sourceFilesFor(directory: string): string[] {
+  return allFiles(directory).filter((file) => /\.(ts|tsx)$/.test(file));
 }

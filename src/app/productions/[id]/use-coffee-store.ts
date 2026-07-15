@@ -1,89 +1,22 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  loadCoffeeData,
-  loadProductionCoffeeData,
-  updateOrderRecord,
-} from "@/lib/data";
+import { updateOrderAction } from "@/app/operator-actions";
 import { describeDataError } from "@/lib/data-errors";
+import { unwrapOperatorAction } from "@/lib/operator-inputs";
+import { mergeProductionCoffeeData } from "@/lib/operator-production-reconciliation";
+import {
+  resolveProductionRefresh,
+  type ProductionLoadState,
+} from "@/lib/operator-production-load-state";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 import type { CoffeeData, Order } from "@/lib/types";
-
-type LoadState = "loading" | "ready" | "error";
-type FetchMode = "replace" | "merge";
 
 const syncPollIntervalMs = 10_000;
 
 function errorMessage(err: unknown, fallback: string) {
   return describeDataError(err, fallback);
-}
-
-function mergeById<T extends { id: string }>(current: T[], incoming: T[]) {
-  if (!incoming.length) return current;
-
-  const nextById = new Map(current.map((item) => [item.id, item]));
-  for (const item of incoming) nextById.set(item.id, item);
-  return Array.from(nextById.values());
-}
-
-function mergeProductionOrders(
-  current: Order[],
-  incoming: Order[],
-  productionId: string,
-  pendingOrderIds: ReadonlySet<string>,
-) {
-  const currentById = new Map(current.map((order) => [order.id, order]));
-  const incomingProductionOrders = incoming.filter(
-    (order) => order.production_id === productionId,
-  );
-  const incomingIds = new Set(
-    incomingProductionOrders.map((order) => order.id),
-  );
-  const pendingOnlyLocal = current.filter(
-    (order) =>
-      order.production_id === productionId &&
-      pendingOrderIds.has(order.id) &&
-      !incomingIds.has(order.id),
-  );
-
-  return [
-    ...current.filter((order) => order.production_id !== productionId),
-    ...incomingProductionOrders.map((order) =>
-      pendingOrderIds.has(order.id)
-        ? currentById.get(order.id) || order
-        : order,
-    ),
-    ...pendingOnlyLocal,
-  ];
-}
-
-function mergeProductionCoffeeData(
-  current: CoffeeData,
-  incoming: CoffeeData,
-  productionId: string,
-  pendingOrderIds: ReadonlySet<string>,
-): CoffeeData {
-  return {
-    clients: mergeById(current.clients, incoming.clients),
-    people: mergeById(current.people, incoming.people),
-    client_people: current.client_people,
-    productions: mergeById(current.productions, incoming.productions),
-    production_roster: [
-      ...current.production_roster.filter(
-        (item) => item.production_id !== productionId,
-      ),
-      ...incoming.production_roster.filter(
-        (item) => item.production_id === productionId,
-      ),
-    ],
-    orders: mergeProductionOrders(
-      current.orders,
-      incoming.orders,
-      productionId,
-      pendingOrderIds,
-    ),
-  };
 }
 
 /**
@@ -102,18 +35,26 @@ function mergeProductionCoffeeData(
  * single-flighted by `saving`. They replace the whole blob, built off the
  * freshest snapshot via `dataRef`.
  */
-export function useCoffeeStore(options: { productionId: string }) {
-  const { productionId } = options;
-  const [data, setData] = useState<CoffeeData | null>(null);
-  const [state, setState] = useState<LoadState>("loading");
-  const [error, setError] = useState("");
+export function useCoffeeStore(options: {
+  productionId: string;
+  initialData: CoffeeData | null;
+  initialError?: string;
+  refreshKey: string;
+}) {
+  const { productionId, initialData, initialError = "", refreshKey } = options;
+  const router = useRouter();
+  const [data, setData] = useState<CoffeeData | null>(initialData);
+  const [state, setState] = useState<ProductionLoadState>(
+    initialData ? "ready" : initialError ? "error" : "loading",
+  );
+  const [error, setError] = useState(initialError);
   const [saving, setSaving] = useState(false);
   const [pendingOrders, setPendingOrders] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
 
   // Always-fresh snapshot so async commits never read a stale closure.
-  const dataRef = useRef<CoffeeData | null>(null);
+  const dataRef = useRef<CoffeeData | null>(initialData);
   const pendingOrdersRef = useRef<ReadonlySet<string>>(new Set());
   const mounted = useRef(true);
 
@@ -121,76 +62,52 @@ export function useCoffeeStore(options: { productionId: string }) {
     dataRef.current = data;
   }, [data]);
 
-  const fetchData = useCallback(
-    (mode: FetchMode = "replace") => {
-      const load =
-        mode === "merge" && productionId
-          ? loadProductionCoffeeData(productionId)
-          : loadCoffeeData();
-
-      return load
-        .then((next) => {
-          if (!mounted.current) return;
-          setData((current) =>
-            mode === "merge" && current
-              ? mergeProductionCoffeeData(
-                  current,
-                  next,
-                  productionId,
-                  pendingOrdersRef.current,
-                )
-              : next,
-          );
-          setState("ready");
-        })
-        .catch((err: unknown) => {
-          if (!mounted.current) return;
-          if (mode === "merge") return;
-          setError(errorMessage(err, "Could not load this production."));
-          setState("error");
-        });
-    },
-    [productionId],
-  );
-
   // Retry path — on shoot day a single dropped request must never leave the
   // dashboard permanently stuck on an error screen.
   const reload = useCallback(() => {
     setState("loading");
     setError("");
-    fetchData();
-  }, [fetchData]);
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     mounted.current = true;
-    fetchData();
-
     return () => {
       mounted.current = false;
     };
-  }, [fetchData]);
+  }, []);
+
+  // A Server Component refresh supplies the authoritative scoped snapshot.
+  // Reconcile it around any optimistic orders that are still in flight.
+  useEffect(() => {
+    const resolution = resolveProductionRefresh(
+      dataRef.current,
+      initialData,
+      initialError,
+    );
+    if (initialData) {
+      setData((current) =>
+        current
+          ? mergeProductionCoffeeData(
+              current,
+              initialData,
+              productionId,
+              pendingOrdersRef.current,
+            )
+          : initialData,
+      );
+    }
+    setError(resolution.error);
+    setState(resolution.state);
+  }, [initialData, initialError, productionId, refreshKey]);
 
   useEffect(() => {
     if (state !== "ready" || !productionId || !isSupabaseConfigured) return;
 
-    let inFlight = false;
-    let queued = false;
     let pollTimer: number | null = null;
 
     const refresh = () => {
-      if (inFlight) {
-        queued = true;
-        return;
-      }
-
-      inFlight = true;
-      void fetchData("merge").finally(() => {
-        inFlight = false;
-        if (queued && mounted.current) {
-          queued = false;
-          refresh();
-        }
-      });
+      router.refresh();
     };
 
     pollTimer = window.setInterval(refresh, syncPollIntervalMs);
@@ -214,7 +131,7 @@ export function useCoffeeStore(options: { productionId: string }) {
       if (pollTimer) window.clearInterval(pollTimer);
       void supabase.removeChannel(channel);
     };
-  }, [fetchData, productionId, state]);
+  }, [productionId, router, state]);
 
   const markPending = useCallback((id: string, on: boolean) => {
     setPendingOrders((prev) => {
@@ -250,9 +167,10 @@ export function useCoffeeStore(options: { productionId: string }) {
       );
 
       try {
-        const result = await updateOrderRecord(base, orderId, patch);
-        const serverOrder = result.orders.find((order) => order.id === orderId);
-        if (serverOrder && mounted.current) {
+        const serverOrder = unwrapOperatorAction(
+          await updateOrderAction(orderId, patch),
+        );
+        if (mounted.current) {
           setData((prev) =>
             prev
               ? {
@@ -280,10 +198,13 @@ export function useCoffeeStore(options: { productionId: string }) {
           setError(errorMessage(err, "Couldn't save that change — reverted."));
         }
       } finally {
-        if (mounted.current) markPending(orderId, false);
+        if (mounted.current) {
+          markPending(orderId, false);
+          router.refresh();
+        }
       }
     },
-    [markPending],
+    [markPending, router],
   );
 
   const run = useCallback(
@@ -298,7 +219,10 @@ export function useCoffeeStore(options: { productionId: string }) {
       setError("");
       try {
         const next = await commit(base);
-        if (mounted.current) setData(next);
+        if (mounted.current) {
+          setData(next);
+          router.refresh();
+        }
         return true;
       } catch (err) {
         if (mounted.current) setError(errorMessage(err, fallback));
@@ -307,7 +231,7 @@ export function useCoffeeStore(options: { productionId: string }) {
         if (mounted.current) setSaving(false);
       }
     },
-    [saving],
+    [router, saving],
   );
 
   return {

@@ -106,6 +106,19 @@ Missing or malformed public Supabase configuration shows an actionable setup err
 
 The browser still uses `localStorage` for non-authoritative UI preferences such as production list ordering and label design. Those preferences are not application records and do not synchronize across devices.
 
+Authenticated operator table reads now run in Server Components through the
+server-only domain DAL under `src/server/operator/`. Operator writes use thin
+Server Actions in `src/app/operator-actions.ts`. Each read and mutation creates
+an anon-key Supabase server client from the current request cookies, verifies
+the signed-in user, and relies on authenticated RLS; the service role remains
+exclusive to token-scoped public runner/printer Route Handlers.
+
+The intentional browser Supabase exceptions are authentication/session
+observation, the `orders` Realtime subscription used only as a refresh signal,
+and authenticated `person-photos` Storage access. Photo metadata saved on a
+person still crosses the operator Server Action boundary. No operator client
+component performs direct table CRUD.
+
 ## Demo users
 
 Create users in the Supabase dashboard (email/password) or have them sign in once with Google:
@@ -196,9 +209,11 @@ The web `/labels` screen still supports PNG share/download and NIIMBOT batch CSV
 
 The current assumed export preset is 50mm × 30mm at 300 DPI (`591×354px`). Physical roll verification is still pending — see [docs/label-image-export.md](docs/label-image-export.md).
 
-The browser never uses the service role key — it uses only
-`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and table/photo
-access is controlled by Supabase Auth plus RLS/storage policies.
+The browser never uses the service role key. Browser auth, Realtime
+notifications, and the documented photo-storage exception use only
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; operator table
+access executes on the server with the same anon key, signed-in cookie session,
+and RLS.
 
 ## Local test data
 

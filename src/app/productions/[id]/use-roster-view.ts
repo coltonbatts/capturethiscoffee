@@ -3,20 +3,15 @@
 import { useMemo } from "react";
 import { captureProgress, needsOrder } from "@/lib/order-progress";
 import { formatDrink } from "@/lib/order-summary";
+import {
+  activePeopleNotOnProductionRoster,
+  productionRosterItems,
+} from "@/lib/operator-production-people";
 import type {
   CoffeeData,
-  Order,
-  Person,
   Production,
-  ProductionRoster,
   RosterOrder,
 } from "@/lib/types";
-
-type JoinedRosterRow = {
-  roster: ProductionRoster;
-  person: Person | undefined;
-  order?: Order;
-};
 
 export type RosterFilters = {
   query: string;
@@ -38,23 +33,7 @@ export function useRosterView(
 ) {
   const items = useMemo<RosterOrder[]>(() => {
     if (!data || !production) return [];
-
-    const peopleById = new Map(data.people.map((person) => [person.id, person]));
-    const orderByRoster = new Map<string, Order>();
-    for (const order of data.orders) orderByRoster.set(order.roster_id, order);
-
-    return data.production_roster
-      .filter((roster) => roster.production_id === production.id)
-      .slice()
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map(
-        (roster): JoinedRosterRow => ({
-          roster,
-          person: peopleById.get(roster.person_id),
-          order: orderByRoster.get(roster.id),
-        }),
-      )
-      .filter((item): item is RosterOrder => Boolean(item.person));
+    return productionRosterItems(data, production.id);
   }, [data, production]);
 
   const activeItems = useMemo(
@@ -87,12 +66,9 @@ export function useRosterView(
   const progress = useMemo(() => captureProgress(activeItems), [activeItems]);
 
   const peopleNotOnRoster = useMemo(() => {
-    if (!data) return [];
-    const rostered = new Set(items.map((item) => item.person.id));
-    return data.people.filter(
-      (person) => !rostered.has(person.id) && person.active,
-    );
-  }, [data, items]);
+    if (!data || !production) return [];
+    return activePeopleNotOnProductionRoster(data, production.id);
+  }, [data, production]);
 
   return {
     items,

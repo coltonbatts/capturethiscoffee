@@ -41,6 +41,10 @@ Fallback and advanced paths:
 - Local development uses a configured Supabase project. Browser `localStorage`
   is limited to non-authoritative UI preferences such as list ordering and
   label design.
+- Signed-in operator table reads and writes cross a server-only DAL/Server
+  Action boundary and use the operator cookie session with authenticated RLS.
+  Browser Supabase use is limited to auth/session observation, Realtime refresh
+  notifications, and authenticated person-photo Storage uploads.
 
 Historical/cancelled paths:
 
