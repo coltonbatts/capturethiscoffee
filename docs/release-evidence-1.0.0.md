@@ -18,7 +18,8 @@ status change.
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
 | Live Vercel deployment | `dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64` | READY |
 | Live deployed Git commit | `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified through Vercel |
-| Release preview URL/commit | To be recorded after branch push | Pending |
+| Release preview deployment | `dpl_Aiv2sx7bVEp6zoayjjkU95zWN3YJ` / commit `d92505e60b20dd6be331c22a702b74d5a26416cd` | READY |
+| Release preview URL | `https://capturethiscoffee-51g7vionj-coltons-projects-536a670d.vercel.app` | Vercel-auth protected |
 | Production release deploy | Must match approved release commit | Pending |
 
 The live deployment predates the current release candidate. Its `/privacy` and
