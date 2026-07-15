@@ -14,12 +14,13 @@ status change.
 | Starting branch/commit | `main` / `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified |
 | Release branch | `codex/release-1.0.0` | Created |
 | Release-candidate application source | `6003661` | Exact build-5 app source and non-shipping screenshot tooling |
+| Draft pull request | `https://github.com/coltonbatts/capturethiscoffee/pull/9` | OPEN, DRAFT, mergeable; production merge gated |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
 | Live Vercel deployment | `dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64` | READY |
 | Live deployed Git commit | `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified through Vercel |
-| Release preview deployment | `dpl_Aiv2sx7bVEp6zoayjjkU95zWN3YJ` / commit `d92505e60b20dd6be331c22a702b74d5a26416cd` | READY |
-| Release preview URL | `https://capturethiscoffee-51g7vionj-coltons-projects-536a670d.vercel.app` | Vercel-auth protected |
+| Release preview deployment | `dpl_2J6VJTBb4cV79he7mJhCgyhBRqaS` / commit `dc4f33008a368feeff01b0a9817d053692ce1396` | READY |
+| Release preview URL | `https://capturethiscoffee-bu7tbtneg-coltons-projects-536a670d.vercel.app` | Vercel-auth protected |
 | Production release deploy | Must match approved release commit | Pending |
 
 The live deployment predates the current release candidate. Its `/privacy` and
