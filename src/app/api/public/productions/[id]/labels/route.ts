@@ -12,7 +12,7 @@ import {
   jsonError,
 } from "@/lib/supabase-server";
 import {
-  getRunnerProductionData,
+  getPrinterProductionData,
   ProductionQueryError,
 } from "@/server/productions/queries";
 
@@ -26,7 +26,7 @@ export async function GET(
     const supabase = getSupabaseServiceRoleClient();
 
     await validateProductionShareToken(supabase, id, token);
-    const data = await getRunnerProductionData(supabase, id);
+    const data = await getPrinterProductionData(supabase, id);
     const queue = buildPrinterQueue(data, id);
     if (!queue) throw new ApiError("Production not found.", 404);
 

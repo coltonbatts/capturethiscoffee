@@ -166,32 +166,6 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
   };
 }
 
-export async function loadRunnerCoffeeData(
-  productionId: string,
-  shareToken: string,
-): Promise<CoffeeData> {
-  if (!productionId || !shareToken || !isSupabaseConfigured) {
-    return loadCoffeeData();
-  }
-
-  const response = await fetch(
-    `/api/public/productions/${encodeURIComponent(
-      productionId,
-    )}?token=${encodeURIComponent(shareToken)}`,
-  );
-  const body = (await response.json().catch(() => ({}))) as {
-    data?: CoffeeData;
-    error?: string;
-  };
-
-  if (!response.ok) {
-    throw new Error(body.error || "Could not load this production.");
-  }
-  if (!body.data) throw new Error("Could not load this production.");
-
-  return body.data;
-}
-
 export async function loadProductionCoffeeData(
   productionId: string,
 ): Promise<CoffeeData> {

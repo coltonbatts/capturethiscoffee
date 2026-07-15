@@ -5,10 +5,17 @@ import {
   supabaseConfigError,
   type Database,
 } from "@/lib/supabase";
-
-const protectedPathPattern = /^\/(people|labels|productions\/new)(\/|$)/;
+import {
+  isProtectedOperatorPath,
+  legacyRunnerRedirectUrl,
+} from "@/lib/route-access";
 
 export async function proxy(request: NextRequest) {
+  const legacyRedirect = legacyRunnerRedirectUrl(request.nextUrl);
+  if (legacyRedirect) {
+    return NextResponse.redirect(legacyRedirect);
+  }
+
   if (isAuthDisabled) {
     return NextResponse.next();
   }
@@ -18,7 +25,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (supabaseConfigError || !supabaseUrl || !supabaseAnonKey) {
-    if (protectedPathPattern.test(pathname)) {
+    if (isProtectedOperatorPath(pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
@@ -51,7 +58,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && protectedPathPattern.test(pathname)) {
+  if (!user && isProtectedOperatorPath(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);

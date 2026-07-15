@@ -2,10 +2,10 @@
 
 import { X } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
-import type { Person } from "@/lib/types";
+type AvatarPerson = { name: string; photo_url?: string };
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
-export function Avatar({ person }: { person: Person }) {
+export function Avatar({ person }: { person: AvatarPerson }) {
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [photoFailed, setPhotoFailed] = useState(false);
   const storagePath = storagePathFromPersonPhotoUrl(person.photo_url);
@@ -58,7 +58,7 @@ export function Avatar({ person }: { person: Person }) {
   return <AvatarFallback person={person} />;
 }
 
-function AvatarFallback({ person }: { person: Person }) {
+function AvatarFallback({ person }: { person: AvatarPerson }) {
   return (
     <div className="grid size-12 place-items-center rounded-lg bg-black text-sm font-semibold text-white ring-1 ring-black">
       {person.name

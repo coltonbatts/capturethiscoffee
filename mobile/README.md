@@ -5,13 +5,13 @@ Native iOS app that prints Capture This Coffee cup labels directly to the NIIMBO
 ## On-set workflow (Phase 2)
 
 1. **Deploy or run CTC** with the new API routes (see repo root). Production must be **active** before `label_printed` updates will stick.
-2. Open the **runner share link** on the production board (URL shape: `https://…/productions/{id}?token=…`).
+2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
 3. On the iPhone, open **CTC Printer** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).
 5. Tap **Print** on each label in the queue. The app downloads the server PNG, prints, then marks `label_printed` via the public order PATCH route.
 6. Use **Refresh** after runner-board changes. Toggle the chip to show already-printed labels.
 
-**Local dev on a physical iPhone:** the share URL must use your Mac's LAN IP, not `localhost` (e.g. `http://192.168.1.69:3000/productions/…?token=…`). `next.config.ts` already allows dev origins for common LAN IPs.
+**Local dev on a physical iPhone:** the share URL must use your Mac's LAN IP, not `localhost` (e.g. `http://192.168.1.69:3000/run/…?token=…`). `next.config.ts` already allows dev origins for common LAN IPs.
 
 ## API endpoints (share-token auth)
 

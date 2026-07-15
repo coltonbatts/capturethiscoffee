@@ -1,6 +1,18 @@
 import type { Client, Order, Production, RosterOrder } from "./types";
 
-export function formatDrink(order?: Order) {
+type DrinkSummaryOrder = Pick<
+  Order,
+  | "status"
+  | "drink_type"
+  | "size"
+  | "temperature"
+  | "milk_type"
+  | "sweetener"
+  | "caffeine"
+  | "special_notes"
+>;
+
+export function formatDrink(order?: DrinkSummaryOrder | null) {
   if (!order || order.status === "no_order") return "No order";
 
   let drink = cleanPart(order.drink_type);

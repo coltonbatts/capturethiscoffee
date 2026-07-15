@@ -19,7 +19,7 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 - Private demo login at `/login` when auth is enabled
 - Shoot-day list at `/productions`
 - Day creation at `/productions/new` (optional client/brand name for label branding)
-- Runner dashboard at `/productions/[id]`
+- Runner dashboard at `/run/[id]?token=…`
 - People at `/people`
 - Supabase Auth email/password when env vars are configured
 - Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
@@ -126,7 +126,8 @@ select public.create_production_share_token(
 );
 ```
 
-Open `/productions/<production-id>?token=<returned-token>` for the runner view.
+Open `/run/<production-id>?token=<returned-token>` for the runner view. Legacy
+`/productions/<production-id>?token=…` links redirect during migration.
 The token authorizes only that production. It omits private person notes and
 dietary notes. It does include `usual_order` because the runner screen uses it
 as the operational prompt for confirming drinks quickly. Order edits are limited
@@ -166,7 +167,7 @@ Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set 
 Setup, signing, and troubleshooting: [mobile/README.md](mobile/README.md).  
 Strategy and hardware notes: [docs/phone-printing-investigation.md](docs/phone-printing-investigation.md).
 
-**Local dev on a physical iPhone:** use your Mac's LAN IP in the share URL, not `localhost` (e.g. `http://192.168.1.69:3000/productions/{id}?token=…`).
+**Local dev on a physical iPhone:** use your Mac's LAN IP in the share URL, not `localhost` (e.g. `http://192.168.1.69:3000/run/{id}?token=…`).
 
 ### Public printer API (share-token auth)
 

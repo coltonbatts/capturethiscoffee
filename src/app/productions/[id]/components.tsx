@@ -33,11 +33,10 @@ import {
   type PersonForm,
 } from "@/lib/people";
 import type {
-  Order,
-  Production,
-  ProductionRoster,
-  RosterOrder,
-} from "@/lib/types";
+  ProductionBoardOrderDTO,
+  ProductionBoardRosterDTO,
+} from "@/lib/production-board";
+import type { Production, ProductionRoster } from "@/lib/types";
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
 const customPrimaryBtn =
@@ -275,18 +274,18 @@ export function RosterList({
   onNoDrink,
   onEditRoster,
 }: {
-  items: RosterOrder[];
+  items: ProductionBoardRosterDTO[];
   pendingOrders: ReadonlySet<string>;
   canManageSetup: boolean;
-  onTakeOrder: (order: Order) => void;
-  onNoDrink: (order: Order) => void;
-  onEditRoster: (item: RosterOrder) => void;
+  onTakeOrder: (order: ProductionBoardOrderDTO) => void;
+  onNoDrink: (order: ProductionBoardOrderDTO) => void;
+  onEditRoster: (item: ProductionBoardRosterDTO) => void;
 }) {
   return (
     <div className="grid gap-4">
       {items.map((item) => (
         <RosterCard
-          key={item.roster.id}
+          key={item.roster_id}
           item={item}
           pending={pendingOrders.has(item.order?.id || "")}
           canManageSetup={canManageSetup}
@@ -307,14 +306,14 @@ function RosterCard({
   onNoDrink,
   onEditRoster,
 }: {
-  item: RosterOrder;
+  item: ProductionBoardRosterDTO;
   pending: boolean;
   canManageSetup: boolean;
-  onTakeOrder: (order: Order) => void;
-  onNoDrink: (order: Order) => void;
-  onEditRoster: (item: RosterOrder) => void;
+  onTakeOrder: (order: ProductionBoardOrderDTO) => void;
+  onNoDrink: (order: ProductionBoardOrderDTO) => void;
+  onEditRoster: (item: ProductionBoardRosterDTO) => void;
 }) {
-  const { order, roster, person } = item;
+  const { order, person } = item;
   const captured = isOrderCaptured(order);
   const skipped = isOrderSkipped(order);
   const railColor = captured
@@ -322,7 +321,7 @@ function RosterCard({
     : skipped
       ? "bg-zinc-400"
       : "bg-amber-400";
-  const roleLine = [person.role, roster.group_label || person.department]
+  const roleLine = [person.role, item.group_label || person.department]
     .filter(Boolean)
     .join(" · ");
 
@@ -429,13 +428,13 @@ function CardActions({
   onNoDrink,
   onEditRoster,
 }: {
-  order: Order;
+  order: ProductionBoardOrderDTO;
   captured: boolean;
   skipped: boolean;
   pending: boolean;
   canManageSetup: boolean;
-  onTakeOrder: (order: Order) => void;
-  onNoDrink: (order: Order) => void;
+  onTakeOrder: (order: ProductionBoardOrderDTO) => void;
+  onNoDrink: (order: ProductionBoardOrderDTO) => void;
   onEditRoster: () => void;
 }) {
   const compactButtonClass =
@@ -678,10 +677,10 @@ export function OrderEditor({
   saving,
 }: {
   title: string;
-  draft: Partial<Order>;
+  draft: Partial<ProductionBoardOrderDTO>;
   updateUsualOrder: boolean;
   canUpdateUsualOrder?: boolean;
-  onChange: (draft: Partial<Order>) => void;
+  onChange: (draft: Partial<ProductionBoardOrderDTO>) => void;
   onUpdateUsualOrder: (value: boolean) => void;
   onCancel: () => void;
   onSave: () => void;

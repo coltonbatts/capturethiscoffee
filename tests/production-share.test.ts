@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../src/lib/supabase";
 import {
   hashProductionShareToken,
+  isRunnerOrderOnBoard,
   sanitizeRunnerOrderPatch,
   ShareTokenError,
   validateProductionShareToken,
@@ -98,6 +99,41 @@ describe("production share access helpers", () => {
     assert.deepEqual(sanitizeRunnerOrderPatch(null), {});
   });
 
+  it("limits token order writes to the current on-set board", () => {
+    const scopedOrder = {
+      production_id: "prod-1",
+      roster_id: "roster-1",
+      person_id: "person-1",
+    };
+    const scopedRoster = {
+      id: "roster-1",
+      production_id: "prod-1",
+      person_id: "person-1",
+      on_set_today: true,
+    };
+
+    assert.equal(
+      isRunnerOrderOnBoard(scopedOrder, scopedRoster, "prod-1"),
+      true,
+    );
+    assert.equal(
+      isRunnerOrderOnBoard(
+        scopedOrder,
+        { ...scopedRoster, on_set_today: false },
+        "prod-1",
+      ),
+      false,
+    );
+    assert.equal(
+      isRunnerOrderOnBoard(
+        scopedOrder,
+        { ...scopedRoster, person_id: "person-other" },
+        "prod-1",
+      ),
+      false,
+    );
+    assert.equal(isRunnerOrderOnBoard(scopedOrder, null, "prod-1"), false);
+  });
 });
 
 describe("validateProductionShareToken", () => {

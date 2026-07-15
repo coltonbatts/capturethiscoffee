@@ -15,7 +15,7 @@ export function buildProductionShareUrl(
   token: string,
 ) {
   const base = origin.replace(/\/+$/, "");
-  return `${base}/productions/${encodeURIComponent(productionId)}?token=${encodeURIComponent(token)}`;
+  return `${base}/run/${encodeURIComponent(productionId)}?token=${encodeURIComponent(token)}`;
 }
 
 /**

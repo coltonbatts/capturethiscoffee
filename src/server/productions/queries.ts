@@ -5,10 +5,12 @@ import type { Database } from "@/lib/supabase";
 import type { CoffeeData } from "@/lib/types";
 import {
   toOrderLabelContext,
-  toRunnerCoffeeData,
+  toProductionBoardDTO,
+  toPrinterCoffeeData,
   type OrderLabelContext,
   type OrderLabelSource,
   type ProductionAggregate,
+  type ProductionBoardDTO,
   type RunnerClientSource,
   type RunnerOrderSource,
   type RunnerPersonSource,
@@ -39,10 +41,26 @@ export class ProductionQueryError extends Error {
   }
 }
 
-export async function getRunnerProductionData(
+export async function getPrinterProductionData(
   supabase: ServerSupabaseClient,
   productionId: string,
 ): Promise<CoffeeData> {
+  return toPrinterCoffeeData(await getProductionAggregate(supabase, productionId));
+}
+
+export async function getProductionBoard(
+  supabase: ServerSupabaseClient,
+  productionId: string,
+): Promise<ProductionBoardDTO> {
+  return toProductionBoardDTO(
+    await getProductionAggregate(supabase, productionId),
+  );
+}
+
+export async function getProductionAggregate(
+  supabase: ServerSupabaseClient,
+  productionId: string,
+): Promise<ProductionAggregate> {
   const production = await getReadableProduction(supabase, productionId);
 
   const [clientResult, rosterResult, ordersResult] = await Promise.all([
@@ -85,7 +103,7 @@ export async function getRunnerProductionData(
     orders: (ordersResult.data || []) as RunnerOrderSource[],
   };
 
-  return toRunnerCoffeeData(aggregate);
+  return aggregate;
 }
 
 export async function getOrderLabelContext(

@@ -66,7 +66,8 @@ access-control change reintroduces roles.
 | `/login` | Signed-in operator | Supabase Auth entry point |
 | `/productions` | Signed-in operator | Shoot-day list, active-day entry point, new-day creation |
 | `/productions/new` | Signed-in operator | Prepare a shoot day |
-| `/productions/[id]` | Runner plus signed-in operator | Live board for search, drink confirmation/editing, status movement, summary, runner/printer link sharing |
+| `/productions/[id]` | Signed-in operator | Live board plus production and roster setup, label links, and runner/printer link sharing |
+| `/run/[id]?token=…` | Token-scoped runner | Live drink/order workflow only |
 | `/people` | Signed-in operator | Supporting people database and usual orders |
 | `/labels` | Signed-in operator | Fallback/advanced PNG and CSV export, preview, test labels |
 | `/api/public/productions/[id]` | Runner/printer token API | Token-scoped runner payload |

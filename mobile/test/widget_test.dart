@@ -14,12 +14,28 @@ void main() {
     expect(find.text('Link production'), findsOneWidget);
   });
 
-  test('parseProductionShareUrl extracts session fields', () {
+  test('parseProductionShareUrl accepts the canonical runner link', () {
+    final session = parseProductionShareUrl(
+      'https://capturethis.coffee/run/prod-1?token=abc123',
+    );
+    expect(session?.productionId, 'prod-1');
+    expect(session?.token, 'abc123');
+    expect(session?.apiBase, 'https://capturethis.coffee');
+  });
+
+  test('parseProductionShareUrl retains legacy link compatibility', () {
     final session = parseProductionShareUrl(
       'https://capturethis.coffee/productions/prod-1?token=abc123',
     );
     expect(session?.productionId, 'prod-1');
     expect(session?.token, 'abc123');
     expect(session?.apiBase, 'https://capturethis.coffee');
+  });
+
+  test('parseProductionShareUrl rejects unrelated nested production APIs', () {
+    final session = parseProductionShareUrl(
+      'https://capturethis.coffee/api/public/productions/prod-1/labels?token=abc123',
+    );
+    expect(session, isNull);
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
@@ -21,11 +21,15 @@ import {
 import { isOrderCaptured } from "@/lib/order-progress";
 import { emptyPersonForm, type PersonForm } from "@/lib/people";
 import { mintProductionShareLink } from "@/lib/share-links";
+import {
+  toProductionBoardRosterItem,
+  type ProductionBoardOrderDTO,
+  type ProductionBoardRosterDTO,
+} from "@/lib/production-board";
 import type {
   Order,
   Production,
   ProductionRoster,
-  RosterOrder,
 } from "@/lib/types";
 import {
   AddToRoster,
@@ -44,8 +48,6 @@ import { useRosterView } from "./use-roster-view";
 
 export default function ProductionDashboardPage() {
   const params = useParams<{ id: string }>();
-  const searchParams = useSearchParams();
-  const shareToken = searchParams.get("token") || "";
   const { isAdmin } = useAppAuth();
   const {
     data,
@@ -57,7 +59,7 @@ export default function ProductionDashboardPage() {
     patchOrder,
     run,
     reload,
-  } = useCoffeeStore({ productionId: params.id, shareToken });
+  } = useCoffeeStore({ productionId: params.id });
 
   // Filter state lives here so typing in search never re-renders the modals.
   const [query, setQuery] = useState("");
@@ -96,11 +98,16 @@ export default function ProductionDashboardPage() {
 
   const filters = useMemo(() => ({ query, needsOnly }), [query, needsOnly]);
   const view = useRosterView(data, production, filters);
+  const liveItems = useMemo(
+    () => view.filteredItems.map(toProductionBoardRosterItem),
+    [view.filteredItems],
+  );
 
   if (!production) {
     return (
       <AppShell
         title="Day"
+        requireAuth
         breadcrumbs={[
           { label: "Days", href: "/productions" },
           { label: "Day" },
@@ -128,20 +135,26 @@ export default function ProductionDashboardPage() {
     );
   }
 
-  function takeOrder(order: Order) {
+  function takeOrder(boardOrder: ProductionBoardOrderDTO) {
+    const order = data?.orders.find((item) => item.id === boardOrder.id);
+    if (!order) return;
     setEditorTitle(isOrderCaptured(order) ? "Edit order" : "Take order");
     setEditingId(order.id);
     setDraft(order);
     setUpdateUsualOrder(false);
   }
 
-  function markNoDrink(order: Order) {
+  function markNoDrink(order: ProductionBoardOrderDTO) {
     void patchOrder(order.id, { status: "no_order" });
   }
 
-  function openRosterEditor(item: RosterOrder) {
-    setEditingRosterId(item.roster.id);
-    setRosterDraft(item.roster);
+  function openRosterEditor(item: ProductionBoardRosterDTO) {
+    const roster = data?.production_roster.find(
+      (candidate) => candidate.id === item.roster_id,
+    );
+    if (!roster) return;
+    setEditingRosterId(roster.id);
+    setRosterDraft(roster);
   }
 
   function closeOrderEditor() {
@@ -203,8 +216,6 @@ export default function ProductionDashboardPage() {
           { ...draft, status },
           {
             updateUsualOrder: isAdmin && updateUsualOrder,
-            productionId: production!.id,
-            shareToken,
           },
         ),
       "Could not save order.",
@@ -277,6 +288,7 @@ export default function ProductionDashboardPage() {
   return (
     <AppShell
       title={production.name}
+      requireAuth
       breadcrumbs={[
         { label: "Days", href: "/productions" },
         { label: production.name },
@@ -311,7 +323,7 @@ export default function ProductionDashboardPage() {
         />
 
         <RosterList
-          items={view.filteredItems}
+          items={liveItems}
           pendingOrders={pendingOrders}
           canManageSetup={isAdmin}
           onTakeOrder={takeOrder}

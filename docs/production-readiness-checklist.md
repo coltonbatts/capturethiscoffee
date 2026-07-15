@@ -68,7 +68,7 @@ downstream export assumes this size.
 Steps:
 1. Confirm the production is `active`.
 2. Open CTC Printer on the iPhone.
-3. Paste or reuse the runner share link (`/productions/{id}?token=...`).
+3. Paste or reuse the runner share link (`/run/{id}?token=...`).
 4. Force-quit the official NIIMBOT app before connecting.
 5. Connect the NIIMBOT M2_H.
 6. Refresh the queue.
@@ -316,7 +316,7 @@ Steps:
      'Readiness test link'
    );
    ```
-2. On the second device, open `/productions/<production-id>?token=<returned-token>` in a private window (not signed in).
+2. On the second device, open `/run/<production-id>?token=<returned-token>` in a private window (not signed in).
 3. Confirm the runner board loads: roster, names, drink orders visible.
 4. Confirm private fields are **not** present — dietary notes and person notes should not appear anywhere in the runner view (check by comparing to a person you know has notes set in `/people` while signed in).
 5. Confirm `usual_order` **does** show, since it's the intentional operational prompt.

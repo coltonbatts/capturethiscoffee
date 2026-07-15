@@ -142,7 +142,21 @@ describe("printer queue helpers", () => {
     );
   });
 
-  it("parses a production share URL into API session fields", () => {
+  it("parses the canonical runner share URL into API session fields", () => {
+    assert.deepEqual(
+      parseProductionShareUrl(
+        "https://capturethis.coffee/run/prod-1?token=runner-secret",
+      ),
+      {
+        productionId: "prod-1",
+        token: "runner-secret",
+        origin: "https://capturethis.coffee",
+      },
+    );
+    assert.equal(parseProductionShareUrl("not-a-url"), null);
+  });
+
+  it("keeps parsing legacy production share URLs during migration", () => {
     assert.deepEqual(
       parseProductionShareUrl(
         "https://capturethis.coffee/productions/prod-1?token=runner-secret",
@@ -153,6 +167,11 @@ describe("printer queue helpers", () => {
         origin: "https://capturethis.coffee",
       },
     );
-    assert.equal(parseProductionShareUrl("not-a-url"), null);
+    assert.equal(
+      parseProductionShareUrl(
+        "https://capturethis.coffee/api/public/productions/prod-1/labels?token=runner-secret",
+      ),
+      null,
+    );
   });
 });

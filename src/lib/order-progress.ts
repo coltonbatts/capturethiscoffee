@@ -1,5 +1,7 @@
 import type { Order, RosterOrder } from "./types";
 
+type OrderProgress = Pick<Order, "status" | "label_printed">;
+
 /**
  * The app's collection model is intentionally simpler than the stored
  * `OrderStatus`: a roster person either still needs their drink taken,
@@ -7,17 +9,17 @@ import type { Order, RosterOrder } from "./types";
  * statuses (confirmed/ordered/picked_up/delivered) all count as captured
  * so historical rows keep working without a migration.
  */
-export function isOrderCaptured(order?: Order) {
+export function isOrderCaptured(order?: OrderProgress | null) {
   return Boolean(
     order && order.status !== "not_asked" && order.status !== "no_order",
   );
 }
 
-export function isOrderSkipped(order?: Order) {
+export function isOrderSkipped(order?: OrderProgress | null) {
   return order?.status === "no_order";
 }
 
-export function needsOrder(order?: Order) {
+export function needsOrder(order?: OrderProgress | null) {
   return !order || order.status === "not_asked";
 }
 

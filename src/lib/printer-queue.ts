@@ -88,7 +88,7 @@ export function parseProductionShareUrl(raw: string) {
 
   try {
     const url = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
-    const match = url.pathname.match(/\/productions\/([^/]+)\/?$/);
+    const match = url.pathname.match(/^\/(?:run|productions)\/([^/]+)\/?$/);
     if (!match) return null;
 
     const token = url.searchParams.get("token") || "";

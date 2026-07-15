@@ -30,12 +30,14 @@ ProductionSession? parseProductionShareUrl(String raw) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) return null;
 
-  final uri = Uri.tryParse(trimmed.contains('://') ? trimmed : 'https://$trimmed');
+  final uri =
+      Uri.tryParse(trimmed.contains('://') ? trimmed : 'https://$trimmed');
   if (uri == null) return null;
 
-  final segments = uri.pathSegments;
-  final productionsIndex = segments.indexOf('productions');
-  if (productionsIndex == -1 || productionsIndex + 1 >= segments.length) {
+  final segments =
+      uri.pathSegments.where((segment) => segment.isNotEmpty).toList();
+  if (segments.length != 2 ||
+      (segments.first != 'run' && segments.first != 'productions')) {
     return null;
   }
 
@@ -44,7 +46,7 @@ ProductionSession? parseProductionShareUrl(String raw) {
 
   return ProductionSession(
     apiBase: uri.origin,
-    productionId: segments[productionsIndex + 1],
+    productionId: segments[1],
     token: token,
   );
 }

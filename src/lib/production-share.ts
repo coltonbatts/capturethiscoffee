@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./supabase";
-import type { Order } from "./types";
+import type { Order, ProductionRoster } from "./types";
 
 export const runnerOrderFields = [
   "drink_type",
@@ -72,6 +72,24 @@ export function sanitizeRunnerOrderPatch(input: unknown): PartialRunnerOrderPatc
   }
 
   return patch;
+}
+
+export function isRunnerOrderOnBoard(
+  order: Pick<Order, "production_id" | "roster_id" | "person_id">,
+  roster: Pick<
+    ProductionRoster,
+    "id" | "production_id" | "person_id" | "on_set_today"
+  > | null,
+  productionId: string,
+) {
+  return Boolean(
+    roster &&
+      roster.on_set_today &&
+      order.production_id === productionId &&
+      roster.production_id === productionId &&
+      order.roster_id === roster.id &&
+      order.person_id === roster.person_id,
+  );
 }
 
 export async function validateProductionShareToken(

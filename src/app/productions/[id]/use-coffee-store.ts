@@ -5,7 +5,6 @@ import {
   describeDataError,
   loadCoffeeData,
   loadProductionCoffeeData,
-  loadRunnerCoffeeData,
   updateOrderRecord,
 } from "@/lib/data";
 import {
@@ -88,7 +87,7 @@ function mergeProductionCoffeeData(
 
 /**
  * Owns the production dashboard's data: the initial load, a centralized error
- * channel, and the two mutation paths a runner uses on set.
+ * channel, and the operator dashboard's two mutation paths.
  *
  * `patchOrder` is the fast path — every status tap. It updates local state
  * immediately (optimistic), then reconciles with the server's authoritative
@@ -102,8 +101,8 @@ function mergeProductionCoffeeData(
  * single-flighted by `saving`. They replace the whole blob, built off the
  * freshest snapshot via `dataRef`.
  */
-export function useCoffeeStore(options: { productionId: string; shareToken: string }) {
-  const { productionId, shareToken } = options;
+export function useCoffeeStore(options: { productionId: string }) {
+  const { productionId } = options;
   const [data, setData] = useState<CoffeeData | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
@@ -124,11 +123,9 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
   const fetchData = useCallback(
     (mode: FetchMode = "replace") => {
       const load =
-        shareToken && productionId
-          ? loadRunnerCoffeeData(productionId, shareToken)
-          : mode === "merge" && productionId
-            ? loadProductionCoffeeData(productionId)
-            : loadCoffeeData();
+        mode === "merge" && productionId
+          ? loadProductionCoffeeData(productionId)
+          : loadCoffeeData();
 
       return load
         .then((next) => {
@@ -152,7 +149,7 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
           setState("error");
         });
     },
-    [productionId, shareToken],
+    [productionId],
   );
 
   // Retry path — on shoot day a single dropped request must never leave the
@@ -197,12 +194,6 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
 
     pollTimer = window.setInterval(refresh, syncPollIntervalMs);
 
-    if (shareToken) {
-      return () => {
-        if (pollTimer) window.clearInterval(pollTimer);
-      };
-    }
-
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       return () => {
@@ -228,7 +219,7 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
       if (pollTimer) window.clearInterval(pollTimer);
       void supabase.removeChannel(channel);
     };
-  }, [fetchData, productionId, shareToken, state]);
+  }, [fetchData, productionId, state]);
 
   const markPending = useCallback((id: string, on: boolean) => {
     setPendingOrders((prev) => {
@@ -266,7 +257,6 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
       try {
         const result = await updateOrderRecord(base, orderId, patch, {
           productionId,
-          shareToken,
         });
         const serverOrder = result.orders.find((order) => order.id === orderId);
         if (serverOrder && mounted.current) {
@@ -300,7 +290,7 @@ export function useCoffeeStore(options: { productionId: string; shareToken: stri
         if (mounted.current) markPending(orderId, false);
       }
     },
-    [markPending, productionId, shareToken],
+    [markPending, productionId],
   );
 
   const run = useCallback(
