@@ -89,7 +89,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 6. Restart `npm run dev` after changing `.env.local`.
 7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
 8. For Google sign-in (`/login` → **Continue with Google**), open **Authentication > Providers > Google**, enable it, and paste a Google Cloud OAuth **Web application** client ID and secret. In Google Cloud, set the authorized redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback` (find `<project-ref>` in your Supabase project URL). In Supabase **Authentication > URL Configuration**, set **Site URL** to your deployed app origin and add redirect URLs for local and production (for example `http://localhost:3000/**` and `https://coffee.capturethis.com/**`).
-9. For a controlled demo, disable public sign-ups or leave sign-ups unused and create demo users manually.
+9. Disable public sign-ups and create or invite operator users manually. Hiding
+   sign-up in the Capture This UI is not sufficient; the Supabase Auth setting
+   itself must reject public registration.
 
 Supabase is the application's only runtime data backend. The authenticated operator app reads and writes these tables:
 

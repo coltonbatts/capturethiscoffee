@@ -336,10 +336,12 @@ membership require Supabase database-admin access.
 ### B3. Operator auth checks
 
 Steps:
-1. In Supabase, go to **Authentication > Users** and confirm the intended
+1. In Supabase, disable public sign-ups under Authentication settings. Confirm
+   the public `/auth/v1/settings` response reports `disable_signup: true`.
+2. Go to **Authentication > Users** and confirm the intended
    operator user exists.
-2. Sign in at `/login` as that user. Confirm it redirects to `/productions`.
-3. While signed in as that operator, open `/people`, `/labels`, and
+3. Sign in at `/login` as that user. Confirm it redirects to `/productions`.
+4. While signed in as that operator, open `/people`, `/labels`, and
    `/productions/new` directly. Confirm all load (not redirected to `/login`).
    Every signed-in user has full access per `src/lib/auth.ts`; admin/staff
    `app_metadata` is historical and no longer required.
@@ -349,19 +351,22 @@ Steps:
    to decide who can access the app.
 
 **Record:**
+- Public Auth settings report `disable_signup: true`? Y/N
 - Operator user exists? Y/N
 - Protected routes load for signed-in operator? Y/N
 - Protected routes redirect for signed-out visitor? Y/N
 - Second signed-in user has full app access, if tested? Y/N
 
-**Pass/fail:** Pass if signed-in users can use the app and signed-out visitors
-are redirected. Fail if a signed-out visitor can reach `/people`, `/labels`, or
-`/productions/new` and perform setup writes.
+**Pass/fail:** Pass if public registration is disabled, signed-in users can use
+the app, and signed-out visitors are redirected. Fail if Supabase reports
+`disable_signup: false` or a signed-out visitor can reach `/people`, `/labels`,
+or `/productions/new` and perform setup writes.
 
-**Phase 4 result:** Partial. All listed operator routes redirected a signed-out
-request to `/login` on the deployment. Signed-in route loading, login redirect,
-and second-user access were not tested because no operator credential was
-available.
+**Release-candidate result:** Blocked. On 2026-07-15 the live Supabase Auth
+settings endpoint returned `disable_signup: false`; public registration is
+currently enabled at the auth service even though Capture This has no sign-up
+UI. All listed operator routes redirected a signed-out request to `/login`.
+Signed-in route loading and second-user access remain unverified.
 
 ### B4. RLS checks — BLOCKER
 

@@ -75,6 +75,11 @@ connected/printing image or short demo remains pending the physical M2_H gate.
 - Signed-out operator routes redirect to login.
 - Missing-token public production, label queue, PNG, and PATCH requests return
   sanitized 401 responses.
+- The live Supabase Auth settings endpoint returned HTTP 200 with
+  `disable_signup: false` on 2026-07-15. Public registration is therefore a
+  confirmed release blocker until disabled and rechecked.
+- Anonymous REST selects on all seven core tables and an anonymous `orders`
+  PATCH returned HTTP 401 using the deployed public configuration.
 - Vercel reports the production deployment READY and no runtime error clusters
   in the inspected seven-day window.
 - Environment variable names, applied Supabase migrations, Realtime publication,
@@ -87,6 +92,7 @@ connected/printing image or short demo remains pending the physical M2_H gate.
 |---|---|---|
 | Privacy/support owner approval | Blocked on owner | Approved wording before production deploy/attestation |
 | Leaked temporary credential rotation | Blocked on owner | Rotate the affected temporary Supabase/Auth credential; never reuse it |
+| Public Supabase signup disabled | **FAILED** | Disable public registration in Supabase Auth; verify `disable_signup: true` |
 | Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
 | Physical iPhone + M2_H test | Blocked on hardware | Completed `docs/physical-release-test.md` record |
 | External TestFlight | Pending | Build processed, Beta App Review approved, buddy pilot recorded |

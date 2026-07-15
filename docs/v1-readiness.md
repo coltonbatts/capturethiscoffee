@@ -36,7 +36,8 @@
 - Confirm the `person-photos` storage bucket and policies exist.
 - Confirm the client user can sign in. Every signed-in user has full app access
   per `src/lib/auth.ts`; `app_metadata.admin` is historical and not required.
-- Disable public email sign-ups unless intentionally onboarding more demo users.
+- Disable public email sign-ups in Supabase Auth. Create or invite every
+  operator deliberately; this release does not permit self-service signup.
 - Verify a new client, person, photo, production, roster edit, order edit, and
   label printed flag persist after refresh on a second device.
 - Confirm missing configuration shows a setup error and never creates

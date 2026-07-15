@@ -64,7 +64,9 @@ printer are available.
   `supabase/migrations/` in filename order. Record each applied migration.
 - Confirm `orders` is present in the `supabase_realtime` publication.
 - Keep public email sign-ups disabled. Invite operators deliberately; current
-  signed-in operators share full workspace access.
+  signed-in operators share full workspace access. The 2026-07-15 release audit
+  found public signup enabled, so the owner must disable and re-verify it before
+  release.
 - Confirm RLS denies anonymous direct access to core tables. The service-role
   key stays server-side and should be rotated after suspected exposure.
 - Production links are generated from the production UI. Treat them as bearer
