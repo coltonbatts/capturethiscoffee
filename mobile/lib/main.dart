@@ -34,6 +34,8 @@ const _queueRefreshInterval = Duration(seconds: 10);
 final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
 
+typedef CtcApiFactory = CtcApi Function(ProductionSession session);
+
 void main() => runApp(const PrinterApp());
 
 class PrinterApp extends StatelessWidget {
@@ -41,10 +43,12 @@ class PrinterApp extends StatelessWidget {
     super.key,
     this.sessionRepository,
     this.printRecoveryRepository,
+    this.apiFactory,
   });
 
   final SessionRepository? sessionRepository;
   final PrintRecoveryRepository? printRecoveryRepository;
+  final CtcApiFactory? apiFactory;
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +146,7 @@ class PrinterApp extends StatelessWidget {
       home: PrinterHome(
         sessionRepository: sessionRepository,
         printRecoveryRepository: printRecoveryRepository,
+        apiFactory: apiFactory,
       ),
     );
   }
@@ -208,10 +213,12 @@ class PrinterHome extends StatefulWidget {
     super.key,
     this.sessionRepository,
     this.printRecoveryRepository,
+    this.apiFactory,
   });
 
   final SessionRepository? sessionRepository;
   final PrintRecoveryRepository? printRecoveryRepository;
+  final CtcApiFactory? apiFactory;
 
   @override
   State<PrinterHome> createState() => _PrinterHomeState();
@@ -250,6 +257,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   CtcApi? _api;
   late final SessionRepository _sessionRepository;
   late final PrintRecoveryRepository _printRecoveryRepository;
+  late final CtcApiFactory _apiFactory;
   PrintRecoveryLedger? _printRecoveryLedger;
   PrinterQueue? _queue;
   Timer? _queueRefreshTimer;
@@ -272,6 +280,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         widget.sessionRepository ?? KeychainSessionRepository();
     _printRecoveryRepository =
         widget.printRecoveryRepository ?? PreferencesPrintRecoveryRepository();
+    _apiFactory = widget.apiFactory ?? (session) => CtcApi(session);
     WidgetsBinding.instance.addObserver(this);
     _restoreSession();
   }
@@ -313,7 +322,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _session = saved;
-        _api = saved == null ? null : CtcApi(saved);
+        _api = saved == null ? null : _apiFactory(saved);
         _printRecoveryLedger = ledger;
         _loadingSession = false;
       });
@@ -525,7 +534,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     _api?.close();
     setState(() {
       _session = session;
-      _api = CtcApi(session);
+      _api = _apiFactory(session);
       _queueSignature = '';
     });
     _startQueueRefreshTimer();
@@ -590,7 +599,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             'Paste the full production share URL (must include ?token=…).',
           );
         }
-        final api = CtcApi(parsed);
+        final api = _apiFactory(parsed);
         late final PrinterQueue queue;
         try {
           queue = await _fetchQueue(api);

@@ -165,6 +165,13 @@ an Apple device frame that implies unsupported hardware. A 15–30 second demo
 video may show link → connect → print → synced web state, with the token area
 cropped or blurred.
 
+Three provisional, truthful 6.9-inch portrait screenshots are prepared in
+`docs/app-store-assets/iphone-6.9/`. Each is 1320×2868 PNG with no alpha channel
+and uses only a non-shipping fictional fixture. They show production linking,
+the pending queue, and duplicate-safe print/sync recovery. They do not fabricate
+a connected printer. After the physical gate, add or replace one asset with the
+tested M2_H connected/printing state if it improves reviewer understanding.
+
 ## Submission order
 
 1. Approve privacy/support wording and deploy the release commit.

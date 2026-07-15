@@ -1,0 +1,142 @@
+import 'package:ctc_printer/ctc_api.dart';
+import 'package:ctc_printer/main.dart';
+import 'package:ctc_printer/print_recovery.dart';
+import 'package:ctc_printer/production_session.dart';
+import 'package:ctc_printer/session_store.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+const _session = ProductionSession(
+  apiBase: 'https://coffee.capturethis.com',
+  productionId: 'fictional-apple-review',
+  token: 'screenshot-fixture-not-a-live-token',
+);
+
+const _queue = PrinterQueue(
+  productionName: 'Apple Review Coffee Run',
+  designId: 'production-sticker-sheet',
+  labels: [
+    QueueLabel(
+      orderId: 'order-alex',
+      personName: 'Alex North',
+      drink: 'Black coffee',
+      group: 'Crew',
+      status: 'confirmed',
+      labelPrinted: false,
+    ),
+    QueueLabel(
+      orderId: 'order-cameron',
+      personName: 'Cameron Ellington-Smythe',
+      drink: 'Iced americano',
+      group: 'Camera',
+      status: 'confirmed',
+      labelPrinted: false,
+    ),
+    QueueLabel(
+      orderId: 'order-taylor',
+      personName: 'Taylor Quinn',
+      drink: 'Half-caf oat milk vanilla latte, extra hot',
+      group: 'Production',
+      status: 'confirmed',
+      labelPrinted: false,
+    ),
+    QueueLabel(
+      orderId: 'order-morgan',
+      personName: 'Morgan Lee',
+      drink: 'Iced decaf caramel latte with oat milk, light ice',
+      group: 'Agency',
+      status: 'confirmed',
+      labelPrinted: false,
+    ),
+  ],
+);
+
+class _ScreenshotApi extends CtcApi {
+  _ScreenshotApi(super.session);
+
+  @override
+  Future<PrinterQueue> fetchQueue() async => _queue;
+
+  @override
+  void close() {}
+}
+
+Future<void> _renderAppStoreScreenshot(
+  WidgetTester tester, {
+  required Widget app,
+  required String golden,
+}) async {
+  tester.view.devicePixelRatio = 3;
+  tester.view.physicalSize = const Size(1320, 2868);
+  addTearDown(tester.view.reset);
+
+  const boundaryKey = Key('app-store-screenshot-boundary');
+  await tester.pumpWidget(
+    RepaintBoundary(key: boundaryKey, child: app),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+
+  await expectLater(
+    find.byKey(boundaryKey),
+    matchesGoldenFile('goldens/app-store/$golden'),
+  );
+}
+
+PrinterApp _fixtureApp({List<PrintRecoveryRecord> recoveries = const []}) {
+  return PrinterApp(
+    sessionRepository: MemorySessionRepository(_session),
+    printRecoveryRepository: MemoryPrintRecoveryRepository(recoveries),
+    apiFactory: _ScreenshotApi.new,
+  );
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('App Store screenshot — link production', (tester) async {
+    await _renderAppStoreScreenshot(
+      tester,
+      app: PrinterApp(
+        sessionRepository: MemorySessionRepository(),
+        printRecoveryRepository: MemoryPrintRecoveryRepository(),
+      ),
+      golden: '01-link-production.png',
+    );
+  });
+
+  testWidgets('App Store screenshot — fictional pending queue', (tester) async {
+    await _renderAppStoreScreenshot(
+      tester,
+      app: _fixtureApp(),
+      golden: '02-pending-queue.png',
+    );
+  });
+
+  testWidgets('App Store screenshot — print sync recovery', (tester) async {
+    await _renderAppStoreScreenshot(
+      tester,
+      app: _fixtureApp(recoveries: [
+        PrintRecoveryRecord(
+          apiBase: _session.apiBase,
+          productionId: _session.productionId,
+          orderId: 'order-alex',
+          personName: 'Alex North',
+          drink: 'Black coffee',
+          createdAt: DateTime.utc(2026, 7, 15, 18),
+          state: PrintRecoveryState.printedNeedsSync,
+        ),
+        PrintRecoveryRecord(
+          apiBase: _session.apiBase,
+          productionId: _session.productionId,
+          orderId: 'order-cameron',
+          personName: 'Cameron Ellington-Smythe',
+          drink: 'Iced americano',
+          createdAt: DateTime.utc(2026, 7, 15, 18, 1),
+          state: PrintRecoveryState.uncertain,
+        ),
+      ]),
+      golden: '03-print-sync-recovery.png',
+    );
+  });
+}
