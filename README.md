@@ -45,6 +45,9 @@ mid-shoot:
   Download PNG action remains available.
 - Missing or unreachable people photos fall back to initials instead of a
   broken image.
+- The authenticated operator board listens for Supabase Realtime order changes
+  and retains a 10-second polling fallback. The public runner deliberately uses
+  a 10-second token API poll and never connects directly to Supabase.
 
 ## Run locally
 

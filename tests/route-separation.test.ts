@@ -76,4 +76,46 @@ describe("operator and runner route separation", () => {
       /AddToRoster|ProductionDetailsEditor|RosterEditor|RunnerLinkSheet|mintProductionShareLink/,
     );
   });
+
+  it("keeps every public runner and printer read behind token validation", () => {
+    const publicReads = [
+      [
+        "../src/app/api/public/productions/[id]/route.ts",
+        "getProductionBoard(supabase, id)",
+      ],
+      [
+        "../src/app/api/public/productions/[id]/labels/route.ts",
+        "getPrinterProductionData(supabase, id)",
+      ],
+      [
+        "../src/app/api/public/orders/[id]/label/route.ts",
+        "getOrderLabelContext(supabase, productionId, orderId)",
+      ],
+    ] as const;
+
+    for (const [path, protectedRead] of publicReads) {
+      const source = readFileSync(new URL(path, import.meta.url), "utf8");
+      const validation = source.indexOf("validateProductionShareToken(");
+      const read = source.indexOf(protectedRead);
+      assert.ok(validation >= 0, `${path} must validate a share token`);
+      assert.ok(read > validation, `${path} must validate before reading data`);
+      assert.match(source, /error instanceof ShareTokenError/);
+    }
+  });
+
+  it("keeps public order patches token-scoped and board-scoped", () => {
+    const source = readFileSync(
+      new URL("../src/app/api/public/orders/[id]/route.ts", import.meta.url),
+      "utf8",
+    );
+    const validation = source.indexOf("validateProductionShareToken(");
+    const orderRead = source.indexOf('.from("orders")');
+
+    assert.ok(validation >= 0);
+    assert.ok(orderRead > validation, "token validation must precede order access");
+    assert.match(source, /sanitizeRunnerOrderPatch\(body\?\.patch\)/);
+    assert.match(source, /isRunnerOrderOnBoard\(order, roster, productionId\)/);
+    assert.match(source, /\.eq\("production_id", productionId\)/);
+    assert.match(source, /production\.status !== "active"/);
+  });
 });

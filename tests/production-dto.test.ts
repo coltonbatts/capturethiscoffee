@@ -197,11 +197,18 @@ describe("order label context", () => {
     assert.equal(label.notesStatus, "Confirmed");
   });
 
-  it("rejects cross-production, off-set, and uncaptured orders", () => {
+  it("rejects cross-production, mismatched-person, off-set, and uncaptured orders", () => {
     assert.equal(
       toOrderLabelContext({
         ...source,
         order: { ...order, production_id: "prod-other" },
+      }),
+      null,
+    );
+    assert.equal(
+      toOrderLabelContext({
+        ...source,
+        order: { ...order, person_id: "person-other" },
       }),
       null,
     );

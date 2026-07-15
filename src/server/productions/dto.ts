@@ -215,6 +215,7 @@ export function toOrderLabelContext(source: OrderLabelSource): OrderLabelContext
     roster.production_id !== production.id ||
     order.production_id !== production.id ||
     order.roster_id !== roster.id ||
+    order.person_id !== roster.person_id ||
     roster.person_id !== person.id ||
     !roster.on_set_today ||
     !isOrderCaptured(order)

@@ -2,9 +2,9 @@
 
 Native iOS app that prints Capture This Coffee cup labels directly to the NIIMBOT M2_H over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered server-side by the Next.js app and fetched with the same production share-token auth the runner board uses.
 
-## On-set workflow (Phase 2)
+## Primary on-set workflow
 
-1. **Deploy or run CTC** with the new API routes (see repo root). Production must be **active** before `label_printed` updates will stick.
+1. **Deploy or run CTC** with the public API routes (see repo root). Production must be **active** before `label_printed` updates will stick.
 2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
 3. On the iPhone, open **CTC Printer** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).

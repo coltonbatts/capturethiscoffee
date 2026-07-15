@@ -142,6 +142,50 @@ describe("printer queue helpers", () => {
     );
   });
 
+  it("includes every captured status, including already-printed reprints", () => {
+    for (const status of [
+      "confirmed",
+      "ordered",
+      "picked_up",
+      "delivered",
+    ] as const) {
+      const data: CoffeeData = {
+        ...sampleData,
+        orders: [{ ...sampleData.orders[0]!, status, label_printed: true }],
+      };
+
+      assert.deepEqual(
+        buildPrinterQueue(data, "prod-1")?.labels.map((item) => ({
+          orderId: item.orderId,
+          labelPrinted: item.labelPrinted,
+        })),
+        [{ orderId: "order-1", labelPrinted: true }],
+      );
+    }
+  });
+
+  it("excludes waiting, declined, cross-production, and mismatched-person orders", () => {
+    for (const status of ["not_asked", "no_order"] as const) {
+      const data: CoffeeData = {
+        ...sampleData,
+        orders: [{ ...sampleData.orders[0]!, status }],
+      };
+      assert.deepEqual(buildPrinterQueue(data, "prod-1")?.labels, []);
+    }
+
+    const crossProduction: CoffeeData = {
+      ...sampleData,
+      orders: [{ ...sampleData.orders[0]!, production_id: "prod-2" }],
+    };
+    assert.deepEqual(buildPrinterQueue(crossProduction, "prod-1")?.labels, []);
+
+    const mismatchedPerson: CoffeeData = {
+      ...sampleData,
+      orders: [{ ...sampleData.orders[0]!, person_id: "person-2" }],
+    };
+    assert.deepEqual(buildPrinterQueue(mismatchedPerson, "prod-1")?.labels, []);
+  });
+
   it("parses the canonical runner share URL into API session fields", () => {
     assert.deepEqual(
       parseProductionShareUrl(

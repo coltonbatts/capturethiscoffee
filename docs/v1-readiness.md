@@ -16,9 +16,19 @@
   the runner board.
 - Keep `/labels` available as fallback/advanced PNG and CSV export.
 
+## Live sync behavior
+
+- The authenticated operator production board subscribes to Supabase Realtime
+  for `orders` changes and also polls every 10 seconds as a fallback.
+- The public token runner deliberately polls the public production API every 10
+  seconds. It does not connect to Supabase directly.
+- CTC Printer stays on the token-scoped HTTP/PNG API and refreshes its queue on
+  demand; it has no Supabase credentials.
+
 ## Supabase checklist
 
-- Run `supabase/schema.sql` and all migrations in `supabase/migrations`.
+- Run `supabase/schema.sql` and all migrations in `supabase/migrations`, ending
+  at `20260706120000_enable_orders_realtime.sql`.
 - Confirm RLS is enabled on `clients`, `people`, `client_people`, `productions`,
   `production_share_tokens`, `production_roster`, and `orders`.
 - Confirm obsolete print-station tables are absent after the latest migration:
@@ -74,20 +84,21 @@ once that's done.
 
 1. Sign in at `/login`.
 2. Open the active production from `/productions`.
-3. Search for a known person, confirm or adjust their drink, and mark ordered.
+3. Search for a known person and confirm or adjust their drink.
 4. Quick-add one guest, enter a simple drink, and save.
 5. Copy the runner link and show that it is the same link CTC Printer uses.
 6. In CTC Printer, print one pending label and mark it printed.
-7. Back on the production runner page, show the printed badge and mark the same
-   order picked up and delivered.
+7. Back on the production runner page, show the printed badge and refresh once
+   to demonstrate server state persistence.
 8. Show `/labels` as fallback/advanced export, not the main print station.
 9. Show the Summary tab for the coffee-shop copy/paste view.
 
 ## Known limitations
 
-- CTC Printer is implemented, but Phase 2 still needs a deployed end-to-end
-  validation pass on real shoot data: API queue, physical print, and
-  `label_printed` visible on the runner board.
+- Phase 4 verified the deployed signed-out route boundary, missing/invalid
+  token rejection, and anonymous Supabase denial. A valid runner-token pass,
+  physical CTC Printer output, and `label_printed` visible back in the web app
+  still require operator access, an iPhone, and the NIIMBOT.
 - Web Share with files depends on the browser and OS. Use **Download PNG** when
   sharing is unavailable on the `/labels` fallback screen.
 - The current export preset has not yet been physically verified against the

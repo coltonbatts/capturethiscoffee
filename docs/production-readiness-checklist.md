@@ -1,6 +1,6 @@
 # Production Readiness Checklist
 
-Last updated: 2026-07-03 (aligned print/auth readiness with CTC Printer primary path)
+Last updated: 2026-07-15 (Phase 4 repository and deployed-boundary audit)
 
 This checklist exists to close out the two P0 blockers before Capture This
 Coffee is used on a real paid shoot:
@@ -29,6 +29,48 @@ it or getting sign-off from the tech lead.
 > truth: once Section A passes, update `niimbot-m2-preset.json`'s
 > description (and the numbers, if the measured size differs) to match
 > the recorded result — not before.
+
+### Phase 4 evidence snapshot — 2026-07-15
+
+No physical or dashboard-only result is treated as passed in this snapshot.
+The production deployment tested below was Vercel deployment
+`dpl_HaGqQXps7kTdaorszUfFu98Dxj3c`, commit `28e0f29`, in `READY` state and
+aliased to `https://coffee.capturethis.com`.
+
+| Check | Evidence collected | Result |
+|---|---|---|
+| Repository verification | 73/73 Node tests, ESLint, Next.js production build, NIIMBOT export verifier, 4/4 Flutter tests, and Flutter analysis all passed | Verified automatically |
+| Label PNG contract | Server renderer test and export verifier both confirmed PNG output at `591 x 354px`; queue tests cover captured, skipped, off-set, cross-production, mismatched-person, and already-printed cases | Verified automatically; physical size remains unverified |
+| Signed-out operator routes | `/productions`, `/people`, `/labels`, and `/productions/new` each returned `307` to `/login?next=...` | Verified against deployment |
+| Missing/invalid public tokens | Production GET, label-queue GET, label-PNG GET, and order PATCH returned `401` for a missing token and `403` for an invalid token; the runner page returned `404` in both cases | Verified against deployment |
+| Public Supabase configuration | The deployed login assets contained exact matches for the configured public Supabase URL and anon key; no values were printed or recorded | Verified against deployment |
+| Service-role API configuration | The deployed invalid-token requests reached the token lookup and returned `403`, which would not occur if the server-only URL/key configuration failed | Operationally verified; hosting-dashboard name/value check still required |
+| Anonymous direct Supabase access | Against the same public URL/key delivered by the deployment, anonymous selects on all seven core tables plus the required `orders` update returned HTTP `401` / Postgres `42501` | Verified against deployment configuration |
+| Migration ledger and Realtime publication | Repository migrations end at `20260706120000_enable_orders_realtime.sql`; no Supabase dashboard/database-admin session was available to inspect applied migration history or publication membership | Unverified on deployed database |
+| Signed-in operator and valid/revoked token flows | No operator credential, live share token, or safe test production was available | Unverified |
+| CTC Printer, NIIMBOT, and fallback physical output | No iPhone, installed CTC Printer build, loaded stock, or NIIMBOT was available to this audit | Unverified |
+
+Current sync behavior is intentional: the authenticated operator production
+board listens to Supabase Realtime order changes and keeps a 10-second polling
+fallback; the public token runner uses a 10-second public API poll. This phase
+does not move the public runner onto direct Supabase Realtime.
+
+### Minimal remaining access and hardware handoff
+
+1. In Vercel **Project Settings > Environment Variables**, confirm all three
+   names in B1 target Production. With the service-role value available only
+   to the reviewer, search browser-loaded sources for a short leading fragment;
+   record only pass/fail, never the fragment.
+2. In the Supabase SQL editor, run the B2 and B4 queries, including the
+   `supabase_realtime` publication check, then perform one reversible
+   authenticated setup write and undo it.
+3. Sign in as an intended operator and complete B3. Create a disposable active
+   production/token and complete B5 in a private window; revoke that token at
+   the end.
+4. With the user’s iPhone and NIIMBOT, record the stock measurement, print one
+   CTC Printer label, confirm BLE stability and `label_printed` sync, then run
+   the `/labels` PNG fallback in A3. Do not update the preset from automated
+   pixel evidence alone.
 
 ---
 
@@ -81,11 +123,14 @@ Steps:
 - CTC Printer build/version: _____
 - Queue loaded? Y/N
 - Printed order/person: _____
+- Correct orientation and no cropping? Y/N
+- BLE stayed connected through queue refresh, print, and sync? Y/N
 - `label_printed` visible in web app after refresh? Y/N
 
 **Pass/fail:** Pass if the queue loads, the label prints legibly, CTC Printer
-does not hang, and `label_printed` is visible back in the web app. Fail
-(blocker) if any of those steps fail.
+does not hang or drop BLE, orientation/cropping are correct, and
+`label_printed` is visible back in the web app. Fail (blocker) if any of those
+steps fail.
 
 ### A3. Validate `/labels` fallback PNG export
 
@@ -224,13 +269,20 @@ anywhere in client-delivered code.
 **Pass/fail:** Pass if the key does not appear in any browser-loaded
 asset. Fail (blocker) if it does — this is a credential leak.
 
+**Phase 4 result:** Partial. The two public values were confirmed in deployed
+assets, and the server-only token lookup is operational. The Vercel connector
+does not expose environment-variable names or secret values, the local Vercel
+CLI had no login, and no service-role value was available for an exact browser
+asset scan. Confirm the dashboard entries and perform the value-assisted scan
+before marking B1 passed.
+
 ### B2. Database schema and migrations applied — BLOCKER
 
 In the Supabase SQL editor, confirm:
 1. `supabase/schema.sql` has been run.
 2. Every file in `supabase/migrations/` has been run, in filename order
    (oldest timestamp first, currently ending at
-   `20260624130000_drop_print_station_tables.sql`).
+   `20260706120000_enable_orders_realtime.sql`).
 3. Obsolete print-station tables are gone:
 
 ```sql
@@ -240,13 +292,32 @@ and table_name in ('printer_devices', 'label_print_jobs', 'label_print_attempts'
 -- expect 0 rows
 ```
 
+Confirm the latest migration added `orders` to Realtime:
+
+```sql
+select schemaname, tablename
+from pg_publication_tables
+where pubname = 'supabase_realtime'
+and schemaname = 'public'
+and tablename = 'orders';
+-- expect exactly 1 row: public | orders
+```
+
 **Record:**
 - Migrations applied through: _____ (filename of latest)
 - Obsolete tables query returned 0 rows? Y/N
+- Realtime publication query returned exactly `public | orders`? Y/N
 
-**Pass/fail:** Pass if the query returns zero rows and every migration
-file has been applied. Fail (blocker) if old print-station tables still
-exist or a migration is missing — RLS policies may be inconsistent.
+**Pass/fail:** Pass if the obsolete-tables query returns zero rows, the
+publication query returns exactly `public | orders`, and every migration file
+has been applied. Fail (blocker) if old print-station tables still exist, the
+Realtime row is absent, or a migration is missing — runtime behavior and RLS
+policies may be inconsistent.
+
+**Phase 4 result:** Unverified on the deployed database. The repository end
+point is corrected above, and the deployed share-token table is operational,
+but applied migration history, obsolete table absence, and Realtime publication
+membership require Supabase database-admin access.
 
 ### B3. Operator auth checks
 
@@ -272,6 +343,11 @@ Steps:
 **Pass/fail:** Pass if signed-in users can use the app and signed-out visitors
 are redirected. Fail if a signed-out visitor can reach `/people`, `/labels`, or
 `/productions/new` and perform setup writes.
+
+**Phase 4 result:** Partial. All listed operator routes redirected a signed-out
+request to `/login` on the deployment. Signed-in route loading, login redirect,
+and second-user access were not tested because no operator credential was
+available.
 
 ### B4. RLS checks — BLOCKER
 
@@ -299,6 +375,13 @@ shown and signed-in setup writes work. Fail (blocker) if any anonymous
 read/write succeeds — this means direct table access is open and the
 token-scoped API routes are not the only way in.
 
+**Phase 4 result:** Partial. External anonymous REST requests using the same
+public Supabase URL/key delivered by the deployed app returned HTTP `401` with
+Postgres code `42501` for selects on `clients`, `people`, `client_people`,
+`productions`, `production_share_tokens`, `production_roster`, and `orders`, as
+well as the required `orders` update. The authenticated setup write still
+requires a signed-in user or SQL editor session.
+
 ### B5. Public runner share-token flow — test on a second device — BLOCKER
 
 This is the flow real runners use on set, so test it exactly as a runner
@@ -318,7 +401,7 @@ Steps:
 3. Confirm the runner board loads: roster, names, drink orders visible.
 4. Confirm private fields are **not** present — dietary notes and person notes should not appear anywhere in the runner view (check by comparing to a person you know has notes set in `/people` while signed in).
 5. Confirm `usual_order` **does** show, since it's the intentional operational prompt.
-6. Tap a status change (e.g. mark an order "ordered"). Confirm it saves and persists after a refresh.
+6. Capture or edit an order (or mark **No drink**). Confirm it saves and persists after a refresh.
 7. Edit a drink field (e.g. `drink_type`) from the second device. Confirm it saves.
 8. Try to load the same URL with an obviously wrong token (e.g. change one character). Confirm it fails with an error, not silent access.
 9. If you have a way to test it: mark the production `complete` as a signed-in operator, then retry a status tap from the second device. Confirm the PATCH is rejected ("Production is not active").
@@ -337,14 +420,21 @@ Steps:
 N — this is the primary access path runners use on shoot day, and any gap
 here is a data exposure or an on-set outage risk.
 
+**Phase 4 result:** Partial. Missing and invalid tokens were rejected with
+`401` and `403` respectively by the deployed production GET, queue GET,
+label-PNG GET, and order PATCH boundaries; the runner page returned `404` for
+both. A valid token, private-field omission on real data, persistence,
+completed-production rejection, and revocation require a disposable production
+plus operator/Supabase access.
+
 ---
 
 ## Sign-off
 
 | Section | Result | Signed off by | Date |
 |---|---|---|---|
-| A — NIIMBOT M2 label validation | Pass / Fail | | |
-| B — Production deployment validation | Pass / Fail | | |
+| A — NIIMBOT M2 label validation | Not run — hardware required | | 2026-07-15 audit |
+| B — Production deployment validation | Partial — B1/B2/B3/B4/B5 manual items remain | | 2026-07-15 audit |
 
 Do not treat Capture This Coffee as ready for paid client use until both
 sections pass in full. Partial passes with recorded exceptions must be

@@ -16,8 +16,8 @@ The product should optimize one simple loop:
    the drink, and advances status.
 3. **Print** - CTC Printer opens the same token link, fetches pending labels,
    prints over BLE, and marks `label_printed`.
-4. **Handoff** - summary groups the coffee-shop order, then the runner tracks
-   ordered, picked up, and delivered.
+4. **Handoff** - summary groups the coffee-shop order while captured and
+   printed state stay visible to the runner and operator.
 5. **Close out** - mark the production complete, preserve useful usual orders,
    and record cleanup items outside the live runner loop.
 

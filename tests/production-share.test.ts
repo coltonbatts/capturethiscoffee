@@ -6,6 +6,7 @@ import type { Database } from "../src/lib/supabase";
 import {
   hashProductionShareToken,
   isRunnerOrderOnBoard,
+  runnerOrderFields,
   sanitizeRunnerOrderPatch,
   ShareTokenError,
   validateProductionShareToken,
@@ -22,13 +23,18 @@ type TokenRow = {
  * Minimal stand-in for the two query shapes validateProductionShareToken
  * uses: select().eq().eq().maybeSingle() and update().eq().
  */
-function stubSupabase(row: TokenRow | null, updates: unknown[] = []) {
+function stubSupabase(
+  row: TokenRow | null,
+  updates: unknown[] = [],
+  filters: Array<[string, unknown]> = [],
+) {
   const client = {
     from() {
       return {
         select() {
           return {
-            eq() {
+            eq(column: string, value: unknown) {
+              filters.push([column, value]);
               return this;
             },
             maybeSingle: async () => ({ data: row, error: null }),
@@ -62,6 +68,18 @@ describe("production share access helpers", () => {
   });
 
   it("keeps token-scoped order writes to operational fields only", () => {
+    assert.deepEqual(runnerOrderFields, [
+      "drink_type",
+      "size",
+      "temperature",
+      "milk_type",
+      "sweetener",
+      "caffeine",
+      "special_notes",
+      "vendor",
+      "status",
+      "label_printed",
+    ]);
     assert.deepEqual(
       sanitizeRunnerOrderPatch({
         drink_type: "Latte",
@@ -70,6 +88,8 @@ describe("production share access helpers", () => {
         person_id: "person-2",
         label_printed: true,
         created_at: "2026-06-01T00:00:00.000Z",
+        updated_at: "2026-06-01T00:00:00.000Z",
+        roster_id: "other-roster",
       }),
       {
         drink_type: "Latte",
@@ -79,6 +99,7 @@ describe("production share access helpers", () => {
     );
 
     assert.deepEqual(sanitizeRunnerOrderPatch({ status: "archived" }), {});
+    assert.deepEqual(sanitizeRunnerOrderPatch({ label_printed: "true" }), {});
   });
 
   it("normalizes null field values to empty strings and drops non-strings", () => {
@@ -163,14 +184,19 @@ describe("validateProductionShareToken", () => {
   });
 
   it("rejects a revoked token", async () => {
+    const updates: unknown[] = [];
     await expectTokenError(
       validateProductionShareToken(
-        stubSupabase({ ...validRow, revoked_at: "2026-06-30T00:00:00.000Z" }),
+        stubSupabase(
+          { ...validRow, revoked_at: "2026-06-30T00:00:00.000Z" },
+          updates,
+        ),
         "prod-1",
         "runner-token",
       ),
       403,
     );
+    assert.deepEqual(updates, []);
   });
 
   it("rejects an expired token", async () => {
@@ -186,18 +212,23 @@ describe("validateProductionShareToken", () => {
 
   it("accepts a live token and stamps last_used_at", async () => {
     const updates: unknown[] = [];
+    const filters: Array<[string, unknown]> = [];
     const row = {
       ...validRow,
       expires_at: new Date(Date.now() + 60_000).toISOString(),
     };
 
     const result = await validateProductionShareToken(
-      stubSupabase(row, updates),
+      stubSupabase(row, updates, filters),
       "prod-1",
       "runner-token",
     );
 
     assert.equal(result.id, "token-1");
+    assert.deepEqual(filters, [
+      ["production_id", "prod-1"],
+      ["token_hash", hashProductionShareToken("runner-token")],
+    ]);
     assert.equal(updates.length, 1);
     assert.ok(
       typeof updates[0] === "object" &&

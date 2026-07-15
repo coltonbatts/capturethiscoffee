@@ -34,7 +34,12 @@ export function printableLabelItemsForProduction(
         {
           roster,
           person,
-          order: data.orders.find((order) => order.roster_id === roster.id),
+          order: data.orders.find(
+            (order) =>
+              order.roster_id === roster.id &&
+              order.production_id === productionId &&
+              order.person_id === roster.person_id,
+          ),
         },
       ];
     })

@@ -8,11 +8,15 @@ import { niimbotM2ExportPreset } from "../src/lib/niimbot-m2-draw";
 describe("server NIIMBOT M2 PNG renderer", () => {
   it("renders name and drink ink on the text side of the label", async () => {
     const png = await renderNiimbotM2LabelPngBuffer(sampleLabel);
+    const metadata = await sharp(png).metadata();
     const { data, info } = await sharp(png)
       .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });
 
+    assert.equal(metadata.format, "png");
+    assert.equal(metadata.width, niimbotM2ExportPreset.pixelWidth);
+    assert.equal(metadata.height, niimbotM2ExportPreset.pixelHeight);
     assert.equal(info.width, niimbotM2ExportPreset.pixelWidth);
     assert.equal(info.height, niimbotM2ExportPreset.pixelHeight);
     assert.ok(

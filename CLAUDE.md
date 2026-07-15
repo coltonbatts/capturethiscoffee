@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-05
+Last updated: 2026-07-15
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -38,7 +38,7 @@ The printer strategy is settled for now:
 - Keep the NIIMBOT M2_H.
 - Do not rebuild a laptop print station.
 - Do not attempt custom Bluetooth printing from the web app (Safari on iOS has no Web Bluetooth).
-- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. Spike passed; Phase 2 ships label queue + server PNG API + `label_printed` sync. See `mobile/README.md` and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
+- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. The app consumes the label queue + server PNG API and syncs `label_printed`. See `mobile/README.md` and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
 - **Fallback:** `/labels` PNG share/download or NIIMBOT batch CSV through the official NIIMBOT app.
 
 The `/labels` screen currently supports two paths:
@@ -293,15 +293,13 @@ reads and writes still use the session-bound browser client. A later phase can
 move those operations into server-only DAL functions and Server Actions while
 preserving the current DTO and token API contracts.
 
-### P1 - Add realtime sync
+### P1 - Consider public-runner realtime after production proof
 
-The runner board currently loads data and performs optimistic updates, but it does not subscribe to cross-device changes. Supabase Realtime would improve live shoot reliability when multiple devices are open.
-
-Likely scope:
-
-- Subscribe to `orders` for the open production.
-- Consider `production_roster` if roster edits happen during the shoot.
-- Merge server changes without clobbering in-flight optimistic local edits.
+The authenticated operator board already subscribes to Supabase Realtime for
+`orders` and retains a 10-second polling fallback. The public token runner
+intentionally uses a 10-second public API poll. Do not give the runner direct
+Supabase access or replace that polling path during Phase 4; any later realtime
+design must preserve the account-free token boundary and optimistic-edit merge.
 
 ### P1 - Split large UI files
 
