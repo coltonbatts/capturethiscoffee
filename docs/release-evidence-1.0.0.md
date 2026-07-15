@@ -13,7 +13,7 @@ status change.
 | GitHub repository | `https://github.com/coltonbatts/capturethiscoffee.git` | Verified |
 | Starting branch/commit | `main` / `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified |
 | Release branch | `codex/release-1.0.0` | Created |
-| Release-candidate implementation commit | `a451f64` | Committed intentionally; exact build-5 application source |
+| Release-candidate application source | `6003661` | Exact build-5 app source and non-shipping screenshot tooling |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
 | Live Vercel deployment | `dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64` | READY |
@@ -33,7 +33,7 @@ The live deployment predates the current release candidate. Its `/privacy` and
 | Bundle ID | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` |
 | Display name | Capture This | Capture This |
 | Device family | iPhone + iPad | iPhone only |
-| IPA SHA-256 | `0480b56e0ed5ae495059935cf7313c31e370f9cd897827c4f99acc4c11fc936f` | `1b2b0499c053a20878806b30f0c670606b9dd146ab0bb25c7fe723bb0ac9c3e4` |
+| IPA SHA-256 | `0480b56e0ed5ae495059935cf7313c31e370f9cd897827c4f99acc4c11fc936f` | `0ba08aa4a9a502ef3907ebbf4ac367ee3d2625ed681e6001ec7f91935a389f05` |
 | IPA status | Uploaded, processed, internally installed (prior audit/user evidence) | Signed App Store IPA built locally; not uploaded |
 
 Build-4 evidence is preserved under the ignored local directory
@@ -53,14 +53,20 @@ and belong to build 5.
 | `npm run verify:niimbot-export` | Passed; 591×354 PNG contract |
 | `flutter pub get` | Passed |
 | `flutter analyze` | Passed, no issues |
-| `flutter test` | 21/21 passed |
+| `flutter test` | 24/24 passed, including three App Store screenshot regressions |
 | `flutter build ipa --release` | Passed; 42.7 MB IPA, 177.6 MB archive |
 | `npm audit --omit=dev` | Two moderate advisories in Next’s bundled PostCSS; no safe non-breaking remediation currently evidenced |
 
 The IPA was inspected for version/build, bundle ID, iPhone-only device family,
 portrait orientation, export-compliance flag, Bluetooth copy, application and
 plugin privacy manifests, third-party notices, App Store distribution signing,
-and `get-task-allow = false`.
+and `get-task-allow = false`. The non-shipping fictional screenshot strings are
+absent from the release archive.
+
+Three provisional App Store PNGs are recorded under
+`docs/app-store-assets/iphone-6.9/`. Each was visually inspected, is exactly
+1320×2868, has no alpha channel, and contains only fictional data. A real
+connected/printing image or short demo remains pending the physical M2_H gate.
 
 ## Live boundary evidence
 

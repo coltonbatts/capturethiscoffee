@@ -39,7 +39,7 @@ aliased to `https://coffee.capturethis.com`.
 
 | Check | Evidence collected | Result |
 |---|---|---|
-| Repository verification | 100/100 Node tests, ESLint, Next.js 16.2.10 production build, NIIMBOT export verifier, 21/21 Flutter tests, Flutter analysis, and signed App Store IPA build all passed | Verified automatically |
+| Repository verification | 100/100 Node tests, ESLint, Next.js 16.2.10 production build, NIIMBOT export verifier, 24/24 Flutter tests, Flutter analysis, and signed App Store IPA build all passed | Verified automatically |
 | iOS release candidate | `1.0.0 (5)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; not uploaded |
 | Print/sync recovery | Durable per-order states prevent automatic reprint after physical success; the operator can retry sync only or resolve uncertain output after inspection | Verified by automated state-machine tests; physical interruption test pending |
 | Mobile security/reliability | HTTPS-only public links, Keychain session migration, bounded/time-limited API requests, sanitized errors, app-resume reconnect, single-printer and M2_H validation | Verified by analysis and automated tests; BLE behavior pending hardware |
