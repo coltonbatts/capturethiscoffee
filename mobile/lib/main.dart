@@ -271,9 +271,39 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             'Paste the full production share URL (must include ?token=…).',
           );
         }
+        final api = CtcApi(parsed);
+        final queue = await _fetchQueue(api);
+        if (!mounted) return;
         await _saveSession(parsed);
-        await _refreshQueue();
+        _applyQueue(queue);
       });
+
+  Future<PrinterQueue> _fetchQueue(CtcApi api) async {
+    try {
+      return await api.fetchQueue();
+    } catch (error) {
+      throw Exception('Queue fetch failed. ${_errorText(error)}');
+    }
+  }
+
+  void _applyQueue(PrinterQueue queue, {bool silent = false}) {
+    final nextSignature = _signatureForQueue(queue);
+    final changed = nextSignature != _queueSignature;
+    final pendingCount =
+        queue.labels.where((label) => !label.labelPrinted).length;
+
+    setState(() {
+      _queue = queue;
+      _queueSignature = nextSignature;
+      _lastQueueRefreshAt = DateTime.now();
+    });
+
+    if (!silent || changed) {
+      _logLine(
+        'Queue: ${queue.labels.length} labels, $pendingCount to print for ${queue.productionName}.',
+      );
+    }
+  }
 
   Future<void> _refreshQueue({bool silent = false}) async {
     final api = _api;
@@ -288,30 +318,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     }
 
     Future<void> action() async {
-      late final PrinterQueue queue;
-      try {
-        queue = await api.fetchQueue();
-      } catch (error) {
-        throw Exception('Queue fetch failed. ${_errorText(error)}');
-      }
+      final queue = await _fetchQueue(api);
       if (!mounted) return;
-
-      final nextSignature = _signatureForQueue(queue);
-      final changed = nextSignature != _queueSignature;
-      final pendingCount =
-          queue.labels.where((label) => !label.labelPrinted).length;
-
-      setState(() {
-        _queue = queue;
-        _queueSignature = nextSignature;
-        _lastQueueRefreshAt = DateTime.now();
-      });
-
-      if (!silent || changed) {
-        _logLine(
-          'Queue: ${queue.labels.length} labels, $pendingCount to print for ${queue.productionName}.',
-        );
-      }
+      _applyQueue(queue, silent: silent);
     }
 
     if (silent) {
