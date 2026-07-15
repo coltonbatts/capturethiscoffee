@@ -1,6 +1,6 @@
 # Production Readiness Checklist
 
-Last updated: 2026-07-15 (Phase 4 repository and deployed-boundary audit)
+Last updated: 2026-07-15 (1.0.0 release-candidate audit)
 
 This checklist exists to close out the two P0 blockers before Capture This
 Coffee is used on a real paid shoot:
@@ -30,24 +30,28 @@ it or getting sign-off from the tech lead.
 > description (and the numbers, if the measured size differs) to match
 > the recorded result — not before.
 
-### Phase 4 evidence snapshot — 2026-07-15
+### Release-candidate evidence snapshot — 2026-07-15
 
 No physical or dashboard-only result is treated as passed in this snapshot.
 The production deployment tested below was Vercel deployment
-`dpl_HaGqQXps7kTdaorszUfFu98Dxj3c`, commit `28e0f29`, in `READY` state and
+`dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64`, commit `54d9f7c`, in `READY` state and
 aliased to `https://coffee.capturethis.com`.
 
 | Check | Evidence collected | Result |
 |---|---|---|
-| Repository verification | 73/73 Node tests, ESLint, Next.js production build, NIIMBOT export verifier, 4/4 Flutter tests, and Flutter analysis all passed | Verified automatically |
+| Repository verification | 100/100 Node tests, ESLint, Next.js 16.2.10 production build, NIIMBOT export verifier, 21/21 Flutter tests, Flutter analysis, and signed App Store IPA build all passed | Verified automatically |
+| iOS release candidate | `1.0.0 (5)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; not uploaded |
+| Print/sync recovery | Durable per-order states prevent automatic reprint after physical success; the operator can retry sync only or resolve uncertain output after inspection | Verified by automated state-machine tests; physical interruption test pending |
+| Mobile security/reliability | HTTPS-only public links, Keychain session migration, bounded/time-limited API requests, sanitized errors, app-resume reconnect, single-printer and M2_H validation | Verified by analysis and automated tests; BLE behavior pending hardware |
 | Label PNG contract | Server renderer test and export verifier both confirmed PNG output at `591 x 354px`; queue tests cover captured, skipped, off-set, cross-production, mismatched-person, and already-printed cases | Verified automatically; physical size remains unverified |
 | Signed-out operator routes | `/productions`, `/people`, `/labels`, and `/productions/new` each returned `307` to `/login?next=...` | Verified against deployment |
-| Missing/invalid public tokens | Production GET, label-queue GET, label-PNG GET, and order PATCH returned `401` for a missing token and `403` for an invalid token; the runner page returned `404` in both cases | Verified against deployment |
+| Missing public tokens | Production GET, label-queue GET, label-PNG GET, and order PATCH returned sanitized `401` responses | Verified against current deployment |
 | Public Supabase configuration | The deployed login assets contained exact matches for the configured public Supabase URL and anon key; no values were printed or recorded | Verified against deployment |
 | Service-role API configuration | The deployed invalid-token requests reached the token lookup and returned `403`, which would not occur if the server-only URL/key configuration failed | Operationally verified; hosting-dashboard name/value check still required |
 | Anonymous direct Supabase access | Against the same public URL/key delivered by the deployment, anonymous selects on all seven core tables plus the required `orders` update returned HTTP `401` / Postgres `42501` | Verified against deployment configuration |
 | Migration ledger and Realtime publication | Repository migrations end at `20260706120000_enable_orders_realtime.sql`; no Supabase dashboard/database-admin session was available to inspect applied migration history or publication membership | Unverified on deployed database |
-| Signed-in operator and valid/revoked token flows | No operator credential, live share token, or safe test production was available | Unverified |
+| Privacy and support routes | Release candidate includes both static routes and in-app links; current live deployment still returns 404 | Candidate verified; owner wording approval and deployment pending |
+| Signed-in operator and valid/expired/revoked token flows | No safe current credential/token fixture was used; a fictional fixture is specified in `review-production-fixture.md` | Unverified |
 | CTC Printer, NIIMBOT, and fallback physical output | No iPhone, installed CTC Printer build, loaded stock, or NIIMBOT was available to this audit | Unverified |
 
 Current sync behavior is intentional: the authenticated operator production
@@ -64,7 +68,7 @@ use remains intentional for auth/session observation, Realtime notification,
 and person-photo Storage; person table updates after a photo upload use the
 Server Action boundary.
 
-### Minimal remaining access and hardware handoff
+### Minimal remaining owner and hardware handoff
 
 1. In Vercel **Project Settings > Environment Variables**, confirm all three
    names in B1 target Production. With the service-role value available only
@@ -76,10 +80,11 @@ Server Action boundary.
 3. Sign in as an intended operator and complete B3. Create a disposable active
    production/token and complete B5 in a private window; revoke that token at
    the end.
-4. With the user’s iPhone and NIIMBOT, record the stock measurement, print one
-   CTC Printer label, confirm BLE stability and `label_printed` sync, then run
-   the `/labels` PNG fallback in A3. Do not update the preset from automated
-   pixel evidence alone.
+4. Approve the release privacy/support wording and rotate the temporary
+   credential identified during this audit before granting further access.
+5. Run `docs/physical-release-test.md` with build 5, a real iPhone, the M2_H,
+   actual stock, and the fictional production. Do not update the preset from
+   automated pixel evidence alone.
 
 ---
 

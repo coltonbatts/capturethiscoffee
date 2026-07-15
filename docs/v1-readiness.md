@@ -52,6 +52,9 @@
 - Connect the NIIMBOT M2_H.
 - Print one real order label.
 - Confirm the same order shows `label_printed` in Supabase and the runner board.
+- If a physical label prints but the server update fails, use **Sync only** and
+  never tap Print again. If the outcome is uncertain, inspect physical output
+  before choosing **Label printed — sync only** or **Nothing printed — retry**.
 
 ## Fallback label export checklist
 
@@ -103,6 +106,12 @@ once that's done.
   sharing is unavailable on the `/labels` fallback screen.
 - The current export preset has not yet been physically verified against the
   final lid-label media.
+- Version `1.0.0 (5)` is deliberately iPhone-only. iPad is not a supported or
+  tested release target.
+- The production token is Keychain-backed in build 5; unresolved print/sync
+  evidence remains local until the server confirms the order printed.
+- Multiple nearby NIIMBOT devices are blocked rather than connecting to an
+  arbitrary first result. Power off all but the intended M2_H.
 - Offline production mode is not supported. Supabase connectivity is required
   for authoritative application data.
 - The app does not seed rows into Supabase automatically.

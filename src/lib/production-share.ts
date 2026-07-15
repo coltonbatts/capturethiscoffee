@@ -109,7 +109,9 @@ export async function validateProductionShareToken(
     .eq("token_hash", hashProductionShareToken(normalizedToken))
     .maybeSingle();
 
-  if (error) throw new ShareTokenError(error.message, 500);
+  if (error) {
+    throw new ShareTokenError("Could not validate production share token.", 500);
+  }
   if (!data || data.revoked_at) {
     throw new ShareTokenError("Invalid production share token.", 403);
   }

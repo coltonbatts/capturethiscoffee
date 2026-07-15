@@ -14,10 +14,10 @@ import {
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
 const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-zinc-800 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
 
 const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
 
 export default function LoginPage() {
   return (
@@ -134,10 +134,15 @@ function LoginForm() {
     <main className="grid min-h-dvh place-items-center px-4 py-8">
       <section className="w-full max-w-md overflow-hidden rounded-xl border-[3px] border-black bg-white text-black shadow-[6px_6px_0_#000]">
         <div className="flex items-center gap-3 border-b-[3px] border-black bg-black p-5 text-white">
-          <CaptureMark invert className="size-11 rounded-xl" />
-          <h1 className="text-xl font-black uppercase tracking-tight text-white">
-            Capture This
-          </h1>
+          <CaptureMark className="size-12 rounded-full" />
+          <div>
+            <h1 className="text-xl font-black uppercase leading-none tracking-tight text-white">
+              Capture This
+            </h1>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-accent">
+              Coffee operations
+            </p>
+          </div>
         </div>
         <div className="grid gap-4 p-5">
           {isSupabaseConfigured ? (

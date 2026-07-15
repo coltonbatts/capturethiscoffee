@@ -222,14 +222,14 @@ export function EmptyState({
 }
 
 export const inputClass =
-  "min-h-11 min-w-0 w-full rounded-lg border border-zinc-500 bg-white px-3.5 text-base text-black outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-1 focus:ring-black";
+  "min-h-11 min-w-0 w-full rounded-lg border border-zinc-500 bg-white px-3.5 text-base text-black outline-none transition placeholder:text-zinc-400 focus:border-black focus:ring-2 focus:ring-accent";
 
 export const buttonClass =
   "inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-center text-sm font-black leading-tight whitespace-normal transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:px-4";
 
-export const primaryButtonClass = `${buttonClass} border border-black bg-black text-white hover:bg-zinc-800`;
+export const primaryButtonClass = `${buttonClass} border border-black bg-black text-white hover:bg-accent hover:text-black`;
 
-export const secondaryButtonClass = `${buttonClass} border border-zinc-500 bg-white text-black hover:border-black hover:bg-zinc-100`;
+export const secondaryButtonClass = `${buttonClass} border border-zinc-500 bg-white text-black hover:border-black hover:bg-accent/40`;
 
 export const dangerButtonClass = `${buttonClass} border border-red-700 bg-white text-red-700 hover:bg-red-50`;
 

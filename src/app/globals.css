@@ -3,13 +3,16 @@
 :root {
   --background: #f7f3ea;
   --foreground: #050505;
+  --capture-yellow: #f2eb0c;
+  --capture-paper: #f7f3ea;
+  --capture-ink: #050505;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-accent: #ff6a2a;
-  --color-accent-ink: #4a1c00;
+  --color-accent: var(--capture-yellow);
+  --color-accent-ink: var(--capture-ink);
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 }
@@ -68,8 +71,8 @@ body::before {
 }
 
 ::selection {
-  background: #1c1917;
-  color: #fafaf9;
+  background: var(--capture-yellow);
+  color: var(--capture-ink);
 }
 
 button,
@@ -84,8 +87,9 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid #000000;
-  outline-offset: 2px;
+  outline: 3px solid var(--capture-yellow);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--capture-ink);
 }
 
 .rule-double {

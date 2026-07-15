@@ -16,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Capture This Coffee",
   description: "Runner-first coffee order workflow for production shoots.",
+  applicationName: "Capture This Coffee",
+  appleWebApp: {
+    capable: true,
+    title: "Capture This Coffee",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,7 +43,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-white text-black">
+      <body className="min-h-full bg-background text-foreground">
         <Providers>{children}</Providers>
       </body>
     </html>

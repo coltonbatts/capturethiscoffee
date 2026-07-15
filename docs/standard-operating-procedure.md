@@ -44,9 +44,9 @@ The master website is the source of truth for:
 Use the hosted website for setup, runner workflow, summaries, and fallback
 label export.
 
-### CTC Printer
+### Capture This iPhone app
 
-The native iOS **CTC Printer** app is the primary on-set print path. It opens
+The native iPhone **Capture This** app is the primary on-set print path. It opens
 the same runner share link, fetches the pending label queue from the public API,
 prints to the NIIMBOT M2_H over Bluetooth LE, and marks each order
 `label_printed`.
@@ -59,7 +59,7 @@ Printer is unavailable or when a manual export is needed.
 
 ### Key Rule
 
-CTC Printer prints on set. `/labels` exports assets when the primary path is
+Capture This prints on set. `/labels` exports assets when the primary path is
 unavailable or an advanced export is needed.
 
 ## Roles
@@ -259,19 +259,25 @@ needed.
 Printing is batch-oriented: the queue and the `/labels` screen both cover every
 captured drink for the day, and "unprinted" selection keeps reprints cheap.
 
-From CTC Printer:
+From Capture This:
 
 1. Confirm the production is active.
-2. Confirm CTC Printer is linked to the runner share URL.
+2. Confirm Capture This is linked to the runner share URL.
 3. Refresh the queue.
 4. Print each pending label.
 5. Confirm the web day board shows the printed badge.
 6. Inspect the physical label.
 
+If the physical label printed but the web update failed, do not print it again.
+Use **Sync only** after connectivity returns. If the result is uncertain,
+inspect the printer and physical stock first, then select **Label printed — sync
+only** or **Nothing printed — retry**. The app keeps this recovery state across
+restarts and excludes unresolved labels from batch printing.
+
 From the web (signed-in), tap **Print labels** on the production page to open
 the batch on `/labels` with every captured drink preselected.
 
-If CTC Printer is unavailable, use `/labels` for PNG or CSV fallback export.
+If Capture This is unavailable, use `/labels` for PNG or CSV fallback export.
 Do not assume the current physical media is verified until a test print
 confirms it.
 
@@ -294,7 +300,7 @@ confirms it.
 4. Refresh the production page if the order state is unclear.
 5. Reapply the change if needed.
 
-### If CTC Printer Is Unavailable
+### If Capture This Is Unavailable
 
 1. Open `/labels`.
 2. Select the production and labels.
@@ -338,6 +344,8 @@ After the last drink run:
 - Keep drink names readable and specific.
 - Do not store sensitive personal information in drink notes.
 - Do not share sign-in passwords in long-lived chat threads.
+- Treat production share links as bearer credentials. Keep them out of Git,
+  screenshots, logs, and broad email threads.
 
 ## Security Rules
 
@@ -356,8 +364,9 @@ After the last drink run:
 - [ ] Active production opens for a signed-in operator and through the production share link.
 - [ ] Client, people, roster, date, location, and runner details are correct.
 - [ ] Runner can search, quick-add, take orders, and mark no-drink on the actual device.
-- [ ] CTC Printer links to the same runner share URL.
-- [ ] CTC Printer prints one physical test label and marks `label_printed`.
+- [ ] Capture This links to the same runner share URL.
+- [ ] Capture This prints one physical test label and marks `label_printed`.
+- [ ] Interrupted printing is resolved without an accidental duplicate.
 - [ ] `/labels` fallback loads on the phone.
 - [ ] At least one fallback PNG or CSV exports successfully.
 - [ ] Remaining physical unknowns are recorded before client use.

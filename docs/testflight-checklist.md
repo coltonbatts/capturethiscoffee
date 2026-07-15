@@ -1,65 +1,45 @@
-# TestFlight checklist — CTC Printer
+# TestFlight pilot checklist — Capture This
 
-Track progress here. Internal testing skips beta review; external testers (e.g. Luke) need beta review + privacy policy URL.
+Last updated: 2026-07-15
 
-## Status
+External TestFlight is the final pilot, not the permanent distribution. The
+permanent target is an approved unlisted App Store link.
 
-| Step | Owner | Done |
-|---|---|---|
-| Version `0.1.0+1` in `pubspec.yaml` | Agent | ✅ |
-| Export compliance key in `Info.plist` | Agent | ✅ |
-| Release IPA builds | | ☐ |
-| Bundle ID registered in Apple Developer | You | ✅ |
-| App record in App Store Connect | You | ✅ |
-| CTC web app deployed on HTTPS | You | ☐ |
-| One end-to-end print on production API | You | ☐ |
-| IPA uploaded to App Store Connect | You | ✅ |
-| Build processing complete (Ready to Submit) | You | ✅ |
-| Internal TestFlight (your phone) | You | ✅ |
-| External testers invited | You | ☐ |
+## Evidence and status
 
----
+| Step | Status |
+|---|---|
+| Bundle ID `com.capturethis.ctcprinter` and App Store record | Verified by build-4 upload history |
+| Build `0.1.0 (4)` uploaded, processed, installed internally | Verified by prior audit/user evidence |
+| Release version `1.0.0+5` | Implemented |
+| Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally |
+| iPhone-only target, app/privacy manifests, permissions, licenses | Verified in build 5 IPA |
+| Production `/privacy` and `/support` | Candidate implemented; live deployment pending approval |
+| Stable fictional review production | Pending private operator access |
+| Build 5 uploaded/processed | Pending App Store Connect credentials |
+| TestFlight beta metadata | Drafted in `docs/app-store-release.md` |
+| First external Beta App Review | Pending |
+| Buddy invited by email | Pending owner-supplied email / approved build |
+| Buddy install, link, M2_H print, and sync pilot | Pending physical hardware |
 
-## Phase 1 — Apple Developer (one-time, ~30 min)
+Build 4 is not the release candidate: it predates Keychain session storage,
+network bounds, printer validation, interruption recovery, iPhone-only targeting,
+the application privacy manifest, and the 1.0 product version.
 
-### 1A. Confirm bundle ID
+## Before upload
 
-1. Open [developer.apple.com/account](https://developer.apple.com/account) → **Certificates, Identifiers & Profiles** → **Identifiers**.
-2. Look for `com.capturethis.ctcprinter`.
-3. If missing: **+** → **App IDs** → **App** → Description: `CTC Printer` → Bundle ID: **Explicit** `com.capturethis.ctcprinter` → enable nothing extra unless prompted → Register.
+1. Approve and deploy the privacy/support pages.
+2. Rotate the affected temporary credential identified during the release audit.
+3. Create the fictional stable fixture in
+   `docs/review-production-fixture.md`; keep its token out of Git and notes.
+4. Run every required verification command and the physical gate in
+   `docs/physical-release-test.md`.
+5. Confirm App Store name is **Capture This** and upload screenshots containing
+   only fictional data.
+6. Confirm build 5 is still the exact tested IPA. If any code, metadata embedded
+   in the binary, or print constants change, bump the build number and rebuild.
 
-### 1B. Create App Store Connect record
-
-1. Open [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → **Apps** → **+** → **New App**.
-2. Fill in:
-   - **Platforms:** iOS
-   - **Name:** `CTC Printer` (App Store display name; can change later)
-   - **Primary language:** English (U.S.)
-   - **Bundle ID:** `com.capturethis.ctcprinter`
-   - **SKU:** `ctc-printer` (any unique string; never shown to users)
-   - **User Access:** Full Access
-3. Click **Create**. You do not need screenshots or description for TestFlight-only.
-
-**Tell the agent when this step is done** so we can upload.
-
----
-
-## Phase 2 — Backend ready for testers
-
-TestFlight builds cannot use `http://192.168.x.x:3000`. Testers need a **deployed HTTPS** CTC instance.
-
-1. Confirm production has `SUPABASE_SERVICE_ROLE_KEY` set.
-2. Confirm label API routes work:
-   - `GET /api/public/productions/{id}/labels?token=…`
-   - `GET /api/public/orders/{id}/label?productionId=…&token=…`
-3. Production status must be **active** before `label_printed` PATCH works.
-4. Generate a real share link and test on your phone before inviting others.
-
----
-
-## Phase 3 — Build Release IPA
-
-From repo root:
+## Build and upload
 
 ```bash
 cd mobile
@@ -71,104 +51,59 @@ flutter build ipa --release
 
 Output: `mobile/build/ios/ipa/ctc_printer.ipa`
 
-If `flutter build ipa` fails on signing, open Xcode:
+Upload with Xcode Organizer or Transporter while signed into the authorized
+Apple account. Apple associates it using bundle ID, version, and build number.
+Wait until processing finishes and record the status in
+`docs/release-evidence-1.0.0.md`.
 
-```bash
-open ios/Runner.xcworkspace
-```
+Do not reuse build number 5 after uploading it. Change `1.0.0+5` to `+6` or
+higher for any replacement binary.
 
-Runner target → **Signing & Capabilities** → Team: your paid account → **Automatically manage signing** → Bundle ID `com.capturethis.ctcprinter`. Then retry `flutter build ipa`.
+## App Store Connect beta setup
 
----
+1. Open **Capture This → TestFlight** and select the processed build.
+2. Confirm export compliance from actual build behavior; the binary declares no
+   non-exempt encryption. The account owner makes the final attestation.
+3. Add the beta description, **What to Test**, feedback email, contact, privacy
+   URL, and support URL from `docs/app-store-release.md`.
+4. Create an external group named `Capture This crew pilot`.
+5. Add build 5 and submit it for TestFlight App Review.
+6. After approval, invite the buddy by email rather than a broadly shareable
+   public link. Do not include the production share token in the invitation.
+7. Send the fictional review URL privately and keep the fixture active.
 
-## Phase 4 — Upload
+The first external build requires Apple’s beta review. Internal-only builds
+cannot be promoted to external groups; use the normal App Store/TestFlight
+upload path for build 5.
 
-### Option A — Xcode (recommended first time)
+## Buddy pilot acceptance
 
-```bash
-open ios/Runner.xcworkspace
-```
+Record:
 
-1. Select **Any iOS Device (arm64)** as destination (not a simulator).
-2. **Product → Archive** (wait for build).
-3. **Organizer** opens → select archive → **Distribute App**.
-4. **App Store Connect** → **Upload** → defaults OK → Upload.
-5. Wait for email: “App Store Connect: Your build has completed processing” (5–30 min).
+- Tester / date: _____
+- Invitation accepted and build installed: _____
+- iPhone / iOS / build: _____
+- Production linked: pass/fail _____
+- Exact M2_H / firmware / stock: _____
+- Short/long/batch labels: pass/fail _____
+- Interrupted print recovery: pass/fail _____
+- Successful prints synced to hosted web app: pass/fail _____
+- Feedback/crash report: _____
+- Release-blocking issue: none / describe _____
 
-### Option B — Transporter app
-
-1. Install **Transporter** from Mac App Store.
-2. Drag `mobile/build/ios/ipa/ctc_printer.ipa` into Transporter → **Deliver**.
-
----
-
-## Phase 5 — TestFlight configuration
-
-In App Store Connect → **CTC Printer** → **TestFlight**:
-
-### Build metadata
-
-1. Click the new build (e.g. `0.1.0 (1)`).
-2. **Export Compliance** — should auto-skip if `ITSAppUsesNonExemptEncryption` is false in Info.plist. If asked: uses encryption (HTTPS only), exempt.
-
-### App Privacy (required)
-
-**App Privacy** in the left sidebar → **Get Started**:
-
-- **Data collected:** minimal honest answers
-  - No account created in app
-  - **Identifiers:** production share token (not linked to user identity if you treat it as operational)
-  - **Other data:** crew names / drink orders fetched from your server for printing
-- Purpose: app functionality only
-- Not used for tracking
-
-Adjust to match your actual deployment; this is not legal advice.
-
-### Internal testing (you, same day)
-
-1. **TestFlight** → **Internal Testing** → default **App Store Connect Users** group.
-2. Add yourself if not already there.
-3. Enable the build for the group.
-4. On iPhone: install **TestFlight** app → accept invite → install **CTC Printer**.
-
-### External testing (Luke / crew, not on your team)
-
-1. **External Testing** → **+** → create group (e.g. `On-set crew`).
-2. Add tester emails.
-3. Fill **Beta App Description** (example):
-
-   > CTC Printer connects to a NIIMBOT M2_H label printer over Bluetooth and prints cup labels from a Capture This Coffee production share link. Requires a valid production URL from the CTC web app.
-
-4. **Privacy Policy URL** — required. A simple page on your site is enough (even `https://yoursite.com/privacy` with a short paragraph).
-5. Submit for **Beta App Review** (first external build only; often 24–48 hours).
-
----
-
-## Phase 6 — On-set smoke test
-
-1. Force-quit official NIIMBOT app.
-2. Open production share link on phone (HTTPS).
-3. CTC Printer → paste URL → Link production.
-4. Connect printer → Print one label.
-5. Confirm `label_printed` on runner board / Supabase.
-
----
-
-## Ongoing
-
-- Bump build number for every upload: `0.1.0+2`, `0.1.0+3`, … in `pubspec.yaml`.
-- TestFlight builds **expire after 90 days** — upload a fresh build quarterly.
-- BLE printing still requires a **physical iPhone**; Simulator cannot test printer.
-
----
+The pilot passes only after the buddy completes install → link → connect →
+physical print → sync, and the physical release record is complete. Fix a
+release blocker, upload a new build, and repeat the affected test. Do not treat
+TestFlight approval alone as product approval.
 
 ## Troubleshooting
 
-| Problem | Fix |
+| Problem | Action |
 |---|---|
-| Upload fails “No suitable application records” | Finish Phase 1B — create App Store Connect app with matching bundle ID |
-| “Invalid Provisioning Profile” | Xcode → Signing → Automatic + correct team |
-| Archive greyed out | Select **Any iOS Device**, not Simulator |
-| TestFlight install but API fails | Share URL must be HTTPS production, not localhost/LAN |
-| Mark printed fails | Production must be **active** |
-| Connect printer fails | Force-quit NIIMBOT app; check Bluetooth permission |
+| Build not visible | Wait for processing; verify bundle ID/version/build and upload role |
+| Build marked Internal Only | Upload a normal App Store/TestFlight build with a new number |
+| API fails | Use the active HTTPS fictional production; never LAN/localhost for testers |
+| Multiple printers found | Power off every NIIMBOT except the tested M2_H and retry |
+| Physical print succeeded but sync failed | Use **Sync only**; do not reprint |
+| Print outcome uncertain | Inspect physical output, then select the matching recovery action |
+| Privacy URL fails | Stop pilot; deploy/verify `/privacy` before Beta App Review |

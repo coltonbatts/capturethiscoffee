@@ -1,4 +1,4 @@
-# CTC Printer — NIIMBOT M2_H BLE (iOS)
+# Capture This — NIIMBOT M2_H BLE (iPhone)
 
 Native iOS app that prints Capture This Coffee cup labels directly to the NIIMBOT M2_H over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered server-side by the Next.js app and fetched with the same production share-token auth the runner board uses.
 
@@ -6,10 +6,15 @@ Native iOS app that prints Capture This Coffee cup labels directly to the NIIMBO
 
 1. **Deploy or run CTC** with the public API routes (see repo root). Production must be **active** before `label_printed` updates will stick.
 2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
-3. On the iPhone, open **CTC Printer** → paste that full URL → **Link production**.
+3. On the iPhone, open **Capture This** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).
 5. Tap **Print** on each label in the queue. The app downloads the server PNG, prints, then marks `label_printed` via the public order PATCH route.
 6. Use **Refresh** after runner-board changes. Toggle the chip to show already-printed labels.
+
+The linked production token is stored in the iOS Keychain. If the physical
+print succeeds but the server update fails, use **Sync only**; do not print the
+label again. If print outcome is uncertain, inspect the physical output and use
+the corresponding recovery action. Recovery evidence survives an app restart.
 
 **Local dev on a physical iPhone:** the share URL must use your Mac's LAN IP, not `localhost` (e.g. `http://192.168.1.69:3000/run/…?token=…`). `next.config.ts` already allows dev origins for common LAN IPs.
 
@@ -45,7 +50,9 @@ flutter create --project-name ctc_printer --platforms=ios .
 flutter pub get
 ```
 
-`flutter create .` fills in the missing `ios/` folder around the files already here; it won't overwrite `lib/main.dart` or `pubspec.yaml`. (If it prompts about conflicts, keep OUR versions.)
+Do not rerun `flutter create .` over the release project without reviewing its
+diff; the iPhone-only target, privacy manifest, signing settings, and app assets
+are already checked in.
 
 ### 3. iOS permissions + minimum version
 
@@ -53,9 +60,9 @@ Open `ios/Runner/Info.plist` and add inside the top-level `<dict>`:
 
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
-<string>Connects to the NIIMBOT label printer to print coffee labels.</string>
+<string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H so you can print coffee labels for the linked production.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
-<string>Connects to the NIIMBOT label printer to print coffee labels.</string>
+<string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and send coffee labels for printing.</string>
 ```
 
 Open `ios/Podfile`, uncomment/set the platform line to:
@@ -96,13 +103,14 @@ width while preserving aspect ratio. If output is too light/dark, adjust
 
 ## Known quirks / troubleshooting
 
-- **Connect finds nothing** → NIIMBOT app still running somewhere (also check iPad/other phones), or the printer went to sleep (power-cycle it), or iOS Bluetooth permission was denied (Settings → CTC Printer).
+- **Connect finds nothing** → NIIMBOT app still running somewhere (also check iPad/other phones), or the printer went to sleep (power-cycle it), or iOS Bluetooth permission was denied (Settings → Capture This).
+- **Multiple printers found** → power off every NIIMBOT except the intended M2_H. The pinned printer library cannot safely select among scan results, so the app refuses to guess.
 - **Print times out** → usually the RFID/roll check. Lid closed? Genuine roll? Ribbon installed (M2_H is thermal transfer)?
 - **Prints but repeats/hangs after page 1** → known heartbeat/print-task quirk on some models; grab the log, we'll adjust the heartbeat handling.
 - **Output too light/dark** → change `kDensity` (1–5).
 - **Do NOT update the printer firmware.** The open protocol is reverse-engineered; current firmware is confirmed working and the M2_H famously refuses downgrades.
 - **Queue empty** → roster members need `on_set_today` and orders not in `no_order` status.
-- **Mark printed fails** → production must be `active` (not `planning`).
+- **Mark printed fails** → production must be `active` (not `planning`). If the label physically printed, tap **Sync only** after connectivity returns.
 
 ## TestFlight
 
@@ -117,7 +125,7 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Bump `version` in `pubspec.yaml` for each upload (`0.1.0+1`, `0.1.0+2`, …)
+- Current release candidate: `1.0.0+5`. Bump the build suffix for every later upload (`1.0.0+6`, `1.0.0+7`, …).
 - Testers need **HTTPS** production share URLs (not LAN `http://`)
 - Internal testers: no review. External testers: beta review + privacy policy URL.
 - Builds expire after **90 days** — rebuild quarterly.

@@ -10,7 +10,7 @@ The UI is intentionally minimal and contemporary:
 - **Calm typography** — Geist Sans for UI; sentence case; one clear title per screen
 - **Name-first runner cards** — people names and production names wrap instead of truncating, with role/status/drink details kept secondary for fast scanning on set
 - **Short copy** — no eyebrow kickers, demo banners, or Supabase jargon in normal use; labels and actions only where they prevent mistakes
-- **Black / white / zinc** — brand mark via `CaptureMark` (`src/components/capture-mark.tsx`); shared tokens in `src/components/ui.tsx`
+- **Capture yellow / warm paper / black** — the smiley leads the app icon, launch experience, and navigation lockup; shared tokens live in `src/app/globals.css` and `src/components/ui.tsx`
 
 When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button classes rather than one-off styles.
 
@@ -171,15 +171,20 @@ Fallback label export workflow: [docs/label-image-export.md](docs/label-image-ex
 
 ## Label printing
 
-Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set path** is the native **CTC Printer** iOS app (`mobile/`): it pulls a label queue from the web API, downloads server-rendered PNGs, prints over Bluetooth LE to the NIIMBOT M2_H, and marks `label_printed` on each order.
+Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set path** is the native **Capture This** iPhone app (`mobile/`): it pulls a label queue from the web API, downloads server-rendered PNGs, prints over Bluetooth LE to the NIIMBOT M2_H, and marks `label_printed` on each order.
 
-### CTC Printer app (recommended on set)
+### Capture This app (recommended on set)
 
 1. Deploy or run this Next.js app with `SUPABASE_SERVICE_ROLE_KEY` set (required for public API routes).
 2. Set the production to **active** (required before `label_printed` updates stick).
-3. Generate a runner share link (SQL below) and open it on the phone, or paste the full URL into CTC Printer.
-4. In **CTC Printer**: link production → connect printer → tap **Print** per label.
+3. Generate a runner share link (SQL below) and open it on the phone, or paste the full URL into Capture This.
+4. In **Capture This**: link production → connect printer → tap **Print** per label.
 5. Force-quit the official NIIMBOT app before connecting — it holds the BLE connection.
+
+The app stores the production session in the iOS Keychain. If the label prints
+but synchronization fails, use **Sync only** instead of reprinting. Uncertain
+outcomes remain blocked from batches until the operator inspects the physical
+output and explicitly resolves them.
 
 Setup, signing, and troubleshooting: [mobile/README.md](mobile/README.md).  
 Strategy and hardware notes: [docs/phone-printing-investigation.md](docs/phone-printing-investigation.md).

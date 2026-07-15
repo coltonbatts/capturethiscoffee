@@ -40,10 +40,10 @@ import type { Production, ProductionRoster } from "@/lib/types";
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
 const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-white transition hover:bg-zinc-800 active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-white transition hover:bg-accent hover:text-black active:translate-y-px disabled:opacity-50";
 
 const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-black transition hover:bg-zinc-100 active:translate-y-px disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-black transition hover:bg-accent/40 active:translate-y-px disabled:opacity-50";
 
 export function ErrorToast({
   message,

@@ -9,10 +9,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:niim_blue_flutter/niim_blue_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'ctc_api.dart';
+import 'print_recovery.dart';
+import 'printer_validation.dart';
 import 'production_session.dart';
+import 'session_store.dart';
 
 // M2_H @ 300 DPI. The library metadata reports a 567-dot printhead for model
 // 4608, while the server PNG is 591x354 with safe margins for 50x30mm stock.
@@ -20,30 +23,195 @@ const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
+const _printerScanTimeout = Duration(seconds: 8);
+const _printOperationTimeout = Duration(seconds: 60);
 
-const _sessionPrefsKey = 'ctc_production_session';
+const _captureYellow = Color(0xFFF2EB0C);
+const _capturePaper = Color(0xFFF7F3EA);
+const _captureInk = Color(0xFF050505);
+
 const _queueRefreshInterval = Duration(seconds: 10);
+final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
+final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
 
 void main() => runApp(const PrinterApp());
 
 class PrinterApp extends StatelessWidget {
-  const PrinterApp({super.key});
+  const PrinterApp({
+    super.key,
+    this.sessionRepository,
+    this.printRecoveryRepository,
+  });
+
+  final SessionRepository? sessionRepository;
+  final PrintRecoveryRepository? printRecoveryRepository;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CTC Printer',
+      title: 'Capture This Coffee',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: Colors.orange,
         useMaterial3: true,
+        scaffoldBackgroundColor: _capturePaper,
+        colorScheme: const ColorScheme.light(
+          primary: _captureInk,
+          onPrimary: Colors.white,
+          secondary: _captureYellow,
+          onSecondary: _captureInk,
+          surface: Colors.white,
+          onSurface: _captureInk,
+          outline: Color(0xFF5B5B55),
+          outlineVariant: Color(0xFFB8B5AA),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: _captureInk,
+          foregroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleSpacing: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.3,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(color: _captureInk, width: 1.5),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(44, 48),
+            backgroundColor: _captureInk,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: const Color(0xFFD4D1C8),
+            disabledForegroundColor: const Color(0xFF77746D),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(44, 48),
+            foregroundColor: _captureInk,
+            side: const BorderSide(color: _captureInk, width: 1.5),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          labelStyle: const TextStyle(
+            color: _captureInk,
+            fontWeight: FontWeight.w700,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: _captureInk, width: 2.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: _captureYellow.withValues(alpha: 0.28),
+          side: const BorderSide(color: _captureInk),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          labelStyle: const TextStyle(
+            color: _captureInk,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
-      home: const PrinterHome(),
+      home: PrinterHome(
+        sessionRepository: sessionRepository,
+        printRecoveryRepository: printRecoveryRepository,
+      ),
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  const _BrandMark({this.size = 36});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Capture This',
+      image: true,
+      child: Image.asset(
+        'assets/capture-this-smiley.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        excludeFromSemantics: true,
+      ),
+    );
+  }
+}
+
+class _BrandAppBarTitle extends StatelessWidget {
+  const _BrandAppBarTitle({required this.detail});
+
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const _BrandMark(),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Capture This'),
+              Text(
+                detail.toUpperCase(),
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _captureYellow,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 class PrinterHome extends StatefulWidget {
-  const PrinterHome({super.key});
+  const PrinterHome({
+    super.key,
+    this.sessionRepository,
+    this.printRecoveryRepository,
+  });
+
+  final SessionRepository? sessionRepository;
+  final PrintRecoveryRepository? printRecoveryRepository;
 
   @override
   State<PrinterHome> createState() => _PrinterHomeState();
@@ -64,6 +232,15 @@ enum _PrinterStatus {
   error,
 }
 
+class _PrintSyncPendingException implements Exception {
+  const _PrintSyncPendingException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   final NiimbotBluetoothClient _client = NiimbotBluetoothClient();
   final List<String> _log = [];
@@ -71,6 +248,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
   ProductionSession? _session;
   CtcApi? _api;
+  late final SessionRepository _sessionRepository;
+  late final PrintRecoveryRepository _printRecoveryRepository;
+  PrintRecoveryLedger? _printRecoveryLedger;
   PrinterQueue? _queue;
   Timer? _queueRefreshTimer;
   DateTime? _lastQueueRefreshAt;
@@ -83,10 +263,15 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   String? _operatorError;
   String? _lastPrintedLabel;
   String? _failedBatchLabel;
+  String? _connectedDeviceName;
 
   @override
   void initState() {
     super.initState();
+    _sessionRepository =
+        widget.sessionRepository ?? KeychainSessionRepository();
+    _printRecoveryRepository =
+        widget.printRecoveryRepository ?? PreferencesPrintRecoveryRepository();
     WidgetsBinding.instance.addObserver(this);
     _restoreSession();
   }
@@ -96,39 +281,98 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _stopQueueRefreshTimer();
     _linkController.dispose();
+    _api?.close();
     _client.disconnect();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _session != null) {
-      unawaited(_refreshQueue(silent: true));
+    if (state == AppLifecycleState.resumed) {
+      if (_session != null) {
+        _startQueueRefreshTimer();
+        unawaited(_refreshQueue(silent: true));
+      }
+      if (_connected && !_busy) {
+        unawaited(_verifyConnectionAfterResume());
+      }
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _stopQueueRefreshTimer();
     }
   }
 
   Future<void> _restoreSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = decodeSession(prefs.getString(_sessionPrefsKey));
-    setState(() {
-      _session = saved;
-      _api = saved == null ? null : CtcApi(saved);
-      _loadingSession = false;
-    });
-    if (saved != null) {
-      _startQueueRefreshTimer();
-      await _refreshQueue(silent: true);
+    try {
+      final results = await Future.wait<Object?>([
+        _sessionRepository.read(),
+        PrintRecoveryLedger.load(_printRecoveryRepository),
+      ]);
+      final saved = results[0] as ProductionSession?;
+      final ledger = results[1] as PrintRecoveryLedger;
+      if (!mounted) return;
+      setState(() {
+        _session = saved;
+        _api = saved == null ? null : CtcApi(saved);
+        _printRecoveryLedger = ledger;
+        _loadingSession = false;
+      });
+      if (saved != null) {
+        _startQueueRefreshTimer();
+        await _refreshQueue(silent: true);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadingSession = false;
+        _operatorError =
+            'Could not open the saved production securely. Relink the production.';
+      });
+      _logLine('Secure session restore failed: ${error.runtimeType}.');
+    }
+  }
+
+  Future<void> _verifyConnectionAfterResume() async {
+    try {
+      await _client.fetchPrinterInfo().timeout(const Duration(seconds: 8));
+      await _verifyModelDetection();
+      if (!mounted) return;
+      setState(() {
+        _connected = true;
+        _printerStatus = _PrinterStatus.connected;
+      });
+      _logLine('Printer connection verified after app resume.');
+    } catch (_) {
+      try {
+        await _client.disconnect();
+      } catch (_) {
+        // The local UI still needs to return to a safe disconnected state.
+      }
+      if (!mounted) return;
+      setState(() {
+        _connected = false;
+        _connectedDeviceName = null;
+        _printerStatus = _PrinterStatus.disconnected;
+        _operatorError =
+            'Printer connection was lost while the app was in the background. Reconnect before printing.';
+      });
+      _logLine('Printer must reconnect after app resume.');
     }
   }
 
   void _logLine(String message) {
+    if (!mounted) return;
     final stamp = DateTime.now().toIso8601String().substring(11, 19);
     setState(() => _log.insert(0, '[$stamp] $message'));
     // ignore: avoid_print
     print('[printer] $message');
   }
 
-  Future<bool> _run(String label, Future<void> Function() action) async {
+  Future<bool> _run(
+    String label,
+    Future<void> Function() action, {
+    bool affectsPrinter = false,
+  }) async {
     if (_busy) return false;
     setState(() {
       _busy = true;
@@ -146,30 +390,58 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
       return true;
     } catch (error, stack) {
       final message = '$label failed: ${_errorText(error)}';
-      setState(() {
-        _operatorError = message;
-        if (label.toLowerCase().contains('print') ||
-            label.toLowerCase().contains('connect')) {
-          _printerStatus = _PrinterStatus.error;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _operatorError = message;
+          if (affectsPrinter && error is! _PrintSyncPendingException) {
+            _printerStatus = _PrinterStatus.error;
+          }
+        });
+      }
       _logLine('$label FAILED: ${_errorText(error)}');
       _logLine(stack.toString().split('\n').take(3).join(' | '));
       return false;
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<bool> _connectPrinter() => _run('Connect printer', () async {
         setState(() => _printerStatus = _PrinterStatus.connecting);
-        _logLine('Scanning for the first NIIMBOT device…');
+        _logLine('Scanning for the NIIMBOT M2_H…');
         _logLine('(Force-quit the official NIIMBOT app first!)');
+        final devices = await NiimbotBluetoothClient.listDevices(
+          timeout: _printerScanTimeout,
+        );
+        if (devices.isEmpty) {
+          throw Exception(
+            'No NIIMBOT printer found. Wake the M2_H and force-quit the official NIIMBOT app.',
+          );
+        }
+        if (devices.length > 1) {
+          final names = devices
+              .map((device) => device.platformName)
+              .where((name) => name.isNotEmpty)
+              .join(', ');
+          throw Exception(
+            'Multiple NIIMBOT printers are nearby${names.isEmpty ? '' : ' ($names)'}. '
+            'Power off the others so this app cannot select the wrong printer.',
+          );
+        }
+        final scannedName = devices.single.platformName;
+        if (!looksLikeM2HDeviceName(scannedName)) {
+          throw Exception(
+            'Found ${scannedName.isEmpty ? 'an unnamed NIIMBOT' : scannedName}, not an M2_H. '
+            'This release supports only the NIIMBOT M2_H.',
+          );
+        }
         try {
-          await _client.connect();
+          final connection = await _client.connect();
+          _connectedDeviceName = connection.deviceName ?? scannedName;
         } catch (error) {
           setState(() {
             _connected = false;
+            _connectedDeviceName = null;
             _printerStatus = _PrinterStatus.error;
           });
           throw Exception('Printer not connected. ${_errorText(error)}');
@@ -179,16 +451,27 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           if (mounted) {
             setState(() {
               _connected = false;
+              _connectedDeviceName = null;
               _printerStatus = _PrinterStatus.disconnected;
             });
           }
         });
-        await _verifyModelDetection();
+        try {
+          await _verifyModelDetection();
+        } catch (_) {
+          try {
+            await _client.disconnect();
+          } catch (_) {
+            // Preserve the model-validation error shown to the operator.
+          }
+          _connectedDeviceName = null;
+          rethrow;
+        }
         setState(() {
           _connected = true;
           _printerStatus = _PrinterStatus.connected;
         });
-      });
+      }, affectsPrinter: true);
 
   // connect() swallows printer-info failures inside niim_blue_flutter, so a
   // green connection can still have modelId == null and be unable to print.
@@ -205,12 +488,25 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     }
     final info = _client.getPrinterInfo();
     if (meta == null) {
+      if (!looksLikeM2HDeviceName(_connectedDeviceName)) {
+        throw Exception(
+          'Could not verify this printer as an M2_H. Disconnecting for safety.',
+        );
+      }
       _logLine(
-        'Model still unknown (modelId: ${info.modelId}, '
-        'connect: ${info.connectResult}, proto: ${info.protocolVersion}). '
-        'Will force the M2_H print task.',
+        'Model ID unavailable, but the only scanned device identifies as '
+        '${_connectedDeviceName ?? 'M2_H'}. Using the M2_H print task.',
       );
     } else {
+      if (!isSupportedM2H(
+        modelId: info.modelId,
+        deviceName: _connectedDeviceName,
+      )) {
+        throw Exception(
+          'Detected ${meta.model} (modelId ${info.modelId}), not M2_H. '
+          'This release supports only model $niimbotM2HModelId.',
+        );
+      }
       _logLine('Detected ${meta.model} (modelId ${info.modelId}).');
     }
   }
@@ -219,13 +515,14 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         await _client.disconnect();
         setState(() {
           _connected = false;
+          _connectedDeviceName = null;
           _printerStatus = _PrinterStatus.disconnected;
         });
-      });
+      }, affectsPrinter: true);
 
   Future<void> _saveSession(ProductionSession session) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_sessionPrefsKey, encodeSession(session));
+    await _sessionRepository.write(session);
+    _api?.close();
     setState(() {
       _session = session;
       _api = CtcApi(session);
@@ -235,9 +532,31 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   }
 
   Future<void> _clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_sessionPrefsKey);
+    if (_currentRecoveryRecords.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Change with unresolved labels?'),
+          content: const Text(
+            'The recovery records will stay on this iPhone, but you will need the same production share URL to return and resolve them. No labels will be reprinted automatically.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Stay and resolve'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Change production'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+    }
+    await _sessionRepository.clear();
     _stopQueueRefreshTimer();
+    _api?.close();
     setState(() {
       _session = null;
       _api = null;
@@ -272,10 +591,15 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           );
         }
         final api = CtcApi(parsed);
-        final queue = await _fetchQueue(api);
+        late final PrinterQueue queue;
+        try {
+          queue = await _fetchQueue(api);
+        } finally {
+          api.close();
+        }
         if (!mounted) return;
         await _saveSession(parsed);
-        _applyQueue(queue);
+        await _applyQueue(queue);
       });
 
   Future<PrinterQueue> _fetchQueue(CtcApi api) async {
@@ -286,7 +610,12 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     }
   }
 
-  void _applyQueue(PrinterQueue queue, {bool silent = false}) {
+  Future<void> _applyQueue(PrinterQueue queue, {bool silent = false}) async {
+    final serverConfirmed = queue.labels
+        .where((label) => label.labelPrinted)
+        .map((label) => label.orderId);
+    await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+    if (!mounted) return;
     final nextSignature = _signatureForQueue(queue);
     final changed = nextSignature != _queueSignature;
     final pendingCount =
@@ -320,7 +649,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     Future<void> action() async {
       final queue = await _fetchQueue(api);
       if (!mounted) return;
-      _applyQueue(queue, silent: silent);
+      await _applyQueue(queue, silent: silent);
     }
 
     if (silent) {
@@ -357,26 +686,83 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     return text;
   }
 
+  Future<void> _openExternalPage(Uri uri) async {
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      setState(() {
+        _operatorError =
+            'Could not open $uri. Check your connection and try again.';
+      });
+    }
+  }
+
+  Future<void> _showAppInformation() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Capture This'),
+        content: const Text(
+          'Version 1.0.0 (5)\n\nCoffee-label companion for Capture This production crews. Production access requires a share URL.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _openExternalPage(_privacyUri);
+            },
+            child: const Text('Privacy'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _openExternalPage(_supportUri);
+            },
+            child: const Text('Support'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              showLicensePage(
+                context: this.context,
+                applicationName: 'Capture This',
+                applicationVersion: '1.0.0 (5)',
+              );
+            },
+            child: const Text('Licenses'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _printPage(PrintPage page) async {
     _client.stopHeartbeat();
     _client.setPacketInterval(15);
     try {
-      final encoded = page.toEncodedImage();
-      final options = PrintOptions(
-        totalPages: 1,
-        density: kDensity,
-        labelType: LabelType.fromValue(kLabelType),
-      );
-      var task = _client.createPrintTask(options);
-      if (task == null) {
-        // Model auto-detection failed; this app only ever talks to an M2_H,
-        // which uses the b1 print task in niim_blue_flutter.
-        _logLine('Printer model not detected; forcing M2_H (B1) print task.');
-        task = B1PrintTask(_client.abstraction, options);
-      }
-      await task.printInit();
-      await task.printPage(encoded, 1);
-      await task.waitForFinished();
+      await (() async {
+        final encoded = page.toEncodedImage();
+        final options = PrintOptions(
+          totalPages: 1,
+          density: kDensity,
+          labelType: LabelType.fromValue(kLabelType),
+        );
+        var task = _client.createPrintTask(options);
+        if (task == null) {
+          if (!looksLikeM2HDeviceName(_connectedDeviceName)) {
+            throw Exception('Printer model is not verified as M2_H.');
+          }
+          _logLine('Using the M2_H (B1) print task for the verified device.');
+          task = B1PrintTask(_client.abstraction, options);
+        }
+        await task.printInit();
+        await task.printPage(encoded, 1);
+        await task.waitForFinished();
+      })()
+          .timeout(_printOperationTimeout);
     } finally {
       _client.startHeartbeat();
     }
@@ -387,6 +773,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             ? 'Reprint ${item.personName}'
             : 'Print ${item.personName}',
         () => _printOneLabel(item),
+        affectsPrinter: true,
       );
 
   Future<bool> _printNextPending() => _run('Print next', () async {
@@ -395,7 +782,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           throw Exception('No pending labels to print.');
         }
         await _printOneLabel(pending.first);
-      });
+      }, affectsPrinter: true);
 
   Future<void> _confirmAndPrintAllPending() async {
     final pending = _pendingLabels;
@@ -437,7 +824,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           rethrow;
         }
       }
-    });
+    }, affectsPrinter: true);
   }
 
   Future<void> _printOneLabel(QueueLabel item) async {
@@ -449,6 +836,16 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     if (api == null || queue == null) {
       throw Exception(
         'Production not linked. Paste a production share URL first.',
+      );
+    }
+    if (_printRecoveryLedger == null) {
+      throw Exception(
+        'Print recovery storage is unavailable. Restart the app before printing.',
+      );
+    }
+    if (_printRecoveryLedger?[item.orderId] != null) {
+      throw Exception(
+        'This label has an unresolved print outcome. Use its recovery action instead of reprinting.',
       );
     }
 
@@ -501,26 +898,124 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     try {
       await _printPage(page);
     } catch (error) {
+      await _recordPrintRecovery(item, PrintRecoveryState.uncertain);
+      await _disconnectAfterAmbiguousPrint();
       setState(() => _printerStatus = _PrinterStatus.error);
       throw Exception(
-        'Bluetooth print failed for ${item.personName}. ${_errorText(error)}',
+        'The print outcome for ${item.personName} is uncertain. Check the physical printer, then choose “Label printed — sync only” or “Nothing printed — retry.” ${_errorText(error)}',
       );
     }
 
-    setState(() => _lastPrintedLabel = _labelTitle(item));
+    await _recordPrintRecovery(item, PrintRecoveryState.printedNeedsSync);
+    setState(() {
+      _lastPrintedLabel = _labelTitle(item);
+      _printerStatus = _PrinterStatus.connected;
+    });
 
     _logLine('Marking label_printed…');
     try {
       await api.markLabelPrinted(item.orderId);
     } catch (error) {
-      setState(() => _printerStatus = _PrinterStatus.error);
-      throw Exception(
-        'Printed ${item.personName}, but mark-printed API call failed. ${_errorText(error)}',
+      throw _PrintSyncPendingException(
+        'Printed ${item.personName}, but the web app did not sync. Do not reprint. Tap “Sync only” on this label. ${_errorText(error)}',
       );
     }
 
-    setState(() => _printerStatus = _PrinterStatus.connected);
+    await _printRecoveryLedger?.clear(item.orderId);
     await _refreshQueue(silent: true);
+  }
+
+  Future<void> _recordPrintRecovery(
+    QueueLabel item,
+    PrintRecoveryState state,
+  ) async {
+    final session = _session;
+    final ledger = _printRecoveryLedger;
+    if (session == null || ledger == null) {
+      throw StateError('Print recovery storage is unavailable.');
+    }
+    try {
+      await ledger.record(PrintRecoveryRecord(
+        apiBase: session.apiBase,
+        productionId: session.productionId,
+        orderId: item.orderId,
+        personName: item.personName,
+        drink: item.drink,
+        createdAt: DateTime.now(),
+        state: state,
+      ));
+    } catch (error) {
+      // The ledger mutates before persistence. Keep the in-memory recovery and
+      // continue to the server sync, which may still complete successfully.
+      _logLine('Could not persist print recovery: ${error.runtimeType}.');
+    } finally {
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _disconnectAfterAmbiguousPrint() async {
+    try {
+      await _client.disconnect();
+    } catch (_) {
+      // The UI must require a clean reconnect even if teardown also fails.
+    }
+    if (!mounted) return;
+    setState(() {
+      _connected = false;
+      _connectedDeviceName = null;
+      _printerStatus = _PrinterStatus.error;
+    });
+  }
+
+  Future<bool> _syncPrintedLabel(QueueLabel item) => _run(
+        'Sync ${item.personName}',
+        () async {
+          final api = _api;
+          final recovery = _printRecoveryLedger?[item.orderId];
+          if (api == null || recovery == null) {
+            throw Exception('No pending printed-status sync for this label.');
+          }
+          if (recovery.state == PrintRecoveryState.uncertain) {
+            throw Exception(
+                'Confirm whether the physical label printed first.');
+          }
+          await api.markLabelPrinted(item.orderId);
+          await _printRecoveryLedger?.clear(item.orderId);
+          if (mounted) setState(() {});
+          await _refreshQueue(silent: true);
+        },
+      );
+
+  Future<void> _confirmUncertainLabelPrinted(QueueLabel item) async {
+    await _printRecoveryLedger?.markPhysicalPrintConfirmed(item.orderId);
+    if (mounted) setState(() {});
+    await _syncPrintedLabel(item);
+  }
+
+  Future<void> _confirmUncertainLabelNotPrinted(QueueLabel item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Retry this physical label?'),
+        content: Text(
+          'Only continue if no usable ${item.personName} label came out of the printer. This will start a new physical print.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Nothing printed — retry'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    await _printRecoveryLedger?.clear(item.orderId);
+    setState(() {});
+    await _printLabel(item);
   }
 
   _LabelPrintSize _printSizeFor(img.Image decoded) {
@@ -592,19 +1087,70 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
   List<QueueLabel> get _pendingLabels {
     final labels = _queue?.labels ?? [];
-    return labels.where((label) => !label.labelPrinted).toList();
+    return labels
+        .where(
+          (label) =>
+              !label.labelPrinted &&
+              _printRecoveryLedger?[label.orderId] == null,
+        )
+        .toList();
+  }
+
+  List<PrintRecoveryRecord> get _currentRecoveryRecords {
+    final session = _session;
+    final ledger = _printRecoveryLedger;
+    if (session == null || ledger == null) return const [];
+    return ledger.forSession(session);
   }
 
   List<QueueLabel> get _visibleLabels {
     final labels = _queue?.labels ?? [];
-    if (_showPrinted) return labels;
-    return labels.where((label) => !label.labelPrinted).toList();
+    final knownOrderIds = labels.map((label) => label.orderId).toSet();
+    final recoveryOnlyLabels = _currentRecoveryRecords
+        .where((record) => !knownOrderIds.contains(record.orderId))
+        .map(
+          (record) => QueueLabel(
+            orderId: record.orderId,
+            personName: record.personName,
+            drink: record.drink,
+            group: '',
+            status: '',
+            labelPrinted: false,
+          ),
+        );
+    final combined = [...labels, ...recoveryOnlyLabels];
+    if (_showPrinted) return combined;
+    return combined.where((label) => !label.labelPrinted).toList();
   }
 
   String _labelTitle(QueueLabel item) {
     final drink = item.drink.trim();
     if (drink.isEmpty) return item.personName;
     return '${item.personName} - $drink';
+  }
+
+  Future<void> _confirmReprint(QueueLabel item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Reprint ${item.personName}?'),
+        content: const Text(
+          'The web app already records this label as printed. Continue only if you intentionally need a duplicate physical label.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reprint label'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    await _printLabel(item);
   }
 
   String get _printerStatusLabel {
@@ -668,39 +1214,58 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
   Widget _buildLinkScreen() {
     return Scaffold(
-      appBar: AppBar(title: const Text('CTC Printer')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Paste the production share link from the runner board '
-                '(the URL with ?token=…).',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _linkController,
-                decoration: const InputDecoration(
-                  labelText: 'Production share URL',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: _busy ? null : () => _linkProduction(),
-                icon: const Icon(Icons.link),
-                label: const Text('Link production'),
-              ),
-              if (_operatorError != null) ...[
-                const SizedBox(height: 12),
-                _buildOperatorErrorBanner(),
-              ],
-            ],
+      appBar: AppBar(
+        title: const _BrandAppBarTitle(detail: 'Coffee label printer'),
+        actions: [
+          IconButton(
+            onPressed: _showAppInformation,
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About, privacy, and support',
           ),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const SizedBox(height: 12),
+            const Center(child: _BrandMark(size: 104)),
+            const SizedBox(height: 18),
+            Text(
+              'Coffee, ready for set.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.7,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Link today’s production to load the label queue and print over Bluetooth.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+            TextField(
+              controller: _linkController,
+              decoration: const InputDecoration(
+                labelText: 'Production share URL',
+                hintText: 'https://…/run/…?token=…',
+                prefixIcon: Icon(Icons.link),
+              ),
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _busy ? null : () => _linkProduction(),
+              icon: const Icon(Icons.link),
+              label: const Text('Link production'),
+            ),
+            if (_operatorError != null) ...[
+              const SizedBox(height: 12),
+              _buildOperatorErrorBanner(),
+            ],
+          ],
         ),
       ),
     );
@@ -782,7 +1347,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     final queue = _queue;
     final total = queue?.labels.length ?? 0;
     final pending = _pendingLabels.length;
-    final printed = total - pending;
+    final printed =
+        queue?.labels.where((label) => label.labelPrinted).length ?? 0;
+    final attention = _currentRecoveryRecords.length;
     final refreshed = _lastQueueRefreshAt == null
         ? 'Not refreshed yet'
         : _timeLabel(_lastQueueRefreshAt!);
@@ -806,13 +1373,15 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                 const SizedBox(width: 8),
                 _buildMetric(context, 'Printed', printed.toString()),
                 const SizedBox(width: 8),
-                _buildMetric(context, 'Total', total.toString()),
+                _buildMetric(context, 'Attention', attention.toString()),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: Text('Last refresh: $refreshed')),
+                Expanded(
+                  child: Text('Total: $total · Last refresh: $refreshed'),
+                ),
                 IconButton(
                   onPressed: _busy ? null : () => _refreshQueue(),
                   icon: const Icon(Icons.refresh),
@@ -841,7 +1410,8 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     return Expanded(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outlineVariant),
+          color: _captureYellow.withValues(alpha: 0.18),
+          border: Border.all(color: _captureInk),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Padding(
@@ -884,6 +1454,54 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                   : () => _confirmAndPrintAllPending(),
               icon: const Icon(Icons.playlist_play),
               label: Text('Print all pending ($pending)'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrintRecoveryCard() {
+    final recoveries = _currentRecoveryRecords;
+    if (recoveries.isEmpty) return const SizedBox.shrink();
+    final syncCount = recoveries
+        .where(
+          (record) => record.state == PrintRecoveryState.printedNeedsSync,
+        )
+        .length;
+    final uncertainCount = recoveries.length - syncCount;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.report_problem, color: Colors.deepOrange),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Resolve print status before continuing',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                      ),
+                      Text(
+                        '$syncCount printed ${syncCount == 1 ? 'label needs' : 'labels need'} sync. '
+                        '$uncertainCount ${uncertainCount == 1 ? 'label needs' : 'labels need'} a physical check. '
+                        'These labels are excluded from Print next and Print all.',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -981,8 +1599,25 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   Widget _buildLabelTile(BuildContext context, QueueLabel item) {
     final theme = Theme.of(context);
     final isPrinted = item.labelPrinted;
+    final recovery = _printRecoveryLedger?[item.orderId];
+    final needsSync = recovery?.state == PrintRecoveryState.printedNeedsSync;
+    final isUncertain = recovery?.state == PrintRecoveryState.uncertain;
     final group = item.group.trim();
     final status = item.status.trim();
+    final statusLabel = isPrinted
+        ? 'Printed'
+        : needsSync
+            ? 'Sync only'
+            : isUncertain
+                ? 'Check printer'
+                : 'Pending';
+    final statusIcon = isPrinted
+        ? Icons.check_circle
+        : needsSync
+            ? Icons.cloud_upload
+            : isUncertain
+                ? Icons.help
+                : Icons.schedule;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1012,11 +1647,8 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                   ),
                   Chip(
                     visualDensity: VisualDensity.compact,
-                    avatar: Icon(
-                      isPrinted ? Icons.check_circle : Icons.schedule,
-                      size: 16,
-                    ),
-                    label: Text(isPrinted ? 'Printed' : 'Pending'),
+                    avatar: Icon(statusIcon, size: 16),
+                    label: Text(statusLabel),
                   ),
                 ],
               ),
@@ -1029,21 +1661,65 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                       .join(' · '),
                   style: theme.textTheme.bodySmall,
                 ),
+              if (needsSync) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'The physical label printed, but the web status did not sync. Do not print it again.',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+              if (isUncertain) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'A Bluetooth error occurred after printing started. Check whether a usable label came out before choosing an action.',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: isPrinted
-                    ? OutlinedButton.icon(
-                        onPressed: _busy ? null : () => _printLabel(item),
-                        icon: const Icon(Icons.print),
-                        label: const Text('Reprint'),
-                      )
-                    : FilledButton.icon(
-                        onPressed: _busy ? null : () => _printLabel(item),
-                        icon: const Icon(Icons.print),
-                        label: const Text('Print'),
-                      ),
-              ),
+              if (isUncertain)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => _confirmUncertainLabelPrinted(item),
+                      icon: const Icon(Icons.cloud_upload),
+                      label: const Text('Label printed — sync only'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => _confirmUncertainLabelNotPrinted(item),
+                      icon: const Icon(Icons.replay),
+                      label: const Text('Nothing printed — retry'),
+                    ),
+                  ],
+                )
+              else
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: needsSync
+                      ? FilledButton.icon(
+                          onPressed:
+                              _busy ? null : () => _syncPrintedLabel(item),
+                          icon: const Icon(Icons.cloud_upload),
+                          label: const Text('Sync only'),
+                        )
+                      : isPrinted
+                          ? OutlinedButton.icon(
+                              onPressed:
+                                  _busy ? null : () => _confirmReprint(item),
+                              icon: const Icon(Icons.print),
+                              label: const Text('Reprint'),
+                            )
+                          : FilledButton.icon(
+                              onPressed: _busy ? null : () => _printLabel(item),
+                              icon: const Icon(Icons.print),
+                              label: const Text('Print'),
+                            ),
+                ),
             ],
           ),
         ),
@@ -1090,7 +1766,16 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     if (_loadingSession) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _BrandMark(size: 76),
+              SizedBox(height: 20),
+              CircularProgressIndicator(color: _captureInk),
+            ],
+          ),
+        ),
       );
     }
 
@@ -1100,7 +1785,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('On-set controller'),
+        title: const _BrandAppBarTitle(detail: 'On-set controller'),
         actions: [
           IconButton(
             onPressed: _busy ? null : () => _refreshQueue(),
@@ -1111,6 +1796,11 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             onPressed: _busy ? null : _clearSession,
             icon: const Icon(Icons.link_off),
             tooltip: 'Change production',
+          ),
+          IconButton(
+            onPressed: _showAppInformation,
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About, privacy, and support',
           ),
         ],
       ),
@@ -1128,6 +1818,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                   children: [
                     _buildPrinterStatusCard(context),
                     _buildQueueSummaryCard(context),
+                    _buildPrintRecoveryCard(),
                     _buildBatchActionsCard(),
                     if (_operatorError != null || _failedBatchLabel != null)
                       _buildOperatorErrorBanner(),

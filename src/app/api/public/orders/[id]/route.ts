@@ -10,6 +10,10 @@ import {
   getSupabaseServiceRoleClient,
   jsonError,
 } from "@/lib/supabase-server";
+import {
+  enforcePublicApiRateLimit,
+  readLimitedJsonRequest,
+} from "@/lib/public-api-guard";
 import { toRunnerOrder } from "@/server/productions/dto";
 
 export async function PATCH(
@@ -18,7 +22,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    const body = (await request.json().catch(() => null)) as {
+    const body = (await readLimitedJsonRequest(request)) as {
       productionId?: unknown;
       token?: unknown;
       patch?: unknown;
@@ -26,6 +30,7 @@ export async function PATCH(
     const productionId =
       typeof body?.productionId === "string" ? body.productionId : "";
     const token = typeof body?.token === "string" ? body.token : "";
+    enforcePublicApiRateLimit({ request, scope: "runner-order-patch", token });
     const patch = sanitizeRunnerOrderPatch(body?.patch);
 
     if (!Object.keys(patch).length) {
@@ -87,7 +92,7 @@ export async function PATCH(
     return Response.json({ order: toRunnerOrder(data) });
   } catch (error) {
     if (error instanceof ShareTokenError) {
-      return Response.json({ error: error.message }, { status: error.status });
+      return jsonError(error);
     }
     return jsonError(error);
   }

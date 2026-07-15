@@ -6,6 +6,7 @@ import {
   validateProductionShareToken,
 } from "@/lib/production-share";
 import { buildCoffeeLabelForOrder } from "@/lib/printer-queue";
+import { enforcePublicApiRateLimit } from "@/lib/public-api-guard";
 import { renderNiimbotM2LabelPngBuffer } from "@/lib/niimbot-m2-export-server";
 import {
   ApiError,
@@ -25,6 +26,7 @@ export async function GET(
     const { id: orderId } = await context.params;
     const productionId = request.nextUrl.searchParams.get("productionId") || "";
     const token = request.nextUrl.searchParams.get("token") || "";
+    enforcePublicApiRateLimit({ request, scope: "label-png", token });
     // The legacy "design" query param is accepted but ignored: there is one label design.
 
     if (!productionId) {
@@ -47,10 +49,10 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof ShareTokenError) {
-      return Response.json({ error: error.message }, { status: error.status });
+      return jsonError(error);
     }
     if (error instanceof ProductionQueryError) {
-      return Response.json({ error: error.message }, { status: error.status });
+      return jsonError(error);
     }
     return jsonError(error);
   }

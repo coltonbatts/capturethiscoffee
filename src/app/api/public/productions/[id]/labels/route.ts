@@ -6,6 +6,7 @@ import {
   validateProductionShareToken,
 } from "@/lib/production-share";
 import { buildPrinterQueue } from "@/lib/printer-queue";
+import { enforcePublicApiRateLimit } from "@/lib/public-api-guard";
 import {
   ApiError,
   getSupabaseServiceRoleClient,
@@ -23,6 +24,7 @@ export async function GET(
   try {
     const { id } = await context.params;
     const token = request.nextUrl.searchParams.get("token") || "";
+    enforcePublicApiRateLimit({ request, scope: "printer-queue", token });
     const supabase = getSupabaseServiceRoleClient();
 
     await validateProductionShareToken(supabase, id, token);
@@ -37,10 +39,10 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof ShareTokenError) {
-      return Response.json({ error: error.message }, { status: error.status });
+      return jsonError(error);
     }
     if (error instanceof ProductionQueryError) {
-      return Response.json({ error: error.message }, { status: error.status });
+      return jsonError(error);
     }
     return jsonError(error);
   }
