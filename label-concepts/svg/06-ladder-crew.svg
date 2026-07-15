@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 567 340" width="567" height="340">
+  <rect width="567" height="340" fill="#ffffff"/>
+  <!-- text block -->
+  <text x="26" y="52" font-family="Arial" font-size="18" font-weight="bold" letter-spacing="5" fill="#000">CAPTURE THIS</text>
+  <text x="26" y="138" font-family="Arial" font-size="74" font-weight="bold" letter-spacing="-1" fill="#000">DIEGO</text>
+  <text x="26" y="192" font-family="Arial" font-size="34" fill="#000">Drip — Black</text>
+  <line x1="26" y1="272" x2="360" y2="272" stroke="#000" stroke-width="2"/>
+  <text x="26" y="310" font-family="Arial" font-size="20" letter-spacing="3" fill="#000">№ 003 · DAY 2 · HOT</text>
+  <!-- ladder + crew character, matches the on-set ladder motif -->
+  <g stroke="#000" stroke-width="7" stroke-linecap="round" fill="none">
+    <!-- rails -->
+    <line x1="428" y1="322" x2="452" y2="70"/>
+    <line x1="540" y1="322" x2="516" y2="70"/>
+    <!-- rungs -->
+    <line x1="434" y1="270" x2="535" y2="270"/>
+    <line x1="439" y1="220" x2="530" y2="220"/>
+    <line x1="443" y1="170" x2="525" y2="170"/>
+    <line x1="448" y1="120" x2="521" y2="120"/>
+    <!-- character: body from head to hip -->
+    <line x1="477" y1="80" x2="471" y2="125"/>
+    <!-- arm holding cup out -->
+    <line x1="475" y1="94" x2="422" y2="106"/>
+    <!-- other arm gripping rail -->
+    <line x1="476" y1="92" x2="507" y2="104"/>
+    <!-- legs down to rung -->
+    <line x1="471" y1="125" x2="461" y2="168"/>
+    <line x1="471" y1="125" x2="486" y2="168"/>
+  </g>
+  <!-- head -->
+  <circle cx="478" cy="58" r="20" fill="none" stroke="#000" stroke-width="7"/>
+  <!-- cup in hand -->
+  <path d="M 396 104 L 418 104 L 415 126 L 399 126 Z" fill="#000"/>
+  <!-- steam -->
+  <g stroke="#000" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M 402 96 q 4 -8 0 -16"/>
+    <path d="M 412 96 q 4 -8 0 -16"/>
+  </g>
+</svg>

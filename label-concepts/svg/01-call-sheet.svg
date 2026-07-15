@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 567 340" width="567" height="340">
+  <rect width="567" height="340" fill="#ffffff"/>
+  <!-- top band -->
+  <text x="24" y="40" font-family="Arial" font-size="19" font-weight="bold" letter-spacing="5" fill="#000">CAPTURE THIS COFFEE</text>
+  <text x="543" y="40" font-family="Arial" font-size="19" font-weight="bold" letter-spacing="2" fill="#000" text-anchor="end">№ 014</text>
+  <line x1="24" y1="58" x2="543" y2="58" stroke="#000" stroke-width="3"/>
+  <!-- name -->
+  <text x="24" y="172" font-family="Arial" font-size="98" font-weight="bold" letter-spacing="-2" fill="#000">MAYA</text>
+  <!-- drink -->
+  <text x="24" y="226" font-family="Arial" font-size="29" letter-spacing="1" fill="#000">OAT LATTE · 2 SHOTS · HOT</text>
+  <line x1="24" y1="262" x2="543" y2="262" stroke="#000" stroke-width="2"/>
+  <!-- bottom row -->
+  <text x="24" y="306" font-family="Arial" font-size="20" letter-spacing="3" fill="#000">PROD: UA — DAY 2</text>
+  <text x="543" y="306" font-family="Arial" font-size="20" letter-spacing="3" fill="#000" text-anchor="end">RUN 03</text>
+</svg>

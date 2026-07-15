@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Capture This Coffee - Two-Week Deployment Roadmap</title>
+    <style>
+      :root {
+        --ink: #101010;
+        --muted: #5f6462;
+        --line: #d8dedb;
+        --paper: #fbfcfa;
+        --soft: #f3f6f4;
+        --accent: #25d0a4;
+        --accent-dark: #087a62;
+        --accent-soft: #dff8f0;
+        --warn-soft: #fff2bf;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.45;
+      }
+
+      main {
+        width: min(1160px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 36px 0 44px;
+      }
+
+      header {
+        border: 2px solid var(--ink);
+        background: #fff;
+        padding: 28px;
+        box-shadow: 8px 8px 0 var(--ink);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent-dark);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 880px;
+        margin: 0;
+        font-size: clamp(34px, 5vw, 64px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 800px;
+        margin: 18px 0 0;
+        color: #2a2d2c;
+        font-size: 19px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .stat {
+        min-height: 96px;
+        border: 1px solid var(--ink);
+        background: var(--soft);
+        padding: 14px;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 42px 0 16px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .source {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .rail {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .phase {
+        position: relative;
+        border: 1px solid var(--ink);
+        background: #fff;
+        padding: 16px;
+        min-height: 232px;
+      }
+
+      .phase::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: var(--accent);
+      }
+
+      .phase .date {
+        display: inline-block;
+        margin-top: 8px;
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .phase h3 {
+        margin: 10px 0 8px;
+        font-size: 18px;
+        line-height: 1.05;
+      }
+
+      .phase p {
+        margin: 0;
+        color: #333736;
+        font-size: 14px;
+      }
+
+      .commits {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 14px;
+      }
+
+      .commits span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px 7px;
+        color: #2f3432;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        background: var(--soft);
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--ink);
+        background: #fff;
+        padding: 22px;
+      }
+
+      .panel.highlight {
+        background: var(--accent-soft);
+      }
+
+      .panel h3 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+
+      .panel ul {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .panel li {
+        padding-left: 4px;
+      }
+
+      .next {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .next-card {
+        border: 1px solid var(--ink);
+        background: #fff;
+        padding: 18px;
+        min-height: 148px;
+      }
+
+      .next-card strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 18px;
+      }
+
+      .next-card p {
+        margin: 0;
+        color: #343837;
+      }
+
+      footer {
+        margin-top: 28px;
+        border-top: 2px solid var(--ink);
+        padding-top: 16px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 980px) {
+        .rail,
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .story-grid,
+        .next {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 620px) {
+        main {
+          width: min(100vw - 20px, 1160px);
+          padding: 16px 0 28px;
+        }
+
+        header {
+          padding: 20px;
+          box-shadow: 5px 5px 0 var(--ink);
+        }
+
+        .rail,
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .section-title {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        main {
+          width: 100%;
+          padding: 0;
+        }
+
+        header {
+          box-shadow: none;
+        }
+
+        .phase,
+        .panel,
+        .next-card,
+        .stat {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Capture This Coffee - deployment roadmap</p>
+        <h1>Two weeks of shipping turned the prototype into an on-set system.</h1>
+        <p class="lede">
+          From June 22 to July 6, the live app moved through labels, auth, runner
+          links, mobile printing, board simplification, visual polish, and live
+          sync. This is the client-facing story behind the Vercel deploy history.
+        </p>
+        <div class="stats" aria-label="Deployment summary">
+          <div class="stat">
+            <strong>41</strong>
+            <span>Ready Vercel deployments</span>
+          </div>
+          <div class="stat">
+            <strong>33</strong>
+            <span>Production deployments</span>
+          </div>
+          <div class="stat">
+            <strong>8</strong>
+            <span>Preview deployments</span>
+          </div>
+          <div class="stat">
+            <strong>35</strong>
+            <span>Deployed milestones</span>
+          </div>
+        </div>
+      </header>
+
+      <section aria-labelledby="timeline-title">
+        <div class="section-title">
+          <h2 id="timeline-title">What Shipped</h2>
+          <p class="source">Source: Vercel deploys for `capturethiscoffee`, queried July 6, 2026.</p>
+        </div>
+
+        <div class="rail">
+          <article class="phase">
+            <span class="date">Jun 22-30</span>
+            <h3>Label foundation</h3>
+            <p>
+              Reworked coffee label hierarchy, moved toward phone label export,
+              tested variants, then landed the Capture This smiley label export.
+            </p>
+            <div class="commits">
+              <span>7fb0026</span><span>fe2813b</span><span>9a38ef9</span><span>3c1f7e2</span>
+            </div>
+          </article>
+
+          <article class="phase">
+            <span class="date">Jul 1</span>
+            <h3>Branded app flow</h3>
+            <p>
+              Polished the demo, added sticker label styling, redesigned the runner
+              board and labels workstation, and made the home page a three-station hub.
+            </p>
+            <div class="commits">
+              <span>dec7e73</span><span>6f86e66</span><span>14ec90c</span><span>af5b012</span>
+            </div>
+          </article>
+
+          <article class="phase">
+            <span class="date">Jul 2</span>
+            <h3>Runner handoff</h3>
+            <p>
+              Added the native iOS BLE printer path, server label APIs, runner links,
+              Google OAuth handoff docs, and fixed share-token/link behavior.
+            </p>
+            <div class="commits">
+              <span>e05ad01</span><span>32c8c13</span><span>5422bd9</span><span>273c08e</span>
+            </div>
+          </article>
+
+          <article class="phase">
+            <span class="date">Jul 3</span>
+            <h3>Simpler operations</h3>
+            <p>
+              Opened app access to signed-in users, fixed mobile overflow/header
+              behavior, and clarified the production workflow plus fallback labels.
+            </p>
+            <div class="commits">
+              <span>5d4a800</span><span>b93cea9</span><span>aecaf5c</span><span>17e592d</span>
+            </div>
+          </article>
+
+          <article class="phase">
+            <span class="date">Jul 5</span>
+            <h3>Print-loop refinement</h3>
+            <p>
+              Simplified the board to roster, collect drinks, batch labels; made CTC
+              Printer primary; added auto-refresh/reprint; applied visual polish.
+            </p>
+            <div class="commits">
+              <span>dd2bb96</span><span>31834af</span><span>621a2d4</span><span>7a82942</span>
+            </div>
+          </article>
+
+          <article class="phase">
+            <span class="date">Jul 6</span>
+            <h3>Live readiness</h3>
+            <p>
+              Added live production board sync, fixed person photo upload and day
+              delete behavior, then polished the runner card hierarchy.
+            </p>
+            <div class="commits">
+              <span>d16832d</span><span>dc71d33</span><span>fd59f8d</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="client-story-title">
+        <div class="section-title">
+          <h2 id="client-story-title">Client Story</h2>
+        </div>
+        <div class="story-grid">
+          <article class="panel highlight">
+            <h3>The product loop is now assembled.</h3>
+            <ul>
+              <li>Prepare people and productions in the web app.</li>
+              <li>Send runners a scoped link with no account required.</li>
+              <li>Collect drinks on a bolder, mobile-friendly day board.</li>
+              <li>Print through CTC Printer or fall back to the labels workstation.</li>
+              <li>Track progress with clearer board states and live updates.</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>How to say it simply</h3>
+            <p>
+              "In the last two weeks, we moved from a working prototype into the
+              Capture This production workflow: setup, runner handoff, live board,
+              phone printing, and client-ready presentation materials."
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="next-title">
+        <div class="section-title">
+          <h2 id="next-title">Next Decision</h2>
+        </div>
+        <div class="next">
+          <article class="next-card">
+            <strong>Physical print validation</strong>
+            <p>Run the full deployed loop on real NIIMBOT stock and confirm size, scaling, readability, and durability.</p>
+          </article>
+          <article class="next-card">
+            <strong>Staff onboarding</strong>
+            <p>Make runner links, sign-in, day setup, and client handoff easier for Luke's team to own without us in the room.</p>
+          </article>
+          <article class="next-card">
+            <strong>Multi-phone confidence</strong>
+            <p>Lean into live sync so multiple phones can run the same production without manual refresh habits.</p>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        Latest production deployment: `fd59f8d` - Polish runner card hierarchy.
+        All deployment counts are from Vercel project `prj_QsToh3FFlzwkYnb8jNolK76lVGEL`.
+      </footer>
+    </main>
+  </body>
+</html>

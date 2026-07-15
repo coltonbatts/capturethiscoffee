@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 567 340" width="567" height="340">
+  <rect width="567" height="340" fill="#ffffff"/>
+  <rect x="10" y="10" width="547" height="320" rx="26" fill="none" stroke="#000" stroke-width="10"/>
+  <rect x="28" y="28" width="511" height="284" rx="16" fill="none" stroke="#000" stroke-width="3"/>
+  <text x="283" y="74" font-family="Arial" font-size="21" font-weight="bold" letter-spacing="4" fill="#000" text-anchor="middle">★ CAPTURE THIS COFFEE CO. ★</text>
+  <g transform="translate(283 182) scale(0.92 1)">
+    <text x="0" y="0" font-family="Arial" font-size="90" font-weight="bold" letter-spacing="2" fill="#000" text-anchor="middle">CORTADO</text>
+  </g>
+  <text x="283" y="234" font-family="Arial" font-size="30" letter-spacing="5" fill="#000" text-anchor="middle">FOR: ALEX M.</text>
+  <line x1="120" y1="258" x2="446" y2="258" stroke="#000" stroke-width="2"/>
+  <text x="283" y="292" font-family="Arial" font-size="18" letter-spacing="3" fill="#000" text-anchor="middle">ORDER № 012 — APPROVED FOR SET</text>
+</svg>
