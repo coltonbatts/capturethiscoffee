@@ -1,19 +1,8 @@
 "use client";
 
 import { formatDrink } from "./order-summary";
-import {
-  normalizeSupabaseWriteError,
-  requireFreshAppSession,
-} from "./auth";
-import {
-  buildProductionRoster,
-  cloneSeedData,
-  createEmptyOrder,
-  createId,
-  loadCoffeeData as loadLocalCoffeeData,
-  saveCoffeeData,
-} from "./storage";
-import { getSupabaseBrowserClient, isSupabaseConfigured } from "./supabase";
+import { normalizeSupabaseWriteError, requireFreshAppSession } from "./auth";
+import { getSupabaseBrowserClient } from "./supabase";
 import type { Database } from "./supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
@@ -77,11 +66,6 @@ type UpdateProductionInput = {
   status?: Production["status"];
 };
 
-type RunnerAccessOptions = {
-  productionId?: string;
-  shareToken?: string;
-};
-
 const blankToNull = (value?: string) => {
   const next = value?.trim();
   return next ? next : null;
@@ -89,33 +73,10 @@ const blankToNull = (value?: string) => {
 
 const present = (value: string | null | undefined) => value || "";
 
-export const isSupabaseBacked = isSupabaseConfigured;
-
-const networkErrorPattern =
-  /failed to fetch|network ?error|load failed|network request failed|fetch failed|err_internet_disconnected/i;
-
-/**
- * Day-of error copy: turn raw fetch/Supabase transport failures into a message
- * a runner can act on. Anything else passes through unchanged.
- */
-export function describeDataError(err: unknown, fallback: string): string {
-  const message = err instanceof Error ? err.message : "";
-  if (message && networkErrorPattern.test(message)) {
-    return "No connection — check Wi-Fi or signal, then try again.";
-  }
-  return message || fallback;
-}
-
-async function getWritableSupabase(): Promise<SupabaseClient<Database> | null> {
+async function getOperatorSupabase(): Promise<SupabaseClient<Database>> {
   const supabase = getSupabaseBrowserClient();
-  if (!supabase) return null;
-
   await requireFreshAppSession(supabase);
   return supabase;
-}
-
-function getPublicSupabase(): SupabaseClient<Database> | null {
-  return getSupabaseBrowserClient();
 }
 
 function throwSupabaseWriteError(error: { message: string }): never {
@@ -123,8 +84,7 @@ function throwSupabaseWriteError(error: { message: string }): never {
 }
 
 export async function loadCoffeeData(): Promise<CoffeeData> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return loadLocalCoffeeData();
+  const supabase = await getOperatorSupabase();
 
   const [
     clientsResult,
@@ -134,14 +94,23 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
     rosterResult,
     ordersResult,
   ] = await Promise.all([
-    supabase.from("clients").select("*").order("created_at", { ascending: false }),
+    supabase
+      .from("clients")
+      .select("*")
+      .order("created_at", { ascending: false }),
     supabase.from("people").select("*").order("name", { ascending: true }),
     supabase.from("client_people").select("*"),
-    supabase.from("productions").select("*").order("created_at", { ascending: false }),
+    supabase
+      .from("productions")
+      .select("*")
+      .order("created_at", { ascending: false }),
     supabase.from("production_roster").select("*").order("sort_order", {
       ascending: true,
     }),
-    supabase.from("orders").select("*").order("created_at", { ascending: true }),
+    supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: true }),
   ]);
 
   const error = [
@@ -169,8 +138,8 @@ export async function loadCoffeeData(): Promise<CoffeeData> {
 export async function loadProductionCoffeeData(
   productionId: string,
 ): Promise<CoffeeData> {
-  const supabase = getPublicSupabase();
-  if (!productionId || !supabase) return loadCoffeeData();
+  if (!productionId) throw new Error("Production ID is required.");
+  const supabase = await getOperatorSupabase();
 
   const { data: production, error: productionError } = await supabase
     .from("productions")
@@ -182,7 +151,11 @@ export async function loadProductionCoffeeData(
   if (!production) throw new Error("Production not found.");
 
   const [clientResult, rosterResult, ordersResult] = await Promise.all([
-    supabase.from("clients").select("*").eq("id", production.client_id).maybeSingle(),
+    supabase
+      .from("clients")
+      .select("*")
+      .eq("id", production.client_id)
+      .maybeSingle(),
     supabase
       .from("production_roster")
       .select("*")
@@ -220,12 +193,6 @@ export async function loadProductionCoffeeData(
   };
 }
 
-export async function resetDemoCoffeeData(): Promise<CoffeeData> {
-  const next = cloneSeedData();
-  saveCoffeeData(next);
-  return next;
-}
-
 export async function createClientRecord(
   current: CoffeeData,
   input: NewClientInput,
@@ -233,33 +200,15 @@ export async function createClientRecord(
   const name = input.name.trim();
   if (!name) return current;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("clients")
-      .insert({ name, notes: blankToNull(input.notes), active: true })
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("clients")
+    .insert({ name, notes: blankToNull(input.notes), active: true })
+    .select("*")
+    .single();
 
-    if (error) throwSupabaseWriteError(error);
-    return { ...current, clients: [mapClient(data), ...current.clients] };
-  }
-
-  const next = {
-    ...current,
-    clients: [
-      {
-        id: createId("client"),
-        name,
-        notes: input.notes?.trim() || "",
-        active: true,
-        created_at: new Date().toISOString(),
-      },
-      ...current.clients,
-    ],
-  };
-  saveCoffeeData(next);
-  return next;
+  if (error) throwSupabaseWriteError(error);
+  return { ...current, clients: [mapClient(data), ...current.clients] };
 }
 
 export async function createPersonRecord(
@@ -269,51 +218,26 @@ export async function createPersonRecord(
   const name = input.name.trim();
   if (!name) return current;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("people")
-      .insert({
-        name,
-        type: input.type,
-        role: blankToNull(input.role),
-        department: blankToNull(input.department),
-        company: blankToNull(input.company),
-        photo_url: blankToNull(input.photo_url),
-        usual_order: blankToNull(input.usual_order),
-        dietary_notes: blankToNull(input.dietary_notes),
-        notes: blankToNull(input.notes),
-        active: input.active ?? true,
-      })
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("people")
+    .insert({
+      name,
+      type: input.type,
+      role: blankToNull(input.role),
+      department: blankToNull(input.department),
+      company: blankToNull(input.company),
+      photo_url: blankToNull(input.photo_url),
+      usual_order: blankToNull(input.usual_order),
+      dietary_notes: blankToNull(input.dietary_notes),
+      notes: blankToNull(input.notes),
+      active: input.active ?? true,
+    })
+    .select("*")
+    .single();
 
-    if (error) throwSupabaseWriteError(error);
-    return { ...current, people: [mapPerson(data), ...current.people] };
-  }
-
-  const next = {
-    ...current,
-    people: [
-      {
-        id: createId("person"),
-        name,
-        type: input.type,
-        role: input.role?.trim() || "",
-        department: input.department?.trim() || "",
-        company: input.company?.trim() || "",
-        photo_url: input.photo_url?.trim() || "",
-        usual_order: input.usual_order?.trim() || "",
-        dietary_notes: input.dietary_notes?.trim() || "",
-        notes: input.notes?.trim() || "",
-        active: input.active ?? true,
-        created_at: new Date().toISOString(),
-      },
-      ...current.people,
-    ],
-  };
-  saveCoffeeData(next);
-  return next;
+  if (error) throwSupabaseWriteError(error);
+  return { ...current, people: [mapPerson(data), ...current.people] };
 }
 
 export async function updatePersonRecord(
@@ -324,58 +248,33 @@ export async function updatePersonRecord(
   const name = input.name.trim();
   if (!name) return current;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("people")
-      .update({
-        name,
-        type: input.type,
-        role: blankToNull(input.role),
-        department: blankToNull(input.department),
-        company: blankToNull(input.company),
-        photo_url: blankToNull(input.photo_url),
-        usual_order: blankToNull(input.usual_order),
-        dietary_notes: blankToNull(input.dietary_notes),
-        notes: blankToNull(input.notes),
-        active: input.active ?? true,
-      })
-      .eq("id", personId)
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("people")
+    .update({
+      name,
+      type: input.type,
+      role: blankToNull(input.role),
+      department: blankToNull(input.department),
+      company: blankToNull(input.company),
+      photo_url: blankToNull(input.photo_url),
+      usual_order: blankToNull(input.usual_order),
+      dietary_notes: blankToNull(input.dietary_notes),
+      notes: blankToNull(input.notes),
+      active: input.active ?? true,
+    })
+    .eq("id", personId)
+    .select("*")
+    .single();
 
-    if (error) throwSupabaseWriteError(error);
-    const updated = mapPerson(data);
-    return {
-      ...current,
-      people: current.people.map((person) =>
-        person.id === updated.id ? updated : person,
-      ),
-    };
-  }
-
-  const next = {
+  if (error) throwSupabaseWriteError(error);
+  const updated = mapPerson(data);
+  return {
     ...current,
     people: current.people.map((person) =>
-      person.id === personId
-        ? {
-            ...person,
-            name,
-            type: input.type,
-            role: input.role?.trim() || "",
-            department: input.department?.trim() || "",
-            company: input.company?.trim() || "",
-            photo_url: input.photo_url?.trim() || "",
-            usual_order: input.usual_order?.trim() || "",
-            dietary_notes: input.dietary_notes?.trim() || "",
-            notes: input.notes?.trim() || "",
-            active: input.active ?? true,
-          }
-        : person,
+      person.id === updated.id ? updated : person,
     ),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 function findClientByName(data: CoffeeData, name: string) {
@@ -396,154 +295,87 @@ export async function createProductionRecord(
     throw new Error("Choose a client or enter a new client name.");
   }
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    let clientId = input.client_id;
-    let client = current.clients.find((item) => item.id === clientId);
-
-    if (newClientName) {
-      const existing = findClientByName(current, newClientName);
-      if (existing) {
-        client = existing;
-        clientId = existing.id;
-      } else {
-        const { data, error } = await supabase
-          .from("clients")
-          .insert({
-            name: newClientName,
-            active: true,
-          })
-          .select("*")
-          .single();
-
-        if (error) throwSupabaseWriteError(error);
-        client = mapClient(data);
-        clientId = client.id;
-      }
-    }
-
-    const { data: productionRow, error: productionError } = await supabase
-      .from("productions")
-      .insert({
-        name,
-        client_id: clientId,
-        shoot_date: blankToNull(input.shoot_date),
-        location: blankToNull(input.location),
-        runner_name: blankToNull(input.runner_name),
-        notes: blankToNull(input.notes),
-        status: "active",
-      })
-      .select("*")
-      .single();
-
-    if (productionError) throwSupabaseWriteError(productionError);
-
-    const production = mapProduction(productionRow);
-    const rosterPeople = defaultRosterPeople(current, clientId);
-    const rosterInserts = rosterPeople.map((person, index) => ({
-      production_id: production.id,
-      person_id: person.id,
-      group_label:
-        person.department ||
-        (person.type === "client_contact" ? client?.name : person.company) ||
-        "Set",
-      on_set_today: true,
-      sort_order: index + 1,
-    }));
-
-    if (rosterInserts.length) {
-      const { data: rosterRows, error: rosterError } = await supabase
-        .from("production_roster")
-        .insert(rosterInserts)
-        .select("*");
-
-      if (rosterError) throwSupabaseWriteError(rosterError);
-
-      const orderInserts: Array<ReturnType<typeof toOrderInsert>> = [];
-      (rosterRows || []).forEach((row) => {
-        const roster = mapRoster(row);
-        const person = rosterPeople.find((item) => item.id === roster.person_id);
-        if (person) {
-          orderInserts.push(
-            toOrderInsert(createEmptyOrder(production, roster, person)),
-          );
-        }
-      });
-
-      if (orderInserts.length) {
-        const { error: ordersError } = await supabase
-          .from("orders")
-          .insert(orderInserts);
-
-        if (ordersError) throwSupabaseWriteError(ordersError);
-      }
-    }
-
-    return { data: await loadCoffeeData(), production };
-  }
-
-  const now = new Date().toISOString();
-  let nextData = structuredClone(current);
+  const supabase = await getOperatorSupabase();
   let clientId = input.client_id;
-  let client = nextData.clients.find((item) => item.id === clientId);
+  let client = current.clients.find((item) => item.id === clientId);
 
   if (newClientName) {
-    const existing = findClientByName(nextData, newClientName);
+    const existing = findClientByName(current, newClientName);
     if (existing) {
       client = existing;
       clientId = existing.id;
     } else {
-      client = {
-        id: createId("client"),
-        name: newClientName,
-        notes: "",
-        active: true,
-        created_at: now,
-      };
-      nextData.clients.unshift(client);
+      const { data, error } = await supabase
+        .from("clients")
+        .insert({
+          name: newClientName,
+          active: true,
+        })
+        .select("*")
+        .single();
+
+      if (error) throwSupabaseWriteError(error);
+      client = mapClient(data);
       clientId = client.id;
     }
   }
 
-  const production: Production = {
-    id: createId("prod"),
-    name,
-    client_id: clientId,
-    shoot_date: input.shoot_date || "",
-    location: input.location?.trim() || "",
-    runner_name: input.runner_name?.trim() || "",
-    notes: input.notes?.trim() || "",
-    status: "active",
-    created_at: now,
-  };
+  const { data: productionRow, error: productionError } = await supabase
+    .from("productions")
+    .insert({
+      name,
+      client_id: clientId,
+      shoot_date: blankToNull(input.shoot_date),
+      location: blankToNull(input.location),
+      runner_name: blankToNull(input.runner_name),
+      notes: blankToNull(input.notes),
+      status: "active",
+    })
+    .select("*")
+    .single();
 
-  const clientPersonIds = nextData.client_people
-    .filter((item) => item.client_id === clientId && item.active)
-    .map((item) => item.person_id);
-  const rosterItems = buildProductionRoster(
-    production,
-    client,
-    nextData.people,
-    clientPersonIds,
-  );
+  if (productionError) throwSupabaseWriteError(productionError);
 
-  nextData = {
-    ...nextData,
-    productions: [production, ...nextData.productions],
-    production_roster: [
-      ...rosterItems.map((item) => item.roster),
-      ...nextData.production_roster,
-    ],
-    orders: [
-      ...rosterItems.map((item) =>
-        createEmptyOrder(production, item.roster, item.person),
-      ),
-      ...nextData.orders,
-    ],
-  };
+  const production = mapProduction(productionRow);
+  const rosterPeople = defaultRosterPeople(current, clientId);
+  const rosterInserts = rosterPeople.map((person, index) => ({
+    production_id: production.id,
+    person_id: person.id,
+    group_label:
+      person.department ||
+      (person.type === "client_contact" ? client?.name : person.company) ||
+      "Set",
+    on_set_today: true,
+    sort_order: index + 1,
+  }));
 
-  saveCoffeeData(nextData);
-  return { data: nextData, production };
+  if (rosterInserts.length) {
+    const { data: rosterRows, error: rosterError } = await supabase
+      .from("production_roster")
+      .insert(rosterInserts)
+      .select("*");
+
+    if (rosterError) throwSupabaseWriteError(rosterError);
+
+    const orderInserts: Array<ReturnType<typeof toInitialOrderInsert>> = [];
+    (rosterRows || []).forEach((row) => {
+      const roster = mapRoster(row);
+      const person = rosterPeople.find((item) => item.id === roster.person_id);
+      if (person) {
+        orderInserts.push(toInitialOrderInsert(production, roster, person));
+      }
+    });
+
+    if (orderInserts.length) {
+      const { error: ordersError } = await supabase
+        .from("orders")
+        .insert(orderInserts);
+
+      if (ordersError) throwSupabaseWriteError(ordersError);
+    }
+  }
+
+  return { data: await loadCoffeeData(), production };
 }
 
 export async function updateProductionRecord(
@@ -551,48 +383,39 @@ export async function updateProductionRecord(
   productionId: string,
   input: UpdateProductionInput,
 ): Promise<CoffeeData> {
-  const production = current.productions.find((item) => item.id === productionId);
+  const production = current.productions.find(
+    (item) => item.id === productionId,
+  );
   if (!production) return current;
 
   const name = input.name === undefined ? production.name : input.name.trim();
   if (!name) throw new Error("Production name is required.");
 
-  let clientId = input.client_id === undefined ? production.client_id : input.client_id;
+  let clientId =
+    input.client_id === undefined ? production.client_id : input.client_id;
   let nextClients = current.clients;
   const newClientName = input.new_client_name?.trim();
 
-  const supabase = await getWritableSupabase();
+  const supabase = await getOperatorSupabase();
 
   if (newClientName) {
     const existing = findClientByName(current, newClientName);
     if (existing) {
       clientId = existing.id;
     } else {
-      if (supabase) {
-        const { data, error } = await supabase
-          .from("clients")
-          .insert({
-            name: newClientName,
-            active: true,
-          })
-          .select("*")
-          .single();
-
-        if (error) throwSupabaseWriteError(error);
-        const newClient = mapClient(data);
-        clientId = newClient.id;
-        nextClients = [newClient, ...current.clients];
-      } else {
-        const newClient = {
-          id: createId("client"),
+      const { data, error } = await supabase
+        .from("clients")
+        .insert({
           name: newClientName,
-          notes: "",
           active: true,
-          created_at: new Date().toISOString(),
-        };
-        clientId = newClient.id;
-        nextClients = [newClient, ...current.clients];
-      }
+        })
+        .select("*")
+        .single();
+
+      if (error) throwSupabaseWriteError(error);
+      const newClient = mapClient(data);
+      clientId = newClient.id;
+      nextClients = [newClient, ...current.clients];
     }
   }
 
@@ -605,7 +428,9 @@ export async function updateProductionRecord(
         ? production.shoot_date
         : input.shoot_date.trim(),
     location:
-      input.location === undefined ? production.location : input.location.trim(),
+      input.location === undefined
+        ? production.location
+        : input.location.trim(),
     runner_name:
       input.runner_name === undefined
         ? production.runner_name
@@ -614,117 +439,62 @@ export async function updateProductionRecord(
     status: input.status ?? production.status,
   };
 
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("productions")
-      .update({
-        name: patch.name,
-        client_id: patch.client_id,
-        shoot_date: blankToNull(patch.shoot_date),
-        location: blankToNull(patch.location),
-        runner_name: blankToNull(patch.runner_name),
-        notes: blankToNull(patch.notes),
-        status: patch.status,
-      })
-      .eq("id", productionId)
-      .select("*")
-      .single();
+  const { data, error } = await supabase
+    .from("productions")
+    .update({
+      name: patch.name,
+      client_id: patch.client_id,
+      shoot_date: blankToNull(patch.shoot_date),
+      location: blankToNull(patch.location),
+      runner_name: blankToNull(patch.runner_name),
+      notes: blankToNull(patch.notes),
+      status: patch.status,
+    })
+    .eq("id", productionId)
+    .select("*")
+    .single();
 
-    if (error) throwSupabaseWriteError(error);
-    const updated = mapProduction(data);
-    return {
-      ...current,
-      clients: nextClients,
-      productions: current.productions.map((item) =>
-        item.id === updated.id ? updated : item,
-      ),
-    };
-  }
-
-  const next = {
+  if (error) throwSupabaseWriteError(error);
+  const updated = mapProduction(data);
+  return {
     ...current,
     clients: nextClients,
     productions: current.productions.map((item) =>
-      item.id === productionId ? patch : item,
+      item.id === updated.id ? updated : item,
     ),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function updateOrderRecord(
   current: CoffeeData,
   orderId: string,
   patch: Partial<Order>,
-  options: RunnerAccessOptions = {},
 ): Promise<CoffeeData> {
   const updated_at = new Date().toISOString();
 
-  if (options.shareToken && options.productionId) {
-    const response = await fetch(
-      `/api/public/orders/${encodeURIComponent(orderId)}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productionId: options.productionId,
-          token: options.shareToken,
-          patch,
-        }),
-      },
-    );
-    const body = (await response.json().catch(() => ({}))) as {
-      order?: Order;
-      error?: string;
-    };
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("orders")
+    .update(toOrderUpdate({ ...patch, updated_at }))
+    .eq("id", orderId)
+    .select("*")
+    .single();
 
-    if (!response.ok) {
-      throw new Error(body.error || "Could not update order.");
-    }
-    if (!body.order) throw new Error("Could not update order.");
-
-    return {
-      ...current,
-      orders: current.orders.map((order) =>
-        order.id === orderId ? body.order! : order,
-      ),
-    };
-  }
-
-  const supabase = getPublicSupabase();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("orders")
-      .update(toOrderUpdate({ ...patch, updated_at }))
-      .eq("id", orderId)
-      .select("*")
-      .single();
-
-    if (error) throwSupabaseWriteError(error);
-    const updated = mapOrder(data);
-    return {
-      ...current,
-      orders: current.orders.map((order) =>
-        order.id === orderId ? updated : order,
-      ),
-    };
-  }
-
-  const next = {
+  if (error) throwSupabaseWriteError(error);
+  const updated = mapOrder(data);
+  return {
     ...current,
     orders: current.orders.map((order) =>
-      order.id === orderId ? { ...order, ...patch, updated_at } : order,
+      order.id === orderId ? updated : order,
     ),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function saveOrderDraft(
   current: CoffeeData,
   orderId: string,
   draft: Partial<Order>,
-  options: { updateUsualOrder?: boolean } & RunnerAccessOptions = {},
+  options: { updateUsualOrder?: boolean } = {},
 ): Promise<CoffeeData> {
   const order = current.orders.find((item) => item.id === orderId);
   if (!order) return current;
@@ -736,67 +506,43 @@ export async function saveOrderDraft(
     updated_at: new Date().toISOString(),
   } satisfies Order;
   const usualOrder = formatDrink(updatedOrder);
-  const hasRunnerToken = Boolean(options.shareToken && options.productionId);
   const shouldUpdateUsual =
-    !hasRunnerToken && options.updateUsualOrder && usualOrder !== "No order";
+    options.updateUsualOrder && usualOrder !== "No order";
 
-  if (hasRunnerToken) {
-    const result = await updateOrderRecord(current, orderId, updatedOrder, options);
-    return result;
-  }
+  const supabase = await getOperatorSupabase();
+  const { data: orderRow, error: orderError } = await supabase
+    .from("orders")
+    .update(toOrderUpdate(updatedOrder))
+    .eq("id", orderId)
+    .select("*")
+    .single();
 
-  const supabase = shouldUpdateUsual
-    ? await getWritableSupabase()
-    : getPublicSupabase();
-  if (supabase) {
-    const { data: orderRow, error: orderError } = await supabase
-      .from("orders")
-      .update(toOrderUpdate(updatedOrder))
-      .eq("id", orderId)
+  if (orderError) throwSupabaseWriteError(orderError);
+
+  let nextPeople = current.people;
+  if (shouldUpdateUsual) {
+    const { data: personRow, error: personError } = await supabase
+      .from("people")
+      .update({ usual_order: usualOrder })
+      .eq("id", updatedOrder.person_id)
       .select("*")
       .single();
 
-    if (orderError) throwSupabaseWriteError(orderError);
-
-    let nextPeople = current.people;
-    if (shouldUpdateUsual) {
-      const { data: personRow, error: personError } = await supabase
-        .from("people")
-        .update({ usual_order: usualOrder })
-        .eq("id", updatedOrder.person_id)
-        .select("*")
-        .single();
-
-      if (personError) throwSupabaseWriteError(personError);
-      const updatedPerson = mapPerson(personRow);
-      nextPeople = current.people.map((person) =>
-        person.id === updatedPerson.id ? updatedPerson : person,
-      );
-    }
-
-    const savedOrder = mapOrder(orderRow);
-    return {
-      ...current,
-      orders: current.orders.map((item) =>
-        item.id === savedOrder.id ? savedOrder : item,
-      ),
-      people: nextPeople,
-    };
+    if (personError) throwSupabaseWriteError(personError);
+    const updatedPerson = mapPerson(personRow);
+    nextPeople = current.people.map((person) =>
+      person.id === updatedPerson.id ? updatedPerson : person,
+    );
   }
 
-  const next = {
+  const savedOrder = mapOrder(orderRow);
+  return {
     ...current,
     orders: current.orders.map((item) =>
-      item.id === orderId ? updatedOrder : item,
+      item.id === savedOrder.id ? savedOrder : item,
     ),
-    people: current.people.map((person) =>
-      person.id === updatedOrder.person_id && shouldUpdateUsual
-        ? { ...person, usual_order: usualOrder }
-        : person,
-    ),
+    people: nextPeople,
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function createPersonAndAddToRoster(
@@ -808,167 +554,116 @@ export async function createPersonAndAddToRoster(
   const name = input.name.trim();
   if (!name) return current;
 
-  const production = current.productions.find((item) => item.id === productionId);
+  const production = current.productions.find(
+    (item) => item.id === productionId,
+  );
   if (!production) return current;
 
   const groupLabel =
-    input.department?.trim() || input.company?.trim() || input.type.replace("_", " ");
+    input.department?.trim() ||
+    input.company?.trim() ||
+    input.type.replace("_", " ");
   const shouldLinkToClient =
     Boolean(options.linkToClientId) &&
     options.linkToClientId === production.client_id &&
     (input.type === "client_contact" || input.type === "agency");
   const sortOrder =
-    current.production_roster.filter((item) => item.production_id === productionId)
-      .length + 1;
+    current.production_roster.filter(
+      (item) => item.production_id === productionId,
+    ).length + 1;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data: personRow, error: personError } = await supabase
-      .from("people")
-      .insert({
-        name,
-        type: input.type,
-        role: blankToNull(input.role),
-        department: blankToNull(input.department),
-        company: blankToNull(input.company),
-        photo_url: blankToNull(input.photo_url),
-        usual_order: blankToNull(input.usual_order),
-        dietary_notes: blankToNull(input.dietary_notes),
-        notes: blankToNull(input.notes),
-        active: true,
-      })
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data: personRow, error: personError } = await supabase
+    .from("people")
+    .insert({
+      name,
+      type: input.type,
+      role: blankToNull(input.role),
+      department: blankToNull(input.department),
+      company: blankToNull(input.company),
+      photo_url: blankToNull(input.photo_url),
+      usual_order: blankToNull(input.usual_order),
+      dietary_notes: blankToNull(input.dietary_notes),
+      notes: blankToNull(input.notes),
+      active: true,
+    })
+    .select("*")
+    .single();
 
-    if (personError) throwSupabaseWriteError(personError);
-    const person = mapPerson(personRow);
+  if (personError) throwSupabaseWriteError(personError);
+  const person = mapPerson(personRow);
 
-    const { data: rosterRow, error: rosterError } = await supabase
-      .from("production_roster")
-      .insert({
-        production_id: production.id,
-        person_id: person.id,
-        group_label: blankToNull(groupLabel),
-        on_set_today: true,
-        sort_order: sortOrder,
-      })
-      .select("*")
-      .single();
+  const { data: rosterRow, error: rosterError } = await supabase
+    .from("production_roster")
+    .insert({
+      production_id: production.id,
+      person_id: person.id,
+      group_label: blankToNull(groupLabel),
+      on_set_today: true,
+      sort_order: sortOrder,
+    })
+    .select("*")
+    .single();
 
-    if (rosterError) throwSupabaseWriteError(rosterError);
-    const roster = mapRoster(rosterRow);
+  if (rosterError) throwSupabaseWriteError(rosterError);
+  const roster = mapRoster(rosterRow);
 
-    const { data: orderRow, error: orderError } = await supabase
-      .from("orders")
-      .insert(toOrderInsert(createEmptyOrder(production, roster, person)))
-      .select("*")
-      .single();
+  const { data: orderRow, error: orderError } = await supabase
+    .from("orders")
+    .insert(toInitialOrderInsert(production, roster, person))
+    .select("*")
+    .single();
 
-    if (orderError) throwSupabaseWriteError(orderError);
+  if (orderError) throwSupabaseWriteError(orderError);
 
-    let clientLink: ClientPerson | null = null;
-    if (shouldLinkToClient && options.linkToClientId) {
-      const existing = current.client_people.find(
-        (item) =>
-          item.client_id === options.linkToClientId && item.person_id === person.id,
-      );
+  let clientLink: ClientPerson | null = null;
+  if (shouldLinkToClient && options.linkToClientId) {
+    const existing = current.client_people.find(
+      (item) =>
+        item.client_id === options.linkToClientId &&
+        item.person_id === person.id,
+    );
 
-      if (existing) {
-        const { data: linkRow, error: linkError } = await supabase
-          .from("client_people")
-          .update({ active: true })
-          .eq("id", existing.id)
-          .select("*")
-          .single();
+    if (existing) {
+      const { data: linkRow, error: linkError } = await supabase
+        .from("client_people")
+        .update({ active: true })
+        .eq("id", existing.id)
+        .select("*")
+        .single();
 
-        if (linkError) throwSupabaseWriteError(linkError);
-        clientLink = mapClientPerson(linkRow);
-      } else {
-        const { data: linkRow, error: linkError } = await supabase
-          .from("client_people")
-          .insert({
-            client_id: options.linkToClientId,
-            person_id: person.id,
-            relationship_notes: null,
-            active: true,
-          })
-          .select("*")
-          .single();
-
-        if (linkError) throwSupabaseWriteError(linkError);
-        clientLink = mapClientPerson(linkRow);
-      }
-    }
-
-    return {
-      ...current,
-      people: [person, ...current.people],
-      production_roster: [roster, ...current.production_roster],
-      orders: [mapOrder(orderRow), ...current.orders],
-      client_people: clientLink
-        ? current.client_people.some((item) => item.id === clientLink.id)
-          ? current.client_people.map((item) =>
-              item.id === clientLink.id ? clientLink : item,
-            )
-          : [clientLink, ...current.client_people]
-        : current.client_people,
-    };
-  }
-
-  const now = new Date().toISOString();
-  const person: Person = {
-    id: createId("person"),
-    name,
-    type: input.type,
-    role: input.role?.trim() || "",
-    department: input.department?.trim() || "",
-    company: input.company?.trim() || "",
-    photo_url: input.photo_url?.trim() || "",
-    usual_order: input.usual_order?.trim() || "",
-    dietary_notes: input.dietary_notes?.trim() || "",
-    notes: input.notes?.trim() || "",
-    active: true,
-    created_at: now,
-  };
-  const roster: ProductionRoster = {
-    id: createId("roster"),
-    production_id: production.id,
-    person_id: person.id,
-    group_label: groupLabel,
-    on_set_today: true,
-    sort_order: sortOrder,
-  };
-  const clientLink: ClientPerson | null =
-    shouldLinkToClient && options.linkToClientId
-      ? {
-          id: createId("cp"),
+      if (linkError) throwSupabaseWriteError(linkError);
+      clientLink = mapClientPerson(linkRow);
+    } else {
+      const { data: linkRow, error: linkError } = await supabase
+        .from("client_people")
+        .insert({
           client_id: options.linkToClientId,
           person_id: person.id,
-          relationship_notes: "",
+          relationship_notes: null,
           active: true,
-        }
-      : null;
+        })
+        .select("*")
+        .single();
 
-  const next = {
+      if (linkError) throwSupabaseWriteError(linkError);
+      clientLink = mapClientPerson(linkRow);
+    }
+  }
+
+  return {
     ...current,
     people: [person, ...current.people],
     production_roster: [roster, ...current.production_roster],
-    orders: [createEmptyOrder(production, roster, person), ...current.orders],
+    orders: [mapOrder(orderRow), ...current.orders],
     client_people: clientLink
-      ? [
-          clientLink,
-          ...current.client_people.filter(
-            (item) =>
-              !(
-                item.client_id === clientLink.client_id &&
-                item.person_id === clientLink.person_id
-              ),
-          ),
-        ]
+      ? current.client_people.some((item) => item.id === clientLink.id)
+        ? current.client_people.map((item) =>
+            item.id === clientLink.id ? clientLink : item,
+          )
+        : [clientLink, ...current.client_people]
       : current.client_people,
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export type ClientLinkedPerson = {
@@ -1012,91 +707,14 @@ export async function linkPersonToClient(
   );
   const notes = relationshipNotes?.trim() ?? existing?.relationship_notes ?? "";
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    if (existing) {
-      const { data, error } = await supabase
-        .from("client_people")
-        .update({
-          active: true,
-          relationship_notes: blankToNull(notes),
-        })
-        .eq("id", existing.id)
-        .select("*")
-        .single();
-
-      if (error) throwSupabaseWriteError(error);
-      const link = mapClientPerson(data);
-      return {
-        ...current,
-        client_people: current.client_people.map((item) =>
-          item.id === link.id ? link : item,
-        ),
-      };
-    }
-
-    const { data, error } = await supabase
-      .from("client_people")
-      .insert({
-        client_id: clientId,
-        person_id: personId,
-        relationship_notes: blankToNull(notes),
-        active: true,
-      })
-      .select("*")
-      .single();
-
-    if (error) throwSupabaseWriteError(error);
-    const link = mapClientPerson(data);
-    return { ...current, client_people: [link, ...current.client_people] };
-  }
-
+  const supabase = await getOperatorSupabase();
   if (existing) {
-    const next = {
-      ...current,
-      client_people: current.client_people.map((item) =>
-        item.id === existing.id
-          ? { ...item, active: true, relationship_notes: notes }
-          : item,
-      ),
-    };
-    saveCoffeeData(next);
-    return next;
-  }
-
-  const next = {
-    ...current,
-    client_people: [
-      {
-        id: createId("cp"),
-        client_id: clientId,
-        person_id: personId,
-        relationship_notes: notes,
-        active: true,
-      },
-      ...current.client_people,
-    ],
-  };
-  saveCoffeeData(next);
-  return next;
-}
-
-export async function unlinkPersonFromClient(
-  current: CoffeeData,
-  clientId: string,
-  personId: string,
-): Promise<CoffeeData> {
-  const existing = current.client_people.find(
-    (item) =>
-      item.client_id === clientId && item.person_id === personId && item.active,
-  );
-  if (!existing) return current;
-
-  const supabase = await getWritableSupabase();
-  if (supabase) {
     const { data, error } = await supabase
       .from("client_people")
-      .update({ active: false })
+      .update({
+        active: true,
+        relationship_notes: blankToNull(notes),
+      })
       .eq("id", existing.id)
       .select("*")
       .single();
@@ -1111,14 +729,49 @@ export async function unlinkPersonFromClient(
     };
   }
 
-  const next = {
+  const { data, error } = await supabase
+    .from("client_people")
+    .insert({
+      client_id: clientId,
+      person_id: personId,
+      relationship_notes: blankToNull(notes),
+      active: true,
+    })
+    .select("*")
+    .single();
+
+  if (error) throwSupabaseWriteError(error);
+  const link = mapClientPerson(data);
+  return { ...current, client_people: [link, ...current.client_people] };
+}
+
+export async function unlinkPersonFromClient(
+  current: CoffeeData,
+  clientId: string,
+  personId: string,
+): Promise<CoffeeData> {
+  const existing = current.client_people.find(
+    (item) =>
+      item.client_id === clientId && item.person_id === personId && item.active,
+  );
+  if (!existing) return current;
+
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("client_people")
+    .update({ active: false })
+    .eq("id", existing.id)
+    .select("*")
+    .single();
+
+  if (error) throwSupabaseWriteError(error);
+  const link = mapClientPerson(data);
+  return {
     ...current,
     client_people: current.client_people.map((item) =>
-      item.id === existing.id ? { ...item, active: false } : item,
+      item.id === link.id ? link : item,
     ),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function addRosterPerson(
@@ -1126,62 +779,46 @@ export async function addRosterPerson(
   productionId: string,
   personId: string,
 ): Promise<CoffeeData> {
-  const production = current.productions.find((item) => item.id === productionId);
+  const production = current.productions.find(
+    (item) => item.id === productionId,
+  );
   const person = current.people.find((item) => item.id === personId);
   if (!production || !person) return current;
 
   const sortOrder =
-    current.production_roster.filter((item) => item.production_id === productionId)
-      .length + 1;
+    current.production_roster.filter(
+      (item) => item.production_id === productionId,
+    ).length + 1;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data: rosterRow, error: rosterError } = await supabase
-      .from("production_roster")
-      .insert({
-        production_id: production.id,
-        person_id: person.id,
-        group_label: person.department || person.company || "Set",
-        on_set_today: true,
-        sort_order: sortOrder,
-      })
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data: rosterRow, error: rosterError } = await supabase
+    .from("production_roster")
+    .insert({
+      production_id: production.id,
+      person_id: person.id,
+      group_label: person.department || person.company || "Set",
+      on_set_today: true,
+      sort_order: sortOrder,
+    })
+    .select("*")
+    .single();
 
-    if (rosterError) throwSupabaseWriteError(rosterError);
+  if (rosterError) throwSupabaseWriteError(rosterError);
 
-    const roster = mapRoster(rosterRow);
-    const { data: orderRow, error: orderError } = await supabase
-      .from("orders")
-      .insert(toOrderInsert(createEmptyOrder(production, roster, person)))
-      .select("*")
-      .single();
+  const roster = mapRoster(rosterRow);
+  const { data: orderRow, error: orderError } = await supabase
+    .from("orders")
+    .insert(toInitialOrderInsert(production, roster, person))
+    .select("*")
+    .single();
 
-    if (orderError) throwSupabaseWriteError(orderError);
+  if (orderError) throwSupabaseWriteError(orderError);
 
-    return {
-      ...current,
-      production_roster: [roster, ...current.production_roster],
-      orders: [mapOrder(orderRow), ...current.orders],
-    };
-  }
-
-  const roster: ProductionRoster = {
-    id: createId("roster"),
-    production_id: production.id,
-    person_id: person.id,
-    group_label: person.department || person.company || "Set",
-    on_set_today: true,
-    sort_order: sortOrder,
-  };
-
-  const next = {
+  return {
     ...current,
     production_roster: [roster, ...current.production_roster],
-    orders: [createEmptyOrder(production, roster, person), ...current.orders],
+    orders: [mapOrder(orderRow), ...current.orders],
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function updateRosterRecord(
@@ -1197,41 +834,32 @@ export async function updateRosterRecord(
 
   const patch = {
     group_label:
-      input.group_label === undefined ? roster.group_label : input.group_label.trim(),
+      input.group_label === undefined
+        ? roster.group_label
+        : input.group_label.trim(),
     on_set_today: input.on_set_today ?? roster.on_set_today,
   };
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("production_roster")
-      .update({
-        group_label: blankToNull(patch.group_label),
-        on_set_today: patch.on_set_today,
-      })
-      .eq("id", rosterId)
-      .eq("production_id", productionId)
-      .select("*")
-      .single();
+  const supabase = await getOperatorSupabase();
+  const { data, error } = await supabase
+    .from("production_roster")
+    .update({
+      group_label: blankToNull(patch.group_label),
+      on_set_today: patch.on_set_today,
+    })
+    .eq("id", rosterId)
+    .eq("production_id", productionId)
+    .select("*")
+    .single();
 
-    if (error) throwSupabaseWriteError(error);
-    const updated = mapRoster(data);
-    return {
-      ...current,
-      production_roster: current.production_roster.map((item) =>
-        item.id === updated.id ? updated : item,
-      ),
-    };
-  }
-
-  const next = {
+  if (error) throwSupabaseWriteError(error);
+  const updated = mapRoster(data);
+  return {
     ...current,
     production_roster: current.production_roster.map((item) =>
-      item.id === roster.id ? { ...item, ...patch } : item,
+      item.id === updated.id ? updated : item,
     ),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 export async function removeRosterRecord(
@@ -1244,31 +872,15 @@ export async function removeRosterRecord(
   );
   if (!roster) return current;
 
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { error } = await supabase
-      .from("production_roster")
-      .delete()
-      .eq("id", rosterId)
-      .eq("production_id", productionId);
+  const supabase = await getOperatorSupabase();
+  const { error } = await supabase
+    .from("production_roster")
+    .delete()
+    .eq("id", rosterId)
+    .eq("production_id", productionId);
 
-    if (error) throwSupabaseWriteError(error);
+  if (error) throwSupabaseWriteError(error);
 
-    return {
-      ...current,
-      production_roster: current.production_roster.filter(
-        (item) => item.id !== rosterId,
-      ),
-      orders: current.orders.filter((order) => order.roster_id !== rosterId),
-    };
-  }
-
-  const next = withoutRoster(current, rosterId);
-  saveCoffeeData(next);
-  return next;
-}
-
-function withoutRoster(current: CoffeeData, rosterId: string): CoffeeData {
   return {
     ...current,
     production_roster: current.production_roster.filter(
@@ -1282,31 +894,22 @@ export async function removeProductionRecord(
   current: CoffeeData,
   productionId: string,
 ): Promise<CoffeeData> {
-  const supabase = await getWritableSupabase();
-  if (supabase) {
-    const { error } = await supabase
-      .from("productions")
-      .delete()
-      .eq("id", productionId);
+  const supabase = await getOperatorSupabase();
+  const { error } = await supabase
+    .from("productions")
+    .delete()
+    .eq("id", productionId);
 
-    if (error) throwSupabaseWriteError(error);
+  if (error) throwSupabaseWriteError(error);
 
-    return {
-      ...current,
-      productions: current.productions.filter((p) => p.id !== productionId),
-      production_roster: current.production_roster.filter((r) => r.production_id !== productionId),
-      orders: current.orders.filter((o) => o.production_id !== productionId),
-    };
-  }
-
-  const next = {
+  return {
     ...current,
     productions: current.productions.filter((p) => p.id !== productionId),
-    production_roster: current.production_roster.filter((r) => r.production_id !== productionId),
+    production_roster: current.production_roster.filter(
+      (r) => r.production_id !== productionId,
+    ),
     orders: current.orders.filter((o) => o.production_id !== productionId),
   };
-  saveCoffeeData(next);
-  return next;
 }
 
 function defaultRosterPeople(data: CoffeeData, clientId: string) {
@@ -1316,43 +919,109 @@ function defaultRosterPeople(data: CoffeeData, clientId: string) {
   const primaryPeople = data.people.filter((person) =>
     clientPersonIds.includes(person.id),
   );
-  const crew = data.people.filter((person) => person.type === "crew").slice(0, 4);
+  const crew = data.people
+    .filter((person) => person.type === "crew")
+    .slice(0, 4);
 
   return [...primaryPeople, ...crew].filter(
-    (person, index, arr) => arr.findIndex((item) => item.id === person.id) === index,
+    (person, index, arr) =>
+      arr.findIndex((item) => item.id === person.id) === index,
   );
 }
 
-function toOrderInsert(order: Order) {
+function toInitialOrderInsert(
+  production: Production,
+  roster: ProductionRoster,
+  person: Person,
+) {
+  const parsed = parseUsualOrder(person.usual_order);
+
   return {
-    production_id: order.production_id,
-    roster_id: order.roster_id,
-    person_id: order.person_id,
-    drink_type: blankToNull(order.drink_type),
-    size: blankToNull(order.size),
-    temperature: blankToNull(order.temperature),
-    milk_type: blankToNull(order.milk_type),
-    sweetener: blankToNull(order.sweetener),
-    caffeine: blankToNull(order.caffeine),
-    special_notes: blankToNull(order.special_notes),
-    vendor: blankToNull(order.vendor),
-    status: order.status,
-    label_printed: order.label_printed,
+    production_id: production.id,
+    roster_id: roster.id,
+    person_id: person.id,
+    drink_type: blankToNull(parsed.drink_type),
+    size: blankToNull(parsed.size),
+    temperature: blankToNull(parsed.temperature),
+    milk_type: blankToNull(parsed.milk_type),
+    sweetener: blankToNull(parsed.sweetener),
+    caffeine: "Regular",
+    special_notes: blankToNull(parsed.special_notes),
+    vendor: null,
+    status: "not_asked" as const,
+    label_printed: false,
+  };
+}
+
+function parseUsualOrder(usualOrder = "") {
+  const lower = usualOrder.toLowerCase();
+  const parts = usualOrder
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const size = ["small", "medium", "large"].find((item) =>
+    parts.some((part) => part.toLowerCase() === item),
+  );
+  const temperature =
+    lower.includes("iced") || lower.includes("cold")
+      ? "Iced"
+      : lower.includes("hot")
+        ? "Hot"
+        : "";
+  const milk = ["oat", "almond", "whole", "cream"].find((item) =>
+    lower.includes(item),
+  );
+  const drinkPart =
+    parts.find((part) => {
+      const normalized = part.toLowerCase();
+      if (size && normalized === size) return false;
+      if (["hot", "iced"].includes(normalized)) return false;
+      if (milk && normalized === `${milk} milk`) return false;
+      return true;
+    }) ||
+    parts[0] ||
+    "";
+
+  return {
+    drink_type: drinkPart,
+    size: size ? size[0].toUpperCase() + size.slice(1) : "",
+    temperature,
+    milk_type: milk ? milk[0].toUpperCase() + milk.slice(1) : "",
+    sweetener: lower.includes("half sweet")
+      ? "Half sweet"
+      : lower.includes("sweet")
+        ? "Sweetened"
+        : "",
+    special_notes: parts
+      .filter((part) => part !== drinkPart)
+      .filter((part) => {
+        const normalized = part.toLowerCase();
+        if (size && normalized === size) return false;
+        if (milk && normalized === `${milk} milk`) return false;
+        if (["hot", "iced"].includes(normalized)) return false;
+        return true;
+      })
+      .join(", "),
   };
 }
 
 function toOrderUpdate(order: Partial<Order>) {
   return {
     drink_type:
-      order.drink_type === undefined ? undefined : blankToNull(order.drink_type),
+      order.drink_type === undefined
+        ? undefined
+        : blankToNull(order.drink_type),
     size: order.size === undefined ? undefined : blankToNull(order.size),
     temperature:
-      order.temperature === undefined ? undefined : blankToNull(order.temperature),
+      order.temperature === undefined
+        ? undefined
+        : blankToNull(order.temperature),
     milk_type:
       order.milk_type === undefined ? undefined : blankToNull(order.milk_type),
     sweetener:
       order.sweetener === undefined ? undefined : blankToNull(order.sweetener),
-    caffeine: order.caffeine === undefined ? undefined : blankToNull(order.caffeine),
+    caffeine:
+      order.caffeine === undefined ? undefined : blankToNull(order.caffeine),
     special_notes:
       order.special_notes === undefined
         ? undefined

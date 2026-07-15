@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildProductionShareUrl } from "../src/lib/share-links";
+import { buildProductionShareUrl } from "../src/lib/share-url";
 
 describe("buildProductionShareUrl", () => {
   it("builds the runner URL shape the iOS app parses", () => {

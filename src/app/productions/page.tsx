@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   ImageDown,
   Plus,
-  RotateCcw,
   Sliders,
   ChevronUp,
   ChevronDown,
@@ -14,16 +13,9 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
+import { EmptyState, Panel, Field, inputClass } from "@/components/ui";
 import {
-  EmptyState,
-  Panel,
-  Field,
-  inputClass,
-} from "@/components/ui";
-import {
-  isSupabaseBacked,
   loadCoffeeData,
-  resetDemoCoffeeData,
   removeProductionRecord,
   updateProductionRecord,
 } from "@/lib/data";
@@ -67,7 +59,9 @@ export default function ProductionsPage() {
   const [error, setError] = useState("");
   const [customOrder, setCustomOrder] = useState<string[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem("capture-this-coffee-production-order");
+      const saved = window.localStorage.getItem(
+        "capture-this-coffee-production-order",
+      );
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -79,7 +73,9 @@ export default function ProductionsPage() {
     return [];
   });
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [editingProduction, setEditingProduction] = useState<EditDraft | null>(null);
+  const [editingProduction, setEditingProduction] = useState<EditDraft | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -123,23 +119,20 @@ export default function ProductionsPage() {
     }
 
     return sortedProductions.map((production) => {
-      const client = data.clients.find((item) => item.id === production.client_id);
+      const client = data.clients.find(
+        (item) => item.id === production.client_id,
+      );
       const orders = data.orders.filter(
         (order) => order.production_id === production.id,
       );
       const captured = orders.filter((order) => isOrderCaptured(order)).length;
-      const remaining = orders.filter((order) => order.status === "not_asked").length;
+      const remaining = orders.filter(
+        (order) => order.status === "not_asked",
+      ).length;
 
       return { production, client, captured, remaining };
     });
   }, [data, customOrder]);
-
-  async function resetDemoData() {
-    const next = await resetDemoCoffeeData();
-    setData(next);
-    localStorage.removeItem("capture-this-coffee-production-order");
-    setCustomOrder([]);
-  }
 
   function moveProduction(productionId: string, direction: "up" | "down") {
     const ids = cards.map((c) => c.production.id);
@@ -154,7 +147,10 @@ export default function ProductionsPage() {
     nextIds[index] = nextIds[newIndex];
     nextIds[newIndex] = temp;
 
-    localStorage.setItem("capture-this-coffee-production-order", JSON.stringify(nextIds));
+    localStorage.setItem(
+      "capture-this-coffee-production-order",
+      JSON.stringify(nextIds),
+    );
     setCustomOrder(nextIds);
   }
 
@@ -207,7 +203,10 @@ export default function ProductionsPage() {
       const next = await removeProductionRecord(data!, productionId);
       setData(next);
       const nextOrder = customOrder.filter((id) => id !== productionId);
-      localStorage.setItem("capture-this-coffee-production-order", JSON.stringify(nextOrder));
+      localStorage.setItem(
+        "capture-this-coffee-production-order",
+        JSON.stringify(nextOrder),
+      );
       setCustomOrder(nextOrder);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete day.");
@@ -218,6 +217,7 @@ export default function ProductionsPage() {
     <AppShell
       title="Days"
       breadcrumbs={[{ label: "Days" }]}
+      requireAuth
       actions={
         isAdmin ? (
           <div className="flex items-center gap-2">
@@ -247,33 +247,25 @@ export default function ProductionsPage() {
         <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] min-w-0 w-full">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-black uppercase tracking-tight text-black">Days</h1>
+              <h1 className="text-2xl font-black uppercase tracking-tight text-black">
+                Days
+              </h1>
               <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
-                Put today&apos;s people on the roster, collect their drinks, print
-                their labels.
+                Put today&apos;s people on the roster, collect their drinks,
+                print their labels.
               </p>
             </div>
             <div className="shrink-0 sm:w-[180px]">
-              <Link href="/labels" className={`${customSecondaryBtn} w-full text-center`}>
+              <Link
+                href="/labels"
+                className={`${customSecondaryBtn} w-full text-center`}
+              >
                 <ImageDown size={18} aria-hidden="true" />
                 Print labels
               </Link>
             </div>
           </div>
         </section>
-
-        {!isSupabaseBacked ? (
-          <div className="mb-4 flex justify-end">
-            <button
-              type="button"
-              onClick={resetDemoData}
-              className={`${customSecondaryBtn} min-w-11 px-3 min-h-11`}
-              aria-label="Reset demo data"
-            >
-              <RotateCcw size={16} aria-hidden="true" />
-            </button>
-          </div>
-        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
@@ -284,7 +276,10 @@ export default function ProductionsPage() {
         {!data ? (
           <div className="grid gap-4 md:grid-cols-2">
             {[0, 1, 2, 3].map((item) => (
-              <Panel key={item} className="h-32 animate-pulse bg-zinc-100 p-4 border-[3px] border-black shadow-[4px_4px_0_#000]" />
+              <Panel
+                key={item}
+                className="h-32 animate-pulse bg-zinc-100 p-4 border-[3px] border-black shadow-[4px_4px_0_#000]"
+              />
             ))}
           </div>
         ) : cards.length ? (
@@ -297,8 +292,12 @@ export default function ProductionsPage() {
                 canDelete={isAdmin}
                 onMoveUp={() => moveProduction(card.production.id, "up")}
                 onMoveDown={() => moveProduction(card.production.id, "down")}
-                onEdit={() => openProductionEditor(card.production, card.client?.name || "")}
-                onDelete={() => handleDelete(card.production.id, card.production.name)}
+                onEdit={() =>
+                  openProductionEditor(card.production, card.client?.name || "")
+                }
+                onDelete={() =>
+                  handleDelete(card.production.id, card.production.name)
+                }
                 isFirst={idx === 0}
                 isLast={idx === cards.length - 1}
               />
@@ -327,7 +326,10 @@ export default function ProductionsPage() {
       {isAdmin && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[3px] border-black bg-white/95 p-4 backdrop-blur-sm sm:hidden no-print shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-            <Link href="/productions/new" className={customPrimaryBtn + " flex-1"}>
+            <Link
+              href="/productions/new"
+              className={customPrimaryBtn + " flex-1"}
+            >
               <Plus size={18} aria-hidden="true" />
               New Day
             </Link>
@@ -353,13 +355,18 @@ export default function ProductionsPage() {
       {editingProduction && (
         <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
           <div className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-black">Edit Day Details</h2>
+            <h2 className="text-lg font-black uppercase tracking-tight text-black">
+              Edit Day Details
+            </h2>
             <Field label="Day name">
               <input
                 className={inputClass}
                 value={editingProduction.name}
                 onChange={(event) =>
-                  setEditingProduction({ ...editingProduction, name: event.target.value })
+                  setEditingProduction({
+                    ...editingProduction,
+                    name: event.target.value,
+                  })
                 }
                 required
                 autoFocus
@@ -370,7 +377,10 @@ export default function ProductionsPage() {
                 className={inputClass}
                 value={editingProduction.new_client_name}
                 onChange={(event) =>
-                  setEditingProduction({ ...editingProduction, new_client_name: event.target.value })
+                  setEditingProduction({
+                    ...editingProduction,
+                    new_client_name: event.target.value,
+                  })
                 }
                 placeholder="Client or brand name"
               />
@@ -382,7 +392,10 @@ export default function ProductionsPage() {
                   type="date"
                   value={editingProduction.shoot_date}
                   onChange={(event) =>
-                    setEditingProduction({ ...editingProduction, shoot_date: event.target.value })
+                    setEditingProduction({
+                      ...editingProduction,
+                      shoot_date: event.target.value,
+                    })
                   }
                 />
               </Field>
@@ -391,7 +404,10 @@ export default function ProductionsPage() {
                   className={inputClass}
                   value={editingProduction.runner_name}
                   onChange={(event) =>
-                    setEditingProduction({ ...editingProduction, runner_name: event.target.value })
+                    setEditingProduction({
+                      ...editingProduction,
+                      runner_name: event.target.value,
+                    })
                   }
                   placeholder="Runner name"
                 />
@@ -402,7 +418,10 @@ export default function ProductionsPage() {
                 className={inputClass}
                 value={editingProduction.location}
                 onChange={(event) =>
-                  setEditingProduction({ ...editingProduction, location: event.target.value })
+                  setEditingProduction({
+                    ...editingProduction,
+                    location: event.target.value,
+                  })
                 }
                 placeholder="Studio or address"
               />
@@ -428,7 +447,10 @@ export default function ProductionsPage() {
                 className={`${inputClass} min-h-20 py-3`}
                 value={editingProduction.notes}
                 onChange={(event) =>
-                  setEditingProduction({ ...editingProduction, notes: event.target.value })
+                  setEditingProduction({
+                    ...editingProduction,
+                    notes: event.target.value,
+                  })
                 }
                 placeholder="Call time, coffee shop, handoff"
               />
@@ -484,7 +506,9 @@ function ProductionListItem({
         <h2 className="text-lg font-black uppercase tracking-tight text-black truncate">
           {card.production.name}
         </h2>
-        <p className="mt-0.5 text-sm text-zinc-600 truncate">{productionDetail(card)}</p>
+        <p className="mt-0.5 text-sm text-zinc-600 truncate">
+          {productionDetail(card)}
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -587,7 +611,10 @@ function ProductionListItem({
   return (
     <div className={cardStyle}>
       <div className="flex min-w-0 items-start gap-3">
-        <Link href={`/productions/${card.production.id}`} className="min-w-0 flex-1">
+        <Link
+          href={`/productions/${card.production.id}`}
+          className="min-w-0 flex-1"
+        >
           {content}
         </Link>
         {deleteButton}

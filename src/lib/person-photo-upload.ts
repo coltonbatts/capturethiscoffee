@@ -19,8 +19,6 @@ export async function uploadPersonPhoto(
   }
 
   const supabase = getSupabaseBrowserClient();
-  if (!supabase) return fileToDataUrl(file);
-
   await requireFreshAppSession(supabase);
 
   const extension = extensionForFile(file);
@@ -74,13 +72,4 @@ function slugify(value: string) {
       .replace(/^-+|-+$/g, "")
       .slice(0, 48) || "person"
   );
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Could not read that image."));
-    reader.readAsDataURL(file);
-  });
 }

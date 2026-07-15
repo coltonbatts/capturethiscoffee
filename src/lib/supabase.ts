@@ -1,5 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveSupabasePublicConfig } from "./supabase-config";
 import type { OrderStatus, PersonType, ProductionStatus } from "./types";
 
 export type Json =
@@ -348,27 +349,24 @@ export type Database = {
   };
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const enableAuth = process.env.NEXT_PUBLIC_ENABLE_AUTH;
-
-export const isAuthDisabled = enableAuth === "false";
-export const supabaseConfigError =
-  !isAuthDisabled && (!supabaseUrl || !supabaseAnonKey)
-    ? "Supabase auth is enabled by default. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or set NEXT_PUBLIC_ENABLE_AUTH=false for local demo mode only."
-    : "";
-
-export const isSupabaseConfigured = Boolean(
-  !supabaseConfigError && supabaseUrl && supabaseAnonKey && !isAuthDisabled,
+const publicConfig = resolveSupabasePublicConfig(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 );
+
+export const supabaseConfigError = publicConfig.error;
+export const isSupabaseConfigured = publicConfig.status === "configured";
 
 let browserClient: SupabaseClient<Database> | null = null;
 
 export function getSupabaseBrowserClient() {
-  if (isAuthDisabled) return null;
-  if (supabaseConfigError) throw new Error(supabaseConfigError);
-  if (!supabaseUrl || !supabaseAnonKey) return null;
+  if (publicConfig.status === "error") {
+    throw new Error(publicConfig.error);
+  }
 
-  browserClient ??= createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  browserClient ??= createBrowserClient<Database>(
+    publicConfig.url,
+    publicConfig.anonKey,
+  );
   return browserClient;
 }

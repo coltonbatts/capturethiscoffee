@@ -2,15 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  describeDataError,
   loadCoffeeData,
   loadProductionCoffeeData,
   updateOrderRecord,
 } from "@/lib/data";
-import {
-  getSupabaseBrowserClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase";
+import { describeDataError } from "@/lib/data-errors";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 import type { CoffeeData, Order } from "@/lib/types";
 
 type LoadState = "loading" | "ready" | "error";
@@ -40,7 +37,9 @@ function mergeProductionOrders(
   const incomingProductionOrders = incoming.filter(
     (order) => order.production_id === productionId,
   );
-  const incomingIds = new Set(incomingProductionOrders.map((order) => order.id));
+  const incomingIds = new Set(
+    incomingProductionOrders.map((order) => order.id),
+  );
   const pendingOnlyLocal = current.filter(
     (order) =>
       order.production_id === productionId &&
@@ -51,7 +50,9 @@ function mergeProductionOrders(
   return [
     ...current.filter((order) => order.production_id !== productionId),
     ...incomingProductionOrders.map((order) =>
-      pendingOrderIds.has(order.id) ? currentById.get(order.id) || order : order,
+      pendingOrderIds.has(order.id)
+        ? currentById.get(order.id) || order
+        : order,
     ),
     ...pendingOnlyLocal,
   ];
@@ -195,12 +196,6 @@ export function useCoffeeStore(options: { productionId: string }) {
     pollTimer = window.setInterval(refresh, syncPollIntervalMs);
 
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      return () => {
-        if (pollTimer) window.clearInterval(pollTimer);
-      };
-    }
-
     const channel = supabase
       .channel(`production-orders:${productionId}`)
       .on(
@@ -255,9 +250,7 @@ export function useCoffeeStore(options: { productionId: string }) {
       );
 
       try {
-        const result = await updateOrderRecord(base, orderId, patch, {
-          productionId,
-        });
+        const result = await updateOrderRecord(base, orderId, patch);
         const serverOrder = result.orders.find((order) => order.id === orderId);
         if (serverOrder && mounted.current) {
           setData((prev) =>
@@ -290,7 +283,7 @@ export function useCoffeeStore(options: { productionId: string }) {
         if (mounted.current) markPending(orderId, false);
       }
     },
-    [markPending, productionId],
+    [markPending],
   );
 
   const run = useCallback(

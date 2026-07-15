@@ -133,12 +133,12 @@ Complete this at least one day before the production when possible.
 
 - Confirm the deployed app opens at `https://coffee.capturethis.com`.
 - Confirm `/login` accepts the intended operator account.
-- Confirm the app uses Supabase-backed data, not local demo mode.
-- Confirm `NEXT_PUBLIC_ENABLE_AUTH` is unset or `true` in production.
 - Confirm `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are configured.
+- Confirm `SUPABASE_SERVICE_ROLE_KEY` is configured only on the server for
+  runner and printer APIs.
 
-Production must not use `NEXT_PUBLIC_ENABLE_AUTH=false`. That mode stores data
-only in the current browser's `localStorage`.
+Supabase is required in every environment. Missing configuration must show a
+setup error; it must never produce local application records.
 
 ### 2. Confirm Database Readiness
 
@@ -347,7 +347,7 @@ After the last drink run:
 - Give Supabase sign-in access only to people who need setup permissions.
 - Share runner links only with the on-set team, and revoke or expire them after
   the production.
-- Do not use local demo mode for production data.
+- Do not treat browser UI preferences as application records or a backup.
 - Do not change hosted environment variables during a live run unless the tech lead approves it.
 
 ## Quality Checklist

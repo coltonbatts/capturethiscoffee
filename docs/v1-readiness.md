@@ -2,8 +2,8 @@
 
 ## Setup checklist
 
-- Deploy the app with `NEXT_PUBLIC_ENABLE_AUTH` unset or `true`.
 - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Set the server-only `SUPABASE_SERVICE_ROLE_KEY` for runner/printer APIs.
 - Confirm `/login` signs in the client user and redirects to `/productions`.
 - Create the real client, production, runner name, shoot date, and location.
 - Add or import the day-of people before the shoot when possible.
@@ -29,8 +29,8 @@
 - Disable public email sign-ups unless intentionally onboarding more demo users.
 - Verify a new client, person, photo, production, roster edit, order edit, and
   label printed flag persist after refresh on a second device.
-- Do not use `NEXT_PUBLIC_ENABLE_AUTH=false` in production. That is local demo
-  mode and writes only to that browser's `localStorage`.
+- Confirm missing configuration shows a setup error and never creates
+  browser-local application records.
 
 ## Primary print checklist
 
@@ -92,9 +92,9 @@ once that's done.
   sharing is unavailable on the `/labels` fallback screen.
 - The current export preset has not yet been physically verified against the
   final lid-label media.
-- Offline production mode is not guaranteed with Supabase auth. Local demo mode
-  is intentionally separate and browser-local.
-- The app does not seed demo rows into Supabase automatically.
+- Offline production mode is not supported. Supabase connectivity is required
+  for authoritative application data.
+- The app does not seed rows into Supabase automatically.
 
 ## Physical M2 test
 

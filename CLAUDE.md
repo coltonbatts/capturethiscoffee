@@ -71,21 +71,18 @@ npm run verify:niimbot-export
 
 Local app URL: `http://localhost:3000`.
 
-## Runtime modes
+## Runtime data backend
 
-The app has two data modes:
-
-- Supabase-backed mode: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set, and `NEXT_PUBLIC_ENABLE_AUTH` is unset or `true`.
-- Local demo mode: `NEXT_PUBLIC_ENABLE_AUTH=false`; data lives only in browser `localStorage`.
-
-Production must use Supabase-backed mode. Local demo mode is useful for fast local UI work but should not be treated as shared or durable data.
+Supabase is the application's only runtime data backend. Local development
+requires a configured Supabase project; missing or malformed configuration
+shows an actionable error and never activates seed or browser-database data.
+`localStorage` is used only for harmless UI preferences.
 
 Required public env vars are listed in `.env.example`:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_ENABLE_AUTH=
 ```
 
 Server API routes also require `SUPABASE_SERVICE_ROLE_KEY`. That key is used only in server route code through `src/lib/supabase-server.ts`; never expose it to browser code.
@@ -124,9 +121,8 @@ src/lib/
   auth.ts
   supabase.ts
   supabase-server.ts
+  supabase-config.ts
   production-share.ts
-  storage.ts
-  seed.ts
   people.ts
   person-photo-upload.ts
   order-progress.ts
@@ -174,7 +170,9 @@ Important fields:
 - `Production` has status `planning`, `active`, or `complete`.
 - `Order` has drink fields plus status and `label_printed`. The stored `OrderStatus` enum is wider than the UI: the app distinguishes only needs-order (`not_asked`), captured (any other non-skip status), and skipped (`no_order`) via `src/lib/order-progress.ts`.
 
-`src/lib/data.ts` is the main browser data layer. It is large and intentionally supports both Supabase and local demo mode. Be careful when changing it: many functions have a Supabase branch and a localStorage branch.
+`src/lib/data.ts` is the session-bound browser data layer for authenticated
+operator operations. It has one persistence path: Supabase. Token-scoped
+runner/printer operations stay in public API routes and DTO-focused clients.
 
 ## Auth and access model
 
@@ -288,15 +286,12 @@ Before real client use:
 - Confirm signed-in users can manage setup data (apply `20260703120000_authenticated_full_access.sql`).
 - Confirm share-token runner links work on a second device.
 
-### P1 - Reduce data-layer complexity
+### P1 - Continue the operator DAL migration
 
-`src/lib/data.ts` is about 1,385 lines and duplicates behavior for Supabase and local demo mode. This is the largest maintainability issue.
-
-Preferred direction:
-
-- Keep Supabase as the only production source of truth.
-- Either move local demo behavior behind a small adapter or limit it to read-only seed/demo workflows.
-- Add focused tests before broad refactors.
+Supabase is now the only runtime source of truth, but authenticated operator
+reads and writes still use the session-bound browser client. A later phase can
+move those operations into server-only DAL functions and Server Actions while
+preserving the current DTO and token API contracts.
 
 ### P1 - Add realtime sync
 
@@ -321,7 +316,7 @@ Do this only when working in those areas. Avoid refactors that do not support a 
 
 High-value next tests:
 
-- `data.ts` behavior around Supabase/local mode branches.
+- Session-bound Supabase data behavior and sanitized configuration failures.
 - API route token validation and order patch behavior.
 - Roster view filtering/grouping.
 - CSV export content if NIIMBOT batch becomes a core workflow.

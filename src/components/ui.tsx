@@ -20,8 +20,6 @@ export function Avatar({ person }: { person: AvatarPerson }) {
       if (!storagePath || !isSupabaseConfigured) return;
 
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) return;
-
       const { data } = await supabase.storage
         .from("person-photos")
         .createSignedUrl(storagePath, 60 * 60);

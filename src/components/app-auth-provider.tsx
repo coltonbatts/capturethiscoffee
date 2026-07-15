@@ -1,7 +1,7 @@
 "use client";
 
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -32,7 +32,11 @@ async function syncAppSessionFromClient(supabase: SupabaseClient) {
 
 export function AppAuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [initialized, setInitialized] = useState(!isSupabaseConfigured);
+  const pathname = usePathname();
+  const isAccountFreeRoute = pathname.startsWith("/run/");
+  const [initialized, setInitialized] = useState(
+    () => !isSupabaseConfigured || isAccountFreeRoute,
+  );
   const [appUser, setAppUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
 
@@ -48,28 +52,27 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
     }
 
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      return null;
-    }
-
     const user = await syncAppSessionFromClient(supabase);
     applyAppUser(user);
     return user;
   }, [applyAppUser]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || isAccountFreeRoute) {
+      return;
+    }
 
     const initialClient = getSupabaseBrowserClient();
-    if (!initialClient) return;
-
     const authClient: SupabaseClient = initialClient;
     let mounted = true;
 
     async function bootstrap() {
-      const user = await syncAppSessionFromClient(authClient);
-      if (!mounted) return;
-      applyAppUser(user);
+      try {
+        const user = await syncAppSessionFromClient(authClient);
+        if (mounted) applyAppUser(user);
+      } catch {
+        if (mounted) applyAppUser(null);
+      }
     }
 
     void bootstrap();
@@ -91,7 +94,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [applyAppUser]);
+  }, [applyAppUser, isAccountFreeRoute]);
 
   const signOut = useCallback(async () => {
     applyAppUser(null);
@@ -99,8 +102,6 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) return;
 
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-
     await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();

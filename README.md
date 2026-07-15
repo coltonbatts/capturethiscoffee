@@ -16,13 +16,12 @@ When adding screens, extend `Panel`, `cardClass`, `inputClass`, and button class
 
 ## What is in this MVP
 
-- Private demo login at `/login` when auth is enabled
+- Operator login at `/login` through Supabase Auth
 - Shoot-day list at `/productions`
 - Day creation at `/productions/new` (optional client/brand name for label branding)
 - Runner dashboard at `/run/[id]?token=…`
 - People at `/people`
-- Supabase Auth email/password when env vars are configured
-- Explicit local seeded `localStorage` demo mode with `NEXT_PUBLIC_ENABLE_AUTH=false`
+- Supabase Auth email/password with required Supabase configuration
 - Supabase schema and RLS in `supabase/schema.sql`
 - Drink-collection progress ("12 of 20 drinks in") and printed-label state on the day board
 - Clean mobile roster cards with full person names, compact status badges, and consistent order-management actions
@@ -51,6 +50,8 @@ mid-shoot:
 
 ```bash
 npm install
+cp .env.example .env.local
+# Fill in the required Supabase values before starting the app.
 npm run dev
 ```
 
@@ -81,13 +82,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-5. Set `NEXT_PUBLIC_ENABLE_AUTH=true` or leave it unset when you want sign-in and Supabase-backed data enabled.
+5. Add `SUPABASE_SERVICE_ROLE_KEY` for the token-scoped runner/printer APIs. It is server-only and must never use a `NEXT_PUBLIC_` prefix.
 6. Restart `npm run dev` after changing `.env.local`.
 7. In Supabase, open **Authentication > Providers > Email** and confirm email/password sign-in is enabled.
 8. For Google sign-in (`/login` → **Continue with Google**), open **Authentication > Providers > Google**, enable it, and paste a Google Cloud OAuth **Web application** client ID and secret. In Google Cloud, set the authorized redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback` (find `<project-ref>` in your Supabase project URL). In Supabase **Authentication > URL Configuration**, set **Site URL** to your deployed app origin and add redirect URLs for local and production (for example `http://localhost:3000/**` and `https://coffee.capturethis.com/**`).
 9. For a controlled demo, disable public sign-ups or leave sign-ups unused and create demo users manually.
 
-When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads and writes these Supabase tables:
+Supabase is the application's only runtime data backend. The authenticated operator app reads and writes these tables:
 
 - `clients`
 - `people`
@@ -98,9 +99,9 @@ When both env vars are present and `NEXT_PUBLIC_ENABLE_AUTH=true`, the app reads
 - `orders`
 - Supabase Storage bucket `person-photos` for authenticated people photos
 
-When `NEXT_PUBLIC_ENABLE_AUTH=false`, the app uses seeded demo data in `localStorage`. That mode is local-only: data entered there is not written to Supabase and will not be visible to other users or devices. A reset-to-seed control lives on the labels screen and only rewrites this browser's local data — in Supabase-backed mode it does not touch shared data and should be treated as a local-only affordance.
+Missing or malformed public Supabase configuration shows an actionable setup error. It never loads seed data, creates browser-local records, or reports a local write as successful. Local development therefore requires a configured Supabase project.
 
-If auth is enabled or unset but either Supabase env var is missing, the app shows a configuration error instead of falling back to localStorage.
+The browser still uses `localStorage` for non-authoritative UI preferences such as production list ordering and label design. Those preferences are not application records and do not synchronize across devices.
 
 ## Demo users
 
@@ -196,20 +197,21 @@ The browser never uses the service role key — it uses only
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and table/photo
 access is controlled by Supabase Auth plus RLS/storage policies.
 
-## Seed data
+## Local test data
 
-The app does not automatically insert demo rows into Supabase. To test against Supabase, add a client and people from the app, then create a production. To prefill sample rows, adapt the records in `src/lib/seed.ts` into SQL inserts using Supabase-generated UUIDs.
+The app does not include or automatically insert a browser-local demo database. To test locally, add a client and people through the configured Supabase-backed app, then create a production. Any reusable test fixtures should stay isolated under `tests/` and must not become a writable runtime data source.
 
 ## Verification
 
 ```bash
-npm run lint
 npm test
+npm run lint
 npm run build
 ```
 
 The iOS printer app:
 
 ```bash
-cd mobile && flutter analyze && flutter test
+cd mobile && flutter test
+cd mobile && flutter analyze
 ```

@@ -3,10 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
-import {
-  Field,
-  inputClass,
-} from "@/components/ui";
+import { Field, inputClass } from "@/components/ui";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { AUTH_ACCESS_MESSAGE } from "@/lib/auth";
 import {
@@ -50,10 +47,7 @@ function LoginForm() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
-      router.replace(nextPath());
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     if (!initialized || !appUser) return;
 
@@ -69,13 +63,10 @@ function LoginForm() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
-      router.replace("/productions");
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     const supabase = getSupabaseBrowserClient();
-    if (!supabase || submitting) return;
+    if (submitting) return;
 
     setSubmitting(true);
     setError("");
@@ -116,8 +107,8 @@ function LoginForm() {
       return;
     }
 
-    const supabase = isSupabaseConfigured ? getSupabaseBrowserClient() : null;
-    if (!supabase || submitting || redirectingToGoogle) return;
+    if (!isSupabaseConfigured || submitting || redirectingToGoogle) return;
+    const supabase = getSupabaseBrowserClient();
 
     setRedirectingToGoogle(true);
     setError("");
@@ -144,7 +135,9 @@ function LoginForm() {
       <section className="w-full max-w-md overflow-hidden rounded-xl border-[3px] border-black bg-white text-black shadow-[6px_6px_0_#000]">
         <div className="flex items-center gap-3 border-b-[3px] border-black bg-black p-5 text-white">
           <CaptureMark invert className="size-11 rounded-xl" />
-          <h1 className="text-xl font-black uppercase tracking-tight text-white">Capture This</h1>
+          <h1 className="text-xl font-black uppercase tracking-tight text-white">
+            Capture This
+          </h1>
         </div>
         <div className="grid gap-4 p-5">
           {isSupabaseConfigured ? (
@@ -202,13 +195,13 @@ function LoginForm() {
             <button
               type="submit"
               className={`${customPrimaryBtn} mt-1 w-full`}
-              disabled={submitting}
+              disabled={submitting || !isSupabaseConfigured}
             >
               {isSupabaseConfigured
                 ? submitting
                   ? "Signing in…"
                   : "Sign in"
-                : "Continue"}
+                : "Configuration required"}
             </button>
           </form>
         </div>
@@ -247,7 +240,11 @@ function nextPath() {
   return next?.startsWith("/") ? next : "/productions";
 }
 
-function withTimeout<T>(promise: Promise<T>, message: string, ms = 15000): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  message: string,
+  ms = 15000,
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = window.setTimeout(() => reject(new Error(message)), ms);
     promise.then(

@@ -25,7 +25,7 @@ password in Supabase.
 
 ## Verify (client or you)
 
-1. Open the deployed app `/login` (not local demo mode without Supabase env vars).
+1. Open the deployed app `/login`; Supabase configuration is required.
 2. Sign in with the credentials above.
 3. Open **People** — the list should load without errors.
 4. Create a test person; upload a photo; refresh — data and the photo should persist.

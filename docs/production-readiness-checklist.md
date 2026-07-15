@@ -206,15 +206,13 @@ Confirm these are set on the **deployed** environment (not just `.env.local`):
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | browser + server | your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser + server | your Supabase anon/public key |
-| `NEXT_PUBLIC_ENABLE_AUTH` | browser + server | unset, or `true` — never `false` in production |
 | `SUPABASE_SERVICE_ROLE_KEY` | server only, `src/lib/supabase-server.ts` | your Supabase service role key |
 
 **Record:**
-- All four confirmed present in the hosting platform's env settings? Y/N
-- `NEXT_PUBLIC_ENABLE_AUTH` value: _____
+- All three confirmed present in the hosting platform's env settings? Y/N
 
-**Pass/fail:** Pass only if all four are set and `NEXT_PUBLIC_ENABLE_AUTH`
-is not `false`. Fail (blocker) if `SUPABASE_SERVICE_ROLE_KEY` is missing —
+**Pass/fail:** Pass only if all three are set. Fail (blocker) if
+`SUPABASE_SERVICE_ROLE_KEY` is missing —
 the public runner API routes (`/api/public/productions/[id]`,
 `/api/public/orders/[id]`) will not work without it.
 

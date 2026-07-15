@@ -2,6 +2,9 @@
 
 Prepared Sunday, July 5, 2026 for the Monday, July 6, 2026 client conversation.
 
+> Historical presentation artifact. Phase 3 later removed the browser-local
+> demo database; current development and demos use configured Supabase data.
+
 ## Core message
 
 Capture This Coffee has moved from a working prototype into a coherent on-set
@@ -37,7 +40,8 @@ real label stock.
 - `/labels` fallback screen for PNG, share, preview, test labels, and CSV batch
   export.
 - RLS/security model documented and covered by share-token helper tests.
-- Current local seeded demo path with "Northstar Trail Launch" data.
+- At presentation time, a browser-local seeded demo path was still present; it
+  was removed in Phase 3 and is not a current runtime option.
 
 ## Verification run
 
@@ -72,8 +76,8 @@ locked app analyzes and tests cleanly.
 - Production setup should be checked before any real shoot: env vars, RLS,
   storage policies, public sign-up setting, client user, real roster, second
   device runner link, and printer phone.
-- Offline production mode is not guaranteed with Supabase auth. Local demo mode
-  is intentionally browser-local and not production data.
+- Offline production mode is not supported. Current demos require configured
+  Supabase data just like other application use.
 
 ## Demo script
 

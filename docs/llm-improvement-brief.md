@@ -8,6 +8,9 @@
 > instead.
 > What has already been resolved since this was written:
 >
+> - **Phase 3 (single runtime backend) is done.** Supabase is required; the
+>   writable localStorage/seed database and auth-disable flag described below
+>   were removed. Remaining dual-mode text is preserved only as history.
 > - **P0-A and P0-B (open anon reads/writes) are fixed.** Runner access now goes
 >   through SHA-256-hashed share tokens (`src/lib/production-share.ts`) and
 >   token-scoped API routes (`src/app/api/public/...`). Anonymous direct table
@@ -29,11 +32,10 @@
 >   share-token sanitization/privacy (`tests/`).
 >
 > Still open, in current priority order: physical NIIMBOT verification and
-> deployment validation (the checklist's Sections A and B), then the `data.ts`
-> dual-mode consolidation (Phase 2), realtime sync (Phase 3), and splitting the
-> large UI files (Phase 5). The product history and reasoning below remain
-> useful context; the file map, line counts, and problem list do not reflect
-> the current tree.
+> deployment validation (the checklist's Sections A and B), then realtime sync
+> and splitting the large UI files. The product history and reasoning below
+> remain useful context; the file map, line counts, phase numbers, and problem
+> list do not reflect the current tree.
 
 > **How to use this file:** Paste this whole document into a capable coding LLM as the
 > first message of a session. It is a self-contained map of the app: what it is, how it's

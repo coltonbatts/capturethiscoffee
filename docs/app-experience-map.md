@@ -1,6 +1,6 @@
 # Capture This Coffee app experience map
 
-Last updated: 2026-07-03
+Last updated: 2026-07-15
 
 ## Product truth
 
@@ -38,8 +38,9 @@ Fallback and advanced paths:
   an advanced export is needed.
 - Official NIIMBOT app import is historical/fallback only. It is not the main
   on-set printing path now that CTC Printer exists.
-- Local `localStorage` mode is dev/demo only. It is useful for offline local
-  exploration, but it is not production data and cannot mint runner links.
+- Local development uses a configured Supabase project. Browser `localStorage`
+  is limited to non-authoritative UI preferences such as list ordering and
+  label design.
 
 Historical/cancelled paths:
 
@@ -90,7 +91,6 @@ Supporting entities:
 
 - `clients` and `client_people` - setup convenience for recurring people.
 - Supabase Storage `person-photos` - optional identification support.
-- Local demo seed/storage - development-only mirror path.
 - Label renderer/export helpers - shared print asset generation.
 
 ## Candidate cuts and reductions
@@ -103,8 +103,6 @@ sequence after the product story is aligned.
 - Split the production dashboard into clearer runner and setup sections so
   roster editing, production editing, quick add, runner-link creation, and
   order editing do not compete with the live runner loop.
-- Consolidate or isolate the localStorage demo path so production behavior has
-  one obvious source of truth.
 - Add a first-class share-link management UI instead of relying on a single
   copy-runner-link action plus SQL examples.
 - Surface printed/not-printed state consistently in the runner board and close

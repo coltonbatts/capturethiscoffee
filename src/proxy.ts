@@ -1,10 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  isAuthDisabled,
-  supabaseConfigError,
-  type Database,
-} from "@/lib/supabase";
+import type { Database } from "@/lib/supabase";
+import { resolveSupabasePublicConfig } from "@/lib/supabase-config";
 import {
   isProtectedOperatorPath,
   legacyRunnerRedirectUrl,
@@ -16,15 +13,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(legacyRedirect);
   }
 
-  if (isAuthDisabled) {
-    return NextResponse.next();
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publicConfig = resolveSupabasePublicConfig(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
   const pathname = request.nextUrl.pathname;
 
-  if (supabaseConfigError || !supabaseUrl || !supabaseAnonKey) {
+  if (publicConfig.status === "error") {
     if (isProtectedOperatorPath(pathname)) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
@@ -37,22 +32,26 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+  const supabase = createServerClient<Database>(
+    publicConfig.url,
+    publicConfig.anonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
       },
     },
-  });
+  );
 
   const {
     data: { user },

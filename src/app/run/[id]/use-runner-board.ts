@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { describeDataError } from "@/lib/data";
+import { describeDataError } from "@/lib/data-errors";
 import {
   reconcileProductionBoard,
   replaceProductionBoardOrder,

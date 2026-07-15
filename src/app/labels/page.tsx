@@ -16,12 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ScreenLabel } from "@/components/coffee-label-renderer";
 import { useAppAuth } from "@/components/app-auth-provider";
-import {
-  Avatar,
-  EmptyState,
-  Field,
-  inputClass,
-} from "@/components/ui";
+import { Avatar, EmptyState, Field, inputClass } from "@/components/ui";
 import {
   buildLabelExportSelection,
   type ActiveLabelExportItem,
@@ -32,12 +27,8 @@ import {
   niimbotBatchCsv,
   unprintedOrderIds,
 } from "@/lib/label-export";
-import {
-  describeDataError,
-  isSupabaseBacked,
-  loadCoffeeData,
-  updateOrderRecord,
-} from "@/lib/data";
+import { loadCoffeeData, updateOrderRecord } from "@/lib/data";
+import { describeDataError } from "@/lib/data-errors";
 import { mintProductionShareLink } from "@/lib/share-links";
 import { formatDrink } from "@/lib/order-summary";
 import {
@@ -55,7 +46,11 @@ import type { CoffeeLabel } from "@/lib/label-copy";
 
 type ShareNavigator = Navigator & {
   canShare?: (data: { files?: File[] }) => boolean;
-  share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
+  share?: (data: {
+    files?: File[];
+    title?: string;
+    text?: string;
+  }) => Promise<void>;
 };
 
 // Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
@@ -137,7 +132,10 @@ export default function LabelExportPage() {
     [data],
   );
   const activeItems = useMemo(
-    () => (data && productionId ? labelExportItemsForProduction(data, productionId) : []),
+    () =>
+      data && productionId
+        ? labelExportItemsForProduction(data, productionId)
+        : [],
     [data, productionId],
   );
   const selection = useMemo(
@@ -155,7 +153,12 @@ export default function LabelExportPage() {
   const labels = selection?.labels || [];
   const selectedProduction = selection?.production;
   const testLabel = useMemo(
-    () => (selection ? buildClientTestLabel(selection.client?.name || selection.production.name) : null),
+    () =>
+      selection
+        ? buildClientTestLabel(
+            selection.client?.name || selection.production.name,
+          )
+        : null,
     [selection],
   );
   const previewLabel = labels[0];
@@ -175,11 +178,6 @@ export default function LabelExportPage() {
       setError("Choose a production before linking CTC Printer.");
       return;
     }
-    if (!isSupabaseBacked) {
-      setError("CTC Printer links need the Supabase-backed app, not local demo mode.");
-      return;
-    }
-
     setPrinterLinkState("working");
     setError("");
     setStatus("");
@@ -199,7 +197,9 @@ export default function LabelExportPage() {
       }
     } catch (err) {
       setPrinterLinkState("idle");
-      setError(describeDataError(err, "Could not create the CTC Printer link."));
+      setError(
+        describeDataError(err, "Could not create the CTC Printer link."),
+      );
     }
   }
 
@@ -223,8 +223,12 @@ export default function LabelExportPage() {
     setStatus("");
   }
 
-  const allSelected = activeItems.length > 0 && selectedCount >= activeItems.length;
-  const unprintedIds = useMemo(() => unprintedOrderIds(activeItems), [activeItems]);
+  const allSelected =
+    activeItems.length > 0 && selectedCount >= activeItems.length;
+  const unprintedIds = useMemo(
+    () => unprintedOrderIds(activeItems),
+    [activeItems],
+  );
 
   function toggleSelectAll() {
     setSelectedOrderIds(
@@ -254,7 +258,6 @@ export default function LabelExportPage() {
       // Ignore printing flag updates on export
     }
   }
-
 
   async function downloadSelected() {
     if (!labels.length) {
@@ -335,7 +338,9 @@ export default function LabelExportPage() {
         typeof shareNavigator.canShare === "function" &&
         !shareNavigator.canShare({ files })
       ) {
-        setStatus("This device cannot share these files. Use Download instead.");
+        setStatus(
+          "This device cannot share these files. Use Download instead.",
+        );
         return;
       }
 
@@ -376,12 +381,18 @@ export default function LabelExportPage() {
         <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-black uppercase tracking-tight text-black">Labels</h1>
+              <h1 className="text-2xl font-black uppercase tracking-tight text-black">
+                Labels
+              </h1>
               <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
-                Manage print queues, select drink labels, and connect to CTC Printer.
+                Manage print queues, select drink labels, and connect to CTC
+                Printer.
               </p>
             </div>
-            <Link href="/productions" className={`${customSecondaryBtn} hidden sm:inline-flex min-h-11 py-0 px-4 text-xs`}>
+            <Link
+              href="/productions"
+              className={`${customSecondaryBtn} hidden sm:inline-flex min-h-11 py-0 px-4 text-xs`}
+            >
               Days
             </Link>
           </div>
@@ -414,7 +425,9 @@ export default function LabelExportPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Printer size={22} className="text-black" />
-              <h2 className="text-lg font-black uppercase tracking-tight text-black">CTC Printer Connection</h2>
+              <h2 className="text-lg font-black uppercase tracking-tight text-black">
+                CTC Printer Connection
+              </h2>
             </div>
             <p className="text-sm font-semibold text-zinc-600">
               {selectedProduction
@@ -442,7 +455,7 @@ export default function LabelExportPage() {
                 <button
                   type="button"
                   onClick={() => void copyPrinterLink()}
-                  disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
+                  disabled={printerLinkState === "working" || !productionId}
                   className={`${customPrimaryBtn} w-full min-h-11 h-11 py-0 px-3 text-xs`}
                 >
                   {printerLinkState === "working" ? (
@@ -488,12 +501,6 @@ export default function LabelExportPage() {
                 </div>
               </div>
             )}
-
-            {!isSupabaseBacked && (
-              <p className="rounded-lg border-[3px] border-zinc-400 bg-zinc-100 p-3 text-xs font-bold text-zinc-800 leading-normal">
-                Printer linking requires a Supabase database backend. In local demo mode, use the Download fallback exports below.
-              </p>
-            )}
           </div>
         </section>
 
@@ -502,17 +509,20 @@ export default function LabelExportPage() {
           {/* Print Queue / Checkboxes Card */}
           <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3 min-w-0">
-              <h2 className="text-lg font-black uppercase tracking-tight text-black flex-1 truncate">Print Queue</h2>
+              <h2 className="text-lg font-black uppercase tracking-tight text-black flex-1 truncate">
+                Print Queue
+              </h2>
               <div className="flex gap-1.5 shrink-0">
-                {unprintedIds.length > 0 && unprintedIds.length < activeItems.length && (
-                  <button
-                    type="button"
-                    onClick={selectUnprinted}
-                    className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
-                  >
-                    Unprinted ({unprintedIds.length})
-                  </button>
-                )}
+                {unprintedIds.length > 0 &&
+                  unprintedIds.length < activeItems.length && (
+                    <button
+                      type="button"
+                      onClick={selectUnprinted}
+                      className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
+                    >
+                      Unprinted ({unprintedIds.length})
+                    </button>
+                  )}
                 <button
                   type="button"
                   onClick={toggleSelectAll}
@@ -547,9 +557,15 @@ export default function LabelExportPage() {
           {/* Fallback Exports / Preview Column */}
           <div className="flex flex-col gap-6">
             <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
-              <h2 className="text-lg font-black uppercase tracking-tight text-black">Preview</h2>
+              <h2 className="text-lg font-black uppercase tracking-tight text-black">
+                Preview
+              </h2>
 
-              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Label design">
+              <div
+                className="grid grid-cols-2 gap-2"
+                role="group"
+                aria-label="Label design"
+              >
                 {labelDesigns.map((design) => (
                   <button
                     key={design.id}
@@ -645,9 +661,11 @@ export default function LabelExportPage() {
             <button
               type="button"
               onClick={() => void copyPrinterLink()}
-              disabled={printerLinkState === "working" || !productionId || !isSupabaseBacked}
+              disabled={printerLinkState === "working" || !productionId}
               className={`${
-                printerLinkState === "copied" ? customPrimaryBtn : customSecondaryBtn
+                printerLinkState === "copied"
+                  ? customPrimaryBtn
+                  : customSecondaryBtn
               } flex-1`}
             >
               {printerLinkState === "working" ? (
@@ -734,7 +752,9 @@ function LabelChoice({
       </span>
       <span
         className={`grid size-7 place-items-center rounded-md border-2 shrink-0 ${
-          selected ? "border-white bg-white text-black" : "border-black bg-white"
+          selected
+            ? "border-white bg-white text-black"
+            : "border-black bg-white"
         }`}
         aria-hidden="true"
       >
@@ -759,7 +779,9 @@ function downloadBlob(blob: Blob, fileName: string) {
 
 async function writeClipboardText(value: string) {
   if (!navigator.clipboard?.writeText) {
-    throw new Error("Clipboard access is unavailable. Select and copy the link manually.");
+    throw new Error(
+      "Clipboard access is unavailable. Select and copy the link manually.",
+    );
   }
   await navigator.clipboard.writeText(value);
 }
