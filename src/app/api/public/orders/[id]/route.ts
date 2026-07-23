@@ -22,6 +22,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
+    enforcePublicApiRateLimit({ request, scope: "runner-order-patch" });
     const body = (await readLimitedJsonRequest(request)) as {
       productionId?: unknown;
       token?: unknown;
@@ -30,7 +31,6 @@ export async function PATCH(
     const productionId =
       typeof body?.productionId === "string" ? body.productionId : "";
     const token = typeof body?.token === "string" ? body.token : "";
-    enforcePublicApiRateLimit({ request, scope: "runner-order-patch", token });
     const patch = sanitizeRunnerOrderPatch(body?.patch);
 
     if (!Object.keys(patch).length) {

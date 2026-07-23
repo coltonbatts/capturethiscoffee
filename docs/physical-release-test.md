@@ -7,22 +7,27 @@ PNG, or archive evidence.
 ## Record first
 
 - Date/tester: _____
+- Luke present as accepting operator: yes/no _____
 - Capture This version/build: _____
 - iPhone model / iOS: _____
 - Printer model shown on label/device: _____
+- Printer serial / asset identifier: _____
 - Printer firmware (do not update it): _____
+- Ribbon brand/type/color and lot if available: _____
 - Stock brand/type/finish: _____
 - Measured label width × height: _____ mm × _____ mm
-- Die-cut or continuous: _____
+- Shape and feed: rectangle/round/other _____; die-cut/continuous _____
 - App density: _____
 - Fictional/disposable production used: _____
+- Disposable link issued by / revocation owner: _____ / _____
 
 ## Guided test
 
 1. Confirm the exact printer is **NIIMBOT M2_H** and record its firmware.
 2. Measure and record the actual label-roll dimensions and stock type.
 3. Force-quit the official NIIMBOT app on every nearby phone/tablet.
-4. Open build 5 and link the supplied disposable active-production HTTPS URL.
+4. Open the version/build recorded above and link the supplied disposable
+   active-production HTTPS URL.
 5. Power off other nearby NIIMBOT printers, connect the one M2_H, and confirm
    the app does not accept another model.
 6. Print a short name/drink, a long name, a long drink, one confirmed reprint,
@@ -41,6 +46,8 @@ PNG, or archive evidence.
     adhesion, lifting, smearing, fading, and readability.
 13. Photograph representative short/long labels and the cold-cup result without
     exposing a production token or real personal data.
+14. Have Luke repeat link → connect → print → web-sync → interrupted recovery
+    → fallback himself, without Colton touching the phone or dashboard.
 
 ## Result
 
@@ -49,6 +56,7 @@ PNG, or archive evidence.
 - Long drink: pass/fail + notes _____
 - Confirmed reprint: pass/fail + notes _____
 - 10+ batch count / successes: _____ / _____
+- Label-to-order correctness for the entire batch: pass/fail + notes _____
 - Interrupted label physically printed? _____
 - Recovery choice/result: _____
 - Every physical success synced to web? _____
@@ -56,10 +64,28 @@ PNG, or archive evidence.
 - Background/resume: pass/fail _____
 - Cold cup after five minutes: pass/fail _____
 - Orientation/cropping/density/alignment/readability: _____
+- Feed gaps / skipped stock / ribbon behavior: _____
+- Representative fictional-data photo filenames/location: _____
+- Luke independent end-to-end pilot: pass/fail + notes _____
 - Release-blocking issue: none / describe _____
+
+## Acceptance and release
+
+- Final supported Capture This version/build: _____
+- Final accepted printer asset/serial: _____
+- Final firmware (record only; do not update): _____
+- Final ribbon and reorder reference: _____
+- Final stock, dimensions, shape, and reorder reference: _____
+- Disposable production link revoked after evidence capture: yes/no _____
+- Evidence contains no real client data or visible token: yes/no _____
+- Open limitations accepted: _____
+- Luke accepts day-of operation: name/signature/date _____
+- Account/release owner accepts platform obligations: name/signature/date _____
+- Printer may leave Colton's possession: yes/no _____
 
 The gate passes only when the tester reports the exact record above, all label
 types are usable, successful prints synchronize, interruption recovery avoids
-duplicates, and the stock survives the cold-cup check. If tuning changes print
+duplicates, Luke completes the flow independently, and the stock survives the
+cold-cup check. If tuning changes print
 width, density, or the server preset, increment the iOS build, rerun automated
 verification, and repeat the smallest affected physical cases.

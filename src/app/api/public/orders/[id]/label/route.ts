@@ -31,7 +31,7 @@ export async function GET(
     const designId = isLabelDesignId(requestedDesign)
       ? requestedDesign
       : defaultLabelDesignId;
-    enforcePublicApiRateLimit({ request, scope: "label-png", token });
+    enforcePublicApiRateLimit({ request, scope: "label-png" });
 
     if (!productionId) {
       throw new ApiError("Missing productionId.", 400);

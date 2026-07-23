@@ -19,7 +19,7 @@ export async function GET(
   try {
     const { id } = await context.params;
     const token = request.nextUrl.searchParams.get("token") || "";
-    enforcePublicApiRateLimit({ request, scope: "runner-production", token });
+    enforcePublicApiRateLimit({ request, scope: "runner-production" });
     const supabase = getSupabaseServiceRoleClient();
 
     await validateProductionShareToken(supabase, id, token);

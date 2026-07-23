@@ -1,6 +1,6 @@
 # Capture This — App Store release dossier
 
-Last updated: 2026-07-15
+Last updated: 2026-07-23
 
 This is the working metadata package for the iPhone-only `1.0.0 (5)` release
 candidate. Values marked **OWNER APPROVAL** must be approved or completed in
@@ -174,7 +174,8 @@ tested M2_H connected/printing state if it improves reviewer understanding.
 
 ## Submission order
 
-1. Approve privacy/support wording and deploy the release commit.
+1. Record owner approval of the live privacy/support wording and verify both
+   production URLs still return 200.
 2. Create the non-expiring fictional review production and enter its URL only
    in App Store Connect.
 3. Upload build 5 and complete beta metadata.

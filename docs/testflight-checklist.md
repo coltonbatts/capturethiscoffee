@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-15
+Last updated: 2026-07-23
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -14,9 +14,9 @@ permanent target is an approved unlisted App Store link.
 | Release version `1.0.0+5` | Implemented |
 | Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally |
 | iPhone-only target, app/privacy manifests, permissions, licenses | Verified in build 5 IPA |
-| Production `/privacy` and `/support` | Candidate implemented; live deployment pending approval |
+| Production `/privacy` and `/support` | Live; both returned 200 on 2026-07-23 |
 | Stable fictional review production | Pending private operator access |
-| Build 5 uploaded/processed | Pending App Store Connect credentials |
+| Build 5 uploaded/processed | Unknown until the App Store Connect owner checks; do not infer from a local export |
 | TestFlight beta metadata | Drafted in `docs/app-store-release.md` |
 | First external Beta App Review | Pending |
 | Buddy invited by email | Pending owner-supplied email / approved build |
@@ -28,7 +28,7 @@ the application privacy manifest, and the 1.0 product version.
 
 ## Before upload
 
-1. Approve and deploy the privacy/support pages.
+1. Record owner approval of the already-live privacy/support wording.
 2. Rotate the affected temporary credential identified during the release audit.
 3. Create the fictional stable fixture in
    `docs/review-production-fixture.md`; keep its token out of Git and notes.
@@ -46,7 +46,7 @@ cd mobile
 flutter pub get
 flutter analyze
 flutter test
-flutter build ipa --release
+flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 ```
 
 Output: `mobile/build/ios/ipa/ctc_printer.ipa`
@@ -58,6 +58,12 @@ Wait until processing finishes and record the status in
 
 Do not reuse build number 5 after uploading it. Change `1.0.0+5` to `+6` or
 higher for any replacement binary.
+
+The checked-in export options set `manageAppVersionAndBuildNumber` to false.
+This is intentional: Xcode must not silently rewrite the exported IPA to a
+different build number than the archive and `pubspec.yaml`. The 2026-07-23
+verification reproduced that rewrite with the default export and then verified
+archive/IPA agreement when the checked-in export options were used.
 
 ## App Store Connect beta setup
 
