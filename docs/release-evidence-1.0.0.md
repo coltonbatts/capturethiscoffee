@@ -14,20 +14,20 @@ status change.
 | Starting branch/commit | `main` / `54d9f7c360978d0f0ec488ff6b27cef5c3e5526a` | Verified |
 | Release branch | `codex/release-1.0.0` / `d196ff7` | Merged to `main` through PR #9 on 2026-07-20 |
 | Release-candidate application source | `6003661` | Exact build-5 app source and non-shipping screenshot tooling |
-| Current committed `main` | `9cd742125447335258ca8bf16784ee791d830584` | Verified locally and on GitHub |
-| Current local candidate | `9cd7421` plus the recorded uncommitted rate-limit, dependency, export, and handoff diff | No exact release commit until reviewed and committed |
-| Pull request | `https://github.com/coltonbatts/capturethiscoffee/pull/9` | MERGED on 2026-07-20 |
+| Pre-PR #10 `main` | `9cd742125447335258ca8bf16784ee791d830584` | Verified locally and on GitHub |
+| PR #10 application candidate | `324d9c02aed480e09fdee21b44f1343acdb3c8ff` | Exact application, rate-limit, dependency, export, and initial handoff source; the later review-only documentation correction changes no app artifact |
+| Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
 | Live Vercel deployment | `dpl_8BXM4JSN2L6kYaXWMeUUvXWQhZ79` | READY, production |
 | Live deployed Git commit | `9cd742125447335258ca8bf16784ee791d830584` | Verified through Vercel |
 | Release preview deployment | `dpl_2J6VJTBb4cV79he7mJhCgyhBRqaS` / commit `dc4f33008a368feeff01b0a9817d053692ce1396` | READY |
 | Release preview URL | `https://capturethiscoffee-bu7tbtneg-coltons-projects-536a670d.vercel.app` | Vercel-auth protected |
-| Local security/dependency deploy | Must include the uncommitted limiter fix and Next.js 16.2.11 after review | Not deployed |
+| Security/dependency candidate | PR #10 commit `324d9c02aed480e09fdee21b44f1343acdb3c8ff`, including the limiter fix and Next.js 16.2.11 | Verified locally; not deployed |
 
 The live deployment now contains the merged release work and later label-design
-commits. `/privacy` and `/support` both returned 200 on 2026-07-23. It does not
-contain the current uncommitted rate-limiter fix or dependency patch.
+commits. `/privacy` and `/support` both returned 200 on 2026-07-23. It predates
+PR #10's rate-limiter and dependency changes.
 
 ## iOS build provenance
 

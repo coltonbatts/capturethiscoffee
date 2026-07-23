@@ -11,8 +11,8 @@ operating guide is [Luke Quick Start](luke-quick-start.md).
 - GitHub: `https://github.com/coltonbatts/capturethiscoffee`
 - Production branch: `main`
 - Release work branch: `codex/release-1.0.0` was merged through PR #9 on
-  2026-07-20. Current release work is on `main` plus any explicitly recorded,
-  reviewed working-tree changes.
+  2026-07-20. The current release-candidate commit and pull request are recorded
+  in `release-evidence-1.0.0.md`.
 - Release tag: create `capture-this-v1.0.0` only after the physical and external
   pilot gates pass; record the exact commit in `release-evidence-1.0.0.md`.
 - Never commit `.env.local`, share URLs/tokens, Apple credentials, temporary
