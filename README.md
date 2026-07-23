@@ -29,8 +29,8 @@ data in these documents, screenshots, logs, chat, or Git.
 Complete these in order; do not substitute automated checks for the physical
 gate:
 
-1. **Merge and deploy the reviewed release candidate.** Record the exact Git
-   commit and deployment ID, then repeat the live boundary checks in the release
+1. **Deploy the reviewed release candidate.** Record the exact merged Git commit
+   and deployment ID, then repeat the live boundary checks in the release
    evidence.
 2. **Close the owner/dashboard batch.** An account owner must verify the Vercel
    environment names and targets; Supabase migrations, RLS, Realtime, backups,
