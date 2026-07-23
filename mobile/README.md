@@ -120,12 +120,15 @@ Quick path:
 
 ```bash
 cd mobile
-flutter build ipa --release
+flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store Connect
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
 - Current release candidate: `1.0.0+5`. Bump the build suffix for every later upload (`1.0.0+6`, `1.0.0+7`, …).
+- The checked-in export options keep Xcode from silently changing the IPA build
+  number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
+  Connect agree before uploading.
 - Testers need **HTTPS** production share URLs (not LAN `http://`)
 - Internal testers: no review. External testers: beta review + privacy policy URL.
 - Builds expire after **90 days** — rebuild quarterly.

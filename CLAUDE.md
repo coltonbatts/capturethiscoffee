@@ -8,7 +8,7 @@ This is the root handoff for Claude/Claude Code. Treat it as the starting contex
 
 Follow `AGENTS.md`.
 
-This repo uses Next.js `16.2.6`, which has breaking changes versus older Next.js assumptions. Before writing Next.js code, read the relevant guide under `node_modules/next/dist/docs/`. One concrete example already in this app: the request middleware file is `src/proxy.ts`, not `middleware.ts`.
+This repo uses Next.js `16.2.11`, which has breaking changes versus older Next.js assumptions. Before writing Next.js code, read the relevant guide under `node_modules/next/dist/docs/`. One concrete example already in this app: the request middleware file is `src/proxy.ts`, not `middleware.ts`.
 
 ## Product summary
 
@@ -50,7 +50,7 @@ Current assumed PNG preset is `50mm x 30mm @ 300 DPI` from `src/lib/niimbot-m2-p
 
 ## Tech stack
 
-- Next.js `16.2.6`, App Router, React `19.2.4`.
+- Next.js `16.2.11`, App Router, React `19.2.7`.
 - TypeScript strict mode.
 - Supabase Auth, Postgres, RLS, and private `person-photos` Storage bucket.
 - Tailwind CSS v4 via `@tailwindcss/postcss`.
@@ -372,7 +372,7 @@ Local/private:
 ## Suggested first Claude prompt
 
 ```text
-You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/page.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.6, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: CTC exports CSV/PNG assets and the NIIMBOT app prints them.
+You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/page.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.11, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: CTC exports CSV/PNG assets and the NIIMBOT app prints them.
 ```
 
 ## Before handing work back

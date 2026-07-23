@@ -2,6 +2,53 @@
 
 Mobile-first coffee runner app for Capture This production shoots. Put today's people in the roster, collect their drinks, print their labels. Built for fast scanning on set—not internal ops docs.
 
+## Printer handoff
+
+The repository can build the web and iOS release candidates, but a green build
+does **not** make the NIIMBOT handoff complete. Luke must still pass the physical
+M2_H acceptance flow, demonstrate the fallback, and receive the required
+account access before the printer leaves Colton's possession.
+
+Use these documents as the handoff packet:
+
+- [Luke Quick Start](docs/luke-quick-start.md) — the one-page day-of workflow
+- [Physical release test](docs/physical-release-test.md) — the mandatory M2_H
+  evidence and Luke acceptance record
+- [Operational handoff](docs/operational-handoff.md) — ownership, inventory,
+  distribution, support boundary, and cleanup
+- [Release evidence](docs/release-evidence-1.0.0.md) — dated source, build, live,
+  and dashboard evidence
+- [TestFlight checklist](docs/testflight-checklist.md) — temporary beta
+  distribution and external-pilot gates
+
+Never put a runner token, password, service key, signing secret, or real client
+data in these documents, screenshots, logs, chat, or Git.
+
+### Smartest next steps
+
+Complete these in order; do not substitute automated checks for the physical
+gate:
+
+1. **Merge and deploy the reviewed release candidate.** Record the exact Git
+   commit and deployment ID, then repeat the live boundary checks in the release
+   evidence.
+2. **Close the owner/dashboard batch.** An account owner must verify the Vercel
+   environment names and targets; Supabase migrations, RLS, Realtime, backups,
+   and public-signup setting; Apple distribution state; credential rotation;
+   billing; renewals; and named ownership. Record evidence without copying
+   secrets.
+3. **Run one handoff session with Luke.** Luke installs/opens the supported
+   build, links a fictional production, connects the exact M2_H, prints and
+   verifies server sync, recovers an interrupted print without a duplicate,
+   completes the `/labels` fallback, and signs the physical record.
+4. **Clean up test access immediately after acceptance.** Revoke the disposable
+   runner link, remove unnecessary tester/operator access, and confirm the
+   evidence contains no real client data.
+5. **Finish durable distribution.** TestFlight is temporary and builds expire.
+   Maintain named Apple/App Store Connect owners plus a documented replacement
+   build path, and complete the planned permanent unlisted App Store
+   distribution so Luke is not dependent on Colton for reinstall or renewal.
+
 ## Design
 
 The UI is intentionally minimal and contemporary:
@@ -229,14 +276,23 @@ The app does not include or automatically insert a browser-local demo database. 
 ## Verification
 
 ```bash
-npm test
 npm run lint
+npm run test
 npm run build
+npm run verify:niimbot-export
+npm audit --omit=dev
 ```
 
 The iOS printer app:
 
 ```bash
+cd mobile && flutter pub get
 cd mobile && flutter test
 cd mobile && flutter analyze
+cd mobile && flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 ```
+
+Treat `npm audit` as a release signal, not a success guarantee: document and
+resolve or explicitly accept any remaining transitive advisory before
+production promotion. Compilation and simulator/unit tests do not prove
+Bluetooth behavior, print quality, or recovery on the physical M2_H.

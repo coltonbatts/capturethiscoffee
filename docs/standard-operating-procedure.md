@@ -1,6 +1,6 @@
 # Capture This Coffee SOP
 
-Last updated: 2026-07-05
+Last updated: 2026-07-23
 
 ## Purpose
 
@@ -22,6 +22,9 @@ Use this SOP for:
 
 Related docs:
 
+- [Luke Quick Start](luke-quick-start.md)
+- [Physical release test and acceptance](physical-release-test.md)
+- [Operational ownership and handoff](operational-handoff.md)
 - [Label image export](label-image-export.md)
 - [App experience map](app-experience-map.md)
 - [V1 readiness checklist](v1-readiness.md)

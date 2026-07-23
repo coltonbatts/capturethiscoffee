@@ -14,17 +14,74 @@ describe("public API guard", () => {
     });
     const scope = `test-${Math.random()}`;
 
-    enforcePublicApiRateLimit({ request, scope, token: "token", limit: 2 });
-    enforcePublicApiRateLimit({ request, scope, token: "token", limit: 2 });
+    enforcePublicApiRateLimit({ request, scope, limit: 2 });
+    enforcePublicApiRateLimit({ request, scope, limit: 2 });
     assert.throws(
       () =>
         enforcePublicApiRateLimit({
           request,
           scope,
-          token: "token",
           limit: 2,
         }),
       (error) => error instanceof PublicApiGuardError && error.status === 429,
+    );
+  });
+
+  it("does not let one client bypass the limit by rotating fake tokens", () => {
+    const requestForToken = (token: string) =>
+      new Request(`https://example.test/api?token=${token}`, {
+        headers: { "x-forwarded-for": "203.0.113.21" },
+      });
+    const scope = `token-rotation-${Math.random()}`;
+
+    enforcePublicApiRateLimit({
+      request: requestForToken("wrong-token-1"),
+      scope,
+      limit: 2,
+    });
+    enforcePublicApiRateLimit({
+      request: requestForToken("wrong-token-2"),
+      scope,
+      limit: 2,
+    });
+    assert.throws(
+      () =>
+        enforcePublicApiRateLimit({
+          request: requestForToken("wrong-token-3"),
+          scope,
+          limit: 2,
+        }),
+      (error) => error instanceof PublicApiGuardError && error.status === 429,
+    );
+  });
+
+  it("keeps the in-memory limiter bounded during a same-window bucket flood", () => {
+    const scope = `bucket-flood-${Math.random()}`;
+    const now = Date.now();
+    const firstRequest = new Request("https://example.test/api", {
+      headers: { "x-forwarded-for": "198.51.0.0" },
+    });
+
+    for (let index = 0; index <= 5_000; index += 1) {
+      enforcePublicApiRateLimit({
+        request: new Request("https://example.test/api", {
+          headers: {
+            "x-forwarded-for": `198.51.${Math.floor(index / 256)}.${index % 256}`,
+          },
+        }),
+        scope,
+        limit: 1,
+        now,
+      });
+    }
+
+    assert.doesNotThrow(() =>
+      enforcePublicApiRateLimit({
+        request: firstRequest,
+        scope,
+        limit: 1,
+        now,
+      }),
     );
   });
 

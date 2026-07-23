@@ -1,6 +1,6 @@
 # Production Readiness Checklist
 
-Last updated: 2026-07-15 (1.0.0 release-candidate audit)
+Last updated: 2026-07-23 (printer handoff audit)
 
 This checklist exists to close out the two P0 blockers before Capture This
 Coffee is used on a real paid shoot:
@@ -30,17 +30,18 @@ it or getting sign-off from the tech lead.
 > description (and the numbers, if the measured size differs) to match
 > the recorded result — not before.
 
-### Release-candidate evidence snapshot — 2026-07-15
+### Release-candidate evidence snapshot — 2026-07-23
 
 No physical or dashboard-only result is treated as passed in this snapshot.
 The production deployment tested below was Vercel deployment
-`dpl_2mj6VSDnPRCJ4vCfSzHM4XsLmk64`, commit `54d9f7c`, in `READY` state and
+`dpl_8BXM4JSN2L6kYaXWMeUUvXWQhZ79`, commit `9cd7421`, in `READY` state and
 aliased to `https://coffee.capturethis.com`.
 
 | Check | Evidence collected | Result |
 |---|---|---|
-| Repository verification | 100/100 Node tests, ESLint, Next.js 16.2.10 production build, NIIMBOT export verifier, 24/24 Flutter tests, Flutter analysis, and signed App Store IPA build all passed | Verified automatically |
-| iOS release candidate | `1.0.0 (5)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; not uploaded |
+| Repository verification | 103/103 Node tests, ESLint, Next.js 16.2.11 production build, NIIMBOT export verifier, 24/24 Flutter tests, Flutter analysis, and signed App Store IPA build passed | Verified locally |
+| Dependency audit | Next.js core security findings cleared after the local 16.2.11 patch; three high findings remain in Next-bundled PostCSS/Sharp | Failed; requires upstream patch or explicit documented risk decision |
+| iOS release candidate | `1.0.0 (5)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; App Store Connect status unknown |
 | Print/sync recovery | Durable per-order states prevent automatic reprint after physical success; the operator can retry sync only or resolve uncertain output after inspection | Verified by automated state-machine tests; physical interruption test pending |
 | Mobile security/reliability | HTTPS-only public links, Keychain session migration, bounded/time-limited API requests, sanitized errors, app-resume reconnect, single-printer and M2_H validation | Verified by analysis and automated tests; BLE behavior pending hardware |
 | Label PNG contract | Server renderer test and export verifier both confirmed PNG output at `591 x 354px`; queue tests cover captured, skipped, off-set, cross-production, mismatched-person, and already-printed cases | Verified automatically; physical size remains unverified |
@@ -50,7 +51,7 @@ aliased to `https://coffee.capturethis.com`.
 | Service-role API configuration | The deployed invalid-token requests reached the token lookup and returned `403`, which would not occur if the server-only URL/key configuration failed | Operationally verified; hosting-dashboard name/value check still required |
 | Anonymous direct Supabase access | Against the same public URL/key delivered by the deployment, anonymous selects on all seven core tables plus the required `orders` update returned HTTP `401` / Postgres `42501` | Verified against deployment configuration |
 | Migration ledger and Realtime publication | Repository migrations end at `20260706120000_enable_orders_realtime.sql`; no Supabase dashboard/database-admin session was available to inspect applied migration history or publication membership | Unverified on deployed database |
-| Privacy and support routes | Release candidate includes both static routes and in-app links; current live deployment still returns 404 | Candidate verified; owner wording approval and deployment pending |
+| Privacy and support routes | Both current live routes returned HTTP 200 | Verified live; owner wording attestation pending |
 | Signed-in operator and valid/expired/revoked token flows | No safe current credential/token fixture was used; a fictional fixture is specified in `review-production-fixture.md` | Unverified |
 | CTC Printer, NIIMBOT, and fallback physical output | No iPhone, installed CTC Printer build, loaded stock, or NIIMBOT was available to this audit | Unverified |
 
@@ -71,9 +72,9 @@ Server Action boundary.
 ### Minimal remaining owner and hardware handoff
 
 1. In Vercel **Project Settings > Environment Variables**, confirm all three
-   names in B1 target Production. With the service-role value available only
-   to the reviewer, search browser-loaded sources for a short leading fragment;
-   record only pass/fail, never the fragment.
+   names in B1 target Production. If the service-role value is made available
+   to an authorized reviewer, compare it against downloaded client artifacts
+   with a script that prints only pass/fail—never the value or a fragment.
 2. In the Supabase SQL editor, run the B2 and B4 queries, including the
    `supabase_realtime` publication check, then perform one reversible
    authenticated setup write and undo it.
@@ -275,10 +276,10 @@ Confirm these are set on the **deployed** environment (not just `.env.local`):
 the public runner API routes (`/api/public/productions/[id]`,
 `/api/public/orders/[id]`) will not work without it.
 
-Also confirm the service role key is never exposed to the browser:
-open the deployed site, view page source / bundled JS, and search for the
-first several characters of the service role key. It must not appear
-anywhere in client-delivered code.
+Also confirm the service role key is never exposed to the browser. Use an
+authorized local script to compare the exact value with downloaded client
+assets while emitting only a boolean result. Do not paste the key or a fragment
+into browser search, terminal output, chat, or documentation.
 
 **Pass/fail:** Pass if the key does not appear in any browser-loaded
 asset. Fail (blocker) if it does — this is a credential leak.
@@ -362,11 +363,10 @@ the app, and signed-out visitors are redirected. Fail if Supabase reports
 `disable_signup: false` or a signed-out visitor can reach `/people`, `/labels`,
 or `/productions/new` and perform setup writes.
 
-**Release-candidate result:** Blocked. On 2026-07-15 the live Supabase Auth
-settings endpoint returned `disable_signup: false`; public registration is
-currently enabled at the auth service even though Capture This has no sign-up
-UI. All listed operator routes redirected a signed-out request to `/login`.
-Signed-in route loading and second-user access remain unverified.
+**Release-candidate result:** Partial. On 2026-07-23 the live Supabase Auth
+settings endpoint returned `disable_signup: true`, and the listed operator
+routes redirected signed-out requests to `/login`. Signed-in route loading,
+individual invitations/removal, and second-user access remain unverified.
 
 ### B4. RLS checks — BLOCKER
 
@@ -452,8 +452,8 @@ plus operator/Supabase access.
 
 | Section | Result | Signed off by | Date |
 |---|---|---|---|
-| A — NIIMBOT M2 label validation | Not run — hardware required | | 2026-07-15 audit |
-| B — Production deployment validation | Partial — B1/B2/B3/B4/B5 manual items remain | | 2026-07-15 audit |
+| A — NIIMBOT M2 label validation | Not run — hardware required | | 2026-07-23 audit |
+| B — Production deployment validation | Partial — B1/B2/B3/B4/B5 manual items remain | | 2026-07-23 audit |
 
 Do not treat Capture This Coffee as ready for paid client use until both
 sections pass in full. Partial passes with recorded exceptions must be
