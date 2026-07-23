@@ -8,6 +8,7 @@ import {
 import { buildCoffeeLabelForOrder } from "@/lib/printer-queue";
 import { enforcePublicApiRateLimit } from "@/lib/public-api-guard";
 import { renderNiimbotM2LabelPngBuffer } from "@/lib/niimbot-m2-export-server";
+import { defaultLabelDesignId, isLabelDesignId } from "@/lib/label-designs";
 import {
   ApiError,
   getSupabaseServiceRoleClient,
@@ -26,8 +27,11 @@ export async function GET(
     const { id: orderId } = await context.params;
     const productionId = request.nextUrl.searchParams.get("productionId") || "";
     const token = request.nextUrl.searchParams.get("token") || "";
+    const requestedDesign = request.nextUrl.searchParams.get("design") || "";
+    const designId = isLabelDesignId(requestedDesign)
+      ? requestedDesign
+      : defaultLabelDesignId;
     enforcePublicApiRateLimit({ request, scope: "label-png", token });
-    // The legacy "design" query param is accepted but ignored: there is one label design.
 
     if (!productionId) {
       throw new ApiError("Missing productionId.", 400);
@@ -39,7 +43,7 @@ export async function GET(
     const label = labelContext ? buildCoffeeLabelForOrder(labelContext) : null;
     if (!label) throw new ApiError("Label not found for this order.", 404);
 
-    const png = await renderNiimbotM2LabelPngBuffer(label);
+    const png = await renderNiimbotM2LabelPngBuffer(label, designId);
 
     return new Response(new Uint8Array(png), {
       headers: {

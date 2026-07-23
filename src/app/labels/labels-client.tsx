@@ -184,6 +184,7 @@ export function LabelsClient({
     [selection],
   );
   const previewLabel = labels[0];
+  const designPreviewLabel = previewLabel || testLabel;
   const selectedCount = labels.length;
 
   function chooseProduction(nextProductionId: string) {
@@ -413,7 +414,7 @@ export function LabelsClient({
   return (
     <AppShell title="Labels" breadcrumbs={[{ label: "Labels" }]} requireAuth>
       {/* Center Layout Container for a Clean Studio Vibe */}
-      <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
+      <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-5xl">
         <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -541,7 +542,7 @@ export function LabelsClient({
         </section>
 
         {/* Labels Selection & Preview Section */}
-        <div className="grid gap-6 md:grid-cols-[1.2fr_1fr] items-start">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-start">
           {/* Print Queue / Checkboxes Card */}
           <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3 min-w-0">
@@ -593,12 +594,22 @@ export function LabelsClient({
           {/* Fallback Exports / Preview Column */}
           <div className="flex flex-col gap-6">
             <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
-              <h2 className="text-lg font-black uppercase tracking-tight text-black">
-                Preview
-              </h2>
+              <div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className="text-lg font-black uppercase tracking-tight text-black">
+                    Design library
+                  </h2>
+                  <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                    {labelDesigns.length} options
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-semibold leading-snug text-zinc-600">
+                  Every option is live, print-sized, and uses the selected order.
+                </p>
+              </div>
 
               <div
-                className="grid grid-cols-2 gap-2"
+                className="grid grid-cols-2 gap-2.5"
                 role="group"
                 aria-label="Label design"
               >
@@ -608,16 +619,40 @@ export function LabelsClient({
                     type="button"
                     onClick={() => chooseDesign(design.id)}
                     aria-pressed={designId === design.id}
-                    title={design.summary}
-                    className={`inline-flex min-h-10 items-center justify-center rounded-lg border-[3px] border-black px-2.5 text-xs font-black uppercase tracking-wider transition active:translate-y-px ${
+                    className={`overflow-hidden rounded-lg border-[3px] border-black text-left transition active:translate-y-px ${
                       designId === design.id
-                        ? "bg-black text-white"
-                        : "bg-white text-black hover:bg-zinc-100"
+                        ? "bg-black text-white shadow-[3px_3px_0_#000]"
+                        : "bg-white text-black hover:-translate-y-0.5 hover:shadow-[3px_3px_0_#000]"
                     }`}
                   >
-                    {design.name}
+                    {designPreviewLabel ? (
+                      <span className="label-design-thumb block aspect-[5/3] overflow-hidden border-b-[3px] border-black bg-zinc-200">
+                        <ScreenLabel label={designPreviewLabel} design={design.id} />
+                      </span>
+                    ) : null}
+                    <span className="block px-2.5 py-2">
+                      <span className="block text-xs font-black uppercase tracking-wider">
+                        {design.name}
+                      </span>
+                      <span
+                        className={`mt-0.5 block text-[10px] font-semibold leading-tight ${
+                          designId === design.id ? "text-zinc-300" : "text-zinc-500"
+                        }`}
+                      >
+                        {design.summary}
+                      </span>
+                    </span>
                   </button>
                 ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-3 border-t-2 border-black pt-3">
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                  Selected
+                </span>
+                <span className="text-sm font-black uppercase text-black">
+                  {labelDesigns.find((design) => design.id === designId)?.name}
+                </span>
               </div>
 
               <div

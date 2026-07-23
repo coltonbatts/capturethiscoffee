@@ -145,203 +145,411 @@ button {
   }
 }
 
-/* Label preview: smiley, name, drink. Mirrors the 50x30mm PNG export. */
+/* Shared 50x30mm proof surface. Individual systems define their own composition. */
 .screen-label {
   box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   width: min(320px, 100%);
   aspect-ratio: 5 / 3;
   height: auto;
-  padding: 14px 16px;
-  background: #ffffff;
-  color: #000000;
-  border-radius: 10px;
-}
-
-.screen-label-smiley {
-  width: 78px;
-  height: 78px;
-  flex: none;
-  object-fit: contain;
-}
-
-.screen-label-text {
-  min-width: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.screen-label h3 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 900;
-  line-height: 1.02;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.screen-label.label-name-short h3 {
-  font-size: 32px;
-}
-
-.screen-label.label-name-long h3 {
-  font-size: 22px;
-}
-
-.screen-label.label-name-compressed h3 {
-  font-size: 19px;
-}
-
-.screen-label-order {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-/* Knockout design: full-bleed black, white type. Mirrors the PNG export. */
-.screen-label.screen-label-knockout {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 0;
-  background: #000000;
-  color: #ffffff;
-}
-
-.screen-label-knockout .screen-label-wordmark {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 900;
-  font-style: italic;
-  line-height: 1.1;
-}
-
-.screen-label-knockout h3 {
-  -webkit-line-clamp: 1;
-}
-
-.screen-label-knockout .screen-label-rule {
-  margin: 4px 0;
-  border: 0;
-  border-top: 2px solid #ffffff;
-}
-
-.screen-label-knockout .screen-label-order {
-  -webkit-line-clamp: 1;
-  text-transform: uppercase;
-}
-
-.screen-label-knockout .screen-label-footer {
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.screen-label-knockout .screen-label-footer span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (min-width: 375px) {
-  .screen-label {
-    gap: 18px;
-    padding: 18px 22px;
-  }
-
-  .screen-label-smiley {
-    width: 108px;
-    height: 108px;
-  }
-
-  .screen-label h3 {
-    font-size: 30px;
-  }
-
-  .screen-label.label-name-short h3 {
-    font-size: 38px;
-  }
-
-  .screen-label.label-name-long h3 {
-    font-size: 25px;
-  }
-
-  .screen-label.label-name-compressed h3 {
-    font-size: 21px;
-  }
-
-  .screen-label-order {
-    font-size: 15px;
-  }
-
-  .screen-label-knockout .screen-label-wordmark {
-    font-size: 17px;
-  }
-
-  .screen-label-knockout .screen-label-footer {
-    font-size: 11px;
-  }
+  background: #fff;
+  color: #000;
 }
 
 @media (min-width: 640px) {
   .screen-label {
-    gap: 24px;
     width: 430px;
     height: 258px;
-    padding: 24px 30px;
-    border-radius: 12px;
-  }
-
-  .screen-label-smiley {
-    width: 148px;
-    height: 148px;
-  }
-
-  .screen-label h3 {
-    font-size: 40px;
-  }
-
-  .screen-label.label-name-short h3 {
-    font-size: 50px;
-  }
-
-  .screen-label.label-name-long h3 {
-    font-size: 34px;
-  }
-
-  .screen-label.label-name-compressed h3 {
-    font-size: 28px;
-  }
-
-  .screen-label-order {
-    font-size: 20px;
-  }
-
-  .screen-label-knockout .screen-label-wordmark {
-    font-size: 22px;
-  }
-
-  .screen-label-knockout .screen-label-footer {
-    font-size: 13px;
   }
 }
+
+.label-design-thumb .screen-label {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+/* Label collection 02: typographic systems for Swiss / industrial / editorial art direction. */
+:is(
+  .screen-label-grid-01,
+  .screen-label-grid-02,
+  .screen-label-instrument,
+  .screen-label-contact,
+  .screen-label-caption,
+  .screen-label-block
+) {
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:is(
+  .screen-label-grid-01,
+  .screen-label-grid-02,
+  .screen-label-instrument,
+  .screen-label-contact,
+  .screen-label-caption,
+  .screen-label-block
+) h3 {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+:is(
+  .screen-label-grid-01,
+  .screen-label-grid-02,
+  .screen-label-instrument,
+  .screen-label-contact,
+  .screen-label-caption,
+  .screen-label-block
+).label-name-short h3 {
+  font-size: 34px;
+}
+
+.label-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.label-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label-meta span:last-child { text-align: right; }
+
+.label-drink {
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.screen-label-grid-01 {
+  display: grid;
+  grid-template-columns: 9% minmax(0, 1fr);
+}
+
+.label-grid-index,
+.label-grid-rail {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10px;
+  background: #000;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.label-grid-01-copy,
+.label-grid-02-copy {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  padding: 13px 15px 13px 17px;
+}
+
+.label-grid-01-copy > .label-meta:first-child,
+.label-grid-02-copy > .label-meta:first-child {
+  padding-bottom: 7px;
+  border-bottom: 1px solid #000;
+}
+
+.label-grid-01-name {
+  align-self: center;
+}
+
+.label-grid-01-name > p {
+  margin: 0 0 4px;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.label-grid-01-copy > .label-drink,
+.label-grid-02-copy > .label-drink {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #000;
+}
+
+.screen-label-grid-02 {
+  display: grid;
+  grid-template-columns: 18% minmax(0, 1fr);
+}
+
+.label-grid-rail {
+  font-size: 20px;
+  writing-mode: initial;
+  transform: none;
+}
+
+.label-grid-02-copy h3 { align-self: center; }
+
+.screen-label-instrument {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 8px;
+  padding: 13px 16px;
+}
+
+.label-instrument-rule { border-top: 1px solid #000; }
+
+.label-instrument-body {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 27%;
+  align-items: center;
+  gap: 12px;
+}
+
+.label-instrument-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.label-index {
+  margin: 0;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.label-instrument-copy .label-drink { margin-top: -1px; }
+
+.label-instrument-order {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #000;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.label-instrument-order span {
+  font-size: 6px;
+  font-weight: 800;
+}
+
+.label-instrument-order strong { font-size: 17px; }
+
+.screen-label-contact {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 8px;
+  padding: 15px 22px;
+}
+
+.label-contact-copy {
+  align-self: center;
+  max-width: 87%;
+}
+
+.label-contact-copy .label-drink { margin-top: 12px; }
+
+.label-contact-vertical {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translateY(-50%) rotate(-90deg);
+}
+
+.label-crop {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: #000;
+}
+
+.label-crop-tl { top: 5px; left: 5px; border-top: 1px solid; border-left: 1px solid; }
+.label-crop-tr { top: 5px; right: 5px; border-top: 1px solid; border-right: 1px solid; }
+.label-crop-bl { bottom: 5px; left: 5px; border-bottom: 1px solid; border-left: 1px solid; }
+.label-crop-br { right: 5px; bottom: 5px; border-right: 1px solid; border-bottom: 1px solid; }
+
+.screen-label-caption {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 14px 17px;
+}
+
+.label-caption-copy { align-self: end; padding-bottom: 15px; }
+
+.label-caption-kicker {
+  margin: 0 0 8px;
+  font-size: 7px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.label-caption-copy .label-drink { margin-top: 10px; }
+
+.screen-label-caption > .label-meta:last-child {
+  padding-top: 8px;
+  border-top: 1px solid #000;
+}
+
+.screen-label-block {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.screen-label-block > .label-meta { padding: 11px 14px; }
+
+.label-block-name {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: #000;
+  color: #fff;
+}
+
+.label-block-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px 13px;
+}
+
+.label-block-footer .label-drink {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.label-block-footer > span {
+  flex: none;
+  font-size: 6px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  :is(
+    .screen-label-grid-01,
+    .screen-label-grid-02,
+    .screen-label-instrument,
+    .screen-label-contact,
+    .screen-label-caption,
+    .screen-label-block
+  ) h3 {
+    font-size: 43px;
+  }
+
+  :is(
+    .screen-label-grid-01,
+    .screen-label-grid-02,
+    .screen-label-instrument,
+    .screen-label-contact,
+    .screen-label-caption,
+    .screen-label-block
+  ).label-name-short h3 {
+    font-size: 55px;
+  }
+
+  .label-meta { font-size: 10px; }
+  .label-drink { font-size: 18px; }
+  .label-grid-index { font-size: 13px; padding-bottom: 17px; }
+  .label-grid-rail { font-size: 31px; padding-bottom: 16px; }
+  .label-grid-01-copy,
+  .label-grid-02-copy { gap: 12px; padding: 20px 25px; }
+  .label-grid-01-name > p,
+  .label-caption-kicker { font-size: 10px; }
+  .screen-label-instrument { gap: 12px; padding: 20px 24px; }
+  .label-index { font-size: 9px; }
+  .label-instrument-order span { font-size: 9px; }
+  .label-instrument-order strong { font-size: 25px; }
+  .screen-label-contact { gap: 12px; padding: 24px 34px; }
+  .label-contact-vertical { right: 8px; font-size: 9px; }
+  .screen-label-caption { padding: 22px 26px; }
+  .screen-label-block > .label-meta { padding: 16px 22px; }
+  .label-block-name { padding: 14px 22px; }
+  .label-block-footer { padding: 15px 22px 18px; }
+  .label-block-footer > span { font-size: 9px; }
+}
+
+/* The chooser keeps the full composition but reduces its typography proportionally. */
+.label-design-thumb :is(
+  .screen-label-grid-01,
+  .screen-label-grid-02,
+  .screen-label-instrument,
+  .screen-label-contact,
+  .screen-label-caption,
+  .screen-label-block
+) h3 { font-size: 12px; }
+
+.label-design-thumb :is(
+  .screen-label-grid-01,
+  .screen-label-grid-02,
+  .screen-label-instrument,
+  .screen-label-contact,
+  .screen-label-caption,
+  .screen-label-block
+).label-name-short h3 { font-size: 15px; }
+
+.label-design-thumb .label-meta { font-size: 3px; }
+.label-design-thumb .label-drink { font-size: 5px; }
+.label-design-thumb .label-grid-index { padding-bottom: 5px; font-size: 5px; }
+.label-design-thumb .label-grid-rail { padding-bottom: 5px; font-size: 8px; }
+.label-design-thumb .label-grid-01-copy,
+.label-design-thumb .label-grid-02-copy { gap: 3px; padding: 6px 7px; }
+.label-design-thumb .label-grid-01-name > p,
+.label-design-thumb .label-caption-kicker,
+.label-design-thumb .label-index { margin-bottom: 2px; font-size: 3px; }
+.label-design-thumb .label-grid-01-copy > .label-drink,
+.label-design-thumb .label-grid-02-copy > .label-drink { padding-bottom: 3px; }
+.label-design-thumb .screen-label-instrument { gap: 3px; padding: 6px 7px; }
+.label-design-thumb .label-instrument-copy { gap: 2px; }
+.label-design-thumb .label-instrument-order { border-width: 1px; }
+.label-design-thumb .label-instrument-order span { font-size: 3px; }
+.label-design-thumb .label-instrument-order strong { font-size: 7px; }
+.label-design-thumb .screen-label-contact { gap: 3px; padding: 7px 10px; }
+.label-design-thumb .label-contact-copy .label-drink { margin-top: 4px; }
+.label-design-thumb .label-contact-vertical { right: 2px; font-size: 3px; }
+.label-design-thumb .label-crop { width: 4px; height: 4px; }
+.label-design-thumb .screen-label-caption { padding: 6px 7px; }
+.label-design-thumb .label-caption-copy { padding-bottom: 4px; }
+.label-design-thumb .label-caption-copy .label-drink { margin-top: 4px; }
+.label-design-thumb .screen-label-block > .label-meta,
+.label-design-thumb .label-block-name,
+.label-design-thumb .label-block-footer { padding: 5px 7px; }
+.label-design-thumb .label-block-footer > span { font-size: 3px; }
 
 @media print {
   .no-print {

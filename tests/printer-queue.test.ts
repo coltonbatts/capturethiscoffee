@@ -84,7 +84,7 @@ describe("printer queue helpers", () => {
         name: "Launch shoot",
         status: "active",
       },
-      designId: "smiley",
+      designId: "grid-01",
       labels: [
         {
           orderId: "order-1",

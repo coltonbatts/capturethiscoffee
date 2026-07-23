@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import type { CoffeeLabel } from "@/lib/label-copy";
 import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
 import { drawNiimbotM2Label, niimbotM2ExportPreset } from "@/lib/niimbot-m2-draw";
@@ -18,8 +18,6 @@ function ensureFontsRegistered() {
   }
 }
 
-let captureSmileyPromise: ReturnType<typeof loadImage> | undefined;
-
 export async function renderNiimbotM2LabelPngBuffer(
   label: CoffeeLabel,
   designId: LabelDesignId = defaultLabelDesignId,
@@ -32,21 +30,11 @@ export async function renderNiimbotM2LabelPngBuffer(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas export is not available on the server.");
 
-  const captureSmiley =
-    designId === "smiley" ? await loadCaptureSmileyImage() : null;
   drawNiimbotM2Label(
     ctx as unknown as CanvasRenderingContext2D,
     label,
-    captureSmiley as unknown as CanvasImageSource | null,
     designId,
   );
 
   return canvas.toBuffer("image/png");
-}
-
-function loadCaptureSmileyImage() {
-  captureSmileyPromise ??= loadImage(
-    join(process.cwd(), "public", "capture-this-smiley-transparent.png"),
-  );
-  return captureSmileyPromise;
 }

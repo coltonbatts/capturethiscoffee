@@ -4,6 +4,7 @@ import sharp from "sharp";
 import type { CoffeeLabel } from "../src/lib/label-copy";
 import { renderNiimbotM2LabelPngBuffer } from "../src/lib/niimbot-m2-export-server";
 import { niimbotM2ExportPreset } from "../src/lib/niimbot-m2-draw";
+import { labelDesigns } from "../src/lib/label-designs";
 
 describe("server NIIMBOT M2 PNG renderer", () => {
   it("renders name and drink ink on the text side of the label", async () => {
@@ -23,6 +24,18 @@ describe("server NIIMBOT M2 PNG renderer", () => {
       countTextSideInk(data, info.width, info.height, info.channels) > 300,
       "expected visible name/drink ink on the right side of the label",
     );
+  });
+
+  it("renders every design in the client library at the printer preset size", async () => {
+    for (const design of labelDesigns) {
+      const png = await renderNiimbotM2LabelPngBuffer(sampleLabel, design.id);
+      const metadata = await sharp(png).metadata();
+
+      assert.equal(metadata.format, "png", design.name);
+      assert.equal(metadata.width, niimbotM2ExportPreset.pixelWidth, design.name);
+      assert.equal(metadata.height, niimbotM2ExportPreset.pixelHeight, design.name);
+      assert.ok(png.byteLength > 2_000, `${design.name} should contain visible artwork`);
+    }
   });
 });
 

@@ -1,5 +1,4 @@
 import type { CoffeeLabel } from "@/lib/label-copy";
-import { captureThisSmileyTransparentSrc } from "@/lib/brand-assets";
 import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
 import {
   drawNiimbotM2Label,
@@ -8,8 +7,6 @@ import {
 } from "@/lib/niimbot-m2-draw";
 
 export { niimbotM2ExportPreset };
-
-let captureThisSmileyImagePromise: Promise<HTMLImageElement> | undefined;
 
 export function niimbotM2ExportFileName(
   label: Pick<CoffeeLabel, "personName" | "title" | "orderId"> | string,
@@ -34,9 +31,7 @@ export async function renderNiimbotM2LabelPngBlob(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas export is not available in this browser.");
 
-  const captureSmiley =
-    designId === "smiley" ? await loadCaptureThisSmileyImage() : null;
-  drawNiimbotM2Label(ctx, label, captureSmiley, designId);
+  drawNiimbotM2Label(ctx, label, designId);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -44,21 +39,4 @@ export async function renderNiimbotM2LabelPngBlob(
       else reject(new Error("Could not export the label PNG."));
     }, "image/png");
   });
-}
-
-function loadCaptureThisSmileyImage() {
-  captureThisSmileyImagePromise ??= new Promise<HTMLImageElement>((resolve, reject) => {
-    if (typeof Image === "undefined") {
-      reject(new Error("Image loading is not available in this browser."));
-      return;
-    }
-
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Could not load Capture This smiley artwork."));
-    image.src = captureThisSmileyTransparentSrc;
-  });
-
-  return captureThisSmileyImagePromise;
 }
