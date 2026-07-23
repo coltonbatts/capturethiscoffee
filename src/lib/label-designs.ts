@@ -29,6 +29,16 @@ export const labelDesigns = [
     name: "Block",
     summary: "A severe brutalist field built for instant recognition.",
   },
+  {
+    id: "halo",
+    name: "Halo",
+    summary: "Holographic reveal: a bold name on bare metallic with the drink in a shimmer bar.",
+  },
+  {
+    id: "orbit",
+    name: "Orbit",
+    summary: "Y2K worldwide: a chrome wireframe globe, sparkle marks, and a drink pill.",
+  },
 ] as const;
 
 export type LabelDesignId = (typeof labelDesigns)[number]["id"];

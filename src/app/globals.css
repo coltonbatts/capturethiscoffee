@@ -174,7 +174,9 @@ button {
   .screen-label-instrument,
   .screen-label-contact,
   .screen-label-caption,
-  .screen-label-block
+  .screen-label-block,
+  .screen-label-halo,
+  .screen-label-orbit
 ) {
   position: relative;
   overflow: hidden;
@@ -192,7 +194,9 @@ button {
   .screen-label-instrument,
   .screen-label-contact,
   .screen-label-caption,
-  .screen-label-block
+  .screen-label-block,
+  .screen-label-halo,
+  .screen-label-orbit
 ) h3 {
   margin: 0;
   display: -webkit-box;
@@ -213,7 +217,9 @@ button {
   .screen-label-instrument,
   .screen-label-contact,
   .screen-label-caption,
-  .screen-label-block
+  .screen-label-block,
+  .screen-label-halo,
+  .screen-label-orbit
 ).label-name-short h3 {
   font-size: 34px;
 }
@@ -460,6 +466,80 @@ button {
   text-transform: uppercase;
 }
 
+/* Halo: holo-forward. Bare stock is the field; ink only where it must anchor. */
+.screen-label-halo {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  padding: 13px 16px;
+}
+
+.label-halo-name { align-self: center; }
+
+.label-halo-bar {
+  display: flex;
+  align-items: center;
+  margin: 0 -16px;
+  padding: 9px 16px;
+  background: #000;
+  color: #fff;
+}
+
+.label-halo-bar .label-drink {
+  font-weight: 900;
+  text-transform: uppercase;
+  -webkit-line-clamp: 1;
+}
+
+/* Orbit: Y2K worldwide. Chrome wireframe globe over holo-forward restraint. */
+.screen-label-orbit {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 8px;
+  padding: 13px 16px;
+}
+
+.label-orbit-globe {
+  position: absolute;
+  top: 9px;
+  right: 11px;
+  width: 60px;
+  height: 60px;
+  color: #000;
+}
+
+.label-orbit-head {
+  display: grid;
+  gap: 3px;
+}
+
+.label-orbit-head p {
+  margin: 0;
+  max-width: 74%;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.label-orbit-name { align-self: center; }
+
+.label-orbit-bar {
+  display: flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+}
+
+.label-orbit-bar .label-drink {
+  font-weight: 900;
+  text-transform: uppercase;
+  -webkit-line-clamp: 1;
+}
+
 @media (min-width: 640px) {
   :is(
     .screen-label-grid-01,
@@ -467,7 +547,9 @@ button {
     .screen-label-instrument,
     .screen-label-contact,
     .screen-label-caption,
-    .screen-label-block
+    .screen-label-block,
+    .screen-label-halo,
+    .screen-label-orbit
   ) h3 {
     font-size: 43px;
   }
@@ -478,7 +560,9 @@ button {
     .screen-label-instrument,
     .screen-label-contact,
     .screen-label-caption,
-    .screen-label-block
+    .screen-label-block,
+    .screen-label-halo,
+    .screen-label-orbit
   ).label-name-short h3 {
     font-size: 55px;
   }
@@ -511,7 +595,9 @@ button {
   .screen-label-instrument,
   .screen-label-contact,
   .screen-label-caption,
-  .screen-label-block
+  .screen-label-block,
+  .screen-label-halo,
+  .screen-label-orbit
 ) h3 { font-size: 12px; }
 
 .label-design-thumb :is(
@@ -520,7 +606,9 @@ button {
   .screen-label-instrument,
   .screen-label-contact,
   .screen-label-caption,
-  .screen-label-block
+  .screen-label-block,
+  .screen-label-halo,
+  .screen-label-orbit
 ).label-name-short h3 { font-size: 15px; }
 
 .label-design-thumb .label-meta { font-size: 3px; }

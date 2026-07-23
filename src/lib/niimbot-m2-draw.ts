@@ -28,6 +28,12 @@ export function drawNiimbotM2Label(
     case "block":
       drawBlock(ctx, label);
       return;
+    case "halo":
+      drawHalo(ctx, label);
+      return;
+    case "orbit":
+      drawOrbit(ctx, label);
+      return;
     default:
       drawGrid01(ctx, label);
   }
@@ -214,6 +220,176 @@ function drawBlock(ctx: CanvasContext, label: CoffeeLabel) {
   ctx.font = "900 30px Arial, Helvetica, sans-serif";
   drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), left, 301, width, 31, 1, 18);
   drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 335);
+}
+
+/**
+ * Holographic reveal: tuned for metallic/holo thermal stock, where the printer
+ * lays down black and every unprinted pixel shows the shine. Ink is kept to a
+ * bold black name on bare stock plus a single matte-black drink bar with
+ * shimmering knockout text — the one hard-contrast anchor on the label.
+ */
+function drawHalo(ctx: CanvasContext, label: CoffeeLabel) {
+  const { pixelWidth } = niimbotM2ExportPreset;
+  const left = 40;
+  const right = pixelWidth - 40;
+  const width = right - left;
+
+  resetCanvas(ctx);
+  ctx.fillStyle = "#000000";
+
+  // Minimal top meta so the metallic reads as the field, not a printed panel.
+  drawMetaRow(ctx, "CAPTURE THIS COFFEE", `NO. ${orderNumber(label)}`, left, right, 48);
+
+  // Hero name: crisp black letters floating on bare holographic stock.
+  drawResponsiveName(ctx, labelName(label), left, 192, width, {
+    shortSize: 104,
+    longSize: 66,
+    longY: 164,
+    lineHeight: 60,
+    minSize: 30,
+  });
+
+  // Drink: the single contrast anchor — matte black bar, shimmering knockout.
+  const barTop = 244;
+  const barHeight = 62;
+  ctx.fillRect(24, barTop, pixelWidth - 48, barHeight);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 30px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), 48, barTop + 42, width - 16, 31, 1, 18);
+
+  // Bottom meta on bare stock.
+  ctx.fillStyle = "#000000";
+  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 336);
+}
+
+/**
+ * Y2K "worldwide" moment: same holo-forward restraint as Halo, plus a chrome
+ * wireframe globe, sparkle marks, and a lozenge/pill drink bar. On metallic
+ * stock the thin globe lines read as chrome with the shine coming through.
+ */
+function drawOrbit(ctx: CanvasContext, label: CoffeeLabel) {
+  const { pixelWidth } = niimbotM2ExportPreset;
+  const left = 40;
+  const right = pixelWidth - 40;
+  const width = right - left;
+
+  resetCanvas(ctx);
+  ctx.fillStyle = "#000000";
+
+  // Chrome wireframe globe, top-right, with a couple of sparkle marks.
+  drawWireframeGlobe(ctx, 508, 82, 46, 3);
+  drawSparkle(ctx, 447, 44, 9);
+  drawSparkle(ctx, 549, 132, 6);
+
+  // Top label + worldwide kicker carrying the order number.
+  ctx.font = "700 14px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "start";
+  ctx.fillText("CAPTURE THIS COFFEE", left, 50);
+  ctx.font = "700 12px Arial, Helvetica, sans-serif";
+  drawEllipsisText(
+    ctx,
+    `WORLDWIDE COFFEE SERVICE  ·  NO. ${orderNumber(label)}`,
+    left,
+    72,
+    340,
+  );
+
+  // Hero name on bare stock.
+  drawResponsiveName(ctx, labelName(label), left, 202, width, {
+    shortSize: 96,
+    longSize: 62,
+    longY: 180,
+    lineHeight: 56,
+    minSize: 30,
+  });
+
+  // Drink in a Y2K pill — matte black, shimmering knockout text.
+  const barTop = 250;
+  const barHeight = 62;
+  drawRoundedRect(ctx, 24, barTop, pixelWidth - 48, barHeight, barHeight / 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 30px Arial, Helvetica, sans-serif";
+  drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), 58, barTop + 42, width - 44, 31, 1, 18);
+
+  ctx.fillStyle = "#000000";
+  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 340);
+}
+
+/** Line-art globe (outline, curved meridians, latitude lines) for 1-bit output. */
+function drawWireframeGlobe(
+  ctx: CanvasContext,
+  cx: number,
+  cy: number,
+  r: number,
+  lineWidth: number,
+) {
+  ctx.save();
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = lineWidth;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx, cy + r);
+  ctx.stroke();
+
+  for (const rx of [r * 0.34, r * 0.7]) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  for (const f of [0, 0.45, 0.8]) {
+    const dy = r * f;
+    const halfWidth = Math.sqrt(Math.max(r * r - dy * dy, 0));
+    for (const sign of f === 0 ? [1] : [-1, 1]) {
+      const y = cy + sign * dy;
+      ctx.beginPath();
+      ctx.moveTo(cx - halfWidth, y);
+      ctx.lineTo(cx + halfWidth, y);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+/** Four-point Y2K sparkle. */
+function drawSparkle(ctx: CanvasContext, x: number, y: number, size: number) {
+  const inner = size * 0.16;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size);
+  ctx.lineTo(x + inner, y - inner);
+  ctx.lineTo(x + size, y);
+  ctx.lineTo(x + inner, y + inner);
+  ctx.lineTo(x, y + size);
+  ctx.lineTo(x - inner, y + inner);
+  ctx.lineTo(x - size, y);
+  ctx.lineTo(x - inner, y - inner);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawRoundedRect(
+  ctx: CanvasContext,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  radius: number,
+) {
+  const r = Math.min(radius, h / 2, w / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 function resetCanvas(ctx: CanvasContext) {

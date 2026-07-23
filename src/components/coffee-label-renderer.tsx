@@ -99,6 +99,32 @@ export function ScreenLabel({
     );
   }
 
+  if (design === "halo") {
+    return (
+      <div className={rootClass}>
+        <LabelMeta left="Capture This Coffee" right={`No. ${order}`} />
+        <div className="label-halo-name"><h3 title={name}>{name}</h3></div>
+        <div className="label-halo-bar"><p className="label-drink">{drink}</p></div>
+        <LabelMeta left={production} right={group} />
+      </div>
+    );
+  }
+
+  if (design === "orbit") {
+    return (
+      <div className={rootClass}>
+        <GlobeMark />
+        <div className="label-orbit-head">
+          <p>Capture This Coffee</p>
+          <p className="label-orbit-kicker">Worldwide Service · No. {order}</p>
+        </div>
+        <div className="label-orbit-name"><h3 title={name}>{name}</h3></div>
+        <div className="label-orbit-bar"><p className="label-drink">{drink}</p></div>
+        <LabelMeta left={production} right={group} />
+      </div>
+    );
+  }
+
   return (
     <div className={rootClass}>
       <div className="label-grid-index" aria-hidden="true">01</div>
@@ -112,6 +138,22 @@ export function ScreenLabel({
         <LabelMeta left={production} right={group} />
       </div>
     </div>
+  );
+}
+
+function GlobeMark() {
+  return (
+    <svg className="label-orbit-globe" viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="4">
+        <circle cx="50" cy="50" r="46" />
+        <line x1="50" y1="4" x2="50" y2="96" />
+        <line x1="4" y1="50" x2="96" y2="50" />
+        <ellipse cx="50" cy="50" rx="16" ry="46" />
+        <ellipse cx="50" cy="50" rx="33" ry="46" />
+        <line x1="16" y1="27" x2="84" y2="27" />
+        <line x1="16" y1="73" x2="84" y2="73" />
+      </g>
+    </svg>
   );
 }
 
