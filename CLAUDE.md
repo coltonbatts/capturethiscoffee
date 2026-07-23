@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-15
+Last updated: 2026-07-23
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -25,7 +25,7 @@ The app has two primary sections — **Day** (`/productions`: the shoot day, eve
 Core workflow:
 
 1. A team member signs in and creates people/day/roster.
-2. Runner opens the production roster, taps a person, takes their drink order (or marks "No drink").
+2. Runner opens the share link (`/run/[id]?token=...`), taps a person, takes their drink order (or marks "No drink").
 3. The board tracks one progress metric: drinks captured out of roster total.
 4. Once drinks are captured, labels print as a batch: **CTC Printer** (`mobile/`) for direct M2_H BLE printing, or `/labels` for batch PNG/CSV export.
 
@@ -46,7 +46,7 @@ The `/labels` screen currently supports two paths:
 - CSV export for NIIMBOT batch templates, intended for bulk crew labels.
 - PNG export/share/download for hero/client cups and high-control branded labels.
 
-Current assumed PNG preset is `50mm x 30mm @ 300 DPI` from `src/lib/niimbot-m2-preset.json`. This still needs physical verification against the actual label roll and NIIMBOT app import behavior.
+PNG preset is `50mm x 30mm @ 300 DPI` from `src/lib/niimbot-m2-preset.json`. Physical printing through the CTC Printer BLE path is proven on the real M2_H (confirmed 2026-07-23). The NIIMBOT-app PNG-import fallback path remains unverified.
 
 ## Tech stack
 
@@ -91,80 +91,55 @@ Server API routes also require `SUPABASE_SERVICE_ROLE_KEY`. That key is used onl
 
 ```text
 src/proxy.ts
-  Next 16 proxy. Gates setup routes behind Supabase sign-in (any user).
+  Next 16 proxy. Gates /productions, /people, /labels behind Supabase sign-in;
+  redirects legacy /productions/[id]?token runner links to /run/[id].
 
 src/app/
-  layout.tsx
-  page.tsx
-  login/page.tsx
-  productions/page.tsx
-  productions/productions-client.tsx
-  productions/new/page.tsx
-  productions/new/new-production-client.tsx
-  productions/[id]/page.tsx
-  productions/[id]/production-dashboard-client.tsx
-  productions/[id]/components.tsx
-  productions/[id]/use-coffee-store.ts
-  productions/[id]/use-roster-view.ts
-  people/page.tsx
-  people/people-client.tsx
-  labels/page.tsx
-  labels/labels-client.tsx
+  layout.tsx, page.tsx, manifest.ts, globals.css
+  login/page.tsx, privacy/page.tsx, support/page.tsx
+  productions/{page,productions-client,layout}.tsx
+  productions/new/{page,new-production-client}.tsx
+  productions/[id]/{page,layout,components,production-dashboard-client}.tsx
+  productions/[id]/{use-coffee-store,use-roster-view}.ts
+  run/[id]/{page,runner-board}.tsx + use-runner-board.ts  (public token runner board)
+  people/{page,people-client,layout}.tsx
+  labels/{page,labels-client,layout}.tsx
   operator-actions.ts
   api/public/productions/[id]/route.ts
+  api/public/productions/[id]/labels/route.ts
   api/public/orders/[id]/route.ts
+  api/public/orders/[id]/label/route.ts
 
 src/components/
-  app-shell.tsx
-  app-auth-provider.tsx
-  coffee-label-renderer.tsx
-  person-photo-field.tsx
-  ui.tsx
+  app-shell.tsx, app-auth-provider.tsx, providers.tsx, home-auth-button.tsx
+  public-info-page.tsx, capture-mark.tsx
+  coffee-label-renderer.tsx, person-photo-field.tsx, ui.tsx
 
 src/lib/
-  types.ts
-  operator-inputs.ts
-  operator-validation.ts
-  operator-production-reconciliation.ts
-  auth.ts
-  supabase.ts
-  supabase-server.ts
-  supabase-config.ts
-  production-share.ts
-  people.ts
-  person-photo-upload.ts
-  order-progress.ts
-  order-summary.ts
-  printer-queue.ts
-  label-copy.ts
-  label-export.ts
-  label-designs.ts
-  niimbot-m2-export.ts
-  niimbot-m2-preset.json
+  types.ts, auth.ts, people.ts, person-photo-upload.ts, data-errors.ts
+  supabase.ts, supabase-server.ts, supabase-config.ts
+  operator-inputs.ts, operator-validation.ts
+  operator-production-{reconciliation,load-state,people}.ts
+  production-share.ts, share-links.ts, share-url.ts, public-api-guard.ts, route-access.ts
+  production-board.ts, production-order-preference.ts, order-progress.ts, order-summary.ts
+  printer-queue.ts, label-copy.ts, label-export.ts, label-preparation.ts
+  label-designs.ts, brand-assets.ts
+  niimbot-m2-export.ts, niimbot-m2-export-server.ts, niimbot-m2-draw.ts, niimbot-m2-preset.json
 
-src/server/operator/
-  context.ts
-  clients.ts
-  people.ts
-  productions.ts
-  roster.ts
-  orders.ts
-  queries.ts
-  brand-assets.ts
+src/server/
+  auth.ts
+  operator/{context,clients,people,productions,roster,orders,order-drafts,queries,mappers,errors,validation}.ts
+  productions/{dto,queries}.ts  (token-scoped runner/printer DTOs)
+
+mobile/
+  CTC Printer Flutter app (see mobile/README.md)
 
 supabase/
   schema.sql
   migrations/*.sql
 
 tests/
-  auth.test.ts
-  label-copy.test.ts
-  label-export.test.ts
-  order-progress.test.ts
-  order-summary.test.ts
-  printer-queue.test.ts
-  production-share.test.ts
-  share-links.test.ts
+  *.test.ts (19 files — see "Current tests")
 ```
 
 ## Data model
@@ -202,12 +177,13 @@ Team access (since 2026-07-03):
 
 - Any signed-in Supabase Auth user has full access. Admin/staff app metadata is no longer required or consulted.
 - `src/lib/auth.ts` keeps the `isAdminAppUser` name for compatibility, but it now just means "signed in" (same for the `isAdmin` flag from `useAppAuth`).
-- `src/proxy.ts` protects `/people`, `/labels`, and `/productions/new` behind sign-in.
+- `src/proxy.ts` protects `/people`, `/labels`, and all of `/productions` behind sign-in (`isProtectedOperatorPath` in `src/lib/route-access.ts`).
 
 Runner access:
 
 - Runners do not need an account for the active day-of board.
-- They need a production share link with a token.
+- They need a production share link with a token; the runner board is `/run/[id]?token=...` (legacy `/productions/[id]?token=...` links redirect there).
+- Share links are minted and copied from the production board UI (`mintProductionShareTokenAction` in `src/app/operator-actions.ts`).
 - Tokens are stored as SHA-256 hashes in `production_share_tokens`.
 - The public API routes use the service-role client, validate the token, and return/update only scoped production data.
 - Runner payloads intentionally omit private person notes and dietary notes, but include `usual_order` as an operational prompt.
@@ -215,7 +191,10 @@ Runner access:
 Public routes:
 
 - `GET /api/public/productions/[id]?token=...` returns scoped runner data for `planning` or `active` productions.
+- `GET /api/public/productions/[id]/labels?token=...` returns the printer label queue for the CTC Printer app.
+- `GET /api/public/orders/[id]/label?token=...` renders a single label PNG server-side (`src/lib/niimbot-m2-export-server.ts`).
 - `PATCH /api/public/orders/[id]` accepts `{ productionId, token, patch }`, validates the token, requires the production to be `active`, and only allows fields listed in `runnerOrderFields` in `src/lib/production-share.ts`.
+- All public routes are rate-limited via `src/lib/public-api-guard.ts`.
 
 Supabase RLS:
 
@@ -252,21 +231,34 @@ Design constraints:
 - Do not expose service-role credentials in client code. Browser code must use only public Supabase URL/anon key.
 - Before editing Next.js routing, request, response, config, or proxy behavior, check `node_modules/next/dist/docs/`.
 - `context.params` in current route handlers is awaited as a Promise; preserve current Next 16 conventions unless docs say otherwise.
-- `src/app/productions/[id]/use-coffee-store.ts` owns runner-board loading, optimistic order updates, retry, and rollback. It is a good pattern to preserve.
+- `src/app/productions/[id]/use-coffee-store.ts` owns operator-board loading, optimistic order updates, retry, and rollback; the public runner board has its own store in `src/app/run/[id]/use-runner-board.ts`. Both are good patterns to preserve.
 - `src/lib/production-share.ts` is the security boundary for public runner data and order patches. Add tests for changes there.
-- `src/app/labels/page.tsx` is still a large page, but it is now the correct label-asset workflow, not an obsolete print station.
+- `src/app/labels/labels-client.tsx` is still a large file, but it is the correct label-asset workflow, not an obsolete print station (`labels/page.tsx` is now a thin wrapper).
 - Avoid reviving removed laptop/USB print-station concepts. Existing docs that mention them may be historical.
 
 ## Current tests
 
-Existing tests cover:
+Existing tests (19 files in `tests/`):
 
-- `tests/order-progress.test.ts`
-- `tests/order-summary.test.ts`
-- `tests/label-copy.test.ts`
-- `tests/label-export.test.ts`
-- `tests/printer-queue.test.ts`
-- `tests/production-share.test.ts`
+- `auth.test.ts`
+- `label-copy.test.ts`
+- `label-export.test.ts`
+- `niimbot-m2-export-server.test.ts`
+- `operator-boundary.test.ts`
+- `operator-production-load-state.test.ts`
+- `operator-production-people.test.ts`
+- `operator-production-reconciliation.test.ts`
+- `order-progress.test.ts`
+- `order-summary.test.ts`
+- `printer-queue.test.ts`
+- `production-board-state.test.ts`
+- `production-dto.test.ts`
+- `production-order-preference.test.ts`
+- `production-share.test.ts`
+- `public-api-guard.test.ts`
+- `route-separation.test.ts`
+- `share-links.test.ts`
+- `supabase-runtime.test.ts`
 
 Run:
 
@@ -284,29 +276,13 @@ npm run verify:niimbot-export
 
 ## Known risks and backlog
 
-### P0 - Verify physical label workflow
+### Mostly resolved - Verify physical label workflow
 
-The app assumes 50mm x 30mm at 300 DPI. Confirm against the actual NIIMBOT M2 roll and mobile app import behavior.
+Physical printing via the primary path (CTC Printer app → M2_H over BLE, 50mm x 30mm @ 300 DPI) is proven on real stock as of 2026-07-23. Still open: verify the fallback path (PNG export from `/labels` imported into the official NIIMBOT app) and record findings in `docs/label-image-export.md`.
 
-Tasks:
+### Completed - Validate production deployment access
 
-- Read the physical roll dimensions and shape.
-- Export one PNG from `/labels`.
-- Import it into the NIIMBOT app.
-- Print on the actual stock.
-- Update `src/lib/niimbot-m2-preset.json` if sizing is wrong.
-- Record findings in `docs/label-image-export.md` and `docs/niimbot-m2-plan.md`.
-
-### P0 - Validate production deployment access
-
-Before real client use:
-
-- Confirm deployed env vars.
-- Confirm `SUPABASE_SERVICE_ROLE_KEY` is set for public API routes.
-- Confirm RLS is active.
-- Confirm anonymous direct table reads/writes fail.
-- Confirm signed-in users can manage setup data (apply `20260703120000_authenticated_full_access.sql`).
-- Confirm share-token runner links work on a second device.
+Live deployment, env vars, RLS posture, anonymous-access denial, and share-token behavior were verified for the 1.0.0 release; evidence in `docs/release-evidence-1.0.0.md`. Public Supabase signup is disabled (verified 2026-07-23).
 
 ### Completed - operator DAL migration (Phase 5)
 
@@ -329,27 +305,40 @@ design must preserve the account-free token boundary and optimistic-edit merge.
 
 Large files:
 
-- `src/app/productions/[id]/components.tsx` is about 937 lines.
-- `src/app/labels/page.tsx` is about 654 lines.
+- `src/app/productions/[id]/components.tsx` is about 1130 lines.
+- `src/app/labels/labels-client.tsx` is about 920 lines.
 
 Do this only when working in those areas. Avoid refactors that do not support a product change or bug fix.
 
 ### P1 - Strengthen test coverage
 
-High-value next tests:
+Since covered: Supabase runtime config (`supabase-runtime.test.ts`), token validation and rate limiting (`production-share.test.ts`, `public-api-guard.test.ts`), CSV export content (`label-export.test.ts`), label PNG dimensions (`niimbot-m2-export-server.test.ts`).
 
-- Session-bound Supabase data behavior and sanitized configuration failures.
-- API route token validation and order patch behavior.
-- Roster view filtering/grouping.
-- CSV export content if NIIMBOT batch becomes a core workflow.
-- Label PNG generation dimensions.
+Remaining high-value next test:
+
+- Roster view filtering/grouping (`src/app/productions/[id]/use-roster-view.ts`).
 
 ### P2 - Product polish
 
-- Improve label design variants in `src/components/coffee-label-renderer.tsx`.
-- Add final NIIMBOT CSV template guidance after physical testing.
-- Improve admin flow for generating and copying production share links; currently token creation is documented with SQL in `README.md`.
-- Keep docs current as implementation changes.
+- Improve label design variants (`src/lib/label-designs.ts` has 8 designs including Halo/Orbit holographic; label designs are the current product frontier).
+- Add final NIIMBOT CSV template guidance after physical testing of the fallback path.
+- Keep docs current as implementation changes. (Share-link admin flow is done: links are minted from the production board UI.)
+
+## Verify before trusting
+
+Load-bearing claims in this doc, and a sub-minute re-check for each:
+
+- Next/React versions: `grep '"next"\|"react"' package.json`.
+- npm scripts: `grep -A8 scripts package.json`.
+- File map: `find src -type f | sort` and compare.
+- Test list: `ls tests/`.
+- Line counts for the "split large files" items: `wc -l "src/app/productions/[id]/components.tsx" src/app/labels/labels-client.tsx`.
+- Proxy-protected routes and legacy runner redirect: read `src/proxy.ts` (matcher at bottom) and `src/lib/route-access.ts`.
+- Public API surface: `ls -R src/app/api/public`.
+- Runner patch allowlist: `grep -A10 runnerOrderFields src/lib/production-share.ts`.
+- Schema tables: `grep "create table" supabase/schema.sql`.
+- Latest applied migration / RLS posture: `ls supabase/migrations/` (hosted-DB state is in memory/docs, not the repo).
+- Physical print / release status: `docs/release-evidence-1.0.0.md` and `docs/physical-release-test.md` — but repo docs lag reality; treat dated claims here (2026-07-23) as the floor, not the ceiling.
 
 ## Documentation status
 
@@ -372,7 +361,7 @@ Local/private:
 ## Suggested first Claude prompt
 
 ```text
-You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/page.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.11, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: CTC exports CSV/PNG assets and the NIIMBOT app prints them.
+You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/labels-client.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.11, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: the CTC Printer iOS app (mobile/) prints to the M2_H over BLE via the public label APIs; /labels PNG/CSV export is the fallback.
 ```
 
 ## Before handing work back
