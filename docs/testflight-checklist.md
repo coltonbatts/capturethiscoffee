@@ -15,12 +15,14 @@ permanent target is an approved unlisted App Store link.
 | Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally; preserved as build-5 evidence |
 | iPhone-only target, app/privacy manifests, permissions, licenses | Verified in build 5 IPA |
 | Next handoff source `1.0.0+6` | Implemented with in-app operating guide and Active-production print guard |
-| Signed App Store IPA for `1.0.0 (6)` | Built and inspected locally on 2026-07-24; SHA-256 recorded in release evidence |
+| Signed App Store IPA for `1.0.0 (6)` | Exact recorded artifact uploaded through Xcode Organizer on 2026-07-24; SHA-256 recorded in release evidence |
 | Production `/privacy` and `/support` | Live; both returned 200 on 2026-07-23 |
 | Stable fictional review production | Pending private operator access |
-| Build 5 uploaded/processed | Confirmed by the account owner; internal/external group status still needs recording |
-| TestFlight beta metadata | Drafted in `docs/app-store-release.md` |
-| First external Beta App Review | Pending |
+| Build 6 uploaded/processed | Upload completed at 12:57 PM CDT; App Store Connect reports processing `Complete`, binary `Validated`, and TestFlight status `Ready to Submit` |
+| Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone and one label printed successfully per owner report on 2026-07-24 |
+| TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
+| External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
+| First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
 | Buddy invited by email | Pending owner-supplied email / approved build |
 | Buddy install, link, M2_H print, and sync pilot | Pending physical hardware |
 
@@ -28,10 +30,11 @@ Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
 
-Build 5 remains the existing TestFlight pilot. Build 6 has a signed local
-artifact and becomes the supported handoff build only after its upload and
-physical pilot are recorded. Never describe a local IPA as an uploaded
-TestFlight build.
+Build 6 is now the processed internal TestFlight candidate. The owner's
+installation and one successful label are a smoke test, not the full physical
+release gate: printer identity, firmware, stock, batch behavior, interruption
+recovery, web synchronization, and Luke's independent run still need the
+record in `docs/physical-release-test.md`.
 
 ## Before upload
 
@@ -64,8 +67,8 @@ Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
 `docs/release-evidence-1.0.0.md`.
 
-Do not reuse build number 5. Build 6 is the next candidate; after it is
-uploaded, change `1.0.0+6` to `+7` or higher for any replacement binary.
+Do not reuse build number 6. It was uploaded on 2026-07-24; change `1.0.0+6`
+to `+7` or higher for any replacement binary.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a

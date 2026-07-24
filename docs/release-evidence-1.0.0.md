@@ -16,7 +16,7 @@ status change.
 | Release-candidate application source | `6003661` | Exact build-5 app source and non-shipping screenshot tooling |
 | Pre-PR #10 `main` | `9cd742125447335258ca8bf16784ee791d830584` | Verified locally and on GitHub |
 | PR #10 application candidate | `324d9c02aed480e09fdee21b44f1343acdb3c8ff` | Exact application, rate-limit, dependency, export, and initial handoff source; the later review-only documentation correction changes no app artifact |
-| Build-6 handoff source | Current working tree; commit pending | Adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
+| Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -39,7 +39,7 @@ Root, `/privacy`, and `/support` returned 200 on 2026-07-24.
 | Display name | Capture This | Capture This | Capture This |
 | Device family | iPhone + iPad | iPhone only | iPhone only |
 | IPA SHA-256 | `0480b56e0ed5ae495059935cf7313c31e370f9cd897827c4f99acc4c11fc936f` | Prior 2026-07-15 export: `0ba08aa4a9a502ef3907ebbf4ac367ee3d2625ed681e6001ec7f91935a389f05`; current reproducible export: `11478ace75a8b0890bc06e853e8150646221ffb095139f90d45b8dbd930f3594` | `519e26af9dcd1ad6081986d2c1f22239dfbdbbbd36c022c00c11216055ad617c` |
-| Distribution status | Uploaded, processed, internally installed (prior audit/user evidence) | Uploaded/processed in TestFlight per account-owner confirmation on 2026-07-24 | Signed App Store IPA built/inspected locally; not uploaded |
+| Distribution status | Uploaded, processed, internally installed (prior audit/user evidence) | Uploaded/processed in TestFlight per account-owner confirmation on 2026-07-24 | Uploaded through Xcode Organizer on 2026-07-24; processing complete, internally available, external review not submitted |
 
 Build-4 evidence is preserved under the ignored local directory
 `mobile/build/ios/ipa/build-4-evidence/`. File timestamps show the dirty local
@@ -54,6 +54,26 @@ build-number management. The final rebuild verified source, archive, and IPA
 all remain `1.0.0 (5)`. The account owner confirmed build 5 is now in
 TestFlight. Build 6 must receive a new signed archive/IPA and cannot reuse build
 5's artifact evidence.
+
+## TestFlight build 6 status
+
+| Item | Confirmed result |
+|---|---|
+| Upload artifact | `mobile/build/ios/ipa/ctc_printer.ipa`, SHA-256 `519e26af9dcd1ad6081986d2c1f22239dfbdbbbd36c022c00c11216055ad617c` |
+| Upload workflow/time | Xcode Organizer reported `ctc_printer 1.0.0 (6) uploaded`; App Store Connect records Jul 24, 2026 at 12:57 PM CDT |
+| Processing | Build Uploads status `Complete`; binary state `Validated`; no upload warning or error was shown |
+| Version/build and bundle | `1.0.0 (6)` / `com.capturethis.ctcprinter` |
+| Export compliance | App Store Connect metadata: **App Uses Non-Exempt Encryption — No** |
+| Device metadata | iPhone, arm64, minimum iOS 13.0 |
+| Internal availability | TestFlight status `Ready to Submit`; assigned to internal group `Main` with one invite |
+| Internal smoke test | Account owner reported installing build 6 on an iPhone and printing one label successfully on 2026-07-24; device, iOS, M2_H identity, firmware, stock, batch, recovery, and web-sync details were not supplied |
+| Beta metadata | Beta description, privacy URL, and build-specific **What to Test** saved from `docs/app-store-release.md` |
+| External group | `Capture This crew pilot` created; 0 builds and 0 testers |
+| Beta App Review | Not submitted. Required feedback email and review contact first name, last name, phone, and email are blank; the private fictional review fixture also remains pending |
+| App Store Connect product name | Currently `Capture This Printer`; the signed app display name is `Capture This` |
+
+Build 6 is now consumed and must not be reused. Any shipping-code or embedded
+metadata change requires build 7 or higher.
 
 ## Automated verification
 
@@ -109,9 +129,9 @@ connected/printing image or short demo remains pending the physical M2_H gate.
 | Public Supabase signup disabled | Verified live | Public settings reported `disable_signup: true` |
 | Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
 | Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
-| Physical iPhone + M2_H test | Blocked on hardware | Completed `docs/physical-release-test.md` record |
-| App Store Connect build status | Build 5 confirmed; signed build 6 local | Upload the unique build-6 artifact and record processing/group status |
-| External TestFlight | Pending | Processed release build, Beta App Review approved, Luke pilot recorded |
+| Physical iPhone + M2_H test | One-label owner smoke test passed; full gate pending | Complete `docs/physical-release-test.md`, including exact hardware/stock, batch, recovery, sync, and Luke's independent run |
+| App Store Connect build status | Build 6 uploaded, processing complete, internally available | Preserve the processed build and use build 7+ for any replacement |
+| External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 6, submit for Beta App Review, then record Luke's pilot |
 | App Review | Pending | Production submission status and reviewer correspondence |
 | Unlisted request | Pending | Apple-approved Unlisted App status |
 | Permanent App Store link | Pending | Direct URL verified and final clean-device print smoke test |
