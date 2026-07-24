@@ -1,79 +1,66 @@
-# Luke Quick Start — Capture This printer
+# Capture This — Luke’s quick start
 
-Use this guide only after the handoff record names the supported Capture This
-version/build and the exact accepted NIIMBOT M2_H. Never update the printer
-firmware as a troubleshooting step.
+This is the whole routine. Once you do it once, it should feel pretty simple.
 
-## What you need
+## Before you start
 
-- The accepted NIIMBOT M2_H, its charger/cable, installed ribbon, and the
-  recorded label stock.
-- An iPhone running the iOS version recorded in the acceptance test.
-- The supported Capture This app. Install it from the verified unlisted App
-  Store link. If the handoff is still in a TestFlight pilot, install the named
-  current TestFlight build and remember that it expires after 90 days.
-- Internet access and a private runner link for one active production.
-- For fallback only: a signed-in Capture This web account and the official
-  NIIMBOT app.
+Grab:
 
-## Link and connect
+- Your iPhone with **Capture This** installed.
+- The NIIMBOT M2_H printer.
+- The production link Colton sends you.
 
-1. Open **Capture This** on the iPhone.
-2. Paste the complete runner link supplied privately by the production
-   coordinator, then tap **Link production**. Do not screenshot or forward it.
-3. Force-quit the official NIIMBOT app on every nearby phone or tablet.
-4. Power off every nearby NIIMBOT printer except the accepted M2_H.
-5. Wake the accepted printer and tap **Connect printer**.
-6. Check the displayed printer name against the asset/serial record. Stop if
-   Capture This finds a different model or more than one printer.
+Make sure the printer has labels and ribbon in it. Don’t update its firmware,
+even if the NIIMBOT app suggests it.
 
-## Print and refresh
+## Connect everything
 
-1. Tap **Refresh** after the runner changes or adds orders.
-2. Review the pending name and drink before tapping **Print**.
-3. After a physical success, wait for Capture This to report that the label
-   synchronized. On the hosted production board, that order should show its
-   printed badge.
-4. Use the printed-label filter only for an intentional, confirmed reprint.
+1. Open **Capture This**.
+2. Paste the production link Colton sent you.
+3. Tap **Link production**.
+4. Fully close the regular NIIMBOT app if it is open on any nearby phone or
+   tablet.
+5. Turn off any other nearby NIIMBOT printers.
+6. Turn on the M2_H and tap **Connect printer**.
 
-**Sync only** means the physical label already printed and Capture This is only
-retrying the server update. It does not send another label to the printer.
+If the app finds more than one printer, turn off the extras and try again.
 
-If a print is interrupted or the result is uncertain, inspect the printer and
-the physical stock before touching the app:
+## Print the labels
 
-- A usable label exists: choose **Label printed — sync only**.
-- Nothing printed: choose **Nothing printed — retry**.
-- You cannot tell: stop and ask the production coordinator. Do not guess and
-  create a duplicate.
+1. Tap **Refresh** to get the latest orders.
+2. Double-check the person’s name and drink.
+3. Tap **Print**.
+4. Wait for the app to say the label printed and synced before moving on.
 
-For a reconnect problem, keep the recovery record in the app, power-cycle the
-printer, confirm the official NIIMBOT app is still closed, reconnect the same
-M2_H, refresh, and continue. Do not update firmware.
+That’s it.
 
-## `/labels` fallback
+## If something goes wrong
 
-1. Ask a signed-in operator to open
-   `https://coffee.capturethis.com/labels`.
-2. Select the active production and only the required labels.
-3. Use PNG for an individual/high-control label or CSV for a NIIMBOT batch
-   template.
-4. Open the official NIIMBOT app, import the asset, select the accepted stock
-   size/orientation, and print one test label before a batch.
-5. Treat fallback printing as manual: confirm printed status on the hosted
-   board with the production coordinator.
+First, look at the printer and see whether a usable label came out.
 
-## When something fails
+- **A good label came out:** choose **Label printed — sync only**. This tells
+  the website it printed without printing a second copy.
+- **Nothing came out:** choose **Nothing printed — retry**.
+- **You aren’t sure:** stop and text Colton. Don’t guess and accidentally print
+  a duplicate.
 
-Contact: **OWNER INPUT — support person/mailbox and day-of phone**
+If the printer disconnects:
 
-Record only:
+1. Leave the recovery message in the app.
+2. Turn the printer off and back on.
+3. Make sure the regular NIIMBOT app is fully closed.
+4. Reconnect in Capture This and continue.
 
-- Date/time, iPhone model, iOS, Capture This version/build.
-- Printer asset/serial, firmware, ribbon, stock, and measured label size.
-- Last successful step, exact sanitized error text, and whether a physical
-  label came out.
-- A fictional-data photo if output quality is the problem.
+Never update the printer firmware as a troubleshooting step.
 
-Never send a runner link/token, password, service key, signing file, real
-client data, or a screenshot containing any of those items.
+## If the app still won’t print
+
+Text Colton with:
+
+- What you were trying to do.
+- The exact error message.
+- Whether a physical label came out.
+- Your iPhone model and iOS version.
+
+Don’t send the production link or a screenshot that shows it. That link is
+private.

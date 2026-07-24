@@ -11,6 +11,8 @@ account access before the printer leaves Colton's possession.
 
 Use these documents as the handoff packet:
 
+- [Handoff hub](docs/HANDOFF.md) — start here; role-based index, kit,
+  day-of sequence, failure decisions, and definition of done
 - [Luke Quick Start](docs/luke-quick-start.md) — the one-page day-of workflow
 - [Physical release test](docs/physical-release-test.md) — the mandatory M2_H
   evidence and Luke acceptance record

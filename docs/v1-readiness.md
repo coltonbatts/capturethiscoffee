@@ -107,9 +107,9 @@ once that's done.
   sharing is unavailable on the `/labels` fallback screen.
 - The current export preset has not yet been physically verified against the
   final lid-label media.
-- Version `1.0.0 (5)` is deliberately iPhone-only. iPad is not a supported or
-  tested release target.
-- The production token is Keychain-backed in build 5; unresolved print/sync
+- Version `1.0.0 (6)` is deliberately iPhone-only. iPad is not a supported or
+  tested release target. Build 5 remains the prior TestFlight pilot.
+- The production token is Keychain-backed; unresolved print/sync
   evidence remains local until the server confirms the order printed.
 - Multiple nearby NIIMBOT devices are blocked rather than connecting to an
   arbitrary first result. Power off all but the intended M2_H.

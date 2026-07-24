@@ -21,7 +21,7 @@ void main() {
         expect(request.url.queryParameters['token'], _session.token);
         return http.Response(
           jsonEncode({
-            'production': {'name': 'Review Day'},
+            'production': {'name': 'Review Day', 'status': 'active'},
             'designId': 'production-sticker-sheet',
             'labels': [
               {
@@ -42,6 +42,8 @@ void main() {
 
     final queue = await api.fetchQueue();
     expect(queue.productionName, 'Review Day');
+    expect(queue.productionStatus, 'active');
+    expect(queue.isProductionActive, isTrue);
     expect(queue.labels.single.personName, 'Jamie Example');
     expect(queue.labels.single.labelPrinted, isFalse);
   });
@@ -51,7 +53,7 @@ void main() {
       _session,
       client: MockClient((_) async => http.Response(
             jsonEncode({
-              'production': {'name': 'Review Day'},
+              'production': {'name': 'Review Day', 'status': 'active'},
               'labels': [
                 {
                   'orderId': 'order-1',

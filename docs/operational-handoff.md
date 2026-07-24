@@ -4,7 +4,8 @@ Last updated: 2026-07-23
 
 This handoff grants roles, not shared passwords. Fill the ownership and renewal
 register with the account holders before the printer moves. Luke's one-page
-operating guide is [Luke Quick Start](luke-quick-start.md).
+operating guide is [Luke Quick Start](luke-quick-start.md). The role-based entry
+point and definition of done are in [the handoff hub](HANDOFF.md).
 
 ## Source and release
 

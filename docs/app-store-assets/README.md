@@ -4,6 +4,11 @@ The `iphone-6.9/` PNGs are provisional English (U.S.) App Store screenshots
 captured from the iPhone 17 Pro Max simulator at an accepted 6.9-inch portrait
 size of 1320×2868 pixels.
 
+These files represent the build-5 UI. Build 6 adds a production-status chip and
+an in-app operating guide, so recapture the entire final set before submitting
+build 6. The Flutter golden files are layout regression artifacts that use the
+test font; they are not App Store screenshots.
+
 | File | Screen | Data source |
 |---|---|---|
 | `01-link-production.png` | Unlinked production entry screen | Actual release UI, no token entered |

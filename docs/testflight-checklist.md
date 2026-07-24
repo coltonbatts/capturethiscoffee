@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -11,20 +11,27 @@ permanent target is an approved unlisted App Store link.
 |---|---|
 | Bundle ID `com.capturethis.ctcprinter` and App Store record | Verified by build-4 upload history |
 | Build `0.1.0 (4)` uploaded, processed, installed internally | Verified by prior audit/user evidence |
-| Release version `1.0.0+5` | Implemented |
-| Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally |
+| TestFlight pilot version `1.0.0+5` | Uploaded/processed per account-owner confirmation on 2026-07-24 |
+| Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally; preserved as build-5 evidence |
 | iPhone-only target, app/privacy manifests, permissions, licenses | Verified in build 5 IPA |
+| Next handoff source `1.0.0+6` | Implemented with in-app operating guide and Active-production print guard |
+| Signed App Store IPA for `1.0.0 (6)` | Built and inspected locally on 2026-07-24; SHA-256 recorded in release evidence |
 | Production `/privacy` and `/support` | Live; both returned 200 on 2026-07-23 |
 | Stable fictional review production | Pending private operator access |
-| Build 5 uploaded/processed | Unknown until the App Store Connect owner checks; do not infer from a local export |
+| Build 5 uploaded/processed | Confirmed by the account owner; internal/external group status still needs recording |
 | TestFlight beta metadata | Drafted in `docs/app-store-release.md` |
 | First external Beta App Review | Pending |
 | Buddy invited by email | Pending owner-supplied email / approved build |
 | Buddy install, link, M2_H print, and sync pilot | Pending physical hardware |
 
-Build 4 is not the release candidate: it predates Keychain session storage,
+Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
+
+Build 5 remains the existing TestFlight pilot. Build 6 has a signed local
+artifact and becomes the supported handoff build only after its upload and
+physical pilot are recorded. Never describe a local IPA as an uploaded
+TestFlight build.
 
 ## Before upload
 
@@ -36,8 +43,9 @@ the application privacy manifest, and the 1.0 product version.
    `docs/physical-release-test.md`.
 5. Confirm App Store name is **Capture This** and upload screenshots containing
    only fictional data.
-6. Confirm build 5 is still the exact tested IPA. If any code, metadata embedded
-   in the binary, or print constants change, bump the build number and rebuild.
+6. Confirm source, archive, IPA, and App Store Connect all say
+   `1.0.0 (6)`. If any code, embedded metadata, or print constants change after
+   upload, bump to build 7 or higher and rebuild.
 
 ## Build and upload
 
@@ -56,8 +64,8 @@ Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
 `docs/release-evidence-1.0.0.md`.
 
-Do not reuse build number 5 after uploading it. Change `1.0.0+5` to `+6` or
-higher for any replacement binary.
+Do not reuse build number 5. Build 6 is the next candidate; after it is
+uploaded, change `1.0.0+6` to `+7` or higher for any replacement binary.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a
@@ -73,14 +81,14 @@ archive/IPA agreement when the checked-in export options were used.
 3. Add the beta description, **What to Test**, feedback email, contact, privacy
    URL, and support URL from `docs/app-store-release.md`.
 4. Create an external group named `Capture This crew pilot`.
-5. Add build 5 and submit it for TestFlight App Review.
+5. Add build 6 and submit it for TestFlight App Review.
 6. After approval, invite the buddy by email rather than a broadly shareable
    public link. Do not include the production share token in the invitation.
 7. Send the fictional review URL privately and keep the fixture active.
 
 The first external build requires Apple’s beta review. Internal-only builds
 cannot be promoted to external groups; use the normal App Store/TestFlight
-upload path for build 5.
+upload path for build 6.
 
 ## Buddy pilot acceptance
 

@@ -1,5 +1,10 @@
 # Capture This Coffee — Where We're At + Where We're Headed
 
+> **Historical only — do not use for current printer or handoff decisions.**
+> This note predates the working Capture This iPhone app. The current primary
+> path is direct printing to the NIIMBOT M2_H. Start with
+> [`docs/HANDOFF.md`](docs/HANDOFF.md) and the current operator quick start.
+
 Hey Luke,
 
 Here's a quick overview of where Capture This Coffee stands and where I think we should take the printing setup.

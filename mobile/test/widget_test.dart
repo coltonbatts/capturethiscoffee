@@ -1,3 +1,5 @@
+import 'package:ctc_printer/ctc_api.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -5,6 +7,36 @@ import 'package:ctc_printer/main.dart';
 import 'package:ctc_printer/print_recovery.dart';
 import 'package:ctc_printer/production_session.dart';
 import 'package:ctc_printer/session_store.dart';
+
+const _planningSession = ProductionSession(
+  apiBase: 'https://coffee.capturethis.com',
+  productionId: 'planning-production',
+  token: 'fixture-token',
+);
+
+class _PlanningApi extends CtcApi {
+  _PlanningApi(super.session);
+
+  @override
+  Future<PrinterQueue> fetchQueue() async => const PrinterQueue(
+        productionName: 'Tomorrow’s Shoot',
+        productionStatus: 'planning',
+        designId: 'grid-01',
+        labels: [
+          QueueLabel(
+            orderId: 'order-1',
+            personName: 'Jamie Example',
+            drink: 'Iced oat latte',
+            group: 'Crew',
+            status: 'confirmed',
+            labelPrinted: false,
+          ),
+        ],
+      );
+
+  @override
+  void close() {}
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +49,45 @@ void main() {
     ));
     await tester.pump();
     expect(find.text('Link production'), findsOneWidget);
+  });
+
+  testWidgets('in-app quick start is available before linking',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(PrinterApp(
+      sessionRepository: MemorySessionRepository(),
+      printRecoveryRepository: MemoryPrintRecoveryRepository(),
+    ));
+    await tester.pump();
+    await tester.tap(find.byTooltip('How to use Capture This'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to use Capture This'), findsOneWidget);
+    expect(find.text('Link an active production'), findsOneWidget);
+  });
+
+  testWidgets('planning productions visibly pause physical printing',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(PrinterApp(
+      sessionRepository: MemorySessionRepository(_planningSession),
+      printRecoveryRepository: MemoryPrintRecoveryRepository(),
+      apiFactory: _PlanningApi.new,
+    ));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Printing paused'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Printing paused'), findsOneWidget);
+    expect(find.text('Production planning'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.widgetWithText(FilledButton, 'Print'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    final printButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Print'),
+    );
+    expect(printButton.onPressed, isNull);
   });
 
   test('parseProductionShareUrl accepts the canonical runner link', () {

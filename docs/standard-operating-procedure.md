@@ -1,10 +1,10 @@
-# Capture This Coffee SOP
+# Capture This standard operating procedure
 
 Last updated: 2026-07-23
 
 ## Purpose
 
-Capture This Coffee is the drink-order tool for a production day. The whole
+Capture This is the drink-order tool for a production day. The whole
 workflow is one sentence: put today's people on the roster, collect their
 drinks, print their labels. Each roster person either still needs their drink
 order taken, has a drink captured, or is marked "no drink." Once drinks are
@@ -22,6 +22,7 @@ Use this SOP for:
 
 Related docs:
 
+- [Handoff hub](HANDOFF.md)
 - [Luke Quick Start](luke-quick-start.md)
 - [Physical release test and acceptance](physical-release-test.md)
 - [Operational ownership and handoff](operational-handoff.md)
@@ -52,7 +53,8 @@ label export.
 The native iPhone **Capture This** app is the primary on-set print path. It opens
 the same runner share link, fetches the pending label queue from the public API,
 prints to the NIIMBOT M2_H over Bluetooth LE, and marks each order
-`label_printed`.
+`label_printed`. Build 6 also keeps the condensed operating and recovery guide
+inside the app and pauses new physical prints until the production is Active.
 
 ### `/labels` fallback
 

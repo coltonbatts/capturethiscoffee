@@ -14,6 +14,7 @@ const _session = ProductionSession(
 
 const _queue = PrinterQueue(
   productionName: 'Apple Review Coffee Run',
+  productionStatus: 'active',
   designId: 'production-sticker-sheet',
   labels: [
     QueueLabel(
@@ -137,6 +138,31 @@ void main() {
         ),
       ]),
       golden: '03-print-sync-recovery.png',
+    );
+  });
+
+  testWidgets('App Store screenshot — in-app operating guide', (tester) async {
+    tester.view.devicePixelRatio = 3;
+    tester.view.physicalSize = const Size(1320, 2868);
+    addTearDown(tester.view.reset);
+
+    const boundaryKey = Key('app-store-screenshot-boundary');
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: boundaryKey,
+        child: PrinterApp(
+          sessionRepository: MemorySessionRepository(),
+          printRecoveryRepository: MemoryPrintRecoveryRepository(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('How to use Capture This'));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byKey(boundaryKey),
+      matchesGoldenFile('goldens/app-store/04-in-app-guide.png'),
     );
   });
 }

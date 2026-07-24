@@ -27,6 +27,7 @@ const _session = ProductionSession(
 
 const _queue = PrinterQueue(
   productionName: 'Apple Review Coffee Run',
+  productionStatus: 'active',
   designId: 'production-sticker-sheet',
   labels: [
     QueueLabel(

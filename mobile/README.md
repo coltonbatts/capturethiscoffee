@@ -1,10 +1,16 @@
 # Capture This — NIIMBOT M2_H BLE (iPhone)
 
-Native iOS app that prints Capture This Coffee cup labels directly to the NIIMBOT M2_H over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered server-side by the Next.js app and fetched with the same production share-token auth the runner board uses.
+Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered server-side by the Next.js app and fetched with the same production share-token auth the runner board uses.
+
+The in-app help screen contains the condensed day-of workflow and duplicate-safe
+recovery rules. The complete role-based handoff packet starts at
+[`docs/HANDOFF.md`](../docs/HANDOFF.md).
 
 ## Primary on-set workflow
 
-1. **Deploy or run CTC** with the public API routes (see repo root). Production must be **active** before `label_printed` updates will stick.
+1. **Deploy or run Capture This** with the public API routes (see repo root).
+   The production must be **Active**. Build 6 visibly pauses new physical
+   printing for Planning productions.
 2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
 3. On the iPhone, open **Capture This** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).
@@ -103,6 +109,11 @@ width while preserving aspect ratio. If output is too light/dark, adjust
 
 ## Known quirks / troubleshooting
 
+- **Flutter suggests removing CocoaPods during archive** → this is currently a
+  non-blocking migration notice. The signed build-6 IPA succeeds with the
+  checked-in Podfile/lockfile and xcconfig includes. Do not remove CocoaPods or
+  rewrite the iOS dependency setup during a release without a clean diff,
+  archive comparison, and physical M2_H regression test.
 - **Connect finds nothing** → NIIMBOT app still running somewhere (also check iPad/other phones), or the printer went to sleep (power-cycle it), or iOS Bluetooth permission was denied (Settings → Capture This).
 - **Multiple printers found** → power off every NIIMBOT except the intended M2_H. The pinned printer library cannot safely select among scan results, so the app refuses to guess.
 - **Print times out** → usually the RFID/roll check. Lid closed? Genuine roll? Ribbon installed (M2_H is thermal transfer)?
@@ -125,7 +136,11 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Current release candidate: `1.0.0+5`. Bump the build suffix for every later upload (`1.0.0+6`, `1.0.0+7`, …).
+- Existing TestFlight pilot: `1.0.0+5`.
+- Next handoff candidate: `1.0.0+6`. Its signed App Store IPA was built and
+  inspected locally; it must be uploaded and physically accepted before
+  replacing build 5.
+- Bump the build suffix for every later upload (`1.0.0+7`, `1.0.0+8`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.

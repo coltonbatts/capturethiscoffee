@@ -2,10 +2,10 @@
 
 Last updated: 2026-07-23
 
-This is the working metadata package for the iPhone-only `1.0.0 (5)` release
-candidate. Values marked **OWNER APPROVAL** must be approved or completed in
-App Store Connect by the account owner. Production share URLs and tokens must
-never be committed here.
+This is the working metadata package for the iPhone-only `1.0.0 (6)` handoff
+candidate. Build 5 remains the prior TestFlight pilot. Values marked
+**OWNER APPROVAL** must be approved or completed in App Store Connect by the
+account owner. Production share URLs and tokens must never be committed here.
 
 ## Product record
 
@@ -14,7 +14,7 @@ never be committed here.
 | App name | Capture This |
 | Subtitle | Coffee labels for crews |
 | Bundle ID | `com.capturethis.ctcprinter` |
-| Version / build | `1.0.0 (5)` |
+| Version / build | `1.0.0 (6)` |
 | Platform | iPhone only |
 | Minimum iOS | iOS 13.0 |
 | Primary language | English (U.S.) |
@@ -66,8 +66,9 @@ crew names and drink orders. Do not place that URL in Review Notes because its
 token grants access to the fixture.
 
 Bluetooth printing requires a NIIMBOT M2_H, which Apple is not expected to
-own. The queue, label previews, recovery states, privacy page, support page,
-and licensing information remain inspectable without a printer. A short video
+own. The queue, printable name/drink details, recovery states, in-app operating
+guide, privacy page, support page, and licensing information remain inspectable
+without a printer. A short video
 showing the same build printing and synchronizing on a physical M2_H may be
 attached to the review submission.
 
@@ -124,7 +125,7 @@ answer in App Store Connect against the final build and privacy policy.
 - Local storage: the linked session/token is stored in the iOS Keychain;
   unresolved print/sync recovery state is stored locally on the device.
 - Bluetooth: communication is local between the iPhone and NIIMBOT M2_H.
-- Crash/error monitoring: none is integrated in build 5. Revisit the answers
+- Crash/error monitoring: none is integrated in build 6. Revisit the answers
   if monitoring is added.
 - Retention/deletion: governed by the Capture This backend policy; requests go
   to `info@capturethis.com`. The owner must approve the stated retention and
@@ -150,13 +151,14 @@ answer in App Store Connect against the final build and privacy policy.
 
 ## Screenshot and video package
 
-Use real build-5 screens and fictional review data. Capture at least:
+Use real build-6 screens and fictional review data. Capture at least:
 
 1. Link a production.
 2. Pending label queue with short and long fictional orders.
 3. Connected M2_H and print controls.
 4. Successful synchronization / printed state.
 5. Sync-only recovery after an interrupted server update.
+6. The in-app operating guide.
 
 Provide the largest accepted iPhone portrait size in App Store Connect and
 confirm the uploaded set passes Apple’s current screenshot validator. Do not
@@ -165,12 +167,13 @@ an Apple device frame that implies unsupported hardware. A 15–30 second demo
 video may show link → connect → print → synced web state, with the token area
 cropped or blurred.
 
-Three provisional, truthful 6.9-inch portrait screenshots are prepared in
-`docs/app-store-assets/iphone-6.9/`. Each is 1320×2868 PNG with no alpha channel
-and uses only a non-shipping fictional fixture. They show production linking,
-the pending queue, and duplicate-safe print/sync recovery. They do not fabricate
-a connected printer. After the physical gate, add or replace one asset with the
-tested M2_H connected/printing state if it improves reviewer understanding.
+Three provisional, truthful build-5 screenshots remain in
+`docs/app-store-assets/iphone-6.9/` as prior evidence. Do not submit them as
+build-6 screenshots: build 6 adds the production-status chip and in-app guide.
+Recapture the final 1320×2868, no-alpha set from the signed build-6 UI with
+fictional data. Do not fabricate a connected printer. After the physical gate,
+add or replace one asset with the tested M2_H connected/printing state if it
+improves reviewer understanding.
 
 ## Submission order
 
@@ -178,7 +181,7 @@ tested M2_H connected/printing state if it improves reviewer understanding.
    production URLs still return 200.
 2. Create the non-expiring fictional review production and enter its URL only
    in App Store Connect.
-3. Upload build 5 and complete beta metadata.
+3. Build, inspect, and upload build 6, then complete beta metadata.
 4. Complete external TestFlight and the physical pilot; upload a higher build
    if any release-blocking fix is needed.
 5. Complete App Store metadata, privacy answers, rating, contact, screenshots,

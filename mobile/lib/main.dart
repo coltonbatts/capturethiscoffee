@@ -23,6 +23,7 @@ const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
+const String kAppVersion = '1.0.0 (6)';
 const _printerScanTimeout = Duration(seconds: 8);
 const _printOperationTimeout = Duration(seconds: 60);
 
@@ -204,6 +205,62 @@ class _BrandAppBarTitle extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HelpStep extends StatelessWidget {
+  const _HelpStep({
+    required this.number,
+    required this.title,
+    required this.body,
+  });
+
+  final String number;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DecoratedBox(
+            decoration: const BoxDecoration(
+              color: _captureYellow,
+              shape: BoxShape.circle,
+            ),
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Center(
+                child: Text(
+                  number,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(body),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -711,7 +768,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
       builder: (context) => AlertDialog(
         title: const Text('Capture This'),
         content: const Text(
-          'Version 1.0.0 (5)\n\nCoffee-label companion for Capture This production crews. Production access requires a share URL.',
+          'Version $kAppVersion\n\nCoffee-label companion for Capture This production crews. Production access requires a share URL.',
         ),
         actions: [
           TextButton(
@@ -734,7 +791,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
               showLicensePage(
                 context: this.context,
                 applicationName: 'Capture This',
-                applicationVersion: '1.0.0 (5)',
+                applicationVersion: kAppVersion,
               );
             },
             child: const Text('Licenses'),
@@ -744,6 +801,113 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             child: const Text('Done'),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showQuickStart() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: FractionallySizedBox(
+          heightFactor: 0.9,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            children: [
+              Text(
+                'How to use Capture This',
+                style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The production board is the source of truth. Capture This prints its captured drink orders and syncs every successful label.',
+              ),
+              const SizedBox(height: 20),
+              const _HelpStep(
+                number: '1',
+                title: 'Link an active production',
+                body:
+                    'Paste the complete private production link from the coordinator. Printing stays paused until the production is Active.',
+              ),
+              const _HelpStep(
+                number: '2',
+                title: 'Prepare the M2_H',
+                body:
+                    'Load the accepted ribbon and label stock. Force-quit the official NIIMBOT app on nearby devices and power off other NIIMBOT printers.',
+              ),
+              const _HelpStep(
+                number: '3',
+                title: 'Connect and review',
+                body:
+                    'Tap Connect printer, refresh the queue, and double-check the person and drink before printing.',
+              ),
+              const _HelpStep(
+                number: '4',
+                title: 'Print and wait for sync',
+                body:
+                    'Use Print, Print next, or Print all pending. Wait for the printed status to synchronize before moving on.',
+              ),
+              const _HelpStep(
+                number: '5',
+                title: 'Recover without duplicates',
+                body:
+                    'If a usable label came out, choose “Label printed — sync only.” If nothing printed, choose “Nothing printed — retry.” If you cannot tell, stop and ask the coordinator.',
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rules that prevent mistakes',
+                        style: Theme.of(sheetContext)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                          '• Never share or screenshot the production link.'),
+                      const Text('• Never update printer firmware on set.'),
+                      const Text(
+                          '• Never reprint when the app says Sync only.'),
+                      const Text(
+                          '• Keep internet access available while printing.'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  _openExternalPage(_supportUri);
+                },
+                icon: const Icon(Icons.support_agent),
+                label: const Text('Open support'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  _showAppInformation();
+                },
+                child: const Text('About, privacy, and licenses'),
+              ),
+              const Center(
+                child: Text(
+                  'Capture This $kAppVersion',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -837,6 +1001,11 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   }
 
   Future<void> _printOneLabel(QueueLabel item) async {
+    if (_queue?.isProductionActive != true) {
+      throw Exception(
+        'Printing is paused until the coordinator marks this production Active. Refresh after its status changes.',
+      );
+    }
     if (!_connected) {
       throw Exception('Printer not connected. Tap Connect printer first.');
     }
@@ -1227,9 +1396,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         title: const _BrandAppBarTitle(detail: 'Coffee label printer'),
         actions: [
           IconButton(
-            onPressed: _showAppInformation,
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'About, privacy, and support',
+            onPressed: _showQuickStart,
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'How to use Capture This',
           ),
         ],
       ),
@@ -1375,6 +1544,25 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                 fontWeight: FontWeight.w700,
               ),
             ),
+            if (queue != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Chip(
+                  avatar: Icon(
+                    queue.isProductionActive
+                        ? Icons.check_circle
+                        : Icons.pause_circle,
+                    size: 16,
+                  ),
+                  label: Text(
+                    queue.isProductionActive
+                        ? 'Production active'
+                        : 'Production ${queue.productionStatus}',
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -1443,6 +1631,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
   Widget _buildBatchActionsCard() {
     final pending = _pendingLabels.length;
+    final canPrint = _queue?.isProductionActive == true;
 
     return Card(
       child: Padding(
@@ -1451,14 +1640,15 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             FilledButton.icon(
-              onPressed:
-                  _busy || pending == 0 ? null : () => _printNextPending(),
+              onPressed: _busy || pending == 0 || !canPrint
+                  ? null
+                  : () => _printNextPending(),
               icon: const Icon(Icons.skip_next),
               label: const Text('Print next'),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
-              onPressed: _busy || pending == 0
+              onPressed: _busy || pending == 0 || !canPrint
                   ? null
                   : () => _confirmAndPrintAllPending(),
               icon: const Icon(Icons.playlist_play),
@@ -1511,6 +1701,42 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInactiveProductionCard() {
+    final queue = _queue;
+    if (queue == null || queue.isProductionActive) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.pause_circle, color: Colors.deepOrange),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Printing paused',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  Text(
+                    'This production is ${queue.productionStatus}. Ask the coordinator to mark it Active, then refresh the queue.',
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1719,12 +1945,17 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                       : isPrinted
                           ? OutlinedButton.icon(
                               onPressed:
-                                  _busy ? null : () => _confirmReprint(item),
+                                  _busy || _queue?.isProductionActive != true
+                                      ? null
+                                      : () => _confirmReprint(item),
                               icon: const Icon(Icons.print),
                               label: const Text('Reprint'),
                             )
                           : FilledButton.icon(
-                              onPressed: _busy ? null : () => _printLabel(item),
+                              onPressed:
+                                  _busy || _queue?.isProductionActive != true
+                                      ? null
+                                      : () => _printLabel(item),
                               icon: const Icon(Icons.print),
                               label: const Text('Print'),
                             ),
@@ -1807,9 +2038,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             tooltip: 'Change production',
           ),
           IconButton(
-            onPressed: _showAppInformation,
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'About, privacy, and support',
+            onPressed: _showQuickStart,
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'How to use Capture This',
           ),
         ],
       ),
@@ -1827,6 +2058,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                   children: [
                     _buildPrinterStatusCard(context),
                     _buildQueueSummaryCard(context),
+                    _buildInactiveProductionCard(),
                     _buildPrintRecoveryCard(),
                     _buildBatchActionsCard(),
                     if (_operatorError != null || _failedBatchLabel != null)

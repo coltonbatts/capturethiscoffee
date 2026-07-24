@@ -41,7 +41,7 @@ aliased to `https://coffee.capturethis.com`.
 |---|---|---|
 | Repository verification | 103/103 Node tests, ESLint, Next.js 16.2.11 production build, NIIMBOT export verifier, 24/24 Flutter tests, Flutter analysis, and signed App Store IPA build passed | Verified locally |
 | Dependency audit | Next.js core security findings cleared after the local 16.2.11 patch; three high findings remain in Next-bundled PostCSS/Sharp | Failed; requires upstream patch or explicit documented risk decision |
-| iOS release candidate | `1.0.0 (5)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; App Store Connect status unknown |
+| iOS handoff candidate | `1.0.0 (6)`, bundle `com.capturethis.ctcprinter`, iPhone-only, signed App Store IPA SHA-256 recorded in `release-evidence-1.0.0.md` | Verified locally; TestFlight upload pending |
 | Print/sync recovery | Durable per-order states prevent automatic reprint after physical success; the operator can retry sync only or resolve uncertain output after inspection | Verified by automated state-machine tests; physical interruption test pending |
 | Mobile security/reliability | HTTPS-only public links, Keychain session migration, bounded/time-limited API requests, sanitized errors, app-resume reconnect, single-printer and M2_H validation | Verified by analysis and automated tests; BLE behavior pending hardware |
 | Label PNG contract | Server renderer test and export verifier both confirmed PNG output at `591 x 354px`; queue tests cover captured, skipped, off-set, cross-production, mismatched-person, and already-printed cases | Verified automatically; physical size remains unverified |
@@ -83,7 +83,7 @@ Server Action boundary.
    the end.
 4. Approve the release privacy/support wording and rotate the temporary
    credential identified during this audit before granting further access.
-5. Run `docs/physical-release-test.md` with build 5, a real iPhone, the M2_H,
+5. Run `docs/physical-release-test.md` with build 6, a real iPhone, the M2_H,
    actual stock, and the fictional production. Do not update the preset from
    automated pixel evidence alone.
 

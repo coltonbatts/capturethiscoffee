@@ -62,13 +62,17 @@ class QueueLabel {
 class PrinterQueue {
   const PrinterQueue({
     required this.productionName,
+    required this.productionStatus,
     required this.designId,
     required this.labels,
   });
 
   final String productionName;
+  final String productionStatus;
   final String designId;
   final List<QueueLabel> labels;
+
+  bool get isProductionActive => productionStatus == 'active';
 
   factory PrinterQueue.fromJson(Map<String, dynamic> json) {
     final production = json['production'];
@@ -91,6 +95,7 @@ class PrinterQueue {
         'name',
         fallback: 'Production',
       ),
+      productionStatus: _requiredString(production, 'status'),
       designId: _optionalString(
         json,
         'designId',
