@@ -19,7 +19,7 @@ permanent target is an approved unlisted App Store link.
 | Production `/privacy` and `/support` | Live; both returned 200 on 2026-07-23 |
 | Stable fictional review production | Pending private operator access |
 | Build 6 uploaded/processed | Upload completed at 12:57 PM CDT; App Store Connect reports processing `Complete`, binary `Validated`, and TestFlight status `Ready to Submit` |
-| Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone and one label printed successfully per owner report on 2026-07-24 |
+| Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone. The first confirmed reprint on newly loaded holographic stock printed on the first attempt through direct Bluetooth LE, with no laptop, USB, print station, official NIIMBOT app, or other printing bridge. Photo-backed milestone recorded on 2026-07-24 |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -31,9 +31,12 @@ network bounds, printer validation, interruption recovery, iPhone-only targeting
 the application privacy manifest, and the 1.0 product version.
 
 Build 6 is now the processed internal TestFlight candidate. The owner's
-installation and one successful label are a smoke test, not the full physical
-release gate: printer identity, firmware, stock, batch behavior, interruption
-recovery, web synchronization, and Luke's independent run still need the
+first-try holographic reprint proves the intended direct-Bluetooth physical
+path and is preserved in
+`docs/milestones/2026-07-24-build-6-holographic-first-print.md`. It remains a
+smoke test, not the full physical release gate: exact stock measurements,
+printer identity and firmware, batch behavior, interruption recovery, web
+synchronization, cold-cup adhesion, and Luke's independent run still need the
 record in `docs/physical-release-test.md`.
 
 ## Before upload

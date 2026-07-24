@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -31,6 +31,19 @@ Core workflow:
 
 Simplified collection model (since 2026-07-05): the UI exposes only "needs order", "captured", "no drink", and a printed flag. The database still stores the wider legacy `OrderStatus` enum (`confirmed`/`ordered`/`picked_up`/`delivered` all render as captured; `src/lib/order-progress.ts` is the mapping). Do not reintroduce delivery-pipeline status UI (confirmed → ordered → picked up → delivered) — it was removed deliberately.
 
+## Latest physical milestone
+
+On July 24, 2026, the account owner installed iOS build 6, loaded the
+holographic label stock for the first time, selected a reprint, and produced a
+legible physical label on the first attempt. Capture This controlled the
+NIIMBOT M2_H directly over Bluetooth LE; there was no laptop, USB connection,
+local print station, official NIIMBOT app, or other printing bridge. The
+photo-backed record is in
+[`docs/milestones/2026-07-24-build-6-holographic-first-print.md`](docs/milestones/2026-07-24-build-6-holographic-first-print.md).
+This proves the single-label phone-to-printer path on the intended stock, but
+the batch, interruption-recovery, web-sync, cold-cup, and independent-operator
+parts of the physical release gate remain open.
+
 ## Current strategic direction
 
 The printer strategy is settled for now:
@@ -46,7 +59,7 @@ The `/labels` screen currently supports two paths:
 - CSV export for NIIMBOT batch templates, intended for bulk crew labels.
 - PNG export/share/download for hero/client cups and high-control branded labels.
 
-PNG preset is `50mm x 30mm @ 300 DPI` from `src/lib/niimbot-m2-preset.json`. Physical printing through the CTC Printer BLE path is proven on the real M2_H (confirmed 2026-07-23). The NIIMBOT-app PNG-import fallback path remains unverified.
+PNG preset is `50mm x 30mm @ 300 DPI` from `src/lib/niimbot-m2-preset.json`. Physical printing through the CTC Printer BLE path is proven on the real M2_H, including one first-try build-6 reprint on holographic stock on 2026-07-24. The NIIMBOT-app PNG-import fallback path remains unverified.
 
 ## Tech stack
 

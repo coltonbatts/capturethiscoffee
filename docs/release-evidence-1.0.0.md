@@ -66,7 +66,7 @@ TestFlight. Build 6 must receive a new signed archive/IPA and cannot reuse build
 | Export compliance | App Store Connect metadata: **App Uses Non-Exempt Encryption — No** |
 | Device metadata | iPhone, arm64, minimum iOS 13.0 |
 | Internal availability | TestFlight status `Ready to Submit`; assigned to internal group `Main` with one invite |
-| Internal smoke test | Account owner reported installing build 6 on an iPhone and printing one label successfully on 2026-07-24; device, iOS, M2_H identity, firmware, stock, batch, recovery, and web-sync details were not supplied |
+| Internal smoke test | Account owner installed build 6 on an iPhone, loaded holographic stock for the first time, and completed one confirmed reprint on the first attempt on 2026-07-24. Capture This controlled the printer directly over Bluetooth LE with no laptop, USB, local print station, official NIIMBOT app, or other printing bridge. Photo evidence is recorded in `docs/milestones/2026-07-24-build-6-holographic-first-print.md`; exact stock dimensions, firmware, batch, recovery, and web-sync details remain open |
 | Beta metadata | Beta description, privacy URL, and build-specific **What to Test** saved from `docs/app-store-release.md` |
 | External group | `Capture This crew pilot` created; 0 builds and 0 testers |
 | Beta App Review | Not submitted. Required feedback email and review contact first name, last name, phone, and email are blank; the private fictional review fixture also remains pending |
@@ -102,7 +102,9 @@ copied into evidence.
 Three provisional App Store PNGs are recorded under
 `docs/app-store-assets/iphone-6.9/`. Each was visually inspected, is exactly
 1320×2868, has no alpha channel, and contains only fictional data. A real
-connected/printing image or short demo remains pending the physical M2_H gate.
+connected/printing image now records the first build-6 holographic reprint in
+`docs/milestones/2026-07-24-build-6-holographic-first-print.md`. A complete
+batch/recovery demo remains pending the full physical M2_H gate.
 
 ## Live boundary evidence
 
@@ -129,7 +131,7 @@ connected/printing image or short demo remains pending the physical M2_H gate.
 | Public Supabase signup disabled | Verified live | Public settings reported `disable_signup: true` |
 | Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
 | Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
-| Physical iPhone + M2_H test | One-label owner smoke test passed; full gate pending | Complete `docs/physical-release-test.md`, including exact hardware/stock, batch, recovery, sync, and Luke's independent run |
+| Physical iPhone + M2_H test | Build 6 direct-BLE holographic reprint passed on the first try; full gate pending | Preserve the milestone evidence and complete `docs/physical-release-test.md`, including exact hardware/stock, batch, recovery, sync, cold-cup adhesion, and Luke's independent run |
 | App Store Connect build status | Build 6 uploaded, processing complete, internally available | Preserve the processed build and use build 7+ for any replacement |
 | External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 6, submit for Beta App Review, then record Luke's pilot |
 | App Review | Pending | Production submission status and reviewer correspondence |

@@ -4,6 +4,22 @@ Run this only with the signed release-candidate build on a real iPhone and the
 actual NIIMBOT M2_H/stock. Hardware support is not passed by simulator, mock,
 PNG, or archive evidence.
 
+## Partial milestone recorded — July 24, 2026
+
+The account owner installed iOS build 6, loaded the holographic stock for the
+first time, and completed one confirmed reprint on the first attempt. Capture
+This controlled the printer directly over Bluetooth LE, with no laptop, USB
+connection, local print station, official NIIMBOT app, or other printing
+bridge. The supplied photo shows a legible, aligned holographic label at the
+printer.
+
+Photo and full milestone:
+[`milestones/2026-07-24-build-6-holographic-first-print.md`](milestones/2026-07-24-build-6-holographic-first-print.md).
+
+This records the single-reprint result below as a partial pass. Do not mark the
+entire release gate passed until the remaining record, batch, synchronization,
+recovery, adhesion, and independent-operator checks are complete.
+
 ## Record first
 
 - Date/tester: _____

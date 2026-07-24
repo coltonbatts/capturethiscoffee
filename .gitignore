@@ -41,6 +41,10 @@ yarn-error.log*
 # staff handoff with credentials
 docs/*.local.md
 
+# milestone evidence photos show printed labels legibly, which means real
+# names, drinks, and client/production lines. This repository is public.
+docs/milestones/evidence/
+
 # vercel
 .vercel
 
