@@ -14,7 +14,20 @@ import {
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useAppAuth } from "@/components/app-auth-provider";
-import { EmptyState, Panel, Field, inputClass } from "@/components/ui";
+import {
+  EmptyState,
+  Panel,
+  Field,
+  alertErrorClass,
+  cardClass,
+  dangerButtonClass,
+  inputClass,
+  pageHeaderClass,
+  pageIntroClass,
+  pageTitleClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import {
   deleteProductionAction,
   updateProductionAction,
@@ -53,12 +66,8 @@ const statusRank: Record<Production["status"], number> = {
 
 const productionOrderStorageKey = "capture-this-coffee-production-order";
 
-// Premium custom buttons using our neo-brutalist studio aesthetic (thick borders, thick hover shadows)
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
+const customPrimaryBtn = primaryButtonClass;
+const customSecondaryBtn = secondaryButtonClass;
 
 export function ProductionsClient({
   initialData,
@@ -272,15 +281,14 @@ export function ProductionsClient({
         ) : null
       }
     >
-      {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
-        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] min-w-0 w-full">
+        <header className={pageHeaderClass}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-black uppercase tracking-tight text-black">
+              <h1 className={pageTitleClass}>
                 Days
               </h1>
-              <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+              <p className={pageIntroClass}>
                 Put today&apos;s people on the roster, collect their drinks,
                 print their labels.
               </p>
@@ -295,10 +303,10 @@ export function ProductionsClient({
               </Link>
             </div>
           </div>
-        </section>
+        </header>
 
         {error ? (
-          <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+          <div className={`${alertErrorClass} mb-4`} role="alert">
             {error}
           </div>
         ) : null}
@@ -308,7 +316,7 @@ export function ProductionsClient({
             {[0, 1, 2, 3].map((item) => (
               <Panel
                 key={item}
-                className="h-32 animate-pulse bg-zinc-100 p-4 border-[3px] border-black shadow-[4px_4px_0_#000]"
+                className="h-32 animate-pulse bg-black/[0.04] p-4"
               />
             ))}
           </div>
@@ -349,12 +357,10 @@ export function ProductionsClient({
         )}
       </div>
 
-      {/* Add spacing at the bottom on mobile to account for the sticky bottom nav bar */}
       <div className="h-24 sm:hidden" />
 
-      {/* Mobile Sticky Bottom Nav Bar (Thumb Zone) */}
       {isAdmin && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[3px] border-black bg-white/95 p-4 backdrop-blur-sm sm:hidden no-print shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/15 bg-[#f7f3ea]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md no-print sm:hidden">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
             <Link
               href="/productions/new"
@@ -381,12 +387,11 @@ export function ProductionsClient({
         </div>
       )}
 
-      {/* Edit Production Details Modal */}
       {editingProduction && (
-        <div className="fixed inset-0 z-50 grid items-end bg-black/55 p-4 no-print sm:items-center">
-          <div className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border-[3px] border-black bg-white p-5 shadow-[6px_6px_0_#000]">
-            <h2 className="text-lg font-black uppercase tracking-tight text-black">
-              Edit Day Details
+        <div className="fixed inset-0 z-50 grid items-end bg-black/45 p-4 backdrop-blur-[2px] no-print sm:items-center">
+          <div className="mx-auto grid max-h-[85dvh] w-full max-w-md min-w-0 gap-4 overflow-y-auto rounded-xl border border-black/20 bg-[#fffdf8] p-5">
+            <h2 className="text-lg font-semibold tracking-[-0.025em] text-black">
+              Edit day details
             </h2>
             <Field label="Day name">
               <input
@@ -558,7 +563,7 @@ function ProductionListItem({
   const content = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 w-full min-w-0">
       <div className="min-w-0 flex-1">
-        <h2 className="text-lg font-black uppercase tracking-tight text-black truncate">
+        <h2 className="truncate text-lg font-semibold tracking-[-0.025em] text-black">
           {card.production.name}
         </h2>
         <p className="mt-0.5 text-sm text-zinc-600 truncate">
@@ -568,15 +573,15 @@ function ProductionListItem({
 
       <div className="flex flex-wrap items-center gap-2">
         {card.production.status !== "complete" ? (
-          <span className="rounded-md border-[2px] border-black bg-black px-2 py-0.5 text-xs font-black uppercase text-white">
+          <span className="rounded-full border border-black bg-black px-2.5 py-1 text-xs font-semibold text-white">
             {card.production.status === "active" ? "Active" : "Planning"}
           </span>
         ) : (
-          <span className="rounded-md border-[2px] border-zinc-400 bg-zinc-100 px-2 py-0.5 text-xs font-bold uppercase text-zinc-500">
+          <span className="rounded-full border border-black/15 bg-black/[0.04] px-2.5 py-1 text-xs font-medium text-zinc-500">
             Complete
           </span>
         )}
-        <span className="rounded-md border-[2px] border-black bg-white px-2 py-0.5 text-sm font-black text-black">
+        <span className="rounded-full border border-black/15 bg-transparent px-2.5 py-1 text-sm font-semibold text-black">
           {card.remaining
             ? `${card.remaining} ${card.remaining === 1 ? "drink" : "drinks"} needed`
             : `${card.captured} ${card.captured === 1 ? "drink" : "drinks"} in`}
@@ -584,7 +589,7 @@ function ProductionListItem({
       </div>
 
       {isCustomizing && (
-        <div className="mt-3 flex items-center justify-end gap-2 border-t-[3px] border-black pt-3 sm:mt-0 sm:border-t-0 sm:pt-0">
+        <div className="mt-3 flex items-center justify-end gap-2 border-t border-black/10 pt-3 sm:mt-0 sm:border-t-0 sm:pt-0">
           <button
             type="button"
             onClick={(e) => {
@@ -593,7 +598,7 @@ function ProductionListItem({
               onMoveUp?.();
             }}
             disabled={isFirst}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 active:translate-y-px disabled:opacity-30 disabled:pointer-events-none transition"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-transparent text-black transition hover:border-black hover:bg-white active:translate-y-px disabled:pointer-events-none disabled:opacity-30"
             aria-label="Move Up"
           >
             <ChevronUp size={18} />
@@ -606,7 +611,7 @@ function ProductionListItem({
               onMoveDown?.();
             }}
             disabled={isLast}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 active:translate-y-px disabled:opacity-30 disabled:pointer-events-none transition"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-transparent text-black transition hover:border-black hover:bg-white active:translate-y-px disabled:pointer-events-none disabled:opacity-30"
             aria-label="Move Down"
           >
             <ChevronDown size={18} />
@@ -618,11 +623,11 @@ function ProductionListItem({
               e.stopPropagation();
               onEdit?.();
             }}
-            className="flex h-10 px-3 items-center justify-center gap-1.5 rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 active:translate-y-px transition"
+            className="flex h-11 items-center justify-center gap-1.5 rounded-lg border border-black/15 bg-transparent px-3 text-black transition hover:border-black hover:bg-white active:translate-y-px"
             aria-label="Edit Day"
           >
             <Settings size={16} />
-            <span className="text-xs font-black uppercase">Edit</span>
+            <span className="text-xs font-semibold">Edit</span>
           </button>
         </div>
       )}
@@ -638,7 +643,7 @@ function ProductionListItem({
           e.stopPropagation();
           onDelete();
         }}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-[3px] border-red-700 bg-white text-red-700 transition hover:bg-red-50 active:translate-y-px"
+        className={`${dangerButtonClass} h-11 w-11 shrink-0 px-0`}
         aria-label={`Delete ${card.production.name}`}
         title="Delete day"
       >
@@ -647,10 +652,10 @@ function ProductionListItem({
     ) : null;
 
   const cardStyle =
-    "block w-full min-w-0 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] transition-[transform,box-shadow,border-color] duration-100 hover:shadow-[6px_6px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000]";
+    `${cardClass} w-full p-5`;
 
   const customizingCardStyle =
-    "block w-full min-w-0 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]";
+    "block w-full min-w-0 rounded-xl border border-black/30 bg-[#fffdf8] p-5";
 
   if (isCustomizing) {
     return (

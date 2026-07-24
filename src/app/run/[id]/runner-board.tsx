@@ -84,14 +84,14 @@ export function RunnerBoard({
 
   return (
     <div className="min-h-dvh text-black">
-      <header className="sticky top-0 z-30 border-b-[3px] border-black bg-black text-white">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2.5 sm:px-6">
-          <CaptureMark className="size-10 rounded-full" priority />
+      <header className="sticky top-0 z-30 border-b border-black/15 bg-[#f7f3ea]/95 text-black backdrop-blur-md">
+        <div className="mx-auto flex min-h-16 max-w-3xl items-center gap-3 px-4 sm:px-6">
+          <CaptureMark className="size-9 rounded-full" priority />
           <div className="grid min-w-0">
-            <span className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-accent">
+            <span className="truncate text-[11px] font-medium text-zinc-500">
               Capture This Coffee
             </span>
-            <span className="truncate text-base font-black text-white">
+            <span className="truncate text-sm font-semibold text-black">
               {production.name}
             </span>
           </div>

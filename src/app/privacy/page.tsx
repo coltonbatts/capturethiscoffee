@@ -95,7 +95,7 @@ export default function PrivacyPage() {
           of information associated with a production by contacting Capture
           This at{" "}
           <a
-            className="font-black underline underline-offset-4"
+            className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
             href="mailto:info@capturethis.com?subject=Capture%20This%20Coffee%20privacy"
           >
             info@capturethis.com
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
           Material changes will be posted on this page with an updated effective
           date. Privacy questions may be sent to{" "}
           <a
-            className="font-black underline underline-offset-4"
+            className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
             href="mailto:info@capturethis.com?subject=Capture%20This%20Coffee%20privacy"
           >
             info@capturethis.com

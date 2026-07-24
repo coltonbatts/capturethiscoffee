@@ -6,6 +6,13 @@
   --capture-yellow: #f2eb0c;
   --capture-paper: #f7f3ea;
   --capture-ink: #050505;
+  --capture-surface: #fffdf8;
+  --capture-surface-muted: #efebe2;
+  --capture-muted: #656158;
+  --capture-rule: rgb(5 5 5 / 0.18);
+  --capture-danger: #a32929;
+  --capture-radius: 0.75rem;
+  --capture-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -30,44 +37,12 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at 12% 18%, rgb(0 0 0 / 0.035) 0 0.8px, transparent 1.1px),
-    radial-gradient(circle at 78% 32%, rgb(0 0 0 / 0.025) 0 0.7px, transparent 1px),
-    radial-gradient(circle at 34% 72%, rgb(255 255 255 / 0.65) 0 0.9px, transparent 1.2px),
-    linear-gradient(90deg, rgb(0 0 0 / 0.018) 1px, transparent 1px),
-    linear-gradient(180deg, rgb(0 0 0 / 0.014) 1px, transparent 1px),
-    var(--background);
-  background-size: 14px 14px, 19px 19px, 23px 23px, 5px 5px, 7px 7px, auto;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   max-width: 100%;
   overflow-x: hidden;
   width: 100%;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgb(255 255 255 / 0.08) 0,
-      rgb(255 255 255 / 0.08) 1px,
-      transparent 1px,
-      transparent 4px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgb(0 0 0 / 0.018) 0,
-      rgb(0 0 0 / 0.018) 1px,
-      transparent 1px,
-      transparent 6px
-    );
-  mix-blend-mode: multiply;
-  opacity: 0.16;
 }
 
 ::selection {
@@ -87,9 +62,9 @@ button {
 }
 
 :focus-visible {
-  outline: 3px solid var(--capture-yellow);
+  outline: 2px solid var(--capture-ink);
   outline-offset: 3px;
-  box-shadow: 0 0 0 1px var(--capture-ink);
+  box-shadow: 0 0 0 2px var(--capture-paper);
 }
 
 .rule-double {
@@ -123,6 +98,15 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .skeleton::after {
     animation: none;
   }

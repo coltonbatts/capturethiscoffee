@@ -17,7 +17,19 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ScreenLabel } from "@/components/coffee-label-renderer";
 import { useAppAuth } from "@/components/app-auth-provider";
-import { Avatar, EmptyState, Field, inputClass } from "@/components/ui";
+import {
+  Avatar,
+  EmptyState,
+  Field,
+  alertErrorClass,
+  alertStatusClass,
+  inputClass,
+  pageHeaderClass,
+  pageIntroClass,
+  pageTitleClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import {
   buildLabelExportSelection,
   type ActiveLabelExportItem,
@@ -59,12 +71,8 @@ type ShareNavigator = Navigator & {
   }) => Promise<void>;
 };
 
-// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
+const customPrimaryBtn = primaryButtonClass;
+const customSecondaryBtn = secondaryButtonClass;
 
 export function LabelsClient({
   initialData,
@@ -413,15 +421,14 @@ export function LabelsClient({
 
   return (
     <AppShell title="Labels" breadcrumbs={[{ label: "Labels" }]} requireAuth>
-      {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-5xl">
-        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
+        <header className={pageHeaderClass}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-black uppercase tracking-tight text-black">
+              <h1 className={pageTitleClass}>
                 Labels
               </h1>
-              <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+              <p className={pageIntroClass}>
                 Manage print queues, select drink labels, and connect to CTC
                 Printer.
               </p>
@@ -433,10 +440,10 @@ export function LabelsClient({
               Days
             </Link>
           </div>
-        </section>
+        </header>
 
         {error ? (
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+          <div className={`${alertErrorClass} mb-4 flex flex-wrap items-center justify-between gap-3`} role="alert">
             <span>{error}</span>
             {!data && (
               <button
@@ -452,18 +459,17 @@ export function LabelsClient({
         ) : null}
 
         {status ? (
-          <p className="mb-4 rounded-lg border border-zinc-500 bg-white p-3 text-sm font-bold text-black">
+          <p className={`${alertStatusClass} mb-4`} role="status">
             {status}
           </p>
         ) : null}
 
-        {/* Printer Connection Card */}
-        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
+        <section className="mb-6 rounded-xl border border-black/15 bg-[#fffdf8] p-5 sm:p-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Printer size={22} className="text-black" />
-              <h2 className="text-lg font-black uppercase tracking-tight text-black">
-                CTC Printer Connection
+              <h2 className="text-lg font-semibold tracking-[-0.025em] text-black">
+                CTC Printer connection
               </h2>
             </div>
             <p className="text-sm font-semibold text-zinc-600">
@@ -473,7 +479,7 @@ export function LabelsClient({
             </p>
 
             <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-              <Field label="Selected Day">
+              <Field label="Selected day">
                 <select
                   className={inputClass}
                   value={productionId}
@@ -515,7 +521,7 @@ export function LabelsClient({
               <div className="grid gap-1.5 border-t border-zinc-200 pt-3">
                 <label
                   htmlFor="ctc-printer-link"
-                  className="text-xs font-black uppercase tracking-normal text-zinc-500"
+                  className="text-xs font-semibold text-zinc-500"
                 >
                   Link URL (Paste into CTC Printer iPhone App)
                 </label>
@@ -541,13 +547,11 @@ export function LabelsClient({
           </div>
         </section>
 
-        {/* Labels Selection & Preview Section */}
         <div className="grid gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-start">
-          {/* Print Queue / Checkboxes Card */}
-          <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
+          <section className="flex flex-col gap-4 rounded-xl border border-black/15 bg-[#fffdf8] p-5">
             <div className="flex items-center justify-between gap-3 min-w-0">
-              <h2 className="text-lg font-black uppercase tracking-tight text-black flex-1 truncate">
-                Print Queue
+              <h2 className="flex-1 truncate text-lg font-semibold tracking-[-0.025em] text-black">
+                Print queue
               </h2>
               <div className="flex gap-1.5 shrink-0">
                 {unprintedIds.length > 0 &&
@@ -555,7 +559,7 @@ export function LabelsClient({
                     <button
                       type="button"
                       onClick={selectUnprinted}
-                      className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
+                      className={`${secondaryButtonClass} min-h-11 px-2.5 text-xs`}
                     >
                       Unprinted ({unprintedIds.length})
                     </button>
@@ -563,7 +567,7 @@ export function LabelsClient({
                 <button
                   type="button"
                   onClick={toggleSelectAll}
-                  className="inline-flex min-h-9 items-center justify-center rounded-lg border-[3px] border-black bg-white px-2.5 text-xs font-black uppercase text-black hover:bg-zinc-100 transition active:translate-y-px"
+                  className={`${secondaryButtonClass} min-h-11 px-2.5 text-xs`}
                 >
                   {allSelected ? "Clear" : "All"}
                 </button>
@@ -591,15 +595,14 @@ export function LabelsClient({
             )}
           </section>
 
-          {/* Fallback Exports / Preview Column */}
           <div className="flex flex-col gap-6">
-            <section className="rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] flex flex-col gap-4">
+            <section className="flex flex-col gap-4 rounded-xl border border-black/15 bg-[#fffdf8] p-5">
               <div>
                 <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="text-lg font-black uppercase tracking-tight text-black">
+                  <h2 className="text-lg font-semibold tracking-[-0.025em] text-black">
                     Design library
                   </h2>
-                  <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+                  <span className="text-xs font-medium text-zinc-500">
                     {labelDesigns.length} options
                   </span>
                 </div>
@@ -619,19 +622,19 @@ export function LabelsClient({
                     type="button"
                     onClick={() => chooseDesign(design.id)}
                     aria-pressed={designId === design.id}
-                    className={`overflow-hidden rounded-lg border-[3px] border-black text-left transition active:translate-y-px ${
+                    className={`overflow-hidden rounded-lg border text-left transition-[border-color,background-color,color,transform] active:translate-y-px ${
                       designId === design.id
-                        ? "bg-black text-white shadow-[3px_3px_0_#000]"
-                        : "bg-white text-black hover:-translate-y-0.5 hover:shadow-[3px_3px_0_#000]"
+                        ? "border-black bg-black text-white"
+                        : "border-black/15 bg-transparent text-black hover:border-black hover:bg-white"
                     }`}
                   >
                     {designPreviewLabel ? (
-                      <span className="label-design-thumb block aspect-[5/3] overflow-hidden border-b-[3px] border-black bg-zinc-200">
+                      <span className="label-design-thumb block aspect-[5/3] overflow-hidden border-b border-black/20 bg-zinc-200">
                         <ScreenLabel label={designPreviewLabel} design={design.id} />
                       </span>
                     ) : null}
                     <span className="block px-2.5 py-2">
-                      <span className="block text-xs font-black uppercase tracking-wider">
+                      <span className="block text-xs font-semibold">
                         {design.name}
                       </span>
                       <span
@@ -646,28 +649,24 @@ export function LabelsClient({
                 ))}
               </div>
 
-              <div className="flex items-center justify-between gap-3 border-t-2 border-black pt-3">
-                <span className="text-xs font-black uppercase tracking-wider text-zinc-500">
+              <div className="flex items-center justify-between gap-3 border-t border-black/15 pt-3">
+                <span className="text-xs font-medium text-zinc-500">
                   Selected
                 </span>
-                <span className="text-sm font-black uppercase text-black">
+                <span className="text-sm font-semibold text-black">
                   {labelDesigns.find((design) => design.id === designId)?.name}
                 </span>
               </div>
 
               <div
-                className="grid aspect-[5/3] w-full min-w-0 place-items-center overflow-hidden rounded-xl border-[3px] border-black p-4"
-                style={{
-                  background:
-                    "repeating-linear-gradient(0deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 24px), #18181b",
-                }}
+                className="grid aspect-[5/3] w-full min-w-0 place-items-center overflow-hidden rounded-xl border border-black/15 bg-[#ebe7de] p-4"
               >
                 {previewLabel ? (
-                  <div className="w-full min-w-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex justify-center">
+                  <div className="flex w-full min-w-0 justify-center">
                     <ScreenLabel label={previewLabel} design={designId} />
                   </div>
                 ) : (
-                  <p className="text-center text-xs font-black text-zinc-400 uppercase tracking-wider">
+                  <p className="text-center text-xs font-medium text-zinc-500">
                     Select a drink to preview
                   </p>
                 )}
@@ -701,7 +700,7 @@ export function LabelsClient({
                     type="button"
                     onClick={downloadNiimbotCsv}
                     disabled={busy || !selection?.items.length}
-                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border-[2px] border-zinc-400 bg-white text-zinc-600 font-bold text-xs uppercase tracking-wider hover:border-black hover:text-black transition"
+                    className={`${secondaryButtonClass} min-h-11 text-xs`}
                   >
                     <FileSpreadsheet size={14} />
                     CSV Export
@@ -710,7 +709,7 @@ export function LabelsClient({
                     type="button"
                     onClick={() => void downloadTestLabel()}
                     disabled={busy || !testLabel}
-                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border-[2px] border-zinc-400 bg-white text-zinc-600 font-bold text-xs uppercase tracking-wider hover:border-black hover:text-black transition"
+                    className={`${secondaryButtonClass} min-h-11 text-xs`}
                   >
                     <Smile size={14} />
                     Test Label
@@ -722,12 +721,10 @@ export function LabelsClient({
         </div>
       </div>
 
-      {/* Add spacing at the bottom on mobile to account for the sticky bottom nav bar */}
       <div className="h-24 sm:hidden" />
 
-      {/* Mobile Sticky Bottom Nav Bar (Thumb Zone) */}
       {isAdmin && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-[3px] border-black bg-white/95 p-4 backdrop-blur-sm sm:hidden no-print shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/15 bg-[#f7f3ea]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md no-print sm:hidden">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
             <button
               type="button"
@@ -779,16 +776,16 @@ function LabelChoice({
     <button
       type="button"
       onClick={onToggle}
-      className={`grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] p-3 text-left transition active:translate-y-px ${
+      className={`grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border p-3 text-left transition-[border-color,background-color,color,transform] active:translate-y-px ${
         selected
-          ? "border-black bg-black text-white shadow-[2px_2px_0_#000]"
-          : "border-black bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]"
+          ? "border-black bg-black text-white"
+          : "border-black/15 bg-transparent text-black hover:border-black hover:bg-white"
       }`}
       aria-pressed={selected}
     >
       <Avatar person={item.person} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-base font-black uppercase tracking-tight leading-tight">
+        <span className="block truncate text-base font-semibold leading-tight tracking-[-0.025em]">
           {item.person.name}
         </span>
         <span
@@ -800,20 +797,20 @@ function LabelChoice({
         </span>
         <span className="mt-2 flex max-w-full flex-wrap gap-1.5">
           <span
-            className={`inline-flex max-w-full rounded-md border-2 px-1.5 py-0.5 text-[10px] font-bold leading-none uppercase ${
+            className={`inline-flex max-w-full rounded-full border px-2 py-1 text-[10px] font-semibold leading-none ${
               selected
                 ? "border-white/30 bg-white/10 text-white"
-                : "border-black bg-zinc-100 text-zinc-700"
+                : "border-black/15 bg-black/[0.04] text-zinc-700"
             }`}
           >
             <span className="truncate">{group}</span>
           </span>
           {item.order.label_printed && (
             <span
-              className={`inline-flex rounded-md border-2 px-1.5 py-0.5 text-[10px] font-bold leading-none uppercase ${
+              className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold leading-none ${
                 selected
                   ? "border-white/30 bg-white/10 text-white"
-                  : "border-black bg-emerald-100 text-emerald-800"
+                  : "border-emerald-800/25 bg-emerald-50 text-emerald-900"
               }`}
             >
               Printed
@@ -822,7 +819,7 @@ function LabelChoice({
         </span>
       </span>
       <span
-        className={`grid size-7 place-items-center rounded-md border-2 shrink-0 ${
+        className={`grid size-7 shrink-0 place-items-center rounded-full border ${
           selected
             ? "border-white bg-white text-black"
             : "border-black bg-white"

@@ -21,7 +21,11 @@ import {
   Field,
   Panel,
   Sheet,
+  alertErrorClass,
+  dangerButtonClass,
   inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
 } from "@/components/ui";
 import type { CaptureProgress } from "@/lib/order-progress";
 import { isOrderCaptured, isOrderSkipped } from "@/lib/order-progress";
@@ -38,12 +42,8 @@ import type {
 } from "@/lib/production-board";
 import type { Production, ProductionRoster } from "@/lib/types";
 
-// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-white transition hover:bg-accent hover:text-black active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-center text-sm font-black uppercase leading-none tracking-wide text-black transition hover:bg-accent/40 active:translate-y-px disabled:opacity-50";
+const customPrimaryBtn = primaryButtonClass;
+const customSecondaryBtn = secondaryButtonClass;
 
 export function ErrorToast({
   message,
@@ -54,7 +54,7 @@ export function ErrorToast({
 }) {
   return (
     <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-3 md:bottom-4 no-print">
-      <div className="flex w-full max-w-md items-start gap-3 rounded-lg border-[3px] border-red-700 bg-white p-3 text-sm font-bold text-red-700 shadow-[4px_4px_0_#b91c1c]">
+      <div className={`flex w-full max-w-md items-start gap-3 ${alertErrorClass}`} role="alert">
         <span className="min-w-0 flex-1">{message}</span>
         <button
           type="button"
@@ -94,17 +94,17 @@ export function DayHeader({
   copyLinkState?: "idle" | "working" | "copied";
 }) {
   return (
-    <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] no-print">
+    <section className="mb-6 border-b border-black/15 pb-6 no-print">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-balance text-2xl font-black uppercase leading-tight tracking-tight text-black">
+          <h1 className="text-balance text-3xl font-semibold leading-none tracking-[-0.055em] text-black sm:text-4xl">
             {productionName}
           </h1>
           <p className="mt-1 text-sm font-semibold leading-normal text-zinc-600">
             {detail || "Coffee orders"}
           </p>
           {runnerName && (
-            <p className="mt-0.5 text-xs font-black uppercase text-zinc-400">
+            <p className="mt-1 text-xs font-medium text-zinc-500">
               Runner: {runnerName}
             </p>
           )}
@@ -116,7 +116,7 @@ export function DayHeader({
               type="button"
               onClick={onCopyRunnerLink}
               disabled={copyLinkState === "working"}
-              className="flex h-11 w-11 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 transition active:translate-y-px disabled:opacity-50 shrink-0"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/15 bg-transparent text-black transition hover:border-black hover:bg-white active:translate-y-px disabled:opacity-50"
               aria-label={
                 copyLinkState === "copied"
                   ? "Runner link copied"
@@ -136,7 +136,7 @@ export function DayHeader({
             <button
               type="button"
               onClick={onEditDetails}
-              className="flex h-11 w-11 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-zinc-100 transition active:translate-y-px shrink-0"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/15 bg-transparent text-black transition hover:border-black hover:bg-white active:translate-y-px"
               aria-label="Edit production details"
             >
               <Pencil size={16} />
@@ -144,18 +144,18 @@ export function DayHeader({
           )}
 
           <div className="text-right leading-none ml-2">
-            <span className="block text-3xl font-black tabular-nums text-black">
+            <span className="block text-3xl font-semibold tabular-nums tracking-[-0.04em] text-black">
               {progress.captured}
               <span className="text-lg text-zinc-500">/{progress.total}</span>
             </span>
-            <span className="mt-1 block text-[10px] font-black uppercase tracking-wider text-zinc-500">
+            <span className="mt-1 block text-[10px] font-medium text-zinc-500">
               drinks in
             </span>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 h-3 overflow-hidden rounded-md border-2 border-black bg-zinc-100">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/10">
         <div
           className="h-full bg-black transition-[width] duration-300"
           style={{ width: `${progress.percent}%` }}
@@ -177,7 +177,7 @@ export function DayHeader({
           <CountBadge label="printed" count={progress.printed} />
         ) : null}
         {progress.captured && !progress.needed ? (
-          <span className="inline-flex items-center gap-1.5 rounded-md border-2 border-emerald-700 bg-emerald-50 px-2 py-0.5 text-2xs font-bold leading-none uppercase text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/25 bg-emerald-50 px-2.5 py-1 text-xs font-semibold leading-none text-emerald-900">
             <Check size={12} strokeWidth={3} aria-hidden="true" />
             All drinks captured
           </span>
@@ -215,10 +215,10 @@ export function SearchRoster({
   total: number;
 }) {
   const chipClass = (active: boolean) =>
-    `inline-flex min-h-9 items-center gap-1.5 rounded-lg border-[3px] border-black px-3.5 text-xs font-black uppercase tracking-wider transition active:translate-y-px ${
+    `inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition active:translate-y-px ${
       active
         ? "border-black bg-black text-white"
-        : "border-black bg-white text-black hover:bg-zinc-100"
+        : "border-black/15 bg-transparent text-black hover:border-black hover:bg-white"
     }`;
 
   return (
@@ -230,7 +230,7 @@ export function SearchRoster({
           aria-hidden="true"
         />
         <input
-          className={`${inputClass} pl-10 rounded-lg border-[3px] border-black text-base font-semibold`}
+          className={`${inputClass} pl-10 text-base`}
           value={query}
           onChange={(event) => onQuery(event.target.value)}
           placeholder="Search people"
@@ -327,11 +327,11 @@ function RosterCard({
 
   return (
     <article
-      className="relative w-full min-w-0 overflow-hidden rounded-xl border-[3px] border-black bg-white p-4 shadow-[4px_4px_0_#000] transition-[transform,box-shadow] duration-100 hover:shadow-[6px_6px_0_#000] sm:p-5"
+      className="relative w-full min-w-0 overflow-hidden rounded-xl border border-black/15 bg-[#fffdf8] p-4 transition-[border-color,background-color] hover:border-black/35 hover:bg-white sm:p-5"
       aria-busy={pending}
     >
       <span
-        className={`absolute inset-y-0 left-0 w-2.5 ${railColor} border-r-[3px] border-black`}
+        className={`absolute inset-y-0 left-0 w-1.5 ${railColor}`}
         aria-hidden="true"
       />
       <div
@@ -343,39 +343,39 @@ function RosterCard({
           <Avatar person={person} />
         </div>
         <div className="min-w-0">
-          <h2 className="text-balance text-[1.35rem] font-black uppercase leading-[1.03] tracking-tight text-black sm:text-2xl">
+          <h2 className="text-balance text-[1.35rem] font-semibold leading-[1.03] tracking-[-0.035em] text-black sm:text-2xl">
             {person.name}
           </h2>
           {roleLine ? (
-            <p className="mt-1 text-xs font-black uppercase leading-snug tracking-wide text-zinc-500">
+            <p className="mt-1 text-xs font-medium leading-snug text-zinc-500">
               {roleLine}
             </p>
           ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {captured && order?.label_printed ? (
-              <span className="inline-flex items-center gap-1 rounded-md border-2 border-emerald-700 bg-emerald-50 px-2 py-1 text-[0.68rem] font-black uppercase leading-none tracking-wide text-emerald-800">
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-800/25 bg-emerald-50 px-2 py-1 text-[0.68rem] font-semibold leading-none text-emerald-900">
                 <Printer size={12} aria-hidden="true" />
                 Printed
               </span>
             ) : null}
             {skipped ? (
-              <span className="inline-flex items-center gap-1 rounded-md border-2 border-black bg-zinc-100 px-2 py-1 text-[0.68rem] font-black uppercase leading-none tracking-wide text-zinc-700">
+              <span className="inline-flex items-center gap-1 rounded-full border border-black/15 bg-black/[0.04] px-2 py-1 text-[0.68rem] font-semibold leading-none text-zinc-700">
                 <CircleSlash size={12} aria-hidden="true" />
                 No drink
               </span>
             ) : null}
           </div>
         </div>
-        <div className="col-span-2 rounded-lg border-2 border-zinc-200 bg-zinc-50 px-3 py-2.5 text-[0.95rem] leading-snug">
+        <div className="col-span-2 rounded-lg border border-black/10 bg-black/[0.025] px-3 py-2.5 text-[0.95rem] leading-snug">
           {captured ? (
-            <p className="font-black text-black">{formatDrink(order)}</p>
+            <p className="font-semibold text-black">{formatDrink(order)}</p>
           ) : skipped ? (
             <p className="font-bold text-zinc-600">
               Doesn&apos;t want a drink today.
             </p>
           ) : (
             <p className="font-semibold text-zinc-700">
-              <span className="text-xs font-black uppercase tracking-wide text-zinc-500">
+              <span className="text-xs font-medium text-zinc-500">
                 Usual:{" "}
               </span>
               {person.usual_order || "—"}
@@ -386,7 +386,7 @@ function RosterCard({
 
       {!order ? (
         <div className="mt-3 grid gap-2 pl-2.5">
-          <p className="rounded-lg border-[3px] border-black bg-white p-3 text-sm font-bold text-zinc-800">
+          <p className="rounded-lg border border-black/15 bg-black/[0.025] p-3 text-sm font-medium text-zinc-800">
             No order record yet. Remove and re-add this person to rebuild it.
           </p>
           {canManageSetup ? (
@@ -438,7 +438,7 @@ function CardActions({
   onEditRoster: () => void;
 }) {
   const compactButtonClass =
-    "flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border-[3px] border-black bg-white px-2 text-center text-[0.72rem] font-black uppercase leading-none tracking-wide text-black transition hover:bg-zinc-100 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:text-xs";
+    "flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-black/15 bg-transparent px-2 text-center text-[0.72rem] font-semibold leading-none text-black transition hover:border-black hover:bg-white active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-12 sm:text-xs";
 
   const compactActions: ReactNode[] = [];
   if (captured) {
@@ -553,9 +553,9 @@ export function AddToRoster({
   saving: boolean;
 }) {
   return (
-    <Panel className="mt-6 p-5 border-[3px] border-black bg-white shadow-[4px_4px_0_#000] no-print">
+    <Panel className="mt-6 p-5 no-print">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black uppercase leading-tight tracking-tight text-black">
+        <h2 className="text-lg font-semibold leading-tight tracking-[-0.025em] text-black">
           Add to roster
         </h2>
         <button
@@ -569,7 +569,7 @@ export function AddToRoster({
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
         <select
-          className={`${inputClass} border-[3px] border-black text-base`}
+          className={`${inputClass} text-base`}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-label="Add person to production roster"
@@ -796,7 +796,7 @@ export function OrderEditor({
         />
       </Field>
       {canUpdateUsualOrder && (
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-black/20 bg-[#fffdf8] px-3 py-2.5 text-sm font-medium text-black">
           <input
             type="checkbox"
             checked={updateUsualOrder}
@@ -804,7 +804,7 @@ export function OrderEditor({
             className="size-4 shrink-0 accent-black"
           />
           <span>
-            <span className="block font-black text-xs uppercase tracking-tight text-black">Save as usual order</span>
+            <span className="block text-xs font-semibold text-black">Save as usual order</span>
             <span className="text-[10px] text-zinc-500 font-semibold block leading-tight">Leave off for a one-day exception.</span>
           </span>
         </label>
@@ -950,7 +950,7 @@ export function RosterEditor({
           autoFocus
         />
       </Field>
-      <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-black/20 bg-[#fffdf8] px-3 py-2.5 text-sm font-medium text-black">
         <input
           type="checkbox"
           checked={draft.on_set_today ?? true}
@@ -958,7 +958,7 @@ export function RosterEditor({
           className="size-4 shrink-0 accent-black"
         />
         <span>
-          <span className="block font-black text-xs uppercase tracking-tight text-black">On set today</span>
+          <span className="block text-xs font-semibold text-black">On set today</span>
           <span className="text-[10px] text-zinc-500 font-semibold block leading-tight">
             Turn off to keep them out of coffee ordering and labels.
           </span>
@@ -967,7 +967,7 @@ export function RosterEditor({
       <button
         type="button"
         onClick={onRemove}
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-2 border-red-700 bg-white px-3 text-sm font-black uppercase tracking-wider text-red-700 transition hover:bg-red-50 active:translate-y-px disabled:opacity-50"
+        className={`${dangerButtonClass} w-full`}
         disabled={saving}
       >
         <Trash2 size={16} aria-hidden="true" />
@@ -1107,7 +1107,7 @@ export function QuickAddPersonSheet({
         />
       </Field>
       {canLinkToClient && (
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-bold text-black">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-black/20 bg-[#fffdf8] px-3 py-2.5 text-sm font-medium text-black">
           <input
             type="checkbox"
             checked={linkToClient}
@@ -1115,7 +1115,7 @@ export function QuickAddPersonSheet({
             className="size-4 shrink-0 accent-black"
           />
           <span>
-            <span className="block font-black text-xs uppercase tracking-tight text-black">Link to {clientName}</span>
+            <span className="block text-xs font-semibold text-black">Link to {clientName}</span>
             <span className="text-[10px] text-zinc-500 font-semibold block leading-tight">
               Include them automatically on future productions for this client.
             </span>

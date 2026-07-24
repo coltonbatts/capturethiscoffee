@@ -72,7 +72,7 @@ export default function SupportPage() {
         <p>
           Email{" "}
           <a
-            className="font-black underline underline-offset-4"
+            className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
             href="mailto:info@capturethis.com?subject=Capture%20This%20Coffee%20support"
           >
             info@capturethis.com

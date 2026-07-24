@@ -12,38 +12,36 @@ export function PublicInfoPage({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-dvh bg-background px-4 py-8 text-foreground sm:px-6 sm:py-12">
-      <article className="mx-auto w-full max-w-3xl overflow-hidden rounded-2xl border-[3px] border-black bg-white shadow-[6px_6px_0_#000]">
-        <header className="border-b-[3px] border-black bg-black px-5 py-6 text-white sm:px-8">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <CaptureMark className="size-12 rounded-full" priority />
+    <main className="min-h-dvh bg-background px-4 py-7 text-foreground sm:px-6 sm:py-12">
+      <article className="mx-auto w-full max-w-3xl">
+        <header className="border-b border-black/15 pb-8">
+          <Link href="/" className="inline-flex min-h-11 items-center gap-3">
+            <CaptureMark className="size-10 rounded-full" priority />
             <span className="grid">
-              <span className="text-lg font-black uppercase leading-none tracking-tight">
-                Capture This
+              <span className="text-sm font-semibold leading-none tracking-[-0.02em]">
+                Capture This Coffee
               </span>
-              <span className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-accent">
-                Coffee
-              </span>
+              <span className="mt-1 text-[11px] font-medium text-zinc-500">Production-day coffee</span>
             </span>
           </Link>
-          <h1 className="mt-8 text-3xl font-black tracking-tight sm:text-4xl">
+          <h1 className="mt-14 text-4xl font-semibold leading-none tracking-[-0.055em] sm:text-6xl">
             {title}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+          <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-600">
             {summary}
           </p>
         </header>
-        <div className="public-info-content grid gap-7 px-5 py-7 text-[15px] leading-7 sm:px-8 sm:py-9">
+        <div className="public-info-content grid gap-9 py-9 text-[15px] leading-7 sm:py-12">
           {children}
         </div>
-        <footer className="flex flex-wrap gap-x-5 gap-y-2 border-t-[3px] border-black bg-accent px-5 py-4 text-sm font-black sm:px-8">
-          <Link href="/privacy" className="underline underline-offset-4">
+        <footer className="flex flex-wrap gap-x-5 gap-y-2 border-t border-black/15 py-6 text-sm font-semibold">
+          <Link href="/privacy" className="inline-flex min-h-11 items-center underline underline-offset-4">
             Privacy
           </Link>
-          <Link href="/support" className="underline underline-offset-4">
+          <Link href="/support" className="inline-flex min-h-11 items-center underline underline-offset-4">
             Support
           </Link>
-          <Link href="/" className="underline underline-offset-4">
+          <Link href="/" className="inline-flex min-h-11 items-center underline underline-offset-4">
             Capture This Coffee
           </Link>
         </footer>
@@ -61,7 +59,7 @@ export function PublicInfoSection({
 }) {
   return (
     <section>
-      <h2 className="text-xl font-black tracking-tight">{title}</h2>
+      <h2 className="text-xl font-semibold tracking-[-0.025em]">{title}</h2>
       <div className="mt-2 grid gap-3">{children}</div>
     </section>
   );

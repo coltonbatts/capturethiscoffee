@@ -56,7 +56,7 @@ export function PersonPhotoField({
         </div>
 
         <div className="grid min-w-0 flex-1 gap-1">
-          <p className="text-xs font-black uppercase tracking-normal text-zinc-600">
+          <p className="text-xs font-semibold text-zinc-600">
             Photo
           </p>
           <div className="flex gap-2">

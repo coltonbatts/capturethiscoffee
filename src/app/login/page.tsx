@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CaptureMark } from "@/components/capture-mark";
-import { Field, inputClass } from "@/components/ui";
+import {
+  Field,
+  alertErrorClass,
+  inputClass,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/ui";
 import { useAppAuth } from "@/components/app-auth-provider";
 import { AUTH_ACCESS_MESSAGE } from "@/lib/auth";
 import {
@@ -11,13 +17,6 @@ import {
   isSupabaseConfigured,
   supabaseConfigError,
 } from "@/lib/supabase";
-
-// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
 
 export default function LoginPage() {
   return (
@@ -131,26 +130,24 @@ function LoginForm() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center px-4 py-8">
-      <section className="w-full max-w-md overflow-hidden rounded-xl border-[3px] border-black bg-white text-black shadow-[6px_6px_0_#000]">
-        <div className="flex items-center gap-3 border-b-[3px] border-black bg-black p-5 text-white">
-          <CaptureMark className="size-12 rounded-full" />
-          <div>
-            <h1 className="text-xl font-black uppercase leading-none tracking-tight text-white">
-              Capture This
+    <main className="grid min-h-dvh place-items-center px-4 py-8 sm:px-6">
+      <section className="w-full max-w-md text-black">
+        <div className="mb-8 flex items-center gap-4 border-b border-black/15 pb-6">
+          <CaptureMark className="size-16 rounded-full" priority />
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-zinc-500">Coffee for production days</p>
+            <h1 className="mt-1 text-3xl font-semibold leading-none tracking-[-0.055em]">
+              Welcome back
             </h1>
-            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-accent">
-              Coffee operations
-            </p>
           </div>
         </div>
-        <div className="grid gap-4 p-5">
+        <div className="grid gap-5">
           {isSupabaseConfigured ? (
             <>
               <button
                 type="button"
                 onClick={() => void signInWithGoogle()}
-                className={`${customSecondaryBtn} w-full`}
+                className={`${secondaryButtonClass} w-full`}
                 disabled={submitting || redirectingToGoogle}
               >
                 <GoogleMark />
@@ -161,11 +158,11 @@ function LoginForm() {
                 </span>
               </button>
               <div className="flex items-center gap-3" aria-hidden="true">
-                <span className="h-0.5 flex-1 bg-zinc-300" />
-                <span className="text-xs font-black uppercase text-zinc-500">
+                <span className="h-px flex-1 bg-black/15" />
+                <span className="text-xs font-medium text-zinc-500">
                   or
                 </span>
-                <span className="h-0.5 flex-1 bg-zinc-300" />
+                <span className="h-px flex-1 bg-black/15" />
               </div>
             </>
           ) : null}
@@ -193,13 +190,13 @@ function LoginForm() {
               />
             </Field>
             {error ? (
-              <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+              <div className={alertErrorClass} role="alert">
                 {error}
               </div>
             ) : null}
             <button
               type="submit"
-              className={`${customPrimaryBtn} mt-1 w-full`}
+              className={`${primaryButtonClass} mt-1 w-full`}
               disabled={submitting || !isSupabaseConfigured}
             >
               {isSupabaseConfigured

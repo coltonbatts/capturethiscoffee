@@ -5,17 +5,16 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   Field,
+  alertErrorClass,
   inputClass,
+  pageHeaderClass,
+  pageIntroClass,
+  pageTitleClass,
+  primaryButtonClass,
+  secondaryButtonClass,
 } from "@/components/ui";
 import { createProductionAction } from "@/app/operator-actions";
 import { unwrapOperatorAction } from "@/lib/operator-inputs";
-
-// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
 
 export function NewProductionClient({ initialError = "" }: { initialError?: string }) {
   const router = useRouter();
@@ -60,17 +59,16 @@ export function NewProductionClient({ initialError = "" }: { initialError?: stri
       ]}
       requireAuth
     >
-      {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0">
-        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
-          <h1 className="text-2xl font-black uppercase tracking-tight text-black">New Day</h1>
-          <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+        <header className={pageHeaderClass}>
+          <h1 className={pageTitleClass}>New day</h1>
+          <p className={pageIntroClass}>
             Create a new production day and populate its initial roster automatically.
           </p>
-        </section>
+        </header>
 
         <form onSubmit={submit} className="grid gap-4">
-          <section className="grid gap-4 p-5 rounded-xl border-[3px] border-black bg-white shadow-[4px_4px_0_#000]">
+          <section className="grid gap-5 rounded-xl border border-black/15 bg-[#fffdf8] p-5 sm:p-6">
             <Field label="Day name">
               <input
                 className={inputClass}
@@ -83,7 +81,7 @@ export function NewProductionClient({ initialError = "" }: { initialError?: stri
             </Field>
 
             {error ? (
-              <div className="rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+              <div className={alertErrorClass} role="alert">
                 {error}
               </div>
             ) : null}
@@ -142,10 +140,10 @@ export function NewProductionClient({ initialError = "" }: { initialError?: stri
           </section>
 
           <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-            <button type="button" className={customSecondaryBtn} onClick={() => router.back()}>
+            <button type="button" className={secondaryButtonClass} onClick={() => router.back()}>
               Cancel
             </button>
-            <button type="submit" className={customPrimaryBtn} disabled={saving}>
+            <button type="submit" className={primaryButtonClass} disabled={saving}>
               {saving ? "Creating…" : "Create"}
             </button>
           </div>

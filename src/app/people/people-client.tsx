@@ -11,7 +11,13 @@ import {
   Field,
   Panel,
   Sheet,
+  alertErrorClass,
   inputClass,
+  pageHeaderClass,
+  pageIntroClass,
+  pageTitleClass,
+  primaryButtonClass,
+  secondaryButtonClass,
 } from "@/components/ui";
 import {
   createPersonAction,
@@ -27,13 +33,6 @@ import {
   type PersonForm,
 } from "@/lib/people";
 import type { CoffeeData, Person } from "@/lib/types";
-
-// Custom premium buttons matching our Capture This Coffee neo-brutalist / studio aesthetic
-const customPrimaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-black px-4 text-white font-black text-sm uppercase tracking-wider hover:bg-accent hover:text-black transition active:translate-y-px disabled:opacity-50";
-
-const customSecondaryBtn =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-[3px] border-black bg-white px-4 text-black font-black text-sm uppercase tracking-wider hover:bg-accent/40 transition active:translate-y-px disabled:opacity-50";
 
 export function PeopleClient({
   initialData,
@@ -133,24 +132,23 @@ export function PeopleClient({
 
   return (
     <AppShell title="Setup" breadcrumbs={[{ label: "Setup" }]} requireAuth>
-      {/* Center Layout Container for a Clean Studio Vibe */}
       <div className="mx-auto w-full max-w-md px-1 sm:max-w-xl sm:px-0 md:max-w-3xl">
-        <section className="mb-6 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000]">
-          <h1 className="text-2xl font-black uppercase tracking-tight text-black">People Setup</h1>
-          <p className="mt-1 text-sm font-medium leading-relaxed text-zinc-600">
+        <header className={pageHeaderClass}>
+          <h1 className={pageTitleClass}>People</h1>
+          <p className={pageIntroClass}>
             Create or edit crew members, guests, and client contacts. Manage their usual coffee orders.
           </p>
-        </section>
+        </header>
 
         {error ? (
-          <div className="mb-4 rounded-lg border border-red-700 bg-white p-3 text-sm font-bold text-red-700">
+          <div className={`${alertErrorClass} mb-4`} role="alert">
             {error}
           </div>
         ) : null}
 
         <div className="mb-4 flex min-w-0 gap-3">
           <input
-            className={`${inputClass} flex-1 rounded-lg border-[3px] border-black px-3.5 text-base font-medium`}
+            className={`${inputClass} flex-1`}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search people..."
@@ -159,7 +157,7 @@ export function PeopleClient({
           <button
             type="button"
             onClick={() => setShowAddForm(true)}
-            className={customPrimaryBtn + " shrink-0"}
+            className={primaryButtonClass + " shrink-0"}
           >
             <Plus size={18} aria-hidden="true" />
             <span>Add</span>
@@ -169,7 +167,7 @@ export function PeopleClient({
         <div className="grid gap-4 sm:grid-cols-2">
           {!data ? (
             [0, 1, 2, 3, 4, 5].map((item) => (
-              <Panel key={item} className="h-28 animate-pulse bg-zinc-100 p-4 border-[3px] border-black shadow-[4px_4px_0_#000]" />
+              <Panel key={item} className="h-28 animate-pulse bg-black/[0.04] p-4" />
             ))
           ) : !people.length ? (
             <div className="sm:col-span-2">
@@ -180,12 +178,12 @@ export function PeopleClient({
             people.map((person) => (
               <article
                 key={person.id}
-                className="flex gap-4 rounded-xl border-[3px] border-black bg-white p-5 shadow-[4px_4px_0_#000] hover:shadow-[6px_6px_0_#000] transition-[transform,box-shadow] duration-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000] min-w-0"
+                className="flex min-w-0 gap-4 rounded-xl border border-black/15 bg-[#fffdf8] p-5 transition-[border-color,background-color] hover:border-black/35 hover:bg-white"
               >
                 <Avatar person={person} />
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-lg font-black uppercase tracking-tight text-black">{person.name}</h2>
-                  <p className="truncate text-xs font-bold uppercase text-zinc-500 mt-0.5">
+                  <h2 className="truncate text-lg font-semibold tracking-[-0.025em] text-black">{person.name}</h2>
+                  <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">
                     {[person.role, person.department].filter(Boolean).join(" · ") ||
                       personTypeLabel(person.type)}
                   </p>
@@ -198,7 +196,7 @@ export function PeopleClient({
                 </div>
                 <button
                   type="button"
-                  className="flex h-11 w-11 items-center justify-center rounded-lg border-[3px] border-black bg-white text-black hover:bg-accent/40 transition active:translate-y-px shrink-0"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/15 bg-transparent text-black transition hover:border-black hover:bg-black hover:text-white active:translate-y-px"
                   onClick={() => {
                     setEditingPerson(person);
                     setEditForm(personToForm(person));
@@ -220,10 +218,10 @@ export function PeopleClient({
           onClose={closeAddForm}
           footer={
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={closeAddForm} className={customSecondaryBtn}>
+              <button type="button" onClick={closeAddForm} className={secondaryButtonClass}>
                 Cancel
               </button>
-              <button type="submit" className={customPrimaryBtn} disabled={saving}>
+              <button type="submit" className={primaryButtonClass} disabled={saving}>
                 {saving ? "Adding…" : "Add person"}
               </button>
             </div>
@@ -241,10 +239,10 @@ export function PeopleClient({
           onClose={closeEditForm}
           footer={
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={closeEditForm} className={customSecondaryBtn}>
+              <button type="button" onClick={closeEditForm} className={secondaryButtonClass}>
                 Cancel
               </button>
-              <button type="submit" className={customPrimaryBtn} disabled={saving}>
+              <button type="submit" className={primaryButtonClass} disabled={saving}>
                 {saving ? "Saving…" : "Save person"}
               </button>
             </div>
@@ -355,7 +353,7 @@ function PersonFields({
         />
       </Field>
       {showActive && (
-        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border-[3px] border-black bg-white px-3 py-2.5 text-sm font-black text-black">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-black/20 bg-[#fffdf8] px-3 py-2.5 text-sm font-medium text-black">
           <input
             type="checkbox"
             checked={form.active}
