@@ -1,0 +1,379 @@
+.page {
+  --home-paper: #f7f3ea;
+  --home-ink: #090909;
+  --home-muted: #656158;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--home-paper);
+  color: var(--home-ink);
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+}
+
+.skipLink {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 20;
+  transform: translateY(-180%);
+  background: var(--home-ink);
+  color: white;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  transition: transform 160ms ease;
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+.header {
+  width: min(100%, 80rem);
+  min-height: 2.75rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: relative;
+  z-index: 10;
+}
+
+.utilityLabel {
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 0.75rem;
+  font-weight: 580;
+  letter-spacing: 0.015em;
+}
+
+.hero {
+  width: min(100%, 73rem);
+  flex: 1;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.93fr) minmax(23rem, 1.07fr);
+  align-items: center;
+  gap: clamp(3.5rem, 8vw, 8.5rem);
+  padding: clamp(2rem, 5.5vh, 4.75rem) 0 clamp(1.5rem, 4vh, 3.5rem);
+}
+
+.markStage {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  opacity: 0;
+  animation: mark-arrive 720ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+}
+
+.mark {
+  width: min(100%, 31rem);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.copy {
+  min-width: 0;
+  padding-top: 0.25rem;
+}
+
+.title {
+  margin: 0;
+  display: grid;
+  font-size: clamp(4rem, 7vw, 6.9rem);
+  font-weight: 750;
+  line-height: 0.84;
+  letter-spacing: -0.075em;
+  text-wrap: balance;
+  opacity: 0;
+  animation: copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 190ms both;
+}
+
+.supporting {
+  max-width: 27rem;
+  margin: clamp(1.5rem, 3.2vh, 2.25rem) 0 0;
+  color: #292722;
+  font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+  font-weight: 460;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  animation: copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 270ms both;
+}
+
+.primaryAction {
+  width: fit-content;
+  min-height: 3.5rem;
+  margin-top: clamp(1.75rem, 3.8vh, 2.5rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  border: 1px solid var(--home-ink);
+  background: var(--home-ink);
+  color: white;
+  padding: 0.9rem 1.1rem 0.9rem 1.25rem;
+  font-size: 0.94rem;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  text-decoration: none;
+  opacity: 0;
+  animation: copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.primaryAction svg {
+  transition: transform 180ms ease;
+}
+
+.primaryAction:hover {
+  background: transparent;
+  color: var(--home-ink);
+}
+
+.primaryAction:hover svg {
+  transform: translateX(0.2rem);
+}
+
+.primaryAction:active {
+  transform: translateY(1px);
+}
+
+.secondaryNav {
+  max-width: 31rem;
+  margin-top: clamp(2.75rem, 6vh, 4.5rem);
+  padding-top: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 1rem 2rem;
+  border-top: 1px solid rgb(9 9 9 / 0.17);
+  opacity: 0;
+  animation: copy-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) 430ms both;
+}
+
+.navLabel {
+  color: var(--home-muted);
+  font-size: 0.72rem;
+  font-weight: 560;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.navLinks a {
+  position: relative;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  color: var(--home-ink);
+  font-size: 0.86rem;
+  font-weight: 590;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navLinks a::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -0.18rem;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms ease;
+}
+
+.navLinks a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.page :is(a, button):focus-visible {
+  outline: 2px solid var(--home-ink);
+  outline-offset: 4px;
+  box-shadow: none;
+}
+
+@keyframes mark-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(1.25rem) rotate(-4deg) scale(0.92);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translateY(-0.15rem) rotate(0.6deg) scale(1.012);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes copy-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.8rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 859px) {
+  .page {
+    padding: 1.25rem clamp(1.25rem, 5vw, 2.5rem) 2rem;
+  }
+
+  .hero {
+    width: min(100%, 42rem);
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    justify-items: center;
+    gap: clamp(1.75rem, 4.5vh, 3rem);
+    padding: clamp(1.5rem, 4vh, 2.75rem) 0 1rem;
+  }
+
+  .mark {
+    width: clamp(13.5rem, 47vw, 19rem);
+  }
+
+  .copy {
+    width: min(100%, 35rem);
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .title {
+    font-size: clamp(3.65rem, 10.5vw, 5rem);
+  }
+
+  .supporting {
+    margin-top: 1.35rem;
+  }
+
+  .primaryAction {
+    margin-top: 1.75rem;
+  }
+
+  .secondaryNav {
+    width: min(100%, 31rem);
+    margin-top: clamp(2.25rem, 5vh, 3.25rem);
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    min-height: 100svh;
+  }
+
+  .utilityLabel {
+    font-size: 0.7rem;
+  }
+
+  .hero {
+    gap: clamp(1.4rem, 3.5vh, 2rem);
+    padding-top: clamp(1rem, 3vh, 1.75rem);
+  }
+
+  .mark {
+    width: clamp(12.5rem, 58vw, 15rem);
+  }
+
+  .title {
+    font-size: clamp(3.15rem, 14.5vw, 4rem);
+    line-height: 0.86;
+  }
+
+  .supporting {
+    max-width: 19rem;
+    margin-top: 1.15rem;
+    font-size: 1rem;
+  }
+
+  .primaryAction {
+    width: min(100%, 21rem);
+    min-height: 3.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .secondaryNav {
+    margin-top: clamp(1.9rem, 4.5vh, 2.5rem);
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .navLinks {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.55rem 1.35rem;
+  }
+}
+
+@media (max-height: 720px) and (max-width: 859px) {
+  .page {
+    padding-bottom: 0.5rem;
+  }
+
+  .hero {
+    align-content: start;
+    gap: 1.25rem;
+    padding-top: 0.75rem;
+  }
+
+  .mark {
+    width: clamp(10.5rem, 34vh, 13rem);
+  }
+
+  .title {
+    font-size: clamp(2.9rem, 12.5vw, 3.65rem);
+  }
+
+  .supporting {
+    margin-top: 0.9rem;
+  }
+
+  .primaryAction {
+    margin-top: 1.15rem;
+  }
+
+  .secondaryNav {
+    margin-top: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markStage,
+  .title,
+  .supporting,
+  .primaryAction,
+  .secondaryNav {
+    opacity: 1;
+    animation: none;
+  }
+
+  .skipLink,
+  .primaryAction,
+  .primaryAction svg,
+  .navLinks a::after {
+    transition: none;
+  }
+}

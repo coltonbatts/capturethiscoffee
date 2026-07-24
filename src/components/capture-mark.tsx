@@ -6,12 +6,14 @@ type CaptureMarkProps = {
   /** Kept for older call sites; the smiley artwork is already self-contained. */
   invert?: boolean;
   priority?: boolean;
+  sizes?: string;
   title?: string;
 };
 
 export function CaptureMark({
   className = "size-10",
   priority = false,
+  sizes,
   title = "Capture This",
 }: CaptureMarkProps) {
   return (
@@ -28,6 +30,7 @@ export function CaptureMark({
         className="h-full w-full object-contain"
         loading={priority ? "eager" : "lazy"}
         priority={priority}
+        sizes={sizes}
       />
     </span>
   );

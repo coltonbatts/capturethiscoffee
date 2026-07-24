@@ -6,7 +6,7 @@ import { useAppAuth } from "@/components/app-auth-provider";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 const cornerButtonClass =
-  "flex min-h-11 items-center gap-2 border-2 border-white bg-black px-4 text-sm font-black uppercase tracking-tight text-white transition-[background-color,color,transform] duration-100 hover:border-accent hover:bg-accent hover:text-black active:translate-y-[2px]";
+  "flex min-h-11 items-center gap-2 rounded-full border border-black/15 bg-transparent px-4 text-sm font-semibold tracking-[-0.01em] text-black transition-[background-color,border-color,color,transform] duration-200 hover:border-black hover:bg-black hover:text-white active:scale-[0.98]";
 
 export function HomeAuthButton() {
   const { initialized, email, signOut } = useAppAuth();
@@ -25,7 +25,7 @@ export function HomeAuthButton() {
   return (
     <div className="flex items-center gap-2.5">
       <span
-        className="hidden max-w-44 truncate text-xs font-bold text-zinc-300 sm:block"
+        className="hidden max-w-44 truncate text-xs font-medium text-zinc-500 sm:block"
         title={email}
       >
         {email}
