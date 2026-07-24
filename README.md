@@ -219,6 +219,7 @@ App experience map: [docs/app-experience-map.md](docs/app-experience-map.md).
 Client onboarding checklist: [docs/client-login-handoff.md](docs/client-login-handoff.md).
 Paid V1 readiness checklist: [docs/v1-readiness.md](docs/v1-readiness.md).
 Fallback label export workflow: [docs/label-image-export.md](docs/label-image-export.md).
+Scannable label code spike: [docs/spike/README.md](docs/spike/README.md).
 
 ## Label printing
 
@@ -265,6 +266,24 @@ The web `/labels` screen still supports PNG share/download and NIIMBOT batch CSV
 
 The current assumed export preset is 50mm × 30mm at 300 DPI (`591×354px`). Physical roll verification is still pending — see [docs/label-image-export.md](docs/label-image-export.md).
 
+### Scannable label codes (spike in progress)
+
+Printed labels are currently write-only: ink leaves the system and never comes
+back. Planned work adds a scannable code to the label so a later scan can
+identify an order, reprint it, or update its state — the foundation for
+scan-to-reprint in `mobile/`.
+
+**Nothing is built yet.** The symbology and module size are being decided from a
+physical print on real holographic stock rather than from theory, because scan
+reliability on a curved cup is the design driver. Two 300 DPI test sheets are in
+[`docs/spike/`](docs/spike/README.md) along with the procedure, the results
+table, and the decision each outcome implies.
+
+Candidate encoders live in `scripts/spike/` (Data Matrix ECC200 and QR versions
+1–2, both hand-rolled and dependency-free). They stay there until the physical
+result picks a symbology; only the winner gets promoted into `src/lib` with
+tests.
+
 The browser never uses the service role key. Browser auth, Realtime
 notifications, and the documented photo-storage exception use only
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; operator table
@@ -283,6 +302,14 @@ npm run test
 npm run build
 npm run verify:niimbot-export
 npm audit --omit=dev
+```
+
+The label-code spike encoders are verified against Apple's Vision framework —
+the same detector the iOS app uses. macOS with the Swift toolchain only; it
+skips cleanly elsewhere:
+
+```bash
+node scripts/spike/check-encoders.mjs
 ```
 
 The iOS printer app:
