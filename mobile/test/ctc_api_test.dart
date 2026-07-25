@@ -116,20 +116,40 @@ void main() {
     );
   });
 
-  test('fetchLabelPng rejects a non-PNG success response', () async {
+  test('fetchQueue reads the client name for the label brand line', () async {
     final api = CtcApi(
       _session,
       client: MockClient((_) async => http.Response(
-            '<html>not a label</html>',
+            jsonEncode({
+              'production': {
+                'name': 'Review Day',
+                'status': 'active',
+                'clientName': 'Capture This',
+              },
+              'labels': <dynamic>[],
+            }),
             200,
-            headers: {'content-type': 'text/html'},
+            headers: {'content-type': 'application/json'},
           )),
     );
 
-    await expectLater(
-      api.fetchLabelPng('order-1', 'production-sticker-sheet'),
-      throwsA(isA<CtcApiException>()),
+    expect((await api.fetchQueue()).clientName, 'Capture This');
+  });
+
+  test('fetchQueue tolerates a server that omits the client name', () async {
+    final api = CtcApi(
+      _session,
+      client: MockClient((_) async => http.Response(
+            jsonEncode({
+              'production': {'name': 'Review Day', 'status': 'active'},
+              'labels': <dynamic>[],
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          )),
     );
+
+    expect((await api.fetchQueue()).clientName, '');
   });
 
   test('markLabelPrinted sends only the scoped sync patch', () async {

@@ -1,7 +1,11 @@
 // Capture This Coffee — NIIMBOT M2_H direct BLE printer app.
 //
-// Phase 2: load a production share link, fetch server-rendered label PNGs,
-// print over BLE, and mark label_printed via the public order PATCH route.
+// Load a production share link, render label PNGs on device, print over BLE,
+// and mark label_printed via the public order PATCH route.
+//
+// Labels are rendered locally by label_painter.dart rather than downloaded, so
+// printing does not require a signal. The queue fetch still does; caching it is
+// Phase B of docs/offline-first-ios-handoff.md.
 
 import 'dart:async';
 import 'dart:typed_data';
@@ -12,6 +16,8 @@ import 'package:niim_blue_flutter/niim_blue_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'ctc_api.dart';
+import 'label_content.dart';
+import 'label_painter.dart';
 import 'print_recovery.dart';
 import 'printer_validation.dart';
 import 'production_session.dart';
@@ -1029,14 +1035,26 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
     setState(() => _printerStatus = _PrinterStatus.printing);
 
-    _logLine('Fetching PNG for ${item.personName}…');
+    // Rendered on device, not fetched. Downloading one PNG per label made
+    // printing impossible without a signal, even for orders captured hours
+    // earlier — see docs/offline-first-ios-handoff.md.
+    _logLine('Rendering label for ${item.personName}…');
     late final Uint8List bytes;
     try {
-      bytes = await api.fetchLabelPng(item.orderId, queue.designId);
+      bytes = await renderLabelPng(
+        LabelContent.fromQueue(
+          orderId: item.orderId,
+          personName: item.personName,
+          drink: item.drink,
+          group: item.group,
+          productionName: queue.productionName,
+          clientName: queue.clientName,
+        ),
+      );
     } catch (error) {
       setState(() => _printerStatus = _PrinterStatus.error);
       throw Exception(
-        'PNG download failed for ${item.personName}. ${_errorText(error)}',
+        'Could not render the label for ${item.personName}. ${_errorText(error)}',
       );
     }
 
@@ -1044,7 +1062,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     if (decoded == null) {
       setState(() => _printerStatus = _PrinterStatus.error);
       throw Exception(
-        'PNG download failed for ${item.personName}. Could not decode label PNG.',
+        'Could not decode the rendered label for ${item.personName}.',
       );
     }
     final printSize = _printSizeFor(decoded);

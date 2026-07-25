@@ -9,7 +9,6 @@ import 'production_session.dart';
 const _defaultRequestTimeout = Duration(seconds: 15);
 const _defaultResponseTimeout = Duration(seconds: 20);
 const _maximumQueueBytes = 2 * 1024 * 1024;
-const _maximumLabelBytes = 8 * 1024 * 1024;
 const _maximumQueueLabels = 1000;
 
 class CtcApiException implements Exception {
@@ -63,13 +62,25 @@ class PrinterQueue {
   const PrinterQueue({
     required this.productionName,
     required this.productionStatus,
+    required this.clientName,
     required this.designId,
     required this.labels,
   });
 
   final String productionName;
   final String productionStatus;
+
+  /// Optional. Labels show `production name / client name`; the app renders
+  /// labels locally now, so it needs the same brand line the server renderer
+  /// builds. Older servers omit this and the label degrades to the production
+  /// name alone rather than failing.
+  final String clientName;
+
+  /// The design the server considers current. The app always renders `grid-01`
+  /// locally, so this is informational: if it stops matching, the app and
+  /// `/labels` are producing different labels for the same day.
   final String designId;
+
   final List<QueueLabel> labels;
 
   bool get isProductionActive => productionStatus == 'active';
@@ -96,6 +107,7 @@ class PrinterQueue {
         fallback: 'Production',
       ),
       productionStatus: _requiredString(production, 'status'),
+      clientName: _optionalString(production, 'clientName'),
       designId: _optionalString(
         json,
         'designId',
@@ -129,14 +141,6 @@ class CtcApi {
         '?token=${Uri.encodeQueryComponent(session.token)}',
       );
 
-  Uri _labelUri(String orderId, String designId) => Uri.parse(
-        '${session.apiBase}/api/public/orders/'
-        '${Uri.encodeComponent(orderId)}/label'
-        '?productionId=${Uri.encodeQueryComponent(session.productionId)}'
-        '&token=${Uri.encodeQueryComponent(session.token)}'
-        '&design=${Uri.encodeQueryComponent(designId)}',
-      );
-
   Uri _orderPatchUri(String orderId) => Uri.parse(
         '${session.apiBase}/api/public/orders/${Uri.encodeComponent(orderId)}',
       );
@@ -160,23 +164,6 @@ class CtcApi {
         'The server returned an invalid label queue. Refresh and contact support if it continues.',
       );
     }
-  }
-
-  Future<Uint8List> fetchLabelPng(String orderId, String designId) async {
-    final response = await _send(
-      'GET',
-      _labelUri(orderId, designId),
-      headers: _noCacheHeaders,
-      maximumBytes: _maximumLabelBytes,
-    );
-    _throwForStatus(response, fallback: 'Could not load label PNG.');
-    final contentType = response.headers['content-type']?.toLowerCase() ?? '';
-    if (!contentType.startsWith('image/png') || response.bodyBytes.isEmpty) {
-      throw const CtcApiException(
-        'The server returned an invalid label image. Refresh and try again.',
-      );
-    }
-    return response.bodyBytes;
   }
 
   Future<void> markLabelPrinted(String orderId) async {

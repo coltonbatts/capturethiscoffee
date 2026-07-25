@@ -28,3 +28,17 @@ flutter:
   assets:
     - assets/capture-this-smiley.png
     - assets/test_label.png
+  fonts:
+    # The same faces the server registers in
+    # src/lib/niimbot-m2-export-server.ts from public/fonts/. Bundled rather
+    # than relying on the iOS system Arial so label metrics are identical in
+    # `flutter test` on a host machine and on device.
+    #
+    # The web renderer asks for weights 700 and 900; only one bold face exists,
+    # so both resolve to Arial-Bold on either side. That parity is intentional.
+    - family: Arial
+      fonts:
+        - asset: assets/fonts/Arial.ttf
+          weight: 400
+        - asset: assets/fonts/Arial-Bold.ttf
+          weight: 700

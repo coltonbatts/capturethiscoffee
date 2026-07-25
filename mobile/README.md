@@ -14,7 +14,7 @@ recovery rules. The complete role-based handoff packet starts at
 2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
 3. On the iPhone, open **Capture This** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).
-5. Tap **Print** on each label in the queue. The app downloads the server PNG, prints, then marks `label_printed` via the public order PATCH route.
+5. Tap **Print** on each label in the queue. The app renders the label on device, prints, then marks `label_printed` via the public order PATCH route.
 6. Use **Refresh** after runner-board changes. Toggle the chip to show already-printed labels.
 
 The linked production token is stored in the iOS Keychain. If the physical
@@ -28,9 +28,34 @@ the corresponding recovery action. Recovery evidence survives an app restart.
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/public/productions/{id}/labels?token=…` | Label queue JSON |
-| `GET /api/public/orders/{orderId}/label?productionId=…&token=…` | Server-rendered PNG (`production-sticker-sheet` design) |
+| `GET /api/public/productions/{id}/labels?token=…` | Label queue JSON (names, drinks, groups, client name) |
 | `PATCH /api/public/orders/{orderId}` | `{ productionId, token, patch: { label_printed: true } }` |
+
+The app no longer calls `GET /api/public/orders/{orderId}/label`. Downloading a
+PNG per label meant no signal, no printing — even for orders captured an hour
+earlier. That route still serves `/labels` on the web and is the comparison
+baseline for the on-device renderer.
+
+## Label rendering
+
+`lib/label_painter.dart` renders `grid-01` at 591x354 (50x30mm @ 300 DPI), a
+direct port of `drawGrid01` in `src/lib/niimbot-m2-draw.ts`. Coordinates are
+copied verbatim; if the web design moves, this must move with it. Only
+`grid-01` is ported — the other seven designs are a web-side playground.
+
+Arial is bundled from `assets/fonts/` rather than taken from iOS so that
+`flutter test` on a host machine and the device produce identical metrics.
+
+The two renderers will never be byte-identical — `@napi-rs/canvas` and Flutter's
+`TextPainter` shape text differently. What must match is composition. Check it:
+
+```bash
+flutter test test/label_golden_test.dart --update-goldens
+cd .. && node scripts/compare-label-renderers.mjs
+```
+
+That writes stacked server/app pairs for four fixtures (short name, long name,
+long drink, minimal). Look at them.
 
 ## Setup (one-time)
 
@@ -103,9 +128,15 @@ flutter run
 ## Print tuning
 
 Constants at the top of `lib/main.dart`: `kPrintheadWidth`, `kDensity`, and
-`kMinimumTextSideInkPixels`. The app scales server PNGs to the M2_H printhead
-width while preserving aspect ratio. If output is too light/dark, adjust
-`kDensity` and re-run.
+`kMinimumTextSideInkPixels`. The app scales the rendered label to the M2_H
+printhead width while preserving aspect ratio. If output is too light/dark,
+adjust `kDensity` and re-run.
+
+`kMinimumTextSideInkPixels` guards against printing a blank label: below that
+threshold the app overlays the name and drink as plain text. It predates local
+rendering and is kept deliberately — it now catches a renderer bug rather than a
+bad download. `test/label_render_test.dart` asserts real labels stay well above
+it.
 
 ## Known quirks / troubleshooting
 

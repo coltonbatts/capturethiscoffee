@@ -21,6 +21,7 @@ class _PlanningApi extends CtcApi {
   Future<PrinterQueue> fetchQueue() async => const PrinterQueue(
         productionName: 'Tomorrow’s Shoot',
         productionStatus: 'planning',
+        clientName: 'Capture This',
         designId: 'grid-01',
         labels: [
           QueueLabel(
