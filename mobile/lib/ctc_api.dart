@@ -4,12 +4,12 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import 'production_board.dart';
 import 'production_session.dart';
 
 const _defaultRequestTimeout = Duration(seconds: 15);
 const _defaultResponseTimeout = Duration(seconds: 20);
-const _maximumQueueBytes = 2 * 1024 * 1024;
-const _maximumQueueLabels = 1000;
+const _maximumBoardBytes = 2 * 1024 * 1024;
 
 class CtcApiException implements Exception {
   const CtcApiException(this.message);
@@ -18,104 +18,6 @@ class CtcApiException implements Exception {
 
   @override
   String toString() => message;
-}
-
-class QueueLabel {
-  const QueueLabel({
-    required this.orderId,
-    required this.personName,
-    required this.drink,
-    required this.group,
-    required this.status,
-    required this.labelPrinted,
-  });
-
-  final String orderId;
-  final String personName;
-  final String drink;
-  final String group;
-  final String status;
-  final bool labelPrinted;
-
-  factory QueueLabel.fromJson(Map<String, dynamic> json) {
-    final orderId = _requiredString(json, 'orderId');
-    final personName = _requiredString(json, 'personName');
-    final drink = _optionalString(json, 'drink');
-    final group = _optionalString(json, 'group');
-    final status = _optionalString(json, 'status');
-    final labelPrinted = json['labelPrinted'];
-    if (labelPrinted is! bool) {
-      throw const FormatException('Invalid labelPrinted value.');
-    }
-    return QueueLabel(
-      orderId: orderId,
-      personName: personName,
-      drink: drink,
-      group: group,
-      status: status,
-      labelPrinted: labelPrinted,
-    );
-  }
-}
-
-class PrinterQueue {
-  const PrinterQueue({
-    required this.productionName,
-    required this.productionStatus,
-    required this.clientName,
-    required this.designId,
-    required this.labels,
-  });
-
-  final String productionName;
-  final String productionStatus;
-
-  /// Optional. Labels show `production name / client name`; the app renders
-  /// labels locally now, so it needs the same brand line the server renderer
-  /// builds. Older servers omit this and the label degrades to the production
-  /// name alone rather than failing.
-  final String clientName;
-
-  /// The design the server considers current. The app always renders `grid-01`
-  /// locally, so this is informational: if it stops matching, the app and
-  /// `/labels` are producing different labels for the same day.
-  final String designId;
-
-  final List<QueueLabel> labels;
-
-  bool get isProductionActive => productionStatus == 'active';
-
-  factory PrinterQueue.fromJson(Map<String, dynamic> json) {
-    final production = json['production'];
-    final rawLabels = json['labels'];
-    if (production is! Map<String, dynamic> || rawLabels is! List<dynamic>) {
-      throw const FormatException('Invalid queue response.');
-    }
-    if (rawLabels.length > _maximumQueueLabels) {
-      throw const FormatException('Queue is unexpectedly large.');
-    }
-    final labels = rawLabels.map((item) {
-      if (item is! Map<String, dynamic>) {
-        throw const FormatException('Invalid queue label.');
-      }
-      return QueueLabel.fromJson(item);
-    }).toList(growable: false);
-    return PrinterQueue(
-      productionName: _optionalString(
-        production,
-        'name',
-        fallback: 'Production',
-      ),
-      productionStatus: _requiredString(production, 'status'),
-      clientName: _optionalString(production, 'clientName'),
-      designId: _optionalString(
-        json,
-        'designId',
-        fallback: 'production-sticker-sheet',
-      ),
-      labels: labels,
-    );
-  }
 }
 
 class CtcApi {
@@ -135,9 +37,14 @@ class CtcApi {
   final Duration _requestTimeout;
   final Duration _responseTimeout;
 
-  Uri _queueUri() => Uri.parse(
+  /// The full runner board, not the printer-queue endpoint.
+  ///
+  /// The queue only contained captured orders; the board carries the whole
+  /// on-set roster, which is what the cache and offline capture need. The print
+  /// queue is derived from it locally by [PrinterQueue.fromBoard].
+  Uri _boardUri() => Uri.parse(
         '${session.apiBase}/api/public/productions/'
-        '${Uri.encodeComponent(session.productionId)}/labels'
+        '${Uri.encodeComponent(session.productionId)}'
         '?token=${Uri.encodeQueryComponent(session.token)}',
       );
 
@@ -145,23 +52,23 @@ class CtcApi {
         '${session.apiBase}/api/public/orders/${Uri.encodeComponent(orderId)}',
       );
 
-  Future<PrinterQueue> fetchQueue() async {
+  Future<ProductionBoard> fetchBoard() async {
     final response = await _send(
       'GET',
-      _queueUri(),
+      _boardUri(),
       headers: _noCacheHeaders,
-      maximumBytes: _maximumQueueBytes,
+      maximumBytes: _maximumBoardBytes,
     );
-    _throwForStatus(response, fallback: 'Could not load label queue.');
+    _throwForStatus(response, fallback: 'Could not load the production board.');
     try {
       final body = jsonDecode(utf8.decode(response.bodyBytes));
       if (body is! Map<String, dynamic>) {
-        throw const FormatException('Invalid queue response.');
+        throw const FormatException('Invalid board response.');
       }
-      return PrinterQueue.fromJson(body);
+      return ProductionBoard.fromJson(body);
     } on FormatException {
       throw const CtcApiException(
-        'The server returned an invalid label queue. Refresh and contact support if it continues.',
+        'The server returned an invalid production board. Refresh and contact support if it continues.',
       );
     }
   }
@@ -176,7 +83,7 @@ class CtcApi {
         'token': session.token,
         'patch': {'label_printed': true},
       }),
-      maximumBytes: _maximumQueueBytes,
+      maximumBytes: _maximumBoardBytes,
     );
     _throwForStatus(response, fallback: 'Could not sync printed status.');
   }
@@ -253,27 +160,6 @@ class CtcApi {
   void close() {
     if (_ownsClient) _client.close();
   }
-}
-
-String _requiredString(Map<String, dynamic> json, String key) {
-  final value = json[key];
-  if (value is! String || value.trim().isEmpty || value.length > 10000) {
-    throw FormatException('Invalid $key value.');
-  }
-  return value;
-}
-
-String _optionalString(
-  Map<String, dynamic> json,
-  String key, {
-  String fallback = '',
-}) {
-  final value = json[key];
-  if (value == null) return fallback;
-  if (value is! String || value.length > 10000) {
-    throw FormatException('Invalid $key value.');
-  }
-  return value;
 }
 
 void _throwForStatus(http.Response response, {required String fallback}) {

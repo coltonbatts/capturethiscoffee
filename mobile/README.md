@@ -28,13 +28,39 @@ the corresponding recovery action. Recovery evidence survives an app restart.
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/public/productions/{id}/labels?token=…` | Label queue JSON (names, drinks, groups, client name) |
+| `GET /api/public/productions/{id}?token=…` | Full runner board (production, on-set roster, people, orders) |
 | `PATCH /api/public/orders/{orderId}` | `{ productionId, token, patch: { label_printed: true } }` |
 
-The app no longer calls `GET /api/public/orders/{orderId}/label`. Downloading a
-PNG per label meant no signal, no printing — even for orders captured an hour
-earlier. That route still serves `/labels` on the web and is the comparison
-baseline for the on-device renderer.
+The app calls two routes it used to call and no longer does:
+
+- `GET /api/public/orders/{orderId}/label` — downloading a PNG per label meant
+  no signal, no printing, even for orders captured an hour earlier. That route
+  still serves `/labels` on the web and is the comparison baseline for the
+  on-device renderer.
+- `GET /api/public/productions/{id}/labels` — the printer-queue endpoint only
+  returned *captured* orders. The app reads the board instead and derives the
+  print queue locally in `PrinterQueue.fromBoard`, which mirrors
+  `buildPrinterQueue` in `src/lib/printer-queue.ts`. **Nothing calls the labels
+  endpoint now**; it is still deployed and still tested on the web side.
+
+## Offline behaviour
+
+The last board the server returned is cached to `shared_preferences`
+(`lib/board_cache.dart`), scoped to `apiBase` + `productionId`. A cold start
+with no signal shows that roster immediately and printing works, because labels
+render on device. The cache is cleared when the production is unlinked.
+
+Staleness is shown, never hidden: the summary line reads
+`Offline · synced 12 min ago`, and past ten minutes a banner says which orders
+the operator may be missing. Cached data is never treated as server
+confirmation — a print-recovery record is only retired when the server itself
+reports `label_printed`.
+
+Known gap: a production marked **complete** drops out of
+`readableProductionStatuses` server-side, so the board 404s and the app shows
+"Working offline" over a roster for a day that is actually finished. The error
+banner tells the truth underneath, but the offline framing does not. Fixing
+that needs typed errors from `CtcApi` and belongs with the Phase D 403 trap.
 
 ## Label rendering
 

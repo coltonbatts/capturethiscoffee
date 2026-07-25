@@ -1,10 +1,14 @@
+import 'package:ctc_printer/board_cache.dart';
 import 'package:ctc_printer/ctc_api.dart';
 import 'package:ctc_printer/main.dart';
 import 'package:ctc_printer/print_recovery.dart';
+import 'package:ctc_printer/production_board.dart';
 import 'package:ctc_printer/production_session.dart';
 import 'package:ctc_printer/session_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/board_fixture.dart';
 
 const _session = ProductionSession(
   apiBase: 'https://coffee.capturethis.com',
@@ -12,43 +16,38 @@ const _session = ProductionSession(
   token: 'screenshot-fixture-not-a-live-token',
 );
 
-const _queue = PrinterQueue(
-  productionName: 'Apple Review Coffee Run',
-  productionStatus: 'active',
-  clientName: 'Capture This',
-  designId: 'production-sticker-sheet',
-  labels: [
-    QueueLabel(
+final _board = boardFixture(
+  name: 'Apple Review Coffee Run',
+  status: 'active',
+  productionId: 'fictional-apple-review',
+  roster: [
+    boardEntry(
       orderId: 'order-alex',
       personName: 'Alex North',
       drink: 'Black coffee',
       group: 'Crew',
-      status: 'confirmed',
-      labelPrinted: false,
+      sortOrder: 1,
     ),
-    QueueLabel(
+    boardEntry(
       orderId: 'order-cameron',
       personName: 'Cameron Ellington-Smythe',
       drink: 'Iced americano',
       group: 'Camera',
-      status: 'confirmed',
-      labelPrinted: false,
+      sortOrder: 2,
     ),
-    QueueLabel(
+    boardEntry(
       orderId: 'order-taylor',
       personName: 'Taylor Quinn',
       drink: 'Half-caf oat milk vanilla latte, extra hot',
       group: 'Production',
-      status: 'confirmed',
-      labelPrinted: false,
+      sortOrder: 3,
     ),
-    QueueLabel(
+    boardEntry(
       orderId: 'order-morgan',
       personName: 'Morgan Lee',
       drink: 'Iced decaf caramel latte with oat milk, light ice',
       group: 'Agency',
-      status: 'confirmed',
-      labelPrinted: false,
+      sortOrder: 4,
     ),
   ],
 );
@@ -57,7 +56,7 @@ class _ScreenshotApi extends CtcApi {
   _ScreenshotApi(super.session);
 
   @override
-  Future<PrinterQueue> fetchQueue() async => _queue;
+  Future<ProductionBoard> fetchBoard() async => _board;
 
   @override
   void close() {}
@@ -88,6 +87,7 @@ Future<void> _renderAppStoreScreenshot(
 PrinterApp _fixtureApp({List<PrintRecoveryRecord> recoveries = const []}) {
   return PrinterApp(
     sessionRepository: MemorySessionRepository(_session),
+    boardCacheRepository: MemoryBoardCacheRepository(),
     printRecoveryRepository: MemoryPrintRecoveryRepository(recoveries),
     apiFactory: _ScreenshotApi.new,
   );
@@ -101,7 +101,8 @@ void main() {
       tester,
       app: PrinterApp(
         sessionRepository: MemorySessionRepository(),
-        printRecoveryRepository: MemoryPrintRecoveryRepository(),
+        boardCacheRepository: MemoryBoardCacheRepository(),
+    printRecoveryRepository: MemoryPrintRecoveryRepository(),
       ),
       golden: '01-link-production.png',
     );
@@ -153,7 +154,8 @@ void main() {
         key: boundaryKey,
         child: PrinterApp(
           sessionRepository: MemorySessionRepository(),
-          printRecoveryRepository: MemoryPrintRecoveryRepository(),
+          boardCacheRepository: MemoryBoardCacheRepository(),
+    printRecoveryRepository: MemoryPrintRecoveryRepository(),
         ),
       ),
     );

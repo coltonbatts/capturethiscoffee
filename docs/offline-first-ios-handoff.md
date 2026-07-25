@@ -102,7 +102,30 @@ Port the label renderer so the app can print with no network.
 - Keep `/api/public/orders/[id]/label` and the server renderer in place. Do not delete
   them in this phase; they stay as the comparison baseline.
 
-### Phase B — Durable local board cache
+### Phase B — Durable local board cache — DONE 2026-07-24
+
+Landed: the app reads `GET /api/public/productions/[id]` and derives its print
+queue locally (`PrinterQueue.fromBoard`), `formatDrink` and the capture helpers
+are ported to Dart (`mobile/lib/drink_format.dart`), the last good board is
+cached in `mobile/lib/board_cache.dart`, and staleness is shown rather than
+hidden. Cached data is never treated as server confirmation for print recovery.
+Verified by `mobile/test/offline_cold_start_test.dart` (cold start with a
+failing API), plus board, drink-format, and cache tests — 93 mobile tests.
+
+NOTHING now calls `GET /api/public/productions/[id]/labels`. The route and its
+web tests are still in place, per the do-not-delete-web-code rule.
+
+Two open items carried into Phase D:
+
+- **The complete-production gap.** `readableProductionStatuses` is
+  `{planning, active}`, so a production marked complete makes the board 404. The
+  app then shows "Working offline" over a roster for a finished day, and the
+  cached status still says `active`, so printing is not blocked. Distinguishing
+  "cannot reach the server" from "the server says this day is over" needs typed
+  errors out of `CtcApi`. Same family as the 403 trap below.
+- The staleness threshold (10 minutes) is a guess, not a measured number.
+
+Original brief follows.
 
 - Switch the app from the labels-only queue endpoint to the full board:
   `GET /api/public/productions/[id]?token=...`, which returns `ProductionBoardDTO`
