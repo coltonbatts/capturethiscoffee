@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -23,6 +23,10 @@ permanent target is an approved unlisted App Store link.
 | Signed App Store IPA for `1.0.0 (7)` | Built from clean `main` at `88f97dc`; version/build, bundle ID, distribution signing, and artifact hash verified locally |
 | Build 7 uploaded/processed | Uploaded at 10:13 PM CDT on 2026-07-24; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
 | Build 7 internal availability | Assigned to internal group `Main` with one invite; iPhone/M2_H and airplane-mode validation pending |
+| Build 8 uploaded/processed | App Store Connect records upload at 2:12 PM CDT on 2026-07-25; processing `Complete`, status `Ready to Submit`, assigned to `Main` |
+| Build 9 signed App Store IPA | `1.0.0 (9)`, 22,894,208 bytes, SHA-256 `b74965478bfbbb40863557eb8a5d8295d163e15e8ea4a68306cc8330492dd80e` |
+| Build 9 uploaded/processed | Uploaded at 3:46 PM CDT on 2026-07-25; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
+| Build 9 internal availability | Assigned to internal group `Main` with one invite; locally signed release launch, signed-in day loading, and one physical M2_H reprint passed |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -53,8 +57,22 @@ record in `docs/physical-release-test.md`.
 5. Confirm App Store name is **Capture This** and upload screenshots containing
    only fictional data.
 6. Confirm source, archive, IPA, and App Store Connect all say
-   `1.0.0 (7)`. If any code, embedded metadata, or print constants change after
-   upload, bump to build 8 or higher and rebuild.
+   `1.0.0 (9)`. If any code, embedded metadata, or print constants change after
+   upload, bump to build 10 or higher and rebuild.
+
+## Build 9 — what to test
+
+- Fresh install → owner-provisioned sign-in → Days → select an Active day.
+- Confirm the selected direct-Supabase board drives the roster and print deck.
+- Force-quit and relaunch; confirm the account and selected day restore.
+- After an online load, cold-launch in airplane mode; confirm the cached day
+  opens, staleness is visible, and the M2_H remains printable.
+- Restore connectivity and confirm printed status synchronizes without a
+  duplicate physical label.
+- Sign out and confirm another account cannot see the prior account's cached
+  board or unresolved recovery details.
+- Confirm **Legacy link** still opens a Build 8 production share link.
+- Exercise batch stop/recovery and uncertain-print resolution on the real M2_H.
 
 ## Build 7 — what to test
 

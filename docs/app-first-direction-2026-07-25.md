@@ -7,6 +7,9 @@ This supersedes the "what stays on the web permanently" section of
 [`offline-first-ios-handoff.md`](offline-first-ios-handoff.md), which assumed
 people, rosters, day creation, and auth would live on the web indefinitely.
 
+The build-by-build implementation and handoff plan is now in
+[`ios-complete-product-plan-2026-07-25.md`](ios-complete-product-plan-2026-07-25.md).
+
 ## What "frozen" means
 
 Frozen, not deleted.

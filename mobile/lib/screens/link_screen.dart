@@ -1,4 +1,4 @@
-// The front door, until Supabase Auth replaces it.
+// The Build 8 share-link flow, retained as Build 9's migration fallback.
 //
 // This is not pushed as a route. It is what the root shows when there is no
 // session, so there is nothing to navigate back to — an operator with no linked
@@ -53,9 +53,14 @@ String linkValidationMessage(String raw) {
 }
 
 class LinkScreen extends StatefulWidget {
-  const LinkScreen({super.key, required this.onShowHelp});
+  const LinkScreen({
+    super.key,
+    required this.onShowHelp,
+    this.onBackToSignIn,
+  });
 
   final VoidCallback onShowHelp;
+  final VoidCallback? onBackToSignIn;
 
   @override
   State<LinkScreen> createState() => _LinkScreenState();
@@ -83,8 +88,9 @@ class _LinkScreenState extends State<LinkScreen> {
     _linkController.text = text;
     setState(() {
       // Say so immediately rather than waiting for a failed tap on Link.
-      _fieldError =
-          parseProductionShareUrl(text) == null ? linkValidationMessage(text) : null;
+      _fieldError = parseProductionShareUrl(text) == null
+          ? linkValidationMessage(text)
+          : null;
     });
   }
 
@@ -108,6 +114,13 @@ class _LinkScreenState extends State<LinkScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: widget.onBackToSignIn == null
+            ? null
+            : IconButton(
+                onPressed: widget.onBackToSignIn,
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Back to sign in',
+              ),
         title: const BrandAppBarTitle(detail: 'Coffee label printer'),
         actions: [
           IconButton(

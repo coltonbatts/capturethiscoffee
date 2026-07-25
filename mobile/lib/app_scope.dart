@@ -9,18 +9,31 @@
 
 import 'package:flutter/material.dart';
 
+import 'app_runtime.dart';
 import 'printer_controller.dart';
+import 'session_controller.dart';
+import 'workspace_controller.dart';
 
-class PrinterScope extends InheritedNotifier<PrinterController> {
+class PrinterScope extends InheritedNotifier<AppRuntime> {
   const PrinterScope({
     super.key,
-    required PrinterController controller,
+    required AppRuntime runtime,
     required super.child,
-  }) : super(notifier: controller);
+  }) : super(notifier: runtime);
 
-  static PrinterController of(BuildContext context) {
+  static AppRuntime runtimeOf(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<PrinterScope>();
     assert(scope?.notifier != null, 'No PrinterScope found in context.');
     return scope!.notifier!;
   }
+
+  static PrinterController of(BuildContext context) {
+    return runtimeOf(context).printer;
+  }
+
+  static WorkspaceController workspaceOf(BuildContext context) =>
+      runtimeOf(context).workspace;
+
+  static SessionController sessionOf(BuildContext context) =>
+      runtimeOf(context).session;
 }

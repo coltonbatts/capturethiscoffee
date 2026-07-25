@@ -1,9 +1,9 @@
-// All app state and the operations that mutate it.
+// Bluetooth printing and durable physical-print recovery.
 //
-// Extracted from main.dart on 2026-07-25, which had grown to 1945 lines holding
-// every screen, dialog, sheet, and all 21 state fields on a single State
-// object. The app is gaining a route stack, and state that lives on one screen's
-// State cannot outlive a navigation.
+// Build 9 moved authentication, days, selected-board loading, and board caches
+// into SessionController and WorkspaceController. This controller consumes the
+// workspace's shared ProductionBoard → PrinterQueue projection; it does not own
+// account or navigation state.
 //
 // The split line is confirmation. This class never shows a dialog and never
 // takes a BuildContext: `printAllPending` prints, `clearSession` clears, and
@@ -24,7 +24,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:niim_blue_flutter/niim_blue_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'board_cache.dart';
 import 'ctc_api.dart';
@@ -37,6 +36,7 @@ import 'production_session.dart';
 import 'session_store.dart';
 import 'widgets/print_deck.dart';
 import 'widgets/roster_section.dart';
+import 'workspace_controller.dart';
 
 // M2_H @ 300 DPI. The library metadata reports a 567-dot printhead for model
 // 4608, while the server PNG is 591x354 with safe margins for 50x30mm stock.
@@ -46,8 +46,6 @@ const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
 const _printerScanTimeout = Duration(seconds: 8);
 const _printOperationTimeout = Duration(seconds: 60);
-const _queueRefreshInterval = Duration(seconds: 10);
-
 typedef CtcApiFactory = CtcApi Function(ProductionSession session);
 
 enum PrinterStatus {
@@ -82,55 +80,39 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     PrintRecoveryRepository? printRecoveryRepository,
     BoardCacheRepository? boardCacheRepository,
     CtcApiFactory? apiFactory,
-  })  : _sessionRepository = sessionRepository ?? KeychainSessionRepository(),
-        _printRecoveryRepository =
+    WorkspaceController? workspaceController,
+  })  : _printRecoveryRepository =
             printRecoveryRepository ?? PreferencesPrintRecoveryRepository(),
-        _boardCacheRepository =
-            boardCacheRepository ?? PreferencesBoardCacheRepository(),
-        _apiFactory = apiFactory ?? CtcApi.new;
+        _workspace = workspaceController ??
+            WorkspaceController(
+              legacySessionRepository:
+                  sessionRepository ?? KeychainSessionRepository(),
+              legacyCacheRepository:
+                  boardCacheRepository ?? PreferencesBoardCacheRepository(),
+              legacyApiFactory: apiFactory ?? CtcApi.new,
+              legacyTestMode: sessionRepository != null ||
+                  boardCacheRepository != null ||
+                  apiFactory != null,
+            ),
+        _ownsWorkspace = workspaceController == null;
 
   final NiimbotBluetoothClient _client = NiimbotBluetoothClient();
-  final SessionRepository _sessionRepository;
   final PrintRecoveryRepository _printRecoveryRepository;
-  final BoardCacheRepository _boardCacheRepository;
-  final CtcApiFactory _apiFactory;
+  final WorkspaceController _workspace;
+  final bool _ownsWorkspace;
 
   final List<String> _log = [];
 
-  ProductionSession? _session;
-  CtcApi? _api;
   PrintRecoveryLedger? _printRecoveryLedger;
-  PrinterQueue? _queue;
-  Timer? _queueRefreshTimer;
   bool _disposed = false;
-
-  /// When the server last confirmed the board on screen — not when the app last
-  /// read it back off disk. An operator needs the age of the data.
-  DateTime? _lastSyncedAt;
-
-  /// True while the board on screen came from disk and has not been confirmed
-  /// by the server since. Drives the offline banner.
-  bool _servingCachedBoard = false;
-
-  /// Set when the server answered and refused this production — complete,
-  /// revoked, expired, deleted.
-  ///
-  /// Distinct from [_servingCachedBoard] because the two demand opposite
-  /// behaviour. An unreachable server means the cached roster is still true and
-  /// printing it is the entire point of the cache. A refused one means the
-  /// roster may describe a day that is over, and the cached status still says
-  /// `active`, so nothing else in the app would stop a print.
-  String? _boardUnavailableReason;
-
-  String _queueSignature = '';
   RosterFilter _rosterFilter = RosterFilter.toPrint;
 
   /// Bumped once per label that physically printed; drives the deck's stamp.
   int _printSuccessToken = 0;
   String _rosterQuery = '';
+  String _loggedQueueSignature = '';
   bool _connected = false;
   bool _busy = false;
-  bool _loadingSession = true;
   PrinterStatus _printerStatus = PrinterStatus.disconnected;
   String? _operatorError;
   String? _failedBatchLabel;
@@ -140,15 +122,22 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> start() async {
     WidgetsBinding.instance.addObserver(this);
-    await _restoreSession();
+    _workspace.addListener(_handleWorkspaceChanged);
+    _printRecoveryLedger =
+        await PrintRecoveryLedger.load(_printRecoveryRepository);
+    if (_ownsWorkspace) {
+      await _workspace.start();
+    }
+    await _reconcileServerConfirmedRecovery();
+    _emit();
   }
 
   @override
   void dispose() {
     _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
-    _stopQueueRefreshTimer();
-    _api?.close();
+    _workspace.removeListener(_handleWorkspaceChanged);
+    if (_ownsWorkspace) _workspace.dispose();
     _client.disconnect();
     super.dispose();
   }
@@ -164,46 +153,40 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      if (_session != null) {
-        _startQueueRefreshTimer();
-        unawaited(refreshBoard(silent: true));
-      }
       if (_connected && !_busy) {
         unawaited(_verifyConnectionAfterResume());
       }
-    } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      _stopQueueRefreshTimer();
     }
   }
 
   // ------------------------------------------------------------------ getters
 
   List<String> get log => List.unmodifiable(_log);
-  ProductionSession? get session => _session;
-  PrinterQueue? get queue => _queue;
+  ProductionSession? get session => _workspace.legacySession;
+  WorkspaceController get workspace => _workspace;
+  PrinterQueue? get queue => _workspace.queue;
   PrintRecoveryLedger? get printRecoveryLedger => _printRecoveryLedger;
   bool get connected => _connected;
   String? get connectedDeviceName => _connectedDeviceName;
-  bool get busy => _busy;
-  bool get loadingSession => _loadingSession;
+  bool get busy => _busy || _workspace.busy;
+  bool get loadingSession => _workspace.loadingLegacy;
   PrinterStatus get printerStatus => _printerStatus;
-  String? get operatorError => _operatorError;
+  String? get operatorError => _operatorError ?? _workspace.error;
   String? get failedBatchLabel => _failedBatchLabel;
-  bool get servingCachedBoard => _servingCachedBoard;
-  DateTime? get lastSyncedAt => _lastSyncedAt;
+  bool get servingCachedBoard => _workspace.servingCachedBoard;
+  DateTime? get lastSyncedAt => _workspace.lastSyncedAt;
   int get printSuccessToken => _printSuccessToken;
   RosterFilter get rosterFilter => _rosterFilter;
   String get rosterQuery => _rosterQuery;
   bool get isPrinting => _printerStatus == PrinterStatus.printing;
 
   int get printedCount =>
-      _queue?.labels.where((label) => label.labelPrinted).length ?? 0;
+      queue?.labels.where((label) => label.labelPrinted).length ?? 0;
 
-  int get totalCount => _queue?.labels.length ?? 0;
+  int get totalCount => queue?.labels.length ?? 0;
 
   List<QueueLabel> get pendingLabels {
-    final labels = _queue?.labels ?? [];
+    final labels = queue?.labels ?? [];
     return labels
         .where(
           (label) =>
@@ -214,14 +197,20 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   List<PrintRecoveryRecord> get currentRecoveryRecords {
-    final session = _session;
+    final scopeKey = _workspace.scopeKey;
+    final productionId = _workspace.productionId;
     final ledger = _printRecoveryLedger;
-    if (session == null || ledger == null) return const [];
-    return ledger.forSession(session);
+    if (scopeKey == null || productionId == null || ledger == null) {
+      return const [];
+    }
+    return ledger.forScope(
+      scopeKey: scopeKey,
+      productionId: productionId,
+    );
   }
 
   List<QueueLabel> get visibleLabels {
-    final labels = _queue?.labels ?? [];
+    final labels = queue?.labels ?? [];
     final knownOrderIds = labels.map((label) => label.orderId).toSet();
     final recoveryOnlyLabels = currentRecoveryRecords
         .where((record) => !knownOrderIds.contains(record.orderId))
@@ -261,11 +250,11 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   /// chip that changed its number as you typed would be answering a different
   /// question than the one it is labelled with.
   Map<RosterFilter, int> get rosterCounts {
-    final labels = _queue?.labels ?? const <QueueLabel>[];
+    final labels = queue?.labels ?? const <QueueLabel>[];
     final printed = labels.where((label) => label.labelPrinted).length;
     final recoveryOnly = currentRecoveryRecords
-        .where((record) =>
-            !labels.any((label) => label.orderId == record.orderId))
+        .where(
+            (record) => !labels.any((label) => label.orderId == record.orderId))
         .length;
     final total = labels.length + recoveryOnly;
     return {
@@ -286,8 +275,12 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     // Ahead of the cached status, which is exactly the value not to trust here:
     // a completed production still says `active` in a cache written while it
     // was running.
-    if (_boardUnavailableReason != null) return DeckBlock.unavailable;
-    if (_queue?.isProductionActive != true) return DeckBlock.productionInactive;
+    if (_workspace.boardUnavailableReason != null) {
+      return DeckBlock.unavailable;
+    }
+    if (queue?.isProductionActive != true) {
+      return DeckBlock.productionInactive;
+    }
     if (pendingLabels.isEmpty && currentRecoveryRecords.isNotEmpty) {
       return DeckBlock.recoveryPending;
     }
@@ -295,20 +288,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   /// Why the server refused this production, or null while it is readable.
-  String? get boardUnavailableReason => _boardUnavailableReason;
-
-  void _noteBoardAvailability(Object error) {
-    if (error is! CtcApiException) return;
-    switch (error.kind) {
-      case CtcApiErrorKind.gone:
-        _boardUnavailableReason = error.message;
-      case CtcApiErrorKind.unreachable:
-      case CtcApiErrorKind.other:
-        // Neither proves the production is gone. Leave any existing verdict
-        // alone: losing signal after a 404 does not make the day live again.
-        break;
-    }
-  }
+  String? get boardUnavailableReason => _workspace.boardUnavailableReason;
 
   /// The label the deck is showing — the first pending one.
   QueueLabel? get deckLabel =>
@@ -316,49 +296,40 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   LabelContent? get deckContent {
     final item = deckLabel;
-    final queue = _queue;
-    if (item == null || queue == null) return null;
+    final currentQueue = queue;
+    if (item == null || currentQueue == null) return null;
     return LabelContent.fromQueue(
       orderId: item.orderId,
       personName: item.personName,
       drink: item.drink,
       group: item.group,
-      productionName: queue.productionName,
-      clientName: queue.clientName,
+      productionName: currentQueue.productionName,
+      clientName: currentQueue.clientName,
     );
   }
 
   String? get productionStatusLabel {
-    final queue = _queue;
-    if (queue == null || queue.isProductionActive) return null;
-    return 'Production ${queue.productionStatus}';
+    return _workspace.productionStatusLabel;
   }
 
   /// The line under the queue metrics. Never says "synced" about stale data.
   String get syncStatusLabel {
-    final syncedAt = _lastSyncedAt;
-    if (syncedAt == null) return 'Not synced yet';
-    if (_servingCachedBoard) return 'Offline · synced ${_ageLabel(syncedAt)}';
-    return 'Synced ${_timeLabel(syncedAt)}';
+    return _workspace.syncStatusLabel;
   }
 
   /// A board older than this is called out loudly rather than in small print.
-  static const staleBoardThreshold = Duration(minutes: 10);
+  static const staleBoardThreshold = WorkspaceController.staleBoardThreshold;
 
   bool get boardIsStale {
     // "Working offline" would be a lie about a production the server has
     // refused — that gets its own, louder notice.
-    if (_boardUnavailableReason != null) return false;
-    final syncedAt = _lastSyncedAt;
-    if (syncedAt == null || !_servingCachedBoard) return false;
-    return DateTime.now().difference(syncedAt) >= staleBoardThreshold;
+    return _workspace.boardIsStale;
   }
 
   /// How old the board on screen is, in words — "12 min ago". Null when nothing
   /// has ever synced, which is a different sentence, not an age of zero.
   String? get boardAgeLabel {
-    final syncedAt = _lastSyncedAt;
-    return syncedAt == null ? null : _ageLabel(syncedAt);
+    return _workspace.boardAgeLabel;
   }
 
   String labelTitle(QueueLabel item) {
@@ -385,9 +356,14 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void dismissError() {
-    if (_operatorError == null && _failedBatchLabel == null) return;
+    if (_operatorError == null &&
+        _failedBatchLabel == null &&
+        _workspace.error == null) {
+      return;
+    }
     _operatorError = null;
     _failedBatchLabel = null;
+    _workspace.dismissError();
     // Dismissing the message also clears the error *state*, otherwise the
     // printer stays latched in `error` with nothing on screen explaining why
     // and the deck refuses to print.
@@ -398,255 +374,57 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     _emit();
   }
 
-  // -------------------------------------------------------------- session I/O
-
-  Future<void> _restoreSession() async {
-    try {
-      final results = await Future.wait<Object?>([
-        _sessionRepository.read(),
-        PrintRecoveryLedger.load(_printRecoveryRepository),
-        _readCachedBoard(),
-      ]);
-      final saved = results[0] as ProductionSession?;
-      final ledger = results[1] as PrintRecoveryLedger;
-      final cached = results[2] as CachedBoard?;
-      if (_disposed) return;
-
-      _session = saved;
-      _api = saved == null ? null : _apiFactory(saved);
-      _printRecoveryLedger = ledger;
-      _loadingSession = false;
-      _emit();
-
-      if (saved == null) return;
-
-      // Show the cached board before touching the network. On a stage with no
-      // signal this is the entire difference between a usable app and an empty
-      // one — the session survives in the Keychain, but the roster does not.
-      if (cached != null && cached.belongsTo(saved)) {
-        await _applyBoard(
-          cached.board,
-          silent: true,
-          syncedAt: cached.syncedAt,
-          fromCache: true,
-        );
-      }
-
-      _startQueueRefreshTimer();
-      await refreshBoard(silent: true);
-    } catch (error) {
-      if (_disposed) return;
-      _loadingSession = false;
-      _operatorError =
-          'Could not open the saved production securely. Relink the production.';
-      _emit();
-      _logLine('Secure session restore failed: ${error.runtimeType}.');
-    }
-  }
-
-  Future<void> _saveSession(ProductionSession session) async {
-    await _sessionRepository.write(session);
-    _api?.close();
-    _session = session;
-    _api = _apiFactory(session);
-    _queueSignature = '';
-    _emit();
-    _startQueueRefreshTimer();
-  }
+  // ----------------------------------------------------------- workspace bridge
 
   /// Unconditional. The screen decides whether to ask first — see
   /// [currentRecoveryRecords], which is what makes the question worth asking.
   Future<void> clearSession() async {
-    await _sessionRepository.clear();
-    // Unlinking must take the roster with it. The token is the access control,
-    // but the cached crew names and drinks are the actual data.
-    await _boardCacheRepository.clear();
-    _stopQueueRefreshTimer();
-    _api?.close();
-    _session = null;
-    _api = null;
-    _queue = null;
-    _lastSyncedAt = null;
-    _servingCachedBoard = false;
-    _boardUnavailableReason = null;
-    _queueSignature = '';
+    await _workspace.clearLegacySession();
     _operatorError = null;
     _failedBatchLabel = null;
     _emit();
   }
 
-  Future<bool> linkProduction(String url) => _run('Link production', () async {
-        final parsed = parseProductionShareUrl(url);
-        if (parsed == null) {
-          throw Exception(
-            'Paste the full production share URL (must include ?token=…).',
-          );
-        }
-        final api = _apiFactory(parsed);
-        late final ProductionBoard board;
-        try {
-          board = await _fetchBoard(api);
-        } finally {
-          api.close();
-        }
-        if (_disposed) return;
-        await _saveSession(parsed);
-        await _applyBoard(board, session: parsed);
-      });
+  Future<bool> linkProduction(String url) =>
+      _workspace.linkLegacyProduction(url);
 
-  // ---------------------------------------------------------------- the board
+  Future<void> refreshBoard({bool silent = false}) =>
+      _workspace.refreshBoard(silent: silent);
 
-  Future<ProductionBoard> _fetchBoard(CtcApi api) async {
-    try {
-      return await api.fetchBoard();
-    } on CtcApiException catch (error) {
-      // Rethrown as a CtcApiException rather than a plain Exception so the
-      // error *kind* survives. Flattening it here is what let a 404 on a
-      // completed production masquerade as "no signal".
-      throw CtcApiException(
-        'Board fetch failed. ${error.message}',
-        kind: error.kind,
-      );
-    } catch (error) {
-      throw Exception('Board fetch failed. ${_errorText(error)}');
-    }
-  }
-
-  Future<CachedBoard?> _readCachedBoard() async {
-    try {
-      return await _boardCacheRepository.read();
-    } catch (error) {
-      // A damaged cache must never block a launch. The app falls back to the
-      // network exactly as it did before there was a cache.
-      _logLine('Cached board unavailable: ${error.runtimeType}.');
-      return null;
-    }
-  }
-
-  /// Puts a board on screen, from either the server or disk.
-  ///
-  /// [fromCache] is not cosmetic. Cached data must not be treated as server
-  /// confirmation: clearing a print-recovery record needs the server to have
-  /// said `label_printed`, and a cache written before the print was recorded
-  /// would wrongly retire a label that still needs syncing.
-  Future<void> _applyBoard(
-    ProductionBoard board, {
-    bool silent = false,
-    bool fromCache = false,
-    DateTime? syncedAt,
-    ProductionSession? session,
-  }) async {
-    final queue = PrinterQueue.fromBoard(board);
-
-    if (!fromCache) {
-      final serverConfirmed = queue.labels
-          .where((label) => label.labelPrinted)
-          .map((label) => label.orderId);
-      await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
-    }
+  void _handleWorkspaceChanged() {
     if (_disposed) return;
-
-    final nextSignature = _signatureForQueue(queue);
-    final changed = nextSignature != _queueSignature;
-    final pendingCount =
-        queue.labels.where((label) => !label.labelPrinted).length;
-    final stamp = syncedAt ?? DateTime.now();
-
-    _queue = queue;
-    _queueSignature = nextSignature;
-    _lastSyncedAt = stamp;
-    _servingCachedBoard = fromCache;
-    // A board that came back from the server is proof the production is
-    // readable again — a coordinator can reopen a day they closed early.
-    if (!fromCache) _boardUnavailableReason = null;
+    final currentQueue = queue;
+    if (currentQueue != null) {
+      final signature = currentQueue.labels
+          .map((label) =>
+              '${label.orderId}|${label.drink}|${label.status}|${label.labelPrinted}')
+          .join('\n');
+      if (signature != _loggedQueueSignature) {
+        _loggedQueueSignature = signature;
+        final pending =
+            currentQueue.labels.where((label) => !label.labelPrinted).length;
+        _logLine(
+          'Queue: ${currentQueue.labels.length} labels, $pending to print for '
+          '${currentQueue.productionName}'
+          '${_workspace.servingCachedBoard ? ' (cached)' : ''}.',
+        );
+      }
+    } else {
+      _loggedQueueSignature = '';
+    }
+    unawaited(_reconcileServerConfirmedRecovery());
     _emit();
-
-    if (!fromCache) {
-      await _writeCachedBoard(board, session: session, syncedAt: stamp);
-    }
-
-    if (!silent || changed) {
-      _logLine(
-        'Queue: ${queue.labels.length} labels, $pendingCount to print for '
-        '${queue.productionName}${fromCache ? ' (cached)' : ''}.',
-      );
-    }
   }
 
-  Future<void> _writeCachedBoard(
-    ProductionBoard board, {
-    ProductionSession? session,
-    required DateTime syncedAt,
-  }) async {
-    final target = session ?? _session;
-    if (target == null) return;
-    try {
-      await _boardCacheRepository.write(CachedBoard(
-        apiBase: target.apiBase,
-        productionId: target.productionId,
-        syncedAt: syncedAt,
-        board: board,
-      ));
-    } catch (error) {
-      // Failing to cache degrades the next cold start; it must not fail the
-      // refresh that just succeeded.
-      _logLine('Could not cache the board: ${error.runtimeType}.');
-    }
+  Future<void> _reconcileServerConfirmedRecovery() async {
+    final currentQueue = queue;
+    if (_workspace.servingCachedBoard || currentQueue == null) return;
+    final serverConfirmed = currentQueue.labels
+        .where((label) => label.labelPrinted)
+        .map((label) => label.orderId);
+    await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+    _emit();
   }
-
-  Future<void> refreshBoard({bool silent = false}) async {
-    final api = _api;
-    if (api == null) {
-      if (!silent) {
-        _operatorError =
-            'Production not linked. Paste a production share URL first.';
-        _emit();
-      }
-      return;
-    }
-
-    Future<void> action() async {
-      final board = await _fetchBoard(api);
-      if (_disposed) return;
-      await _applyBoard(board, silent: silent);
-    }
-
-    if (silent) {
-      try {
-        await action();
-      } catch (error) {
-        final message = _errorText(error);
-        _operatorError = message;
-        // A failed refresh over an existing board means what is on screen is
-        // now stale, whether it came from disk or from an earlier fetch.
-        if (_queue != null) _servingCachedBoard = true;
-        _noteBoardAvailability(error);
-        _emit();
-        _logLine(message);
-      }
-      return;
-    }
-
-    await _run('Refresh board', action);
-  }
-
-  void _startQueueRefreshTimer() {
-    _stopQueueRefreshTimer();
-    _queueRefreshTimer = Timer.periodic(_queueRefreshInterval, (_) {
-      if (_disposed || _busy || _api == null) return;
-      unawaited(refreshBoard(silent: true));
-    });
-  }
-
-  void _stopQueueRefreshTimer() {
-    _queueRefreshTimer?.cancel();
-    _queueRefreshTimer = null;
-  }
-
-  String _signatureForQueue(PrinterQueue queue) => queue.labels
-      .map((label) =>
-          '${label.orderId}|${label.drink}|${label.status}|${label.labelPrinted}')
-      .join('\n');
 
   // ----------------------------------------------------------------- printer
 
@@ -854,14 +632,14 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     // Checked before the cached status, which cannot be trusted once the server
     // has refused the production: a day marked complete still reads `active` in
     // a cache written while it was running.
-    final unavailable = _boardUnavailableReason;
+    final unavailable = _workspace.boardUnavailableReason;
     if (unavailable != null) {
       throw Exception(
         'This production is no longer available. $unavailable Refresh, and ask '
         'the coordinator if it should still be open.',
       );
     }
-    if (_queue?.isProductionActive != true) {
+    if (queue?.isProductionActive != true) {
       throw Exception(
         'Printing is paused until the coordinator marks this production Active. Refresh after its status changes.',
       );
@@ -869,12 +647,9 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     if (!_connected) {
       throw Exception('Printer not connected. Tap Connect printer first.');
     }
-    final api = _api;
-    final queue = _queue;
-    if (api == null || queue == null) {
-      throw Exception(
-        'Production not linked. Paste a production share URL first.',
-      );
+    final currentQueue = queue;
+    if (currentQueue == null || _workspace.productionId == null) {
+      throw Exception('Select a day before printing.');
     }
     if (_printRecoveryLedger == null) {
       throw Exception(
@@ -902,8 +677,8 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
           personName: item.personName,
           drink: item.drink,
           group: item.group,
-          productionName: queue.productionName,
-          clientName: queue.clientName,
+          productionName: currentQueue.productionName,
+          clientName: currentQueue.clientName,
         ),
       );
     } catch (error) {
@@ -972,10 +747,10 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
     _logLine('Marking label_printed…');
     try {
-      await api.markLabelPrinted(item.orderId);
+      await _workspace.markLabelPrinted(item.orderId);
     } catch (error) {
       throw PrintSyncPendingException(
-        'Printed ${item.personName}, but the web app did not sync. Do not reprint. Tap “Sync only” on this label. ${_errorText(error)}',
+        'Printed ${item.personName}, but the workspace did not sync. Do not reprint. Tap “Sync only” on this label. ${_errorText(error)}',
       );
     }
 
@@ -1010,15 +785,16 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     QueueLabel item,
     PrintRecoveryState state,
   ) async {
-    final session = _session;
+    final scopeKey = _workspace.scopeKey;
+    final productionId = _workspace.productionId;
     final ledger = _printRecoveryLedger;
-    if (session == null || ledger == null) {
+    if (scopeKey == null || productionId == null || ledger == null) {
       throw StateError('Print recovery storage is unavailable.');
     }
     try {
       await ledger.record(PrintRecoveryRecord(
-        apiBase: session.apiBase,
-        productionId: session.productionId,
+        apiBase: scopeKey,
+        productionId: productionId,
         orderId: item.orderId,
         personName: item.personName,
         drink: item.drink,
@@ -1037,16 +813,15 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   Future<bool> syncPrintedLabel(QueueLabel item) => _run(
         'Sync ${item.personName}',
         () async {
-          final api = _api;
           final recovery = _printRecoveryLedger?[item.orderId];
-          if (api == null || recovery == null) {
+          if (_workspace.productionId == null || recovery == null) {
             throw Exception('No pending printed-status sync for this label.');
           }
           if (recovery.state == PrintRecoveryState.uncertain) {
             throw Exception(
                 'Confirm whether the physical label printed first.');
           }
-          await api.markLabelPrinted(item.orderId);
+          await _workspace.markLabelPrinted(item.orderId);
           await _printRecoveryLedger?.clear(item.orderId);
           _emit();
           await refreshBoard(silent: true);
@@ -1138,15 +913,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   // ------------------------------------------------------------------ plumbing
 
-  Future<void> openExternalPage(Uri uri) async {
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && !_disposed) {
-      _operatorError =
-          'Could not open $uri. Check your connection and try again.';
-      _emit();
-    }
-  }
-
   void _logLine(String message) {
     if (_disposed) return;
     final stamp = DateTime.now().toIso8601String().substring(11, 19);
@@ -1199,25 +965,5 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       return text.substring('Exception: '.length);
     }
     return text;
-  }
-
-  String _timeLabel(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    final second = value.second.toString().padLeft(2, '0');
-    return '$hour:$minute:$second';
-  }
-
-  /// How old the board on screen is, in words an operator can act on.
-  String _ageLabel(DateTime value) {
-    final minutes = DateTime.now().difference(value).inMinutes;
-    if (minutes < 1) return 'moments ago';
-    if (minutes == 1) return '1 min ago';
-    if (minutes < 60) return '$minutes min ago';
-    final hours = (minutes / 60).floor();
-    if (hours == 1) return '1 hour ago';
-    if (hours < 24) return '$hours hours ago';
-    final days = (hours / 24).floor();
-    return days == 1 ? '1 day ago' : '$days days ago';
   }
 }

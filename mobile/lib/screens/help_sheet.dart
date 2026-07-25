@@ -7,14 +7,14 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
+import '../external_links.dart';
 import '../theme.dart';
 import 'about_screen.dart';
 
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
 
 Future<void> showQuickStart(BuildContext context) async {
-  final controller = PrinterScope.of(context);
-
+  final legacy = PrinterScope.runtimeOf(context).showLegacy;
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -34,11 +34,14 @@ Future<void> showQuickStart(BuildContext context) async {
               'The production board is the source of truth. Capture This prints its captured drink orders and syncs every successful label.',
             ),
             const SizedBox(height: 20),
-            const _HelpStep(
+            _HelpStep(
               number: '1',
-              title: 'Link an active production',
-              body:
-                  'Paste the complete private production link from the coordinator. Printing stays paused until the production is Active.',
+              title: legacy
+                  ? 'Link an active production'
+                  : 'Sign in and choose an active day',
+              body: legacy
+                  ? 'Paste the complete private production link from the coordinator. Printing stays paused until the production is Active.'
+                  : 'Use the owner-provisioned account, then select the day. If migration fallback is required, use Advanced · Legacy link and paste the complete private link.',
             ),
             const _HelpStep(
               number: '2',
@@ -52,11 +55,12 @@ Future<void> showQuickStart(BuildContext context) async {
               body:
                   'Tap Connect printer, refresh the queue, and double-check the person and drink before printing.',
             ),
-            const _HelpStep(
+            _HelpStep(
               number: '4',
               title: 'Print and wait for sync',
-              body:
-                  'Use Print, Print next, or Print all pending. Wait for the printed status to synchronize before moving on.',
+              body: legacy
+                  ? 'Use Print, Print next, or Print all pending. Wait for the printed status to synchronize before moving on.'
+                  : 'Use Print, Print next, or Print all pending. A loaded day stays printable offline; the app keeps successful-paper evidence until printed status synchronizes.',
             ),
             const _HelpStep(
               number: '5',
@@ -79,12 +83,14 @@ Future<void> showQuickStart(BuildContext context) async {
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                        '• Never share or screenshot the production link.'),
+                    Text(legacy
+                        ? '• Never share or screenshot the production link.'
+                        : '• Use Legacy link only for the migration fallback.'),
                     const Text('• Never update printer firmware on set.'),
                     const Text('• Never reprint when the app says Sync only.'),
-                    const Text(
-                        '• Keep internet access available while printing.'),
+                    Text(legacy
+                        ? '• Keep internet access available while printing.'
+                        : '• Treat the visible offline age as missing-update risk.'),
                   ],
                 ),
               ),
@@ -93,7 +99,7 @@ Future<void> showQuickStart(BuildContext context) async {
             OutlinedButton.icon(
               onPressed: () {
                 Navigator.of(sheetContext).pop();
-                controller.openExternalPage(_supportUri);
+                openExternalPage(context, _supportUri);
               },
               icon: const Icon(Icons.support_agent),
               label: const Text('Open support'),

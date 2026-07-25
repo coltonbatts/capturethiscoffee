@@ -165,9 +165,18 @@ class PrintRecoveryLedger {
 
   PrintRecoveryRecord? operator [](String orderId) => _records[orderId];
 
-  List<PrintRecoveryRecord> forSession(ProductionSession session) =>
+  List<PrintRecoveryRecord> forSession(ProductionSession session) => forScope(
+        scopeKey: session.apiBase,
+        productionId: session.productionId,
+      );
+
+  List<PrintRecoveryRecord> forScope({
+    required String scopeKey,
+    required String productionId,
+  }) =>
       _records.values
-          .where((record) => record.belongsTo(session))
+          .where((record) =>
+              record.apiBase == scopeKey && record.productionId == productionId)
           .toList(growable: false);
 
   Future<void> record(PrintRecoveryRecord record) async {

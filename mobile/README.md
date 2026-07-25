@@ -2,9 +2,11 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal; the app reaches the
-server only to read the board and report `label_printed`, using the same
-production share-token auth the runner board uses.
+(`lib/label_painter.dart`) so printing never needs a signal. Build 9 signs an
+owner-provisioned operator into Supabase, lists existing days, reads the selected
+board directly through authenticated RLS, and reports `label_printed` directly
+to Supabase. The Build 8 share-token path remains under **Legacy link** for this
+migration build.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -15,33 +17,37 @@ frozen. See [`docs/app-first-direction-2026-07-25.md`](../docs/app-first-directi
 
 ## Primary on-set workflow
 
-1. **Deploy or run Capture This** with the public API routes (see repo root).
-   The production must be **Active**. Build 6 visibly pauses new physical
-   printing for Planning productions.
-2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
-3. On the iPhone, open **Capture This** → paste that full URL → **Link production**.
-4. **Connect printer** (force-quit the official NIIMBOT app first).
-5. Work the **deck**: it shows the next label at real size with one action —
+1. Open **Capture This** and sign in with an owner-provisioned email/password.
+   There is no public signup.
+2. Choose an existing Active day on **Days**. Planning and Complete days remain
+   visible, but physical printing is paused unless the selected day is Active.
+3. **Connect printer** (force-quit the official NIIMBOT app first).
+4. Work the **deck**: it shows the next label at real size with one action —
    **Print this label**. The app renders on device, prints, then marks
-   `label_printed` via the public order PATCH route. **Print all** runs the
+   `label_printed` through authenticated Supabase RLS. **Print all** runs the
    whole pending queue and stops on the first failure.
-6. To print someone out of order, find them in the **roster** below the deck and
+5. To print someone out of order, find them in the **roster** below the deck and
    tap the print icon on their row.
+
+If account access is unavailable during migration, choose **Legacy link** from
+Sign in, Days, or the setup screen and paste the runner share URL. That path is
+the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
 
 ## Screen structure
 
-A home screen and four routes. Splash, link, and home are not routes — they are
-states of `RootScreen`, because there is nothing to navigate *back* to from a
-cold start and an operator with no linked production has one thing to do.
+Sign in and Days now precede the Build 8 day surfaces. Root state is coordinated
+by separate session, workspace, and printer controllers.
 
 | Surface | Route | What it is |
 |---|---|---|
+| **Sign in** (`lib/screens/sign_in_screen.dart`) | root state | Owner-provisioned email/password only; no signup. |
+| **Days** (`lib/screens/days_screen.dart`) | root or `/days` | Active, planning, and complete days with capture/print progress. Selects and restores a day. |
 | **Home** (`lib/screens/home_screen.dart`) | — | Where you land and return to. The mark, the day, and one entry per destination, each carrying its own state. |
 | **Deck** (`lib/screens/print_screen.dart`) | `/print` | Production name, sync age, labels-left, the next label, and one action. |
 | **Roster** (`lib/screens/roster_screen.dart`) | `/roster` | Search, To print / Printed / All with counts, dense rows that expand in place. |
 | **Unresolved** (`lib/screens/recovery_screen.dart`) | `/recovery` | The only place a print outcome can be resolved. |
 | **About** (`lib/screens/about_screen.dart`) | `/about` | Version, privacy, support, licenses. |
-| **Link** (`lib/screens/link_screen.dart`) | root state | Paste a share link. Validation answers under the field. |
+| **Legacy link** (`lib/screens/link_screen.dart`) | root state | Secondary Build 8 fallback. Paste a share link; validation answers under the field. |
 
 The deck answers "can I print right now?" in its own button rather than making
 the operator assemble that from separate status cards. Blocking reasons are
@@ -66,14 +72,25 @@ in `lib/widgets/brand_mark.dart` is byte-identical to the web's
 `public/capture-this-smiley.png`; there is no vector source, so animate it as a
 whole object and never trace it.
 
-The linked production token is stored in the iOS Keychain. If the physical
-print succeeds but the server update fails, use **Sync only**; do not print the
-label again. If print outcome is uncertain, inspect the physical output and use
-the corresponding recovery action. Recovery evidence survives an app restart.
+Supabase's persisted session and the legacy production token are stored in the
+iOS Keychain. If the physical print succeeds but the server update fails, use
+**Sync only**; do not print the label again. If print outcome is uncertain,
+inspect the physical output and use the corresponding recovery action. Recovery
+evidence survives an app restart and is never erased by auth refresh failure or
+sign-out.
 
 **Local dev on a physical iPhone:** the share URL must use your Mac's LAN IP, not `localhost` (e.g. `http://192.168.1.69:3000/run/…?token=…`). `next.config.ts` already allows dev origins for common LAN IPs.
 
-## API endpoints (share-token auth)
+## Data access
+
+Normal signed-in operation calls Supabase directly with the public URL, public
+anon key, and the user's session. Typed repositories read `productions`,
+`clients`, `production_roster`, `people`, and `orders`, then adapt those rows
+into the same `ProductionBoard` used by the Build 8 roster, print queue, cache,
+preview, and label renderer. It makes no request to `/api/public/*`.
+
+The following endpoints are retained only for **Legacy link** and the frozen web
+fallback:
 
 | Endpoint | Purpose |
 |---|---|
@@ -94,10 +111,15 @@ The app calls two routes it used to call and no longer does:
 
 ## Offline behaviour
 
-The last board the server returned is cached to `shared_preferences`
-(`lib/board_cache.dart`), scoped to `apiBase` + `productionId`. A cold start
-with no signal shows that roster immediately and printing works, because labels
-render on device. The cache is cleared when the production is unlinked.
+Authenticated boards are cached to app-sandboxed preferences by authenticated
+user ID + production ID (`lib/authenticated_workspace_cache.dart`). The selected
+day is also stored per user. A cold start with no signal restores the Keychain
+session, selected day, and cached roster immediately; printing works because
+labels render on device. Signing out removes the board from memory, and a
+different account can read only its own selected-day pointer and cached boards.
+
+The Legacy link cache remains in `lib/board_cache.dart`, scoped to `apiBase` +
+`productionId`, and is cleared when that production is unlinked.
 
 Staleness is shown, never hidden: the summary line reads
 `Offline · synced 12 min ago`, and past ten minutes a banner says which orders
@@ -145,6 +167,20 @@ That writes stacked server/app pairs for four fixtures (short name, long name,
 long drink, minimal). Look at them.
 
 ## Setup (one-time)
+
+### 0. Supply reviewed public Supabase configuration
+
+The app refuses to guess or fall back to seed data. Release and device commands
+must include the public project URL and public anon key:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+```
+
+Use the same defines with `flutter build ipa`. Never provide the service-role or
+`sb_secret_…` key; Build 9 rejects it and shows a sanitized setup state.
 
 ### 1. Install Flutter (~10 min)
 
@@ -214,7 +250,7 @@ flutter run
 
 ## Print tuning
 
-Constants at the top of `lib/main.dart`: `kPrintheadWidth`, `kDensity`, and
+Constants at the top of `lib/printer_controller.dart`: `kPrintheadWidth`, `kDensity`, and
 `kMinimumTextSideInkPixels`. The app scales the rendered label to the M2_H
 printhead width while preserving aspect ratio. If output is too light/dark,
 adjust `kDensity` and re-run.
@@ -245,7 +281,7 @@ it.
 
 Step-by-step checklist: [docs/testflight-checklist.md](../docs/testflight-checklist.md).
 
-Quick path:
+Quick path (with the reviewed Dart defines above):
 
 ```bash
 cd mobile
@@ -255,10 +291,11 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 
 - Bundle ID: `com.capturethis.ctcprinter`
 - Builds 5, 6, and 7 are uploaded and **consumed**; none may be reused.
-- Current source is `1.0.0+8`, bumped for the UI rework and not yet built or
-  uploaded. What it exists to test is in
+- Current source is `1.0.0+9`. Build 8 was the UI rework; Build 9 adds
+  signed-in day selection and direct Supabase data access. What the physical
+  print baseline exists to test is in
   [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
-- Bump the build suffix for every later upload (`1.0.0+9`, …).
+- Bump the build suffix for every later upload (`1.0.0+10`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.

@@ -5,11 +5,11 @@
 
 import 'package:flutter/material.dart';
 
-import '../app_scope.dart';
+import '../external_links.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
 
-const String kAppVersion = '1.0.0 (8)';
+const String kAppVersion = '1.0.0 (9)';
 
 final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
@@ -21,7 +21,6 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = PrinterScope.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -47,7 +46,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Coffee-label companion for Capture This production crews. '
-              'Production access requires a share URL.',
+              'Sign in, choose a day, and print directly from the workspace.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
@@ -59,14 +58,14 @@ class AboutScreen extends StatelessWidget {
                     leading: const Icon(Icons.privacy_tip_outlined),
                     title: const Text('Privacy'),
                     trailing: const Icon(Icons.open_in_new, size: 18),
-                    onTap: () => controller.openExternalPage(_privacyUri),
+                    onTap: () => openExternalPage(context, _privacyUri),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.support_agent),
                     title: const Text('Support'),
                     trailing: const Icon(Icons.open_in_new, size: 18),
-                    onTap: () => controller.openExternalPage(_supportUri),
+                    onTap: () => openExternalPage(context, _supportUri),
                   ),
                   const Divider(height: 1),
                   ListTile(

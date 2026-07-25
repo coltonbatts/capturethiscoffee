@@ -23,7 +23,9 @@ import '../widgets/brand_mark.dart';
 import '../widgets/motion.dart';
 import '../widgets/print_deck.dart';
 import '../widgets/status_banners.dart';
+import '../workspace_controller.dart';
 import 'about_screen.dart';
+import 'days_screen.dart';
 import 'help_sheet.dart';
 import 'print_screen.dart';
 import 'recovery_screen.dart';
@@ -57,6 +59,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final runtime = PrinterScope.runtimeOf(context);
     final controller = PrinterScope.of(context);
     final recoveries = controller.currentRecoveryRecords;
 
@@ -72,6 +75,13 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const BrandAppBarTitle(detail: 'On-set controller'),
         actions: [
+          if (runtime.workspace.mode == WorkspaceMode.authenticated)
+            IconButton(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(DaysScreen.route),
+              icon: const Icon(Icons.calendar_today_outlined),
+              tooltip: 'Switch day',
+            ),
           IconButton(
             onPressed: controller.busy ? null : () => controller.refreshBoard(),
             icon: const Icon(Icons.refresh),
@@ -417,6 +427,8 @@ class _FooterActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final runtime = PrinterScope.runtimeOf(context);
+    final authenticated = runtime.workspace.mode == WorkspaceMode.authenticated;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -424,18 +436,29 @@ class _FooterActions extends StatelessWidget {
           onPressed: controller.busy
               ? null
               : () async {
+                  if (authenticated) {
+                    await Navigator.of(context).pushNamed(DaysScreen.route);
+                    return;
+                  }
                   if (!await confirmChangeProduction(context, controller)) {
                     return;
                   }
                   await controller.clearSession();
                 },
-          child: const Text('Change production'),
+          child: Text(authenticated ? 'Switch day' : 'Change production'),
         ),
         Text('·', style: Theme.of(context).textTheme.bodySmall),
         TextButton(
           onPressed: () => Navigator.of(context).pushNamed(AboutScreen.route),
           child: const Text('About'),
         ),
+        if (authenticated) ...[
+          Text('·', style: Theme.of(context).textTheme.bodySmall),
+          TextButton(
+            onPressed: runtime.session.busy ? null : runtime.signOut,
+            child: const Text('Sign out'),
+          ),
+        ],
       ],
     );
   }
