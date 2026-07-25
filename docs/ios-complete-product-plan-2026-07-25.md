@@ -2,6 +2,12 @@
 
 Last updated: 2026-07-25
 
+**Current boundary:** Build 9 implementation is committed at `47c4405`. Its
+automated and one-label physical smoke tests passed; the full Build 9 physical
+exit gate remains open. Build 10 is now the order-capture vertical slice on an
+existing day. See
+[`current-state-2026-07-25.md`](current-state-2026-07-25.md).
+
 ## Decision
 
 The Capture This iOS app in `mobile/` becomes the only primary product surface.
@@ -22,20 +28,26 @@ the shop summary, and closes the day without moving to the website.
 
 ## Baseline
 
-Verified on 2026-07-25 at commit `7ed6f04`:
+Verified on 2026-07-25 at commit `47c4405`:
 
-- The iOS app is `1.0.0+8`.
-- Flutter analyzer is clean and all 124 Flutter tests pass.
-- All 104 web tests pass.
-- Build 8 has a home screen, print deck, printable roster, recovery screen,
-  on-device `grid-01` label rendering, durable board cache, and durable
-  print-recovery evidence.
-- The app still authenticates with a production share URL and calls only the
-  token-scoped Next.js board and order PATCH routes.
-- The app cannot yet sign in, list or create days, manage people or rosters,
-  capture orders, produce the coffee-shop summary, or close a day.
-- Build 8's real-iPhone/M2_H checks remain open and must be completed before
-  its print path is treated as the regression baseline.
+- The iOS app is `1.0.0+9`.
+- Flutter analyzer is clean and all 140 Flutter tests pass.
+- All 104 web tests pass; lint and the Next.js production build pass.
+- Build 9 adds owner-provisioned Supabase sign-in, session restoration, Days,
+  signed-in direct board reads, per-user selected-day/board caching, and direct
+  `label_printed` synchronization.
+- The existing home, print deck, printable roster, recovery screen, on-device
+  `grid-01` renderer, durable board cache, and durable print-recovery evidence
+  remain in place.
+- Normal signed-in operation makes no request to the token-scoped Next.js API.
+  The Build 8 share-link path remains under **Legacy link**.
+- The owner installed a signed Build 9 release, opened a signed-in day, and
+  completed one physical M2_H reprint.
+- The app still cannot capture orders, create or edit days, manage people or
+  rosters, produce the coffee-shop summary, mint a fallback runner link, or
+  close a day.
+- Airplane-mode restoration, batch/interruption recovery, sign-out isolation,
+  and the independent-operator physical checks remain open.
 
 ## Definition of done
 
@@ -106,7 +118,8 @@ surface is **Days**, not the production-link field.
 
 ### Identity and configuration
 
-- Add `supabase_flutter` using the same project URL and anon key as the web.
+- Build 9 uses `supabase_flutter` with the same project URL and public anon key
+  as the web.
 - Supply public configuration through reviewed release configuration; never
   bundle the service-role key.
 - Use Supabase Auth's persisted session and refresh behavior. A temporary
@@ -216,7 +229,7 @@ The web is frozen, not removed:
 Each build is independently usable and ends with a TestFlight acceptance pass.
 Do not save validation for the final build.
 
-### Before Build 9 — establish the Build 8 physical baseline
+### Build 8 physical baseline — historical, partially carried forward
 
 Complete the six open checks in `ui-rework-build-8.md`:
 
@@ -230,7 +243,7 @@ Complete the six open checks in `ui-rework-build-8.md`:
 Record the exact Build 8 source and results. The print pipeline then becomes a
 protected subsystem for every later build.
 
-### Build 9 — sign in and choose a day
+### Build 9 — sign in and choose a day — IMPLEMENTED
 
 Goal: replace the pasted link as the normal front door without disturbing
 printing.
@@ -253,32 +266,16 @@ Acceptance:
 - Invalid/expired auth never erases unresolved print evidence.
 - The legacy link path still behaves exactly as Build 8.
 
-### Build 10 — create the day and prepare the roster
+Implementation is committed at `47c4405`. Before Build 10 ships, complete and
+record the remaining physical acceptance:
 
-Goal: all pre-production setup moves to iOS.
+- Airplane-mode cold start from an authenticated cached day.
+- Selected-day restoration and sign-out/second-account isolation.
+- Ten-label batch and Bluetooth interruption/relaunch recovery.
+- Sync-only recovery without a duplicate label.
+- Planning/complete-day refusal, haptics, Reduce Motion, and cold-cup adhesion.
 
-- Create/edit/delete day, client/brand, date, location, runner, notes, status.
-- People list with search, create/edit/archive, usual order, dietary/private
-  notes, camera/library photo.
-- Roster builder: add existing, quick add, group, on-set toggle, remove,
-  reorder.
-- Add bulk paste with a preview/deduplication step for newline/comma-separated
-  call-sheet names. This is required to make a forty-person phone workflow
-  credible.
-- Use transactional database functions for multi-row roster/order creation.
-- Clearly require a connection for every creation/deletion operation.
-
-Acceptance:
-
-- Starting only with an invited login, build a fictional 40-person day on an
-  iPhone without visiting the website.
-- No partial roster member can exist without its order row.
-- Duplicate people and duplicate roster rows are caught before write.
-- Photo upload, signed display, initials fallback, and archive behavior pass.
-- Going offline during setup yields an honest retryable failure, not a fake
-  local success.
-
-### Build 11 — collect orders offline
+### Build 10 — collect orders offline
 
 Goal: one person with one phone can collect and print the entire day.
 
@@ -301,6 +298,31 @@ Acceptance:
   conflict and never silently clobbers it.
 - Completing a day with pending writes cannot silently strand or delete them.
 - Capture and print progress agree on every screen.
+
+### Build 11 — create the day and prepare the roster
+
+Goal: all pre-production setup moves to iOS after the on-set loop is proven.
+
+- Create/edit/delete day, client/brand, date, location, runner, notes, status.
+- People list with search, create/edit/archive, usual order, dietary/private
+  notes, camera/library photo.
+- Roster builder: add existing, quick add, group, on-set toggle, remove,
+  reorder.
+- Add bulk paste with a preview/deduplication step for newline/comma-separated
+  call-sheet names. This is required to make a forty-person phone workflow
+  credible.
+- Use transactional database functions for multi-row roster/order creation.
+- Clearly require a connection for every creation/deletion operation.
+
+Acceptance:
+
+- Starting only with an invited login, build a fictional 40-person day on an
+  iPhone without visiting the website.
+- No partial roster member can exist without its order row.
+- Duplicate people and duplicate roster rows are caught before write.
+- Photo upload, signed display, initials fallback, and archive behavior pass.
+- Going offline during setup yields an honest retryable failure, not a fake
+  local success.
 
 ### Build 12 — complete the operating loop
 
@@ -359,21 +381,21 @@ Acceptance:
 
 ## Capability migration checklist
 
-| Capability | Build 8 | Target build |
+| Capability | Current state | Target build |
 |---|---:|---:|
 | Home/navigation/design system | Done | Preserve |
-| Direct M2_H printing | Done; physical Build 8 gate open | Pre-Build 9 |
+| Direct M2_H printing | Done; full Build 9 physical gate open | Pre-Build 10 |
 | Local label rendering | Done | Preserve |
-| Cached offline board | Done, one token-linked day | Build 9 multi-day/auth scope |
-| Print recovery | Done | Build 11 generalized outbox |
-| Sign in/session | Missing | Build 9 |
-| Days list/select | Missing | Build 9 |
-| Create/edit/complete day | Web only | Build 10/12 |
-| People/photos/usuals | Web only | Build 10 |
-| Roster build/bulk add | Web only | Build 10 |
-| Order capture | Web only | Build 11 |
-| Offline capture replay | Missing | Build 11 |
-| Realtime reconciliation | Missing | Build 11 |
+| Cached offline board | Done, authenticated user/day scoped | Preserve |
+| Print recovery | Done | Build 10 generalized outbox |
+| Sign in/session | Done | Preserve |
+| Days list/select | Done | Preserve |
+| Create/edit/complete day | Web only | Build 11/12 |
+| People/photos/usuals | Web only | Build 11 |
+| Roster build/bulk add | Web only | Build 11 |
+| Order capture | Web only | Build 10 |
+| Offline capture replay | Missing | Build 10 |
+| Realtime reconciliation | Missing | Build 10 |
 | Coffee-shop summary/share | Web only | Build 12 |
 | Create fallback runner link | Web only | Build 12 |
 | Local PNG fallback | Web only | Build 12 |
@@ -426,16 +448,18 @@ Manual, proportional to the build:
 - Do not add multi-tenancy or complex roles during this migration.
 - Do not treat passing automated tests as the physical printer release gate.
 
-## First implementation slice
+## Next implementation slice
 
-The first code task after Build 8's physical baseline is:
+After the Build 9 physical exit gate:
 
-1. Introduce Supabase configuration, auth repository, and test fakes.
-2. Add the signed-out and session-restoring root states.
-3. Add a read-only Days screen.
-4. Select an existing day and adapt its direct Supabase rows into the exact
-   `ProductionBoard` Build 8 already consumes.
-5. Prove the current deck prints from that board without any
-   `/api/public/*` request.
+1. Split board/outbox ownership from online workspace/setup ownership before
+   order writes make `WorkspaceController` another monolith.
+2. Add a Collect screen that uses every on-set board row, including needs-order
+   and no-drink people.
+3. Add typed order patches and optimistic in-memory reconciliation.
+4. Persist a coalescing order outbox with the observed server `updated_at`.
+5. Replay conditionally, surface conflicts, and preserve physical printed facts.
+6. Prove capture → print → relaunch → reconnect on a real phone and M2_H.
 
-Stop there, test it on the phone and M2_H, and only then add write operations.
+Stop there, complete Build 10 acceptance, and only then add day/people/roster
+creation.

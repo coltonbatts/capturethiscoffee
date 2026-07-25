@@ -25,26 +25,26 @@ permanent target is an approved unlisted App Store link.
 | Build 7 internal availability | Assigned to internal group `Main` with one invite; iPhone/M2_H and airplane-mode validation pending |
 | Build 8 uploaded/processed | App Store Connect records upload at 2:12 PM CDT on 2026-07-25; processing `Complete`, status `Ready to Submit`, assigned to `Main` |
 | Build 9 signed App Store IPA | `1.0.0 (9)`, 22,894,208 bytes, SHA-256 `b74965478bfbbb40863557eb8a5d8295d163e15e8ea4a68306cc8330492dd80e` |
+| Build 9 committed source | `47c4405` (`Ship Build 9 signed-in day selection`) |
 | Build 9 uploaded/processed | Uploaded at 3:46 PM CDT on 2026-07-25; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
 | Build 9 internal availability | Assigned to internal group `Main` with one invite; locally signed release launch, signed-in day loading, and one physical M2_H reprint passed |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
 | Buddy invited by email | Pending owner-supplied email / approved build |
-| Buddy install, link, M2_H print, and sync pilot | Pending physical hardware |
+| Buddy install, sign-in, day selection, M2_H print, and sync pilot | Pending physical hardware |
 
 Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
 
-Build 6 is now the processed internal TestFlight candidate. The owner's
-first-try holographic reprint proves the intended direct-Bluetooth physical
-path and is preserved in
-`docs/milestones/2026-07-24-build-6-holographic-first-print.md`. It remains a
-smoke test, not the full physical release gate: exact stock measurements,
-printer identity and firmware, batch behavior, interruption recovery, web
-synchronization, cold-cup adhesion, and Luke's independent run still need the
-record in `docs/physical-release-test.md`.
+Build 9 is the current processed internal TestFlight candidate. Build 6's
+first-try holographic reprint and Build 9's signed-in direct-Supabase reprint
+prove the intended direct-Bluetooth path. Both remain smoke tests, not the full
+physical release gate: authenticated airplane-mode restoration, exact stock
+measurements, printer identity and firmware, batch behavior, interruption
+recovery, synchronization, cold-cup adhesion, and Luke's independent run still
+need the record in `docs/physical-release-test.md`.
 
 ## Before upload
 
@@ -126,8 +126,8 @@ Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
 `docs/release-evidence-1.0.0.md`.
 
-Do not reuse build number 6. It was uploaded on 2026-07-24; change `1.0.0+6`
-to `+7` or higher for any replacement binary.
+Do not reuse build number 9. It was uploaded on 2026-07-25; use `1.0.0+10` or
+higher for any replacement binary.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a
@@ -143,7 +143,7 @@ archive/IPA agreement when the checked-in export options were used.
 3. Add the beta description, **What to Test**, feedback email, contact, privacy
    URL, and support URL from `docs/app-store-release.md`.
 4. Create an external group named `Capture This crew pilot`.
-5. After its physical gate passes, add build 7 and submit it for TestFlight App
+5. After its physical gate passes, add build 9 and submit it for TestFlight App
    Review.
 6. After approval, invite the buddy by email rather than a broadly shareable
    public link. Do not include the production share token in the invitation.
@@ -160,15 +160,16 @@ Record:
 - Tester / date: _____
 - Invitation accepted and build installed: _____
 - iPhone / iOS / build: _____
-- Production linked: pass/fail _____
+- Account sign-in and Active day selected: pass/fail _____
+- Legacy-link fallback: pass/fail _____
 - Exact M2_H / firmware / stock: _____
 - Short/long/batch labels: pass/fail _____
 - Interrupted print recovery: pass/fail _____
-- Successful prints synced to hosted web app: pass/fail _____
+- Successful prints synced to Supabase/hosted board: pass/fail _____
 - Feedback/crash report: _____
 - Release-blocking issue: none / describe _____
 
-The pilot passes only after the buddy completes install → link → connect →
+The pilot passes only after the buddy completes install → sign in → select day → connect →
 physical print → sync, and the physical release record is complete. Fix a
 release blocker, upload a new build, and repeat the affected test. Do not treat
 TestFlight approval alone as product approval.

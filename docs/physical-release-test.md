@@ -4,7 +4,7 @@ Run this only with the signed release-candidate build on a real iPhone and the
 actual NIIMBOT M2_H/stock. Hardware support is not passed by simulator, mock,
 PNG, or archive evidence.
 
-## Partial milestone recorded — July 24, 2026
+## Partial milestones recorded — July 24-25, 2026
 
 The account owner installed iOS build 6, loaded the holographic stock for the
 first time, and completed one confirmed reprint on the first attempt. Capture
@@ -16,9 +16,14 @@ printer.
 Photo and full milestone:
 [`milestones/2026-07-24-build-6-holographic-first-print.md`](milestones/2026-07-24-build-6-holographic-first-print.md).
 
-This records the single-reprint result below as a partial pass. Do not mark the
-entire release gate passed until the remaining record, batch, synchronization,
-recovery, adhesion, and independent-operator checks are complete.
+On July 25, the account owner also installed a signed Build 9 release, signed
+in, selected an existing day through direct Supabase access, and completed one
+physical M2_H reprint.
+
+These record the single-reprint path as a partial pass. Do not mark the entire
+release gate passed until authenticated offline restoration, account isolation,
+the remaining hardware record, batch, synchronization, recovery, adhesion, and
+independent-operator checks are complete.
 
 ## Record first
 
@@ -35,6 +40,7 @@ recovery, adhesion, and independent-operator checks are complete.
 - Shape and feed: rectangle/round/other _____; die-cut/continuous _____
 - App density: _____
 - Fictional/disposable production used: _____
+- Disposable invited account issued by / cleanup owner: _____ / _____
 - Disposable link issued by / revocation owner: _____ / _____
 
 ## Guided test
@@ -42,16 +48,16 @@ recovery, adhesion, and independent-operator checks are complete.
 1. Confirm the exact printer is **NIIMBOT M2_H** and record its firmware.
 2. Measure and record the actual label-roll dimensions and stock type.
 3. Force-quit the official NIIMBOT app on every nearby phone/tablet.
-4. Open the version/build recorded above and link the supplied disposable
-   active-production HTTPS URL.
+4. Open the version/build recorded above, sign in with the disposable invited
+   account, and select the supplied fictional Active day.
 5. Power off other nearby NIIMBOT printers, connect the one M2_H, and confirm
    the app does not accept another model.
 6. Print a short name/drink, a long name, a long drink, one confirmed reprint,
    and a batch of at least 10 labels.
 7. For every sample, inspect orientation, cropping, density, alignment, name
    hierarchy, drink readability, feed gaps, and label-to-order correctness.
-8. Confirm every successful physical print changes the hosted web order to
-   printed.
+8. Confirm every successful physical print changes the Supabase order and
+   hosted web board to printed.
 9. During a second batch, interrupt Bluetooth. For the affected label, inspect
    the physical printer before choosing either **Label printed — sync only** or
    **Nothing printed — retry**. Confirm no accidental duplicate.
@@ -60,10 +66,21 @@ recovery, adhesion, and independent-operator checks are complete.
     label.
 12. Apply one label to a cold cup for at least five minutes, then inspect
     adhesion, lifting, smearing, fading, and readability.
-13. Photograph representative short/long labels and the cold-cup result without
+13. After one successful online load, force-quit, enable airplane mode,
+    relaunch, and confirm the same account/day/board restore and remain
+    printable. Restore signal and confirm pending printed status synchronizes
+    without a duplicate.
+14. Sign out, sign into a second disposable account, and confirm the first
+    account's selected day, cached board, and recovery details are not visible.
+15. Mark or select a Planning/Complete day and confirm new physical printing is
+    refused.
+16. Exercise **Advanced · Legacy link** with a disposable share URL, then
+    complete one `/labels` fallback drill.
+17. Photograph representative short/long labels and the cold-cup result without
     exposing a production token or real personal data.
-14. Have Luke repeat link → connect → print → web-sync → interrupted recovery
-    → fallback himself, without Colton touching the phone or dashboard.
+18. Have Luke repeat sign in → select day → connect → print → hosted sync →
+    airplane-mode restore → interrupted recovery → fallback himself, without
+    Colton touching the phone or dashboard.
 
 ## Result
 
@@ -75,9 +92,14 @@ recovery, adhesion, and independent-operator checks are complete.
 - Label-to-order correctness for the entire batch: pass/fail + notes _____
 - Interrupted label physically printed? _____
 - Recovery choice/result: _____
-- Every physical success synced to web? _____
+- Every physical success synced to Supabase/hosted board? _____
 - Power-cycle/reconnect: pass/fail _____
 - Background/resume: pass/fail _____
+- Authenticated airplane-mode cold start: pass/fail _____
+- Pending printed-state replay without duplicate: pass/fail _____
+- Sign-out/second-account isolation: pass/fail _____
+- Planning/complete-day refusal: pass/fail _____
+- Legacy-link and `/labels` fallback: pass/fail _____
 - Cold cup after five minutes: pass/fail _____
 - Orientation/cropping/density/alignment/readability: _____
 - Feed gaps / skipped stock / ribbon behavior: _____
@@ -92,6 +114,7 @@ recovery, adhesion, and independent-operator checks are complete.
 - Final firmware (record only; do not update): _____
 - Final ribbon and reorder reference: _____
 - Final stock, dimensions, shape, and reorder reference: _____
+- Disposable invited account removed/disabled: yes/no _____
 - Disposable production link revoked after evidence capture: yes/no _____
 - Evidence contains no real client data or visible token: yes/no _____
 - Open limitations accepted: _____

@@ -13,7 +13,9 @@ recovery rules. The complete role-based handoff packet starts at
 [`docs/HANDOFF.md`](../docs/HANDOFF.md).
 
 As of 2026-07-25 this app is the product's primary surface and the web is
-frozen. See [`docs/app-first-direction-2026-07-25.md`](../docs/app-first-direction-2026-07-25.md).
+frozen. See
+[`docs/current-state-2026-07-25.md`](../docs/current-state-2026-07-25.md) and
+[`docs/app-first-direction-2026-07-25.md`](../docs/app-first-direction-2026-07-25.md).
 
 ## Primary on-set workflow
 
@@ -290,10 +292,10 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Builds 5, 6, and 7 are uploaded and **consumed**; none may be reused.
-- Current source is `1.0.0+9`. Build 8 was the UI rework; Build 9 adds
-  signed-in day selection and direct Supabase data access. What the physical
-  print baseline exists to test is in
+- Builds 5 through 9 are uploaded and **consumed**; none may be reused.
+- Build 9 source is committed at `47c4405`. It adds signed-in day selection and
+  direct Supabase data access. What the physical print baseline exists to test
+  is in
   [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
 - Bump the build suffix for every later upload (`1.0.0+10`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build

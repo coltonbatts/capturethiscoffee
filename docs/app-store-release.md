@@ -1,5 +1,11 @@
 # Capture This — App Store release dossier
 
+> **Historical Build 6 metadata packet.** Do not submit this copy for Build 9
+> or later. Current source/artifact status is in
+> [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and the complete-app
+> metadata rewrite is a Build 13 gate in
+> [`current-state-2026-07-25.md`](current-state-2026-07-25.md).
+
 Last updated: 2026-07-23
 
 This is the working metadata package for the iPhone-only `1.0.0 (6)` handoff

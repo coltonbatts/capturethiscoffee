@@ -7,32 +7,40 @@ import {
 export const metadata: Metadata = {
   title: "Support | Capture This Coffee",
   description:
-    "Setup, printing, synchronization recovery, and contact help for the Capture This iOS printer companion.",
+    "Sign-in, day selection, offline printing, synchronization recovery, and NIIMBOT M2_H help for Capture This.",
 };
 
 export default function SupportPage() {
   return (
     <PublicInfoPage
       title="Support"
-      summary="Help for Capture This crews using the iOS printer companion with a NIIMBOT M2_H."
+      summary="Help for Capture This crews using the signed-in iOS app with a NIIMBOT M2_H."
     >
       <PublicInfoSection title="What you need">
         <ul className="list-disc space-y-1 pl-5">
           <li>An iPhone with the current Capture This app.</li>
-          <li>A production share URL provided by a Capture This operator.</li>
+          <li>An owner-provisioned Capture This email/password.</li>
+          <li>An existing Active production day.</li>
           <li>A NIIMBOT M2_H with the expected label stock loaded.</li>
-          <li>Bluetooth and internet access.</li>
+          <li>
+            Bluetooth access. Internet is required to sign in and load a new
+            day; a previously cached day can remain printable without a signal.
+          </li>
         </ul>
       </PublicInfoSection>
 
-      <PublicInfoSection title="Link and print">
+      <PublicInfoSection title="Sign in and print">
         <ol className="list-decimal space-y-1 pl-5">
+          <li>Open Capture This, sign in, and choose the Active day.</li>
           <li>Force-quit the official NIIMBOT app.</li>
-          <li>Paste the full HTTPS production share URL.</li>
           <li>Wake the M2_H and tap Connect printer.</li>
           <li>Print one test label before starting a batch.</li>
-          <li>Confirm the printed status appears in the web app.</li>
+          <li>Confirm the printed status synchronizes in Capture This.</li>
         </ol>
+        <p>
+          Use <strong>Advanced · Legacy link</strong> only when the coordinator
+          asks you to test the fallback production URL.
+        </p>
       </PublicInfoSection>
 
       <PublicInfoSection title="Avoid the wrong printer">
@@ -62,8 +70,12 @@ export default function SupportPage() {
           <li>Power-cycle the printer, then reconnect in Capture This.</li>
           <li>Do not update printer firmware as a troubleshooting step.</li>
           <li>
-            For queue errors, confirm the production is active and the share
-            link has not expired or been revoked.
+            For queue errors, confirm the selected production is Active and
+            refresh when a connection is available.
+          </li>
+          <li>
+            For Legacy-link errors, confirm the private share link has not
+            expired or been revoked.
           </li>
         </ul>
       </PublicInfoSection>

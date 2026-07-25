@@ -14,8 +14,9 @@ Frozen means no new features in `src/`, no deleting web code, and keeping
 TestFlight.
 
 Read [`docs/app-first-direction-2026-07-25.md`](docs/app-first-direction-2026-07-25.md)
-before starting work on either half. Web setup and conventions below still apply
-to the frozen surface.
+and [`docs/current-state-2026-07-25.md`](docs/current-state-2026-07-25.md)
+before starting work on either half. Web setup and conventions below still
+apply to the frozen surface.
 
 ## Printer handoff
 
@@ -238,29 +239,43 @@ Scannable label code spike: [docs/spike/README.md](docs/spike/README.md).
 
 ## Label printing
 
-Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set path** is the native **Capture This** iPhone app (`mobile/`): it pulls a label queue from the web API, downloads server-rendered PNGs, prints over Bluetooth LE to the NIIMBOT M2_H, and marks `label_printed` on each order.
+Capture This Coffee generates branded 50×30mm cup labels. The **primary on-set
+path** is the native **Capture This** iPhone app (`mobile/`). Build 9 signs an
+owner-provisioned operator into Supabase, reads the selected production board
+directly through authenticated RLS, renders labels on device, prints over
+Bluetooth LE to the NIIMBOT M2_H, and synchronizes `label_printed` directly.
 
 ### Capture This app (recommended on set)
 
-1. Deploy or run this Next.js app with `SUPABASE_SERVICE_ROLE_KEY` set (required for public API routes).
-2. Set the production to **active** (required before `label_printed` updates stick).
-3. Generate a runner share link (SQL below) and open it on the phone, or paste the full URL into Capture This.
-4. In **Capture This**: link production → connect printer → tap **Print** per label.
-5. Force-quit the official NIIMBOT app before connecting — it holds the BLE connection.
+1. Supply the reviewed public Supabase URL and public anon key when building
+   the app; never embed the service-role key.
+2. Create/invite the operator account and keep public signup disabled.
+3. Prepare an existing day and set it **Active**.
+4. In **Capture This**: sign in → choose the day → connect printer → print.
+5. Force-quit the official NIIMBOT app before connecting — it holds the BLE
+   connection.
 
-The app stores the production session in the iOS Keychain. If the label prints
-but synchronization fails, use **Sync only** instead of reprinting. Uncertain
-outcomes remain blocked from batches until the operator inspects the physical
-output and explicitly resolves them.
+The app stores the Supabase session in the iOS Keychain and caches the selected
+board per user/day for offline printing. If the label prints but synchronization
+fails, use **Sync only** instead of reprinting. Uncertain outcomes remain
+blocked from batches until the operator inspects the physical output and
+explicitly resolves them.
+
+**Advanced · Legacy link** retains the Build 8 share-token path. That fallback
+still requires the deployed Next.js public API routes and server-only
+`SUPABASE_SERVICE_ROLE_KEY`.
 
 Setup, signing, and troubleshooting: [mobile/README.md](mobile/README.md).  
 Strategy and hardware notes: [docs/phone-printing-investigation.md](docs/phone-printing-investigation.md).
 
-**Local dev on a physical iPhone:** use your Mac's LAN IP in the share URL, not `localhost` (e.g. `http://192.168.1.69:3000/run/{id}?token=…`).
+**Legacy-link local development on a physical iPhone:** use your Mac's LAN
+IP in the share URL, not `localhost` (for example,
+`http://192.168.1.69:3000/run/{id}?token=…`).
 
-### Public printer API (share-token auth)
+### Legacy-link public API (share-token auth)
 
-Same token as the runner board — no separate auth system.
+The normal signed-in app does not call these endpoints. They remain for the
+zero-install runner and Legacy link.
 
 | Endpoint | Purpose |
 |---|---|

@@ -9,6 +9,8 @@ people, rosters, day creation, and auth would live on the web indefinitely.
 
 The build-by-build implementation and handoff plan is now in
 [`ios-complete-product-plan-2026-07-25.md`](ios-complete-product-plan-2026-07-25.md).
+The committed Build 9 boundary and Build 10 entry gate are in
+[`current-state-2026-07-25.md`](current-state-2026-07-25.md).
 
 ## What "frozen" means
 

@@ -16,18 +16,25 @@ Capture This Coffee is a mobile-first coffee-runner app for production shoots. O
 
 Primary users:
 
-- Team member (any signed-in user): prepares people, photos, shoot days, and rosters.
-- Runner: goes around set collecting each person's drink order on a phone.
-- PA / label operator: prints the captured drinks as a batch via the **CTC Printer** iOS app (`mobile/`) or exports from `/labels`.
+- Operator (any invited signed-in user): selects the day and prints in the iOS
+  app today; day/people/roster setup and drink capture remain on the frozen web
+  until Builds 10-12 migrate them.
+- Runner: currently uses the zero-install `/run/[id]` fallback to collect
+  drinks; Build 10 moves the primary collection loop into iOS.
+- Label operator: prints captured drinks through the **Capture This** iOS app
+  (`mobile/`) or uses `/labels` as emergency export.
 
 The app has two primary sections — **Day** (`/productions`: the shoot day, everyone on set and what they ordered) and **Labels** (`/labels`) — plus **People** (`/people`) as the crew database. The Clients admin UI was removed 2026-07-03; the `clients` table remains and a day's optional client/brand name is used only for label branding.
 
-Core workflow:
+Current Build 9 workflow:
 
-1. A team member signs in and creates people/day/roster.
-2. Runner opens the share link (`/run/[id]?token=...`), taps a person, takes their drink order (or marks "No drink").
-3. The board tracks one progress metric: drinks captured out of roster total.
-4. Once drinks are captured, labels print as a batch: **CTC Printer** (`mobile/`) for direct M2_H BLE printing, or `/labels` for batch PNG/CSV export.
+1. A team member still uses the frozen web to create people/day/roster and
+   capture drinks.
+2. The label operator signs into the iOS app, chooses the existing day, and
+   prints directly to the M2_H.
+3. Build 10 closes the primary on-set loop in iOS: select day → collect drink →
+   print → reconcile after an offline period.
+4. `/run/[id]?token=...` and `/labels` remain fallback paths.
 
 Simplified collection model (since 2026-07-05): the UI exposes only "needs order", "captured", "no drink", and a printed flag. The database still stores the wider legacy `OrderStatus` enum (`confirmed`/`ordered`/`picked_up`/`delivered` all render as captured; `src/lib/order-progress.ts` is the mapping). Do not reintroduce delivery-pipeline status UI (confirmed → ordered → picked up → delivered) — it was removed deliberately.
 
@@ -40,9 +47,10 @@ NIIMBOT M2_H directly over Bluetooth LE; there was no laptop, USB connection,
 local print station, official NIIMBOT app, or other printing bridge. The
 photo-backed record is in
 [`docs/milestones/2026-07-24-build-6-holographic-first-print.md`](docs/milestones/2026-07-24-build-6-holographic-first-print.md).
-This proves the single-label phone-to-printer path on the intended stock, but
-the batch, interruption-recovery, web-sync, cold-cup, and independent-operator
-parts of the physical release gate remain open.
+Build 9 later proved signed-in day loading and one physical reprint from the
+direct-Supabase board on 2026-07-25. The airplane-mode, batch,
+interruption-recovery, sync, cold-cup, and independent-operator parts of the
+physical release gate remain open.
 
 ## Current strategic direction
 
@@ -54,17 +62,26 @@ are in `docs/app-first-direction-2026-07-25.md`. Frozen means: no new features i
 TestFlight. This supersedes the "what stays on the web permanently" section of
 `docs/offline-first-ios-handoff.md`.
 
-Not yet started: Supabase Auth in the app, which retires the paste-a-share-link
-front door entirely (sign in, pick today's day). The boundary that keeps the
-offline layer simple is **creation online, capture and printing offline** — do
-not let day/roster creation pull a general-purpose sync engine into scope.
+Build 9 is committed at `47c4405`: Supabase Auth, restored sessions, Days,
+direct RLS-protected board reads, per-user selected-day/board caching, and
+direct `label_printed` synchronization are implemented. Normal signed-in use
+does not call the Next.js public API. The paste-a-share-link flow remains under
+**Legacy link** for fallback only.
+
+Build 10 is the next product slice: collect and edit orders on an existing day,
+continue through an offline cold start, and replay a durable mutation outbox
+without clobbering another device. Full day/people/roster setup moves in Build
+11. The boundary that keeps the offline layer simple is **creation online,
+capture and printing offline** — do not let day/roster creation pull a
+general-purpose sync engine into scope. The canonical status is
+`docs/current-state-2026-07-25.md`.
 
 The printer strategy is settled for now:
 
 - Keep the NIIMBOT M2_H.
 - Do not rebuild a laptop print station.
 - Do not attempt custom Bluetooth printing from the web app (Safari on iOS has no Web Bluetooth).
-- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. The app reads the runner board, derives its print queue on device, **renders labels on device** (`mobile/lib/label_painter.dart`, a port of `grid-01` from `src/lib/niimbot-m2-draw.ts`), caches the last good board (`mobile/lib/board_cache.dart`), and syncs `label_printed`. It no longer downloads a PNG per label — that made printing impossible without a signal. A cold start with no signal is usable and can print. See `mobile/README.md`, `docs/offline-first-ios-handoff.md`, and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
+- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. Signed-in operation reads the selected board directly from Supabase, derives its print queue on device, **renders labels on device** (`mobile/lib/label_painter.dart`, a port of `grid-01` from `src/lib/niimbot-m2-draw.ts`), caches boards in `mobile/lib/authenticated_workspace_cache.dart`, and syncs `label_printed` through authenticated RLS. It no longer downloads a PNG per label — that made printing impossible without a signal. A cold start with no signal is usable and can print. `mobile/lib/board_cache.dart` remains only for Legacy link. See `mobile/README.md`, `docs/current-state-2026-07-25.md`, and `docs/offline-first-ios-handoff.md`. Do not update printer firmware while this is in play.
 - **Offline-first is the direction as of 2026-07-24**, reversing an earlier decision to skip a durable write queue. Put new capture/offline work in `mobile/`, not in the web runner board — that board is frozen but must keep working as the zero-install path. Phases and open traps are in `docs/offline-first-ios-handoff.md`.
 - **Fallback:** `/labels` PNG share/download or NIIMBOT batch CSV through the official NIIMBOT app.
 
@@ -159,10 +176,13 @@ src/server/
   productions/{dto,queries}.ts  (token-scoped runner/printer DTOs)
 
 mobile/
-  CTC Printer Flutter app (see mobile/README.md)
-  lib/main.dart          the app, the route table, and RootScreen
-                         (splash / link / home). ~130 lines — keep it that way.
-  lib/printer_controller.dart  ALL state and every operation. A ChangeNotifier.
+  Capture This Flutter app (see mobile/README.md)
+  lib/main.dart          production Supabase initialization only
+  lib/app.dart           MaterialApp, routes, and RootScreen state selection
+  lib/app_runtime.dart   thin session/workspace/printer coordinator
+  lib/session_controller.dart  auth restore/sign-in/sign-out state
+  lib/workspace_controller.dart selected day, board, cache, and legacy fallback
+  lib/printer_controller.dart  BLE, printing, and physical-print recovery
                          Never shows a dialog, never takes a BuildContext.
   lib/app_scope.dart     PrinterScope, the InheritedNotifier above the navigator
   lib/confirmations.dart the questions the controller deliberately does not ask
@@ -173,7 +193,9 @@ mobile/
     roster_screen.dart   search, filters, the list   (/roster)
     recovery_screen.dart unresolved labels           (/recovery)
     about_screen.dart    version, privacy, licenses  (/about)
-    link_screen.dart     paste a share link (not a route — a root state)
+    sign_in_screen.dart  owner-provisioned auth       (root state)
+    days_screen.dart     list/select existing days    (/days or root state)
+    link_screen.dart     legacy share-link fallback   (root state)
     help_sheet.dart      the in-app operating guide
   lib/widgets/print_deck.dart      the deck (see UI conventions)
   lib/widgets/label_preview.dart   renders the REAL label via renderLabelImage
@@ -386,7 +408,7 @@ Design constraints:
 
 ## Current tests
 
-### iOS app — 124 tests
+### iOS app — 140 tests
 
 ```bash
 cd mobile && flutter analyze && flutter test
@@ -394,9 +416,9 @@ cd mobile && flutter analyze && flutter test
 
 `mobile/test/` covers the label renderer (four goldens plus dimension
 assertions), the interface typeface, the printer queue, board caching and
-offline cold start, print
-recovery, drink formatting, roster search and filtering, and four App Store
-screenshot goldens.
+offline cold start, authenticated session restoration, direct board adaptation,
+per-user cache isolation, print recovery, drink formatting, roster search and
+filtering, and four App Store screenshot goldens.
 
 **The App Store goldens are regression tests, not marketing assets.** They
 render with placeholder box glyphs and no smiley, so they could never be

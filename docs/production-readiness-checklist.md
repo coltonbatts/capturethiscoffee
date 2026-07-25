@@ -1,5 +1,11 @@
 # Production Readiness Checklist
 
+> **Historical web-first/Build 6 checklist.** Preserve it as prior evidence,
+> but use [`current-state-2026-07-25.md`](current-state-2026-07-25.md),
+> [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and
+> [`physical-release-test.md`](physical-release-test.md) for the active Build 9
+> boundary.
+
 Last updated: 2026-07-23 (printer handoff audit)
 
 This checklist exists to close out the two P0 blockers before Capture This

@@ -1,10 +1,13 @@
 # Capture This handoff hub
 
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 
 Start here whenever Capture This changes hands. This page is the index and
 definition of done; the linked documents contain the detailed procedures and
 evidence.
+
+Current engineering and release status:
+[`current-state-2026-07-25.md`](current-state-2026-07-25.md).
 
 ## Product in one sentence
 
@@ -12,19 +15,22 @@ Capture This is a shoot-day coffee operations system that collects crew drink
 orders, turns them into correctly labeled cups, and keeps the production board
 in sync.
 
-The hosted website is the source of truth for productions, rosters, orders, and
-printed status. The Capture This iPhone app is the on-set controller that loads
-one production's captured orders, prints them to the accepted NIIMBOT M2_H, and
-synchronizes each successful label.
+Supabase is the shared source of truth for productions, rosters, orders, and
+printed status. Build 9 signs the operator into the Capture This iPhone app,
+lists existing days, reads the selected board directly, prints captured orders
+to the accepted NIIMBOT M2_H, and synchronizes each successful label. The
+frozen website remains the setup, order-capture, zero-install runner, and export
+fallback until Builds 10-12 complete the iOS loop.
 
 ## Current release position
 
-- TestFlight build 5 is the existing pilot build, per the account owner.
-- Source version `1.0.0+6` is the next handoff candidate. It adds offline
-  in-app operating instructions and blocks new physical prints until the linked
-  production is Active.
-- Build 6 has a signed, inspected App Store IPA. It still needs a TestFlight
-  upload and the physical acceptance run before it replaces build 5.
+- Build 9 source is committed at `47c4405`.
+- TestFlight build 9 is uploaded, processed, and assigned to the internal
+  `Main` group. It is consumed; use build 10 or later for any code change.
+- The account owner installed a signed Build 9 release, selected an
+  authenticated day, and completed one physical M2_H reprint.
+- Build 9's airplane-mode, 10-label batch, interruption recovery, sign-out
+  isolation, adhesion, and independent-operator checks remain open.
 - TestFlight is temporary. The durable distribution target is an
   Apple-approved unlisted App Store link.
 - The handoff is not complete until the named day-of operator passes the
@@ -60,9 +66,12 @@ to choose the current printer path.
 
 - Capture This installed from the named current TestFlight build or verified
   unlisted App Store link.
-- A private share URL for one Active production.
-- A signed-in web operator who can prepare the roster, activate the production,
-  issue/reissue links, and use `/labels` as fallback.
+- An owner-provisioned Supabase operator account and an existing Active day.
+- A private share URL only when the Legacy link or zero-install runner fallback
+  is being exercised.
+- A signed-in web operator who can still prepare the roster, capture orders,
+  activate the production, issue/reissue runner links, and use `/labels` until
+  those capabilities move to iOS.
 - Named primary and backup owners for Apple, Vercel, Supabase, GitHub, domain,
   support, billing, and renewals.
 - A named person who can build and upload the next iOS version without relying
@@ -79,21 +88,24 @@ to choose the current printer path.
 
 ## Standard day-of sequence
 
-1. A signed-in operator confirms the roster and marks the production Active.
-2. The runner uses the private production link to collect or update drinks.
-3. The label operator opens Capture This and links the same private URL.
-4. The operator force-quits the official NIIMBOT app, powers off other NIIMBOT
+1. A signed-in web operator confirms the roster, captures drinks, and marks the
+   production Active. Build 10 moves drink capture into the app.
+2. The label operator opens Capture This, signs in, and selects the existing
+   Active day.
+3. The operator force-quits the official NIIMBOT app, powers off other NIIMBOT
    printers, and connects the accepted M2_H.
-5. The operator refreshes, reviews the person and drink, prints, and waits for
+4. The operator refreshes, reviews the person and drink, prints, and waits for
    synchronization before moving on.
-6. For an interrupted print, the operator inspects the physical output before
+5. For an interrupted print, the operator inspects the physical output before
    choosing sync-only or retry. The operator never guesses.
-7. If Capture This is unavailable, a signed-in operator uses `/labels` for the
+6. If Capture This is unavailable, a signed-in operator uses `/labels` for the
    documented PNG/CSV fallback.
+7. Use **Advanced · Legacy link** only when testing the Build 8 fallback or when
+   account access is unavailable.
 8. After the run, the owner records issues, powers down the printer, and revokes
    disposable links when they are no longer needed.
 
-The same condensed sequence is available inside build 6 from the help icon, so
+The same condensed sequence is available inside Build 9 from the help icon, so
 the operator can read it without repository access.
 
 ## Failure decision table
@@ -101,7 +113,7 @@ the operator can read it without repository access.
 | What happened | Correct action |
 |---|---|
 | No physical label came out | Choose **Nothing printed — retry** after reconnecting |
-| A usable label came out but web sync failed | Choose **Sync only**; do not print again |
+| A usable label came out but hosted sync failed | Choose **Sync only**; do not print again |
 | Bluetooth stopped and the physical outcome is unclear | Inspect the printer and stock before choosing; stop and escalate if still uncertain |
 | More than one NIIMBOT appears | Power off every printer except the accepted M2_H |
 | Production says Planning | Ask the coordinator to mark it Active, then refresh |
@@ -114,13 +126,13 @@ The receiving operator must complete this without the outgoing operator touching
 the phone or dashboard:
 
 1. Install/open the named build.
-2. Link a disposable fictional Active production.
+2. Sign in with a disposable invited account and select a fictional Active day.
 3. Connect the exact accepted M2_H.
 4. Print short, long, intentional-reprint, and 10+ batch cases.
-5. Confirm every physical success appears printed on the hosted board.
+5. Confirm every physical success appears printed in Supabase and on the hosted board.
 6. Recover one interrupted/uncertain print without a duplicate.
 7. Power-cycle/reconnect and background/resume.
-8. Complete one `/labels` fallback print.
+8. Complete one Legacy-link and one `/labels` fallback drill.
 9. Explain the failure decision table back to the owner.
 10. Sign the physical and operational acceptance records.
 

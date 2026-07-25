@@ -18,6 +18,7 @@ status change.
 | PR #10 application candidate | `324d9c02aed480e09fdee21b44f1343acdb3c8ff` | Exact application, rate-limit, dependency, export, and initial handoff source; the later review-only documentation correction changes no app artifact |
 | Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
 | Build-7 offline-first source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on `main` | Verified locally and at `origin/main` before upload; includes on-device label rendering and durable local board caching |
+| Build-9 signed-in source | `47c4405` on `main` | Exact committed Build 9 app source; adds Supabase sign-in, Days, direct authenticated board access, per-user caching, and direct printed-status sync |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -119,7 +120,7 @@ Build 8 is now consumed and must not be reused.
 
 | Item | Confirmed result |
 |---|---|
-| Source | Build 9 working tree based on `main` commit `7ed6f04923181fb307d48d85eee010242fbac783`; signed-in day selection and direct Supabase access were implemented locally before archive |
+| Source | Commit `47c4405` (`Ship Build 9 signed-in day selection`); this records the exact app source that had been implemented locally before the archive |
 | Local artifact | `mobile/build/ios/ipa/ctc_printer.ipa`, 22,894,208 bytes, SHA-256 `b74965478bfbbb40863557eb8a5d8295d163e15e8ea4a68306cc8330492dd80e` |
 | Artifact identity | `1.0.0 (9)` / `com.capturethis.ctcprinter`; Apple Distribution signed for team `YW8K4837YB` |
 | Release configuration | Public Supabase URL and anon JWT supplied through Dart defines; no service-role marker found in the exported app |
@@ -137,7 +138,7 @@ metadata change requires build 10 or higher.
 
 | Check | Result |
 |---|---|
-| `npm test` | 103/103 passed |
+| `npm test` | 104/104 passed |
 | `npm run lint` | Passed |
 | `npm run build` | Passed on Next.js 16.2.11 |
 | `npm run verify:niimbot-export` | Passed; 591×354 PNG contract |

@@ -2,6 +2,12 @@
 
 Last updated: 2026-07-15
 
+> **Historical web-first map.** Build 9 now signs into the iOS app, lists days,
+> reads the selected board directly from Supabase, and prints without a
+> production link. Use
+> [`current-state-2026-07-25.md`](current-state-2026-07-25.md) for the current
+> product map and Build 10 sequence.
+
 ## Product truth
 
 Capture This Coffee exists to make a shoot-day coffee run reliable: every

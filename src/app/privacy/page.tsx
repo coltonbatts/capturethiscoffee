@@ -7,32 +7,37 @@ import {
 export const metadata: Metadata = {
   title: "Privacy Policy | Capture This Coffee",
   description:
-    "How the Capture This Coffee web and iOS printer companion handle production links, crew label data, and Bluetooth printing.",
+    "How the Capture This Coffee web and iOS app handle accounts, production data, offline board caching, and Bluetooth printing.",
 };
 
 export default function PrivacyPage() {
   return (
     <PublicInfoPage
       title="Privacy policy"
-      summary="This policy describes the Capture This Coffee production web app and the Capture This iOS printer companion."
+      summary="This policy describes the Capture This Coffee iOS app, its frozen web fallback, and the shared production service."
     >
       <p className="text-sm font-bold text-zinc-600">
-        Effective date: July 15, 2026
+        Effective date: July 25, 2026
       </p>
 
       <PublicInfoSection title="What the service handles">
         <p>
-          Authorized Capture This operators may enter production details, crew
-          names, groups or roles, drink orders, and label status in the hosted
-          web app. A production share link contains a secret token that grants
-          limited access to one production&apos;s day-of workflow. Anyone who
-          receives a share link should treat it as private.
+          Invited Capture This operators sign in to access production details,
+          crew names, groups or roles, usual drinks, day-specific drink orders,
+          and label status. Every invited account in the current workspace has
+          the same operator access. Public account signup is disabled.
         </p>
         <p>
-          The iOS app uses that link to retrieve the production name, printable
-          crew names and drink orders, group and order status, rendered label
-          images, and whether each label has been printed. It does not receive
-          private person notes or dietary notes through the printer queue.
+          The current iOS app requests the existing days and the selected
+          day&apos;s production, client name, on-set roster, crew names, roles,
+          departments, usual drinks, drink orders, and printed status directly
+          from the shared service. It does not request private person notes or
+          dietary notes in the current day board.
+        </p>
+        <p>
+          A fallback production share link contains a secret token that grants
+          limited access to one production&apos;s day-of workflow. Anyone who
+          receives a share link should treat it as private.
         </p>
       </PublicInfoSection>
 
@@ -44,35 +49,48 @@ export default function PrivacyPage() {
           the hosted service.
         </p>
         <p>
-          The iOS app communicates with the Capture This backend over HTTPS and
+          The iOS app communicates directly with Supabase over HTTPS for
+          authentication and shared production data. The frozen web app and
+          token-scoped fallback APIs are hosted on Vercel. The app communicates
           with a nearby NIIMBOT M2_H printer over Bluetooth Low Energy. Nearby
           Bluetooth device information is used on the device to connect to the
-          printer and is not sent to the Capture This backend.
+          printer and is not sent to Supabase or Vercel.
         </p>
       </PublicInfoSection>
 
       <PublicInfoSection title="Storage and retention">
         <p>
-          The iOS app stores the active production session in the iOS Keychain
-          until the operator changes productions or removes the app. If a
-          physical print cannot be synchronized immediately, the app stores a
-          small local recovery record until the operator resolves the print
-          status. The app does not store the rendered label library as a
-          permanent local archive.
+          The iOS app stores the Supabase sign-in session and any Legacy-link
+          production token in the iOS Keychain. To keep an accepted day usable
+          without a signal, it stores the selected-day pointer and a limited
+          number of recent production boards in app-sandboxed local
+          preferences, separated by account and production. Those cached boards
+          can include production details, crew names, roles, usual drinks,
+          day-specific drink orders, and printed status.
         </p>
         <p>
-          Production and order records remain in the hosted service for
-          operational and production-record purposes until an authorized
+          Signing out removes the active board from the app interface and
+          prevents another account from reading it, but account-scoped cached
+          boards may remain on the device until they are replaced, cleared by a
+          later app version, or the app is removed. If a physical print cannot
+          be synchronized immediately, the app stores a small local recovery
+          record until the operator resolves the print status. The app does not
+          keep rendered label images as a permanent local archive.
+        </p>
+        <p>
+          Production, account, and order records remain in the hosted service
+          for operational and production-record purposes until an authorized
           Capture This operator deletes them or a deletion request is handled.
-          Share tokens may expire or be revoked without deleting the underlying
-          production record.
+          Share tokens may expire or be revoked without deleting the
+          underlying production record.
         </p>
       </PublicInfoSection>
 
       <PublicInfoSection title="Service providers">
         <p>
           Capture This uses Supabase for hosted authentication, database, and
-          storage services, and Vercel to host and deliver the web app and API.
+          storage services, and Vercel to host and deliver the frozen web app
+          and fallback API.
           These providers process information only as needed to provide their
           infrastructure services to Capture This.
         </p>

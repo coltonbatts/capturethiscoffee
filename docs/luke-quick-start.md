@@ -8,7 +8,8 @@ Grab:
 
 - Your iPhone with **Capture This** installed.
 - The NIIMBOT M2_H printer.
-- The production link Colton sends you.
+- The owner-provisioned Capture This email/password.
+- The name of the Active production day.
 
 Make sure the printer has labels and ribbon in it. Don’t update its firmware,
 even if the NIIMBOT app suggests it.
@@ -16,8 +17,8 @@ even if the NIIMBOT app suggests it.
 ## Connect everything
 
 1. Open **Capture This**.
-2. Paste the production link Colton sent you.
-3. Tap **Link production**.
+2. Sign in and choose the Active day.
+3. Confirm the production name before printing.
 4. Fully close the regular NIIMBOT app if it is open on any nearby phone or
    tablet.
 5. Turn off any other nearby NIIMBOT printers.
@@ -39,7 +40,7 @@ That’s it.
 First, look at the printer and see whether a usable label came out.
 
 - **A good label came out:** choose **Label printed — sync only**. This tells
-  the website it printed without printing a second copy.
+  the shared production board it printed without printing a second copy.
 - **Nothing came out:** choose **Nothing printed — retry**.
 - **You aren’t sure:** stop and text Colton. Don’t guess and accidentally print
   a duplicate.
@@ -62,5 +63,6 @@ Text Colton with:
 - Whether a physical label came out.
 - Your iPhone model and iOS version.
 
-Don’t send the production link or a screenshot that shows it. That link is
-private.
+Don’t send a password, a production link, or a screenshot that shows private
+crew data. If account access is unavailable and the owner asks you to use
+**Advanced · Legacy link**, treat that production link as private.

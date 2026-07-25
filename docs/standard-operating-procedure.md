@@ -1,6 +1,12 @@
 # Capture This standard operating procedure
 
-Last updated: 2026-07-23
+Last updated: 2026-07-25
+
+**Build 9 transition:** the iOS app now signs in, lists existing days, reads the
+selected board directly from Supabase, caches it per user/day, and synchronizes
+printed status directly. Day/people/roster setup, drink capture, summary, and
+closeout remain on the frozen web until Builds 10-12. The current build boundary
+is in [current-state-2026-07-25.md](current-state-2026-07-25.md).
 
 ## Purpose
 
@@ -32,11 +38,11 @@ Related docs:
 
 ## Systems
 
-### Master Website
+### Shared backend and frozen website
 
 Use `https://coffee.capturethis.com` for shared production data.
 
-The master website is the source of truth for:
+Supabase is the source of truth for:
 
 - Clients.
 - People.
@@ -45,16 +51,19 @@ The master website is the source of truth for:
 - Coffee orders.
 - Printed label status.
 
-Use the hosted website for setup, runner workflow, summaries, and fallback
-label export.
+Build 9 reads the same data directly after sign-in. Use the frozen website for
+setup, runner/order capture, summaries, and fallback label export until those
+capabilities move to iOS.
 
 ### Capture This iPhone app
 
-The native iPhone **Capture This** app is the primary on-set print path. It opens
-the same runner share link, fetches the pending label queue from the public API,
-prints to the NIIMBOT M2_H over Bluetooth LE, and marks each order
-`label_printed`. Build 6 also keeps the condensed operating and recovery guide
-inside the app and pauses new physical prints until the production is Active.
+The native iPhone **Capture This** app is the primary on-set print path. Build 9
+uses an owner-provisioned Supabase account, lists existing days, reads the
+selected board directly through authenticated RLS, prints to the NIIMBOT M2_H
+over Bluetooth LE, and marks each order `label_printed` directly. It keeps the
+condensed operating and recovery guide inside the app, caches the selected board
+for offline printing, and pauses new physical prints unless the day is Active.
+The production-share URL remains under **Advanced · Legacy link**.
 
 ### `/labels` fallback
 
@@ -104,7 +113,7 @@ The label operator uses CTC Printer on the iPhone.
 Responsibilities:
 
 - Open CTC Printer.
-- Paste or reuse the runner share link.
+- Sign in and select the Active day.
 - Connect the NIIMBOT M2_H.
 - Print pending labels.
 - Confirm `label_printed` updates after successful prints.
@@ -126,6 +135,10 @@ Runners do not need an account for the active day-of flow, but they must use a
 production share link. The link token scopes reads and order edits to one
 production. Anonymous direct Supabase table reads and order updates are not
 allowed.
+
+The signed-in iOS operator does not use that token. Normal Build 9 operation
+uses the invited user's authenticated Supabase session; the token path is a
+fallback.
 
 Keep public sign-ups disabled unless intentionally onboarding new staff. Access
 control is invitation-based at the Supabase user level.
@@ -186,11 +199,13 @@ On the device the runner will use:
 
 On the phone the PA will use:
 
-1. Open or paste the runner share link in CTC Printer.
+1. Open Capture This, sign in, and select the Active day.
 2. Connect the NIIMBOT M2_H.
 3. Print one physical test label from the queue.
-4. Confirm the web runner board shows the label as printed.
+4. Confirm Capture This and the web runner board show the label as printed.
 5. Record any scaling, cropping, readability, or `label_printed` issue.
+
+Use **Advanced · Legacy link** only for the explicit fallback drill.
 
 If CTC Printer is unavailable, run the fallback `/labels` PNG or CSV export
 flow in [label-image-export.md](label-image-export.md).
@@ -203,7 +218,7 @@ flow in [label-image-export.md](label-image-export.md).
 - Open the active production.
 - Confirm the roster is correct.
 - Confirm the runner can open the production page.
-- Confirm the CTC Printer phone can open the runner share link.
+- Confirm the Capture This operator account can select the Active day.
 
 ### Runner
 
@@ -267,10 +282,10 @@ captured drink for the day, and "unprinted" selection keeps reprints cheap.
 From Capture This:
 
 1. Confirm the production is active.
-2. Confirm Capture This is linked to the runner share URL.
+2. Sign in and select the correct day.
 3. Refresh the queue.
 4. Print each pending label.
-5. Confirm the web day board shows the printed badge.
+5. Confirm the app and web day board show the printed badge.
 6. Inspect the physical label.
 
 If the physical label printed but the web update failed, do not print it again.
@@ -369,7 +384,8 @@ After the last drink run:
 - [ ] Active production opens for a signed-in operator and through the production share link.
 - [ ] Client, people, roster, date, location, and runner details are correct.
 - [ ] Runner can search, quick-add, take orders, and mark no-drink on the actual device.
-- [ ] Capture This links to the same runner share URL.
+- [ ] Capture This signs in, selects the Active day, and restores it after relaunch.
+- [ ] Advanced · Legacy link opens the same disposable runner share URL.
 - [ ] Capture This prints one physical test label and marks `label_printed`.
 - [ ] Interrupted printing is resolved without an accidental duplicate.
 - [ ] `/labels` fallback loads on the phone.
