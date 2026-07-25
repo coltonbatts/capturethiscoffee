@@ -31,7 +31,7 @@ const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
-const String kAppVersion = '1.0.0 (6)';
+const String kAppVersion = '1.0.0 (7)';
 const _printerScanTimeout = Duration(seconds: 8);
 const _printOperationTimeout = Duration(seconds: 60);
 
