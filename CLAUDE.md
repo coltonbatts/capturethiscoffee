@@ -51,7 +51,8 @@ The printer strategy is settled for now:
 - Keep the NIIMBOT M2_H.
 - Do not rebuild a laptop print station.
 - Do not attempt custom Bluetooth printing from the web app (Safari on iOS has no Web Bluetooth).
-- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. The app consumes the label queue, **renders labels on device** (`mobile/lib/label_painter.dart`, a port of `grid-01` from `src/lib/niimbot-m2-draw.ts`), and syncs `label_printed`. It no longer downloads a PNG per label — that made printing impossible without a signal. See `mobile/README.md`, `docs/offline-first-ios-handoff.md`, and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
+- **Primary on-set path (July 2026):** native iOS app in `mobile/` (Flutter + `niim_blue_flutter`) prints to the M2_H over BLE. The app reads the runner board, derives its print queue on device, **renders labels on device** (`mobile/lib/label_painter.dart`, a port of `grid-01` from `src/lib/niimbot-m2-draw.ts`), caches the last good board (`mobile/lib/board_cache.dart`), and syncs `label_printed`. It no longer downloads a PNG per label — that made printing impossible without a signal. A cold start with no signal is usable and can print. See `mobile/README.md`, `docs/offline-first-ios-handoff.md`, and `docs/phone-printing-investigation.md`. Do not update printer firmware while this is in play.
+- **Offline-first is the direction as of 2026-07-24**, reversing an earlier decision to skip a durable write queue. Put new capture/offline work in `mobile/`, not in the web runner board — that board is frozen but must keep working as the zero-install path. Phases and open traps are in `docs/offline-first-ios-handoff.md`.
 - **Fallback:** `/labels` PNG share/download or NIIMBOT batch CSV through the official NIIMBOT app.
 
 The `/labels` screen currently supports two paths:
@@ -203,8 +204,8 @@ Runner access:
 
 Public routes:
 
-- `GET /api/public/productions/[id]?token=...` returns scoped runner data for `planning` or `active` productions.
-- `GET /api/public/productions/[id]/labels?token=...` returns the printer label queue for the CTC Printer app.
+- `GET /api/public/productions/[id]?token=...` returns scoped runner data for `planning` or `active` productions. This is the CTC Printer app's only read; it derives its print queue locally (`PrinterQueue.fromBoard`). Note the status gate: a `complete` production 404s here.
+- `GET /api/public/productions/[id]/labels?token=...` returns the printer label queue. **Nothing calls this now** — the app moved to the board endpoint because the queue omits people who have not been asked yet. Still deployed and still tested.
 - `GET /api/public/orders/[id]/label?token=...` renders a single label PNG server-side (`src/lib/niimbot-m2-export-server.ts`). The iOS app no longer calls this; it remains the `/labels` export path and the comparison baseline for the on-device renderer (`node scripts/compare-label-renderers.mjs`).
 - `PATCH /api/public/orders/[id]` accepts `{ productionId, token, patch }`, validates the token, requires the production to be `active`, and only allows fields listed in `runnerOrderFields` in `src/lib/production-share.ts`.
 - All public routes are rate-limited via `src/lib/public-api-guard.ts`.
