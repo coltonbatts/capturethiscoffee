@@ -13,12 +13,21 @@ import 'package:flutter/material.dart';
 import '../label_content.dart';
 import '../theme.dart';
 import 'brand_mark.dart';
+import 'motion.dart';
 import 'label_preview.dart';
 
 /// Why printing is unavailable, in the order the operator must resolve it.
 enum DeckBlock {
   none,
   disconnected,
+
+  /// The server refused this production — complete, revoked, expired, deleted.
+  ///
+  /// Separate from [productionInactive], which is derived from the *cached*
+  /// status and therefore cannot detect this: a day closed after the cache was
+  /// written still reads `active` on disk.
+  unavailable,
+
   productionInactive,
   recoveryPending,
 }
@@ -134,9 +143,7 @@ class _PrintDeckState extends State<PrintDeck>
   }
 
   bool get _canPrint =>
-      widget.block == DeckBlock.none &&
-      widget.content != null &&
-      !widget.busy;
+      widget.block == DeckBlock.none && widget.content != null && !widget.busy;
 
   @override
   Widget build(BuildContext context) {
@@ -210,8 +217,7 @@ class _PrintDeckState extends State<PrintDeck>
             widget.connected
                 ? Icons.bluetooth_connected
                 : Icons.bluetooth_disabled,
-            color:
-                widget.connected ? CaptureColors.ink : CaptureColors.faint,
+            color: widget.connected ? CaptureColors.ink : CaptureColors.faint,
           ),
           tooltip: widget.connected ? 'Disconnect printer' : 'Connect printer',
         ),
@@ -231,11 +237,14 @@ class _PrintDeckState extends State<PrintDeck>
             // sense of how much day is left.
             TweenAnimationBuilder<double>(
               tween: Tween(end: widget.pending.toDouble()),
-              duration: CaptureMotion.slow,
+              duration: motionDuration(context, CaptureMotion.slow),
               curve: CaptureMotion.ease,
               builder: (context, value, _) => Text(
                 '${value.round()}',
-                style: theme.textTheme.headlineLarge,
+                // Tabular figures are not cosmetic here: this number counts
+                // itself down, and proportional digits change width mid-count,
+                // so the text beside it twitches on every tick.
+                style: CaptureType.statNumber,
               ),
             ),
             const SizedBox(width: 7),
@@ -258,7 +267,7 @@ class _PrintDeckState extends State<PrintDeck>
             tween: Tween(
               end: widget.total == 0 ? 0 : widget.printed / widget.total,
             ),
-            duration: CaptureMotion.slow,
+            duration: motionDuration(context, CaptureMotion.slow),
             curve: CaptureMotion.ease,
             builder: (context, value, _) =>
                 LinearProgressIndicator(value: value, minHeight: 4),
@@ -277,7 +286,7 @@ class _PrintDeckState extends State<PrintDeck>
         : Column(
             children: [
               AnimatedSwitcher(
-                duration: CaptureMotion.base,
+                duration: motionDuration(context, CaptureMotion.base),
                 switchInCurve: CaptureMotion.ease,
                 child: LabelPreview(
                   key: ValueKey(label.orderNumber + label.personName),
@@ -370,6 +379,15 @@ class _PrintDeckState extends State<PrintDeck>
           icon: const Icon(Icons.bluetooth_searching),
           label: const Text('Connect printer'),
         );
+      case DeckBlock.unavailable:
+        // Says "closed", not "paused". A paused day is waiting for someone to
+        // start it; this one the server has already refused.
+        return FilledButton.icon(
+          onPressed: null,
+          style: CaptureButtons.accent,
+          icon: const Icon(Icons.event_busy),
+          label: const Text('This day is closed'),
+        );
       case DeckBlock.productionInactive:
         // Deliberately not "Printing paused" — that is the explanation card's
         // heading, and the same phrase twice reads as one message repeated.
@@ -412,9 +430,8 @@ class _PrintDeckState extends State<PrintDeck>
         const SizedBox(width: 10),
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: widget.busy || !widget.connected
-                ? null
-                : widget.onDisconnect,
+            onPressed:
+                widget.busy || !widget.connected ? null : widget.onDisconnect,
             icon: const Icon(Icons.bluetooth_disabled, size: 18),
             label: const Text('Disconnect'),
           ),

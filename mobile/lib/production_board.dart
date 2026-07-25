@@ -301,6 +301,8 @@ class QueueLabel {
     required this.group,
     required this.status,
     required this.labelPrinted,
+    this.role = '',
+    this.department = '',
   });
 
   final String orderId;
@@ -309,6 +311,39 @@ class QueueLabel {
   final String group;
   final String status;
   final bool labelPrinted;
+
+  /// Carried for the expanded roster row only — never printed on a label.
+  ///
+  /// Optional because print-recovery records reconstruct a QueueLabel from the
+  /// ledger, which stores only what a label needs. A recovery row genuinely has
+  /// no role to show.
+  final String role;
+  final String department;
+
+  /// `Producer · Camera`, skipping whichever is missing.
+  ///
+  /// Falls back to the roster group so a row is never left with a blank second
+  /// line — the group is what the operator sorted by, so it is never useless.
+  String get roleLine {
+    final parts = [role.trim(), department.trim()]
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return group.trim();
+    return parts.join(' · ');
+  }
+
+  /// Up to two initials, matching the web's `Avatar` fallback: the first letter
+  /// of each space-separated name part.
+  String get initials {
+    final letters = personName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0].toUpperCase())
+        .take(2)
+        .join();
+    return letters.isEmpty ? '?' : letters;
+  }
 }
 
 /// The printable subset of a board, derived on device.
@@ -344,6 +379,8 @@ class PrinterQueue {
         group: entry.group,
         status: order.status,
         labelPrinted: order.labelPrinted,
+        role: entry.person.role,
+        department: entry.person.department,
       ));
     }
 

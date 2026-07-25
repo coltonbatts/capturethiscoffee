@@ -11,10 +11,38 @@ const _defaultRequestTimeout = Duration(seconds: 15);
 const _defaultResponseTimeout = Duration(seconds: 20);
 const _maximumBoardBytes = 2 * 1024 * 1024;
 
+/// What kind of failure this was, which the UI has to tell apart.
+///
+/// The distinction is load-bearing, not cosmetic. When a refresh fails the app
+/// keeps showing the cached board, and the operator needs to know which of two
+/// very different things happened:
+///
+///   * [unreachable] — the roster on screen is still true, just old. Printing
+///     it is correct and is the whole point of the offline cache.
+///   * [gone] — the server answered, and said this production is no longer
+///     readable with this token. The roster on screen is not just stale, it may
+///     describe a day that is over. Printing must stop.
+///
+/// Without this, a production marked `complete` drops out of the readable
+/// statuses, the board 404s, and the app reports "Working offline" over a
+/// finished day while still happily printing labels, because the *cached*
+/// status still says active.
+enum CtcApiErrorKind {
+  /// No connection, a timeout, a stall, an aborted request.
+  unreachable,
+
+  /// The server replied and refused: 404, 401, 403, revoked, expired, complete.
+  gone,
+
+  /// Everything else — malformed payloads, oversized responses, 5xx.
+  other,
+}
+
 class CtcApiException implements Exception {
-  const CtcApiException(this.message);
+  const CtcApiException(this.message, {this.kind = CtcApiErrorKind.other});
 
   final String message;
+  final CtcApiErrorKind kind;
 
   @override
   String toString() => message;
@@ -111,6 +139,7 @@ class CtcApi {
           if (!abort.isCompleted) abort.complete();
           throw const CtcApiException(
             'The server took too long to respond. Check your connection and try again.',
+            kind: CtcApiErrorKind.unreachable,
           );
         },
       );
@@ -128,6 +157,7 @@ class CtcApi {
           if (!abort.isCompleted) abort.complete();
           throw const CtcApiException(
             'The server response stalled. Check your connection and try again.',
+            kind: CtcApiErrorKind.unreachable,
           );
         },
       );
@@ -143,12 +173,14 @@ class CtcApi {
     } on http.RequestAbortedException {
       throw const CtcApiException(
         'The request was cancelled. Check your connection and try again.',
+        kind: CtcApiErrorKind.unreachable,
       );
     } on http.ClientException {
       // ClientException often includes the full request URI. Never surface it:
       // GET URLs contain the production capability token.
       throw const CtcApiException(
         'No connection. Check Wi-Fi or signal, then try again.',
+        kind: CtcApiErrorKind.unreachable,
       );
     } on FormatException {
       throw const CtcApiException('The server returned an invalid response.');
@@ -174,6 +206,9 @@ void _throwForStatus(http.Response response, {required String fallback}) {
     // Status and the allowlist below are sufficient for safe operator copy.
   }
 
+  // Every one of these is the server saying no, rather than the server being
+  // out of reach. That difference decides whether the cached roster on screen
+  // is still safe to print.
   const allowedMessages = {
     'Missing production share token.',
     'Invalid production share token.',
@@ -184,16 +219,19 @@ void _throwForStatus(http.Response response, {required String fallback}) {
     'Label not found for this order.',
   };
   if (serverMessage != null && allowedMessages.contains(serverMessage)) {
-    throw CtcApiException(serverMessage);
+    throw CtcApiException(serverMessage, kind: CtcApiErrorKind.gone);
   }
   if (response.statusCode == 401 || response.statusCode == 403) {
     throw const CtcApiException(
       'This production link is invalid, expired, revoked, or no longer active.',
+      kind: CtcApiErrorKind.gone,
     );
   }
   if (response.statusCode == 404) {
     throw const CtcApiException(
-        'This production or label is no longer available.');
+      'This production or label is no longer available.',
+      kind: CtcApiErrorKind.gone,
+    );
   }
   throw CtcApiException('$fallback Try again in a moment.');
 }

@@ -29,6 +29,29 @@ flutter:
     - assets/capture-this-smiley.png
     - assets/test_label.png
   fonts:
+    # INTERFACE type. Geist is the web app's typeface (src/app/layout.tsx loads
+    # it via next/font/google); bundling it is what makes the app read as the
+    # same product as the site. Variable, wght axis 100-900, so the web's
+    # off-scale weights (460, 560, 590, 650, 750) resolve natively via
+    # `FontVariation('wght', n)` rather than being rounded to a static face.
+    #
+    # OFL 1.1 — see assets/fonts/OFL-Geist.txt.
+    #
+    # Registered with no `weight:` on purpose. Pinning a weight on a variable
+    # asset defeats the axis; `CaptureType` drives it with fontVariations.
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist-Variable.ttf
+    - family: GeistMono
+      fonts:
+        - asset: assets/fonts/GeistMono-Variable.ttf
+
+    # LABEL type. Not interface type — this family must never be used for UI,
+    # and Geist must never reach a label. The separation is enforced by
+    # label_painter.dart naming `labelFontFamily` explicitly on its only
+    # TextPainter, so the global interface font cannot be inherited into a
+    # label. test/label_golden_test.dart is the regression proof.
+    #
     # The same faces the server registers in
     # src/lib/niimbot-m2-export-server.ts from public/fonts/. Bundled rather
     # than relying on the iOS system Arial so label metrics are identical in

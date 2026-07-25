@@ -9,7 +9,9 @@ import 'package:ctc_printer/ctc_api.dart';
 import 'package:ctc_printer/main.dart';
 import 'package:ctc_printer/print_recovery.dart';
 import 'package:ctc_printer/production_board.dart';
+import 'package:ctc_printer/printer_controller.dart';
 import 'package:ctc_printer/production_session.dart';
+import 'package:ctc_printer/screens/home_screen.dart';
 import 'package:ctc_printer/session_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,8 +29,25 @@ class _OfflineApi extends CtcApi {
   _OfflineApi(super.session);
 
   @override
-  Future<ProductionBoard> fetchBoard() async =>
-      throw const CtcApiException('No connection. Check Wi-Fi or signal.');
+  Future<ProductionBoard> fetchBoard() async => throw const CtcApiException(
+        'No connection. Check Wi-Fi or signal.',
+        kind: CtcApiErrorKind.unreachable,
+      );
+
+  @override
+  void close() {}
+}
+
+/// The server answers, and refuses — a day marked complete drops out of the
+/// readable statuses and its board 404s.
+class _GoneApi extends CtcApi {
+  _GoneApi(super.session);
+
+  @override
+  Future<ProductionBoard> fetchBoard() async => throw const CtcApiException(
+        'This production or label is no longer available.',
+        kind: CtcApiErrorKind.gone,
+      );
 
   @override
   void close() {}
@@ -119,7 +138,15 @@ void main() {
       apiFactory: _OfflineApi.new,
     );
 
+    // Home knows the day without a network call.
     expect(find.text('Review Day'), findsOneWidget);
+
+    // And the crew survived with it. This is the assertion that matters: the
+    // session lives in the Keychain, but the roster only exists on disk, and
+    // without it a cold start on a stage with no signal is an empty app.
+    await tester.tap(find.byKey(rosterEntryKey));
+    await tester.pumpAndSettle();
+
     expect(find.textContaining('Jamie Example'), findsWidgets);
     expect(find.textContaining('Iced oat latte'), findsWidgets);
     expect(find.textContaining('Sam Okafor'), findsWidgets);
@@ -199,6 +226,98 @@ void main() {
     expect(find.text('Review Day (updated)'), findsOneWidget);
     expect(find.text('Working offline'), findsNothing);
     expect(find.textContaining('Synced'), findsOneWidget);
+  });
+
+  group('a production the server refuses', () {
+    // The failure this guards: a day marked complete drops out of the readable
+    // statuses and the board 404s. The app kept showing the cached roster,
+    // labelled it "Working offline", and went on printing — because the cached
+    // production status still said `active`.
+
+    testWidgets('is not described as working offline', (tester) async {
+      await _pumpApp(
+        tester,
+        cache: MemoryBoardCacheRepository(
+          _cachedBoard(age: const Duration(minutes: 45)),
+        ),
+        apiFactory: _GoneApi.new,
+      );
+
+      expect(find.text('This day is closed'), findsWidgets);
+      expect(find.text('Working offline'), findsNothing);
+    });
+
+    testWidgets('still shows the last roster it saw', (tester) async {
+      // Hiding the roster would be its own kind of lying — the crew and their
+      // drinks are the last true thing this iPhone knows.
+      await _pumpApp(
+        tester,
+        cache: MemoryBoardCacheRepository(
+          _cachedBoard(age: const Duration(minutes: 45)),
+        ),
+        apiFactory: _GoneApi.new,
+      );
+
+      expect(find.text('Review Day'), findsOneWidget);
+    });
+
+    test('refuses to print, even though the cached status says active',
+        () async {
+      // The safety half. The notice is words; this is the guard. Note the
+      // cached board below is deliberately `active` — that is the exact value
+      // that used to let a finished day keep printing.
+      final controller = PrinterController(
+        sessionRepository: MemorySessionRepository(_session),
+        printRecoveryRepository: MemoryPrintRecoveryRepository(),
+        boardCacheRepository: MemoryBoardCacheRepository(
+          _cachedBoard(age: const Duration(minutes: 5)),
+        ),
+        apiFactory: _GoneApi.new,
+      );
+      addTearDown(controller.dispose);
+      await controller.start();
+
+      expect(controller.queue?.isProductionActive, isTrue);
+      expect(controller.boardUnavailableReason, isNotNull);
+
+      await controller.printLabel(controller.queue!.labels.first);
+      expect(controller.operatorError, contains('no longer available'));
+    });
+
+    test('a lost signal after a refusal does not reopen the day', () async {
+      // Losing the network must not launder a refusal back into "just stale".
+      final controller = PrinterController(
+        sessionRepository: MemorySessionRepository(_session),
+        printRecoveryRepository: MemoryPrintRecoveryRepository(),
+        boardCacheRepository: MemoryBoardCacheRepository(
+          _cachedBoard(age: const Duration(minutes: 5)),
+        ),
+        apiFactory: _GoneApi.new,
+      );
+      addTearDown(controller.dispose);
+      await controller.start();
+      expect(controller.boardUnavailableReason, isNotNull);
+
+      // A later refresh that merely cannot reach the server.
+      await controller.refreshBoard(silent: true);
+      expect(controller.boardUnavailableReason, isNotNull);
+    });
+
+    testWidgets('a merely unreachable server is still offline, not closed',
+        (tester) async {
+      // The other half: losing signal must not be mistaken for a closed day,
+      // or the offline cache stops being worth having.
+      await _pumpApp(
+        tester,
+        cache: MemoryBoardCacheRepository(
+          _cachedBoard(age: const Duration(minutes: 45)),
+        ),
+        apiFactory: _OfflineApi.new,
+      );
+
+      expect(find.text('Working offline'), findsOneWidget);
+      expect(find.text('This day is closed'), findsNothing);
+    });
   });
 
   testWidgets('a successful fetch writes the cache for the next cold start',

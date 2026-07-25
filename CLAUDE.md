@@ -160,12 +160,29 @@ src/server/
 
 mobile/
   CTC Printer Flutter app (see mobile/README.md)
-  lib/main.dart          app state, BLE orchestration, print + recovery flow
+  lib/main.dart          the app, the route table, and RootScreen
+                         (splash / link / home). ~130 lines — keep it that way.
+  lib/printer_controller.dart  ALL state and every operation. A ChangeNotifier.
+                         Never shows a dialog, never takes a BuildContext.
+  lib/app_scope.dart     PrinterScope, the InheritedNotifier above the navigator
+  lib/confirmations.dart the questions the controller deliberately does not ask
   lib/theme.dart         design tokens, ported from globals.css --capture-*
-  lib/widgets/print_deck.dart      the primary surface (see UI conventions)
+  lib/screens/
+    home_screen.dart     where the operator lands and returns to
+    print_screen.dart    the deck                    (/print)
+    roster_screen.dart   search, filters, the list   (/roster)
+    recovery_screen.dart unresolved labels           (/recovery)
+    about_screen.dart    version, privacy, licenses  (/about)
+    link_screen.dart     paste a share link (not a route — a root state)
+    help_sheet.dart      the in-app operating guide
+  lib/widgets/print_deck.dart      the deck (see UI conventions)
   lib/widgets/label_preview.dart   renders the REAL label via renderLabelImage
-  lib/widgets/roster_section.dart  search + To print/Printed/All
-  lib/widgets/brand_mark.dart      the smiley; BrandMark / BrandPulse
+  lib/widgets/roster_section.dart  RosterControls + RosterEmptyState
+  lib/widgets/roster_tiles.dart    dense rows, expansion, recovery pointers
+  lib/widgets/status_banners.dart  error / stale / closed-day / activity log
+  lib/widgets/motion.dart          CascadeIn, Pressable, motionDuration
+  lib/widgets/brand_mark.dart      the smiley; BrandMark / BrandPulse /
+                                   ArrivingBrandMark (the web's mark-arrive)
 
 supabase/
   schema.sql
@@ -246,19 +263,75 @@ neo-brutalist treatment the app used to carry.
 
 - **Tokens live in `mobile/lib/theme.dart`** and mirror `src/app/globals.css`
   `--capture-*` verbatim. Cream paper `#F7F3EA`, ink `#050505`, muted `#656158`,
-  hairline rules, 12px radii, semibold with negative tracking. Change one side,
-  change the other.
+  hairline rules, semibold with negative tracking. Change one side, change the
+  other.
+- **Radii follow the web:** controls (buttons, inputs, chips) are 8, cards and
+  panels are 12, the sheet's top corners are 16. Corrected 2026-07-25 — these
+  were all 12-14, which flattened a distinction the web does make. The home
+  screen's primary action is **square**, matching `.primaryAction` in
+  `src/app/page.module.css`: the one control in the product with no radius.
 - **Yellow `#F2EB0C` at full strength, once per screen**, on the action the
   operator came to take. Never as a low-alpha tint — that reads muddy. When no
-  action is available (printer disconnected) there is no yellow at all.
-- **Do not set a global `fontFamily`.** The UI uses the iOS system font. The
-  bundled Arial exists only so `label_painter.dart` matches the server
-  renderer's metrics; leaking it into the interface is a bug.
-- **The deck is the primary surface.** It answers "can I print right now?" in
-  its own button instead of making the operator assemble that from separate
-  status cards. Blocking reasons are ordered by fixability: disconnected →
-  production not active → recovery pending. Do not reintroduce a stack of
-  co-equal status cards.
+  action is available (printer disconnected) there is no yellow at all. Two
+  non-control exceptions ported from the web: text selection, and the focus
+  ring on an input. Neither is pressable, so neither competes.
+- **The interface font is Geist, set globally** (`kInterfaceFont` in
+  `theme.dart`), bundled from `assets/fonts/Geist-Variable.ttf` under OFL 1.1.
+  Activity-log mono is `GeistMono`. This **reverses** the former "never set a
+  global `fontFamily`" rule, on 2026-07-25.
+
+  That rule existed to stop the bundled **Arial — which is label type, not
+  interface type** — leaking into the UI. Naming Geist explicitly makes that
+  leak less likely, not more. The invariant that actually matters runs the
+  other way: **Geist must never reach a label.** It cannot, because
+  `label_painter.dart` has exactly one text-drawing site and names
+  `labelFontFamily` on it, so no `ThemeData` value is inheritable into a label.
+
+  `test/label_golden_test.dart` is the regression proof — if a theme change
+  moves those four goldens, the change is wrong, not the goldens.
+  `test/interface_font_test.dart` guards the other direction: that Geist is
+  actually loaded (rather than silently falling back) and that its variable
+  `wght` axis still responds, since the design uses 460/650/750 and a static
+  TTF would collapse them without erroring.
+- **Geist is variable — use `fontVariations`, not just `fontWeight`.** Set both;
+  they must agree, or text renders at one weight in tests and another on device.
+- **`letterSpacing` in `theme.dart` is logical pixels; the web specifies `em`.**
+  Every value is size × em. Change a font size and you must recompute its
+  tracking. `interface_font_test.dart` asserts the ratios.
+- **The deck answers "can I print right now?"** in its own button instead of
+  making the operator assemble that from separate status cards. Blocking reasons
+  are ordered by fixability: disconnected → **day closed** → production not
+  active → recovery pending. Do not reintroduce a stack of co-equal status cards.
+- **Home must never reduce the print entry to a menu label.** A home screen puts
+  a tap between the operator and the print button, and the deck exists to
+  collapse that question into one place. The entry therefore renders the
+  `DeckBlock` state machine — count, next person, blocking reason — and is
+  yellow **only** when a print would actually succeed. If it ever reads just
+  "Print labels ›", that screen has failed. Asserted in `widget_test.dart`.
+- **A blocking reason routes to the screen that clears it**
+  (`printEntryDestination`). Naming one screen and opening another is a dead end.
+- **`DeckBlock.unavailable` and the `_printOneLabel` guard are checked ahead of
+  the cached production status.** A day marked complete still reads `active` in
+  a cache written while it was running, so the cached status is exactly the
+  value not to trust once the server has refused the board. See
+  `CtcApiErrorKind` and `mobile/README.md`.
+- **One decision, one screen.** Print recovery is resolvable on `/recovery` and
+  nowhere else. Home counts them, the roster marks the people they belong to,
+  and the deck refuses to print past them — all pointers, no second copy of the
+  buttons. Three copies of a decision that reprints onto a real cup is three
+  chances to answer it differently.
+- **The roster is dense by default.** A forty-person call sheet is the normal
+  case. Tap expands one row in place; opening a second closes the first. Build
+  it lazily — the board caps at 1000 entries.
+- **Reduce Motion must resolve to the END state**, never the start: an entrance
+  that begins at opacity 0 and is then told not to animate leaves a blank
+  screen. Flutter's implicit animations (`AnimatedSize`, `AnimatedSwitcher`,
+  `TweenAnimationBuilder`) do **not** consult it on their own — route every
+  duration through `motionDuration()`. Both directions are asserted in
+  `widget_test.dart`.
+- **Stagger with an `Interval` inside one controller, not a delayed
+  `forward()`.** A `Future.delayed` leaves a pending timer that fails any widget
+  test touching the screen.
 - **The label preview must stay the real bitmap.** `LabelPreview` calls the same
   `renderLabelImage` the BLE print path uses. Never rebuild the label layout in
   widgets — a preview that can drift from the paper is worse than none.
@@ -269,6 +342,12 @@ neo-brutalist treatment the app used to carry.
 - **Haptics carry physical meaning.** Heavy on a print that produced paper,
   medium on printer connect, and a deliberate double-beat on an *uncertain*
   print — the one state that must not feel like success.
+
+  Consequence: **do not add a celebration haptic on "That's the day."** A day
+  completes immediately after a print, which already fires a heavy impact — a
+  second one produces exactly the uncertain double-beat, making "finished" and
+  "something may have gone wrong" identical in the hand, on a set too loud to
+  hear either. The visual celebration carries it.
 - **Never surface the legacy `OrderStatus` enum.** Rows showed
   "Camera · confirmed" until 2026-07-25; the product exposes only needs-order /
   captured / no-drink.
@@ -307,14 +386,15 @@ Design constraints:
 
 ## Current tests
 
-### iOS app — 97 tests
+### iOS app — 124 tests
 
 ```bash
 cd mobile && flutter analyze && flutter test
 ```
 
 `mobile/test/` covers the label renderer (four goldens plus dimension
-assertions), the printer queue, board caching and offline cold start, print
+assertions), the interface typeface, the printer queue, board caching and
+offline cold start, print
 recovery, drink formatting, roster search and filtering, and four App Store
 screenshot goldens.
 

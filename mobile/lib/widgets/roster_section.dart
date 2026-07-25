@@ -1,15 +1,18 @@
-// The roster: every person on the day and where their label stands.
+// The roster's controls and its empty states.
 //
-// The deck answers "what's next"; this answers "where is Priya". Those are
-// different questions and the second one used to have no answer better than
+// The deck answers "what's next"; the roster answers "where is Priya". Those
+// are different questions and the second one used to have no answer better than
 // scrolling — on a forty-person call sheet that is not an answer.
 //
-// Presentational only. Filtering lives with the state in main.dart so the tiles
-// keep their access to print, sync, and recovery actions.
+// The list itself is no longer here. It belongs to the screen, which builds it
+// lazily: the board caps at 1000 entries and this used to build every row on
+// every frame inside a Column.
+//
+// Presentational only. Filtering lives with the state on the controller so the
+// rows keep their access to print, sync, and recovery actions.
 
 import 'package:flutter/material.dart';
 
-import '../production_board.dart';
 import '../theme.dart';
 
 enum RosterFilter { toPrint, printed, all }
@@ -22,149 +25,180 @@ extension RosterFilterLabel on RosterFilter {
       };
 }
 
-class RosterSection extends StatelessWidget {
-  const RosterSection({
+/// Search and the three filters, pinned above the list.
+///
+/// Counts are baked into the chip labels, the way the web does it — "To print
+/// (12)" answers the question the operator was going to ask next anyway.
+class RosterControls extends StatelessWidget {
+  const RosterControls({
     super.key,
-    required this.labels,
     required this.filter,
     required this.onFilterChanged,
     required this.searchController,
     required this.onQueryChanged,
     required this.query,
-    required this.queueLoaded,
     required this.busy,
-    required this.tileBuilder,
+    required this.counts,
   });
-
-  /// Already filtered and searched by the caller.
-  final List<QueueLabel> labels;
 
   final RosterFilter filter;
   final ValueChanged<RosterFilter> onFilterChanged;
   final TextEditingController searchController;
   final ValueChanged<String> onQueryChanged;
   final String query;
+  final bool busy;
+
+  /// How many rows each filter would show, ignoring the search query.
+  final Map<RosterFilter, int> counts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: searchController,
+          onChanged: onQueryChanged,
+          textInputAction: TextInputAction.search,
+          autocorrect: false,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            hintText: 'Find someone',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            prefixIconConstraints: const BoxConstraints(minWidth: 40),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    onPressed: () {
+                      searchController.clear();
+                      onQueryChanged('');
+                    },
+                    icon: const Icon(Icons.close, size: 18),
+                    tooltip: 'Clear search',
+                  ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Scrolls horizontally. Three chips carrying counts do not fit across a
+        // narrow phone, and they get wider again at larger accessibility text
+        // sizes — a fixed Row here overflows rather than adapting.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final option in RosterFilter.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text('${option.label} (${counts[option] ?? 0})'),
+                    selected: filter == option,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    selectedColor: CaptureColors.ink,
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide(
+                      color: filter == option
+                          ? CaptureColors.ink
+                          : CaptureColors.rule,
+                    ),
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: filter == option ? Colors.white : CaptureColors.ink,
+                    ),
+                    onSelected: busy ? null : (_) => onFilterChanged(option),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The web's `EmptyState`: a yellow disc with a typed `:)`, a title, and a line
+/// of explanation.
+///
+/// The smiley is deliberately *not* the artwork here — the web types the face
+/// as two characters, which is a smaller, quieter joke than the brand mark and
+/// right for a list that just came up empty.
+class RosterEmptyState extends StatelessWidget {
+  const RosterEmptyState({
+    super.key,
+    required this.filter,
+    required this.query,
+    required this.queueLoaded,
+  });
+
+  final RosterFilter filter;
+  final String query;
 
   /// False before the first board load — distinguishes "nothing here" from
   /// "nothing loaded yet", which need different copy.
   final bool queueLoaded;
 
-  final bool busy;
-  /// `isLast` suppresses the row's separator so the list does not end on a
-  /// rule floating above the card's padding.
-  final Widget Function(BuildContext, QueueLabel, bool isLast) tileBuilder;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final (title, description) = _copy();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text('Roster', style: theme.textTheme.titleMedium),
-                  ),
-                  Text(
-                    labels.length == 1 ? '1 person' : '${labels.length} people',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: CaptureColors.yellow,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 12),
-            _search(context),
-            const SizedBox(height: 10),
-            _filters(),
-            const SizedBox(height: 6),
-            if (labels.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 28),
-                child: Text(
-                  _emptyMessage(),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
-                ),
-              )
-            else
-              for (final (index, item) in labels.indexed)
-                tileBuilder(context, item, index == labels.length - 1),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _search(BuildContext context) {
-    return TextField(
-      controller: searchController,
-      onChanged: onQueryChanged,
-      textInputAction: TextInputAction.search,
-      autocorrect: false,
-      decoration: InputDecoration(
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        hintText: 'Find someone',
-        prefixIcon: const Icon(Icons.search, size: 20),
-        prefixIconConstraints: const BoxConstraints(minWidth: 40),
-        suffixIcon: query.isEmpty
-            ? null
-            : IconButton(
-                onPressed: () {
-                  searchController.clear();
-                  onQueryChanged('');
-                },
-                icon: const Icon(Icons.close, size: 18),
-                tooltip: 'Clear search',
-              ),
-      ),
-    );
-  }
-
-  Widget _filters() {
-    return Row(
-      children: [
-        for (final option in RosterFilter.values)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(option.label),
-              selected: filter == option,
-              showCheckmark: false,
-              visualDensity: VisualDensity.compact,
-              selectedColor: CaptureColors.ink,
-              backgroundColor: Colors.transparent,
-              side: BorderSide(
-                color: filter == option
-                    ? CaptureColors.ink
-                    : CaptureColors.rule,
-              ),
-              labelStyle: TextStyle(
-                fontSize: 12,
+            child: const Text(
+              ':)',
+              style: TextStyle(
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color:
-                    filter == option ? Colors.white : CaptureColors.ink,
+                color: CaptureColors.ink,
               ),
-              onSelected: busy ? null : (_) => onFilterChanged(option),
             ),
           ),
-      ],
+          const SizedBox(height: 16),
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 
-  String _emptyMessage() {
-    if (!queueLoaded) return 'Pull down to load the roster.';
-    if (query.isNotEmpty) return 'Nobody matches “$query”.';
+  (String, String) _copy() {
+    if (!queueLoaded) {
+      return ('Nothing loaded yet', 'Pull down to load the roster.');
+    }
+    if (query.isNotEmpty) {
+      return ('Nobody matches “$query”', 'Try a name or a drink.');
+    }
     return switch (filter) {
-      RosterFilter.toPrint => 'Every label is printed.',
-      RosterFilter.printed => 'Nothing printed yet.',
-      RosterFilter.all => 'No one on this production yet.',
+      RosterFilter.toPrint => (
+          'Every label is printed',
+          'Nothing is waiting on the printer.',
+        ),
+      RosterFilter.printed => (
+          'Nothing printed yet',
+          'Printed labels collect here as they come off the M2_H.',
+        ),
+      RosterFilter.all => (
+          'No one on this production yet',
+          'Captured drink orders land here as the runner takes them.',
+        ),
     };
   }
 }

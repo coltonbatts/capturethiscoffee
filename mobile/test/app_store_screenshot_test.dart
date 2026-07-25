@@ -4,6 +4,7 @@ import 'package:ctc_printer/main.dart';
 import 'package:ctc_printer/print_recovery.dart';
 import 'package:ctc_printer/production_board.dart';
 import 'package:ctc_printer/production_session.dart';
+import 'package:ctc_printer/screens/home_screen.dart';
 import 'package:ctc_printer/session_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,6 +67,7 @@ Future<void> _renderAppStoreScreenshot(
   WidgetTester tester, {
   required Widget app,
   required String golden,
+  Key? openFromHome,
 }) async {
   tester.view.devicePixelRatio = 3;
   tester.view.physicalSize = const Size(1320, 2868);
@@ -76,7 +78,23 @@ Future<void> _renderAppStoreScreenshot(
     RepaintBoundary(key: boundaryKey, child: app),
   );
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 100));
+
+  // Settle, do not pump a fixed interval.
+  //
+  // These screens now open with a staggered entrance that runs to 990ms, and a
+  // fixed 100ms pump captured the frame before any of it had faded in — an app
+  // bar over an empty body. The golden still passed, because a blank screen
+  // compares equal to a blank screen. Waiting for the entrance is what makes
+  // these assert anything at all.
+  await tester.pumpAndSettle();
+
+  // Each of these screenshots is named for a surface. Now that those surfaces
+  // are routes rather than sections of one long scroll, getting there is part
+  // of rendering the shot.
+  if (openFromHome != null) {
+    await tester.tap(find.byKey(openFromHome));
+    await tester.pumpAndSettle();
+  }
 
   await expectLater(
     find.byKey(boundaryKey),
@@ -113,6 +131,7 @@ void main() {
       tester,
       app: _fixtureApp(),
       golden: '02-pending-queue.png',
+      openFromHome: printEntryKey,
     );
   });
 
@@ -140,6 +159,7 @@ void main() {
         ),
       ]),
       golden: '03-print-sync-recovery.png',
+      openFromHome: recoveryEntryKey,
     );
   });
 
@@ -160,6 +180,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('How to use Capture This'));
     await tester.pumpAndSettle();
 

@@ -30,20 +30,34 @@ frozen. See [`docs/app-first-direction-2026-07-25.md`](../docs/app-first-directi
 
 ## Screen structure
 
-One scrolling surface, ordered so the most-repeated action is first and
-everything else appears only when it matters.
+A home screen and four routes. Splash, link, and home are not routes — they are
+states of `RootScreen`, because there is nothing to navigate *back* to from a
+cold start and an operator with no linked production has one thing to do.
 
-| Surface | What it is |
-|---|---|
-| **Deck** (`lib/widgets/print_deck.dart`) | The primary surface. Production name, sync age, labels-left count, the next label, and one action. |
-| **Label preview** (`lib/widgets/label_preview.dart`) | Calls the same `renderLabelImage` the print path uses, so the preview cannot drift from the paper. |
-| **Roster** (`lib/widgets/roster_section.dart`) | Search plus To print / Printed / All. Compact rows; rows needing a decision expand with their full explanation. |
-| Exceptions | Error banner, paused-production explanation, and print recovery render only when they apply. |
-| Diagnostics | Recent activity, collapsed. |
+| Surface | Route | What it is |
+|---|---|---|
+| **Home** (`lib/screens/home_screen.dart`) | — | Where you land and return to. The mark, the day, and one entry per destination, each carrying its own state. |
+| **Deck** (`lib/screens/print_screen.dart`) | `/print` | Production name, sync age, labels-left, the next label, and one action. |
+| **Roster** (`lib/screens/roster_screen.dart`) | `/roster` | Search, To print / Printed / All with counts, dense rows that expand in place. |
+| **Unresolved** (`lib/screens/recovery_screen.dart`) | `/recovery` | The only place a print outcome can be resolved. |
+| **About** (`lib/screens/about_screen.dart`) | `/about` | Version, privacy, support, licenses. |
+| **Link** (`lib/screens/link_screen.dart`) | root state | Paste a share link. Validation answers under the field. |
 
 The deck answers "can I print right now?" in its own button rather than making
 the operator assemble that from separate status cards. Blocking reasons are
-ordered by fixability: disconnected → production not active → recovery pending.
+ordered by fixability: disconnected → day closed → production not active →
+recovery pending.
+
+**Home does not weaken that.** Putting a screen in front of the deck risks
+undoing the thing the deck exists for, so its print entry renders the same
+`DeckBlock` — the count, the next person, and the blocking reason — and is
+yellow only when a print would actually succeed. A blocking reason routes to the
+screen that can clear it, not back to the deck to be repeated.
+
+`lib/widgets/label_preview.dart` calls the same `renderLabelImage` the print
+path uses, so the preview cannot drift from the paper. When it cannot render, it
+says so: `renderLabelPng` wraps that same function, so a failed preview is a
+print about to fail.
 
 Design tokens live in `lib/theme.dart` and mirror the web's `--capture-*`
 custom properties: cream paper `#F7F3EA`, ink `#050505`, hairline rules, and
@@ -91,11 +105,23 @@ the operator may be missing. Cached data is never treated as server
 confirmation — a print-recovery record is only retired when the server itself
 reports `label_printed`.
 
-Known gap: a production marked **complete** drops out of
-`readableProductionStatuses` server-side, so the board 404s and the app shows
-"Working offline" over a roster for a day that is actually finished. The error
-banner tells the truth underneath, but the offline framing does not. Fixing
-that needs typed errors from `CtcApi` and belongs with the Phase D 403 trap.
+A refused production is not the same as an unreachable one, and the app no
+longer conflates them. `CtcApiException` carries a `CtcApiErrorKind`:
+
+- `unreachable` — no signal, a timeout, a stall. The cached roster is still
+  true, just old. It says **Working offline** and printing continues, which is
+  the entire point of the cache.
+- `gone` — the server answered and refused: 404, 401/403, revoked, expired, or
+  a production marked **complete**, which drops out of
+  `readableProductionStatuses` server-side. It says **This day is closed**,
+  keeps the last roster on screen, and stops printing.
+
+That second case used to report "Working offline" over a finished day and go on
+printing, because the *cached* production status still said `active` — so
+nothing downstream of the cache would stop it. `DeckBlock.unavailable` and the
+guard at the top of `_printOneLabel` are both checked ahead of the cached
+status for exactly that reason. Covered in `test/offline_cold_start_test.dart`
+under "a production the server refuses".
 
 ## Label rendering
 
