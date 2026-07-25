@@ -20,6 +20,9 @@ permanent target is an approved unlisted App Store link.
 | Stable fictional review production | Pending private operator access |
 | Build 6 uploaded/processed | Upload completed at 12:57 PM CDT; App Store Connect reports processing `Complete`, binary `Validated`, and TestFlight status `Ready to Submit` |
 | Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone. The first confirmed reprint on newly loaded holographic stock printed on the first attempt through direct Bluetooth LE, with no laptop, USB, print station, official NIIMBOT app, or other printing bridge. Photo-backed milestone recorded on 2026-07-24 |
+| Signed App Store IPA for `1.0.0 (7)` | Built from clean `main` at `88f97dc`; version/build, bundle ID, distribution signing, and artifact hash verified locally |
+| Build 7 uploaded/processed | Uploaded at 10:13 PM CDT on 2026-07-24; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
+| Build 7 internal availability | Assigned to internal group `Main` with one invite; iPhone/M2_H and airplane-mode validation pending |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -122,14 +125,15 @@ archive/IPA agreement when the checked-in export options were used.
 3. Add the beta description, **What to Test**, feedback email, contact, privacy
    URL, and support URL from `docs/app-store-release.md`.
 4. Create an external group named `Capture This crew pilot`.
-5. Add build 6 and submit it for TestFlight App Review.
+5. After its physical gate passes, add build 7 and submit it for TestFlight App
+   Review.
 6. After approval, invite the buddy by email rather than a broadly shareable
    public link. Do not include the production share token in the invitation.
 7. Send the fictional review URL privately and keep the fixture active.
 
 The first external build requires Apple’s beta review. Internal-only builds
 cannot be promoted to external groups; use the normal App Store/TestFlight
-upload path for build 6.
+upload path for the physical-test candidate.
 
 ## Buddy pilot acceptance
 

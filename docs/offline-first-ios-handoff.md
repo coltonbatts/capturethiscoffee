@@ -199,7 +199,19 @@ Two traps you must handle explicitly, not discover in the field:
   none of it belongs in this task.
 - Do not change the printer BLE pipeline, the `niim_blue_flutter` pin, or firmware.
 
-## What stays on the web permanently
+## What stays on the web permanently — SUPERSEDED 2026-07-25
+
+This is no longer the direction. See
+[`app-first-direction-2026-07-25.md`](app-first-direction-2026-07-25.md): the web
+is frozen, and the app takes over people, rosters, day creation, and auth by
+talking to Postgres directly through Supabase Auth. The ergonomic argument below
+(forty names is a keyboard job) was accepted as a real cost, not refuted.
+
+The rest of this brief still stands — including the warning against building a
+general-purpose sync engine. The direction doc adds the boundary that keeps that
+warning satisfiable: creation online, capture and printing offline.
+
+Original text follows.
 
 People database with photos, roster building, day creation, minting share links,
 auth, and being the database. Typing forty names off a call sheet is a keyboard job.

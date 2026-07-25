@@ -17,6 +17,7 @@ status change.
 | Pre-PR #10 `main` | `9cd742125447335258ca8bf16784ee791d830584` | Verified locally and on GitHub |
 | PR #10 application candidate | `324d9c02aed480e09fdee21b44f1343acdb3c8ff` | Exact application, rate-limit, dependency, export, and initial handoff source; the later review-only documentation correction changes no app artifact |
 | Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
+| Build-7 offline-first source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on `main` | Verified locally and at `origin/main` before upload; includes on-device label rendering and durable local board caching |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -32,14 +33,14 @@ Root, `/privacy`, and `/support` returned 200 on 2026-07-24.
 
 ## iOS build provenance
 
-| Item | Build 4 | Build 5 TestFlight pilot | Build 6 handoff candidate |
-|---|---|---|---|
-| Version | `0.1.0 (4)` | `1.0.0 (5)` | `1.0.0 (6)` |
-| Bundle ID | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` |
-| Display name | Capture This | Capture This | Capture This |
-| Device family | iPhone + iPad | iPhone only | iPhone only |
-| IPA SHA-256 | `0480b56e0ed5ae495059935cf7313c31e370f9cd897827c4f99acc4c11fc936f` | Prior 2026-07-15 export: `0ba08aa4a9a502ef3907ebbf4ac367ee3d2625ed681e6001ec7f91935a389f05`; current reproducible export: `11478ace75a8b0890bc06e853e8150646221ffb095139f90d45b8dbd930f3594` | `519e26af9dcd1ad6081986d2c1f22239dfbdbbbd36c022c00c11216055ad617c` |
-| Distribution status | Uploaded, processed, internally installed (prior audit/user evidence) | Uploaded/processed in TestFlight per account-owner confirmation on 2026-07-24 | Uploaded through Xcode Organizer on 2026-07-24; processing complete, internally available, external review not submitted |
+| Item | Build 4 | Build 5 TestFlight pilot | Build 6 handoff candidate | Build 7 offline-first candidate |
+|---|---|---|---|---|
+| Version | `0.1.0 (4)` | `1.0.0 (5)` | `1.0.0 (6)` | `1.0.0 (7)` |
+| Bundle ID | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` | `com.capturethis.ctcprinter` |
+| Display name | Capture This | Capture This | Capture This | Capture This |
+| Device family | iPhone + iPad | iPhone only | iPhone only | iPhone only |
+| IPA SHA-256 | `0480b56e0ed5ae495059935cf7313c31e370f9cd897827c4f99acc4c11fc936f` | Prior 2026-07-15 export: `0ba08aa4a9a502ef3907ebbf4ac367ee3d2625ed681e6001ec7f91935a389f05`; current reproducible export: `11478ace75a8b0890bc06e853e8150646221ffb095139f90d45b8dbd930f3594` | `519e26af9dcd1ad6081986d2c1f22239dfbdbbbd36c022c00c11216055ad617c` | `49b43309c95ebc8731b25c49007c8691998c14702270ae3f4b2355284073fc2c` |
+| Distribution status | Uploaded, processed, internally installed (prior audit/user evidence) | Uploaded/processed in TestFlight per account-owner confirmation on 2026-07-24 | Uploaded through Xcode Organizer on 2026-07-24; processing complete, internally available, external review not submitted | Uploaded through Xcode command-line distribution on 2026-07-24; processing complete, internally available in `Main`, physical testing pending |
 
 Build-4 evidence is preserved under the ignored local directory
 `mobile/build/ios/ipa/build-4-evidence/`. File timestamps show the dirty local
@@ -52,8 +53,8 @@ On 2026-07-23 the default Xcode export reproduced a source/archive build-5 to
 IPA build-6 rewrite. `mobile/ios/ExportOptions.plist` now disables automatic
 build-number management. The final rebuild verified source, archive, and IPA
 all remain `1.0.0 (5)`. The account owner confirmed build 5 is now in
-TestFlight. Build 6 must receive a new signed archive/IPA and cannot reuse build
-5's artifact evidence.
+TestFlight. Builds 6 and 7 each received a new signed archive/IPA and retain
+separate artifact evidence.
 
 ## TestFlight build 6 status
 
@@ -75,6 +76,44 @@ TestFlight. Build 6 must receive a new signed archive/IPA and cannot reuse build
 Build 6 is now consumed and must not be reused. Any shipping-code or embedded
 metadata change requires build 7 or higher.
 
+## TestFlight build 7 status
+
+| Item | Confirmed result |
+|---|---|
+| Source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on clean `main`, matching `origin/main` |
+| Local artifact | `mobile/build/ios/ipa/ctc_printer.ipa`, 22,268,770 bytes, SHA-256 `49b43309c95ebc8731b25c49007c8691998c14702270ae3f4b2355284073fc2c` |
+| Artifact identity | `1.0.0 (7)` / `com.capturethis.ctcprinter`; Apple Distribution signed for team `YW8K4837YB` |
+| Upload workflow/time | Xcode command-line distribution reported `Upload succeeded` at Jul 24, 2026 10:13 PM CDT |
+| Processing | App Store Connect Build Uploads status `Complete` |
+| Internal availability | TestFlight status `Ready to Submit`; assigned to internal group `Main` with one invite |
+| Automated verification | `flutter analyze` passed with no issues; `flutter test` passed 93/93; signed archive and IPA build passed |
+| Physical validation | Pending build-7 iPhone/M2_H label comparison and airplane-mode cold-start print test |
+
+Build 7 is now consumed and must not be reused. Any shipping-code or embedded
+metadata change requires build 8 or higher.
+
+## Build 8 — source only, not yet built or uploaded
+
+Source is `1.0.0 (8)` (`mobile/pubspec.yaml` and `kAppVersion`). Bumped because
+build 7 is consumed and the on-set UI was reworked; no archive, IPA, or upload
+exists yet.
+
+What build 8 exists to test:
+
+| Change | What physical testing must confirm |
+|---|---|
+| Print deck replaces the stacked status cards | The next label is readable at arm's length on set, and the single action correctly refuses to print when disconnected, paused, or blocked by recovery |
+| Label preview renders the real bitmap | What the deck shows matches the paper that comes out, for long names and long drinks |
+| Print-success haptic (heavy) | Confirms a print in the hand on a set too loud to hear the printer |
+| Uncertain-print haptic (double-beat) | Is distinguishable from success **without looking**; this is the state that must never be mistaken for a completed print |
+| Print stamp animation | Timing reads correctly against the physical paper rather than leading or lagging it |
+| Roster search and filters | Finding one person on a full call sheet is faster than scrolling |
+
+Neither the haptics nor the stamp timing can be checked in the iOS Simulator —
+it has no Bluetooth and no Taptic Engine. Everything above was verified only by
+`flutter analyze`, `flutter test` (97/97), and simulator screenshots of layout
+and search.
+
 ## Automated verification
 
 | Check | Result |
@@ -87,6 +126,9 @@ metadata change requires build 7 or higher.
 | `flutter analyze` | Passed, no issues |
 | `flutter test` | 27/27 passed for build-6 source, including four App Store layout regressions |
 | `flutter build ipa --release --export-options-plist=ios/ExportOptions.plist` | Passed for build 6; 42.7 MB IPA, 177.6 MB archive |
+| `flutter analyze` (build 7) | Passed, no issues |
+| `flutter test` (build 7) | 93/93 passed, including label golden and offline cold-start coverage |
+| `flutter build ipa --release --export-options-plist=ios/ExportOptions.plist` (build 7) | Passed; archive reports `1.0.0 (7)`, local IPA is 22,268,770 bytes |
 | `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
 
 The build-6 IPA was inspected for version/build, bundle ID, iPhone-only device family,
@@ -132,8 +174,8 @@ batch/recovery demo remains pending the full physical M2_H gate.
 | Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
 | Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
 | Physical iPhone + M2_H test | Build 6 direct-BLE holographic reprint passed on the first try; full gate pending | Preserve the milestone evidence and complete `docs/physical-release-test.md`, including exact hardware/stock, batch, recovery, sync, cold-cup adhesion, and Luke's independent run |
-| App Store Connect build status | Build 6 uploaded, processing complete, internally available | Preserve the processed build and use build 7+ for any replacement |
-| External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 6, submit for Beta App Review, then record Luke's pilot |
+| App Store Connect build status | Build 7 uploaded, processing complete, internally available in `Main` | Preserve the processed build and use build 8+ for any replacement |
+| External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 7 after its physical gate passes, submit for Beta App Review, then record Luke's pilot |
 | App Review | Pending | Production submission status and reviewer correspondence |
 | Unlisted request | Pending | Apple-approved Unlisted App status |
 | Permanent App Store link | Pending | Direct URL verified and final clean-device print smoke test |

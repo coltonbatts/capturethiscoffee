@@ -1,6 +1,6 @@
 # Capture This Coffee - Claude Handoff
 
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 
 This is the root handoff for Claude/Claude Code. Treat it as the starting context for the project, then verify details against the files before editing.
 
@@ -45,6 +45,19 @@ the batch, interruption-recovery, web-sync, cold-cup, and independent-operator
 parts of the physical release gate remain open.
 
 ## Current strategic direction
+
+**The iOS app is the product; the web is frozen (decided 2026-07-25).** Full
+reasoning, the verified RLS evidence that makes it possible, and the phase order
+are in `docs/app-first-direction-2026-07-25.md`. Frozen means: no new features in
+`src/`, do not delete web code, keep `npm run test`/`lint`/`build` green, and keep
+`/run/[id]` working as the zero-install path for a PA who will never install
+TestFlight. This supersedes the "what stays on the web permanently" section of
+`docs/offline-first-ios-handoff.md`.
+
+Not yet started: Supabase Auth in the app, which retires the paste-a-share-link
+front door entirely (sign in, pick today's day). The boundary that keeps the
+offline layer simple is **creation online, capture and printing offline** — do
+not let day/roster creation pull a general-purpose sync engine into scope.
 
 The printer strategy is settled for now:
 
@@ -147,6 +160,12 @@ src/server/
 
 mobile/
   CTC Printer Flutter app (see mobile/README.md)
+  lib/main.dart          app state, BLE orchestration, print + recovery flow
+  lib/theme.dart         design tokens, ported from globals.css --capture-*
+  lib/widgets/print_deck.dart      the primary surface (see UI conventions)
+  lib/widgets/label_preview.dart   renders the REAL label via renderLabelImage
+  lib/widgets/roster_section.dart  search + To print/Printed/All
+  lib/widgets/brand_mark.dart      the smiley; BrandMark / BrandPulse
 
 supabase/
   schema.sql
@@ -220,6 +239,42 @@ Supabase RLS:
 
 The app is intentionally simple, mobile-first, and utilitarian for on-set use.
 
+### iOS app (`mobile/`) — the primary surface
+
+Reworked 2026-07-25 to mirror the web's visual language rather than the
+neo-brutalist treatment the app used to carry.
+
+- **Tokens live in `mobile/lib/theme.dart`** and mirror `src/app/globals.css`
+  `--capture-*` verbatim. Cream paper `#F7F3EA`, ink `#050505`, muted `#656158`,
+  hairline rules, 12px radii, semibold with negative tracking. Change one side,
+  change the other.
+- **Yellow `#F2EB0C` at full strength, once per screen**, on the action the
+  operator came to take. Never as a low-alpha tint — that reads muddy. When no
+  action is available (printer disconnected) there is no yellow at all.
+- **Do not set a global `fontFamily`.** The UI uses the iOS system font. The
+  bundled Arial exists only so `label_painter.dart` matches the server
+  renderer's metrics; leaking it into the interface is a bug.
+- **The deck is the primary surface.** It answers "can I print right now?" in
+  its own button instead of making the operator assemble that from separate
+  status cards. Blocking reasons are ordered by fixability: disconnected →
+  production not active → recovery pending. Do not reintroduce a stack of
+  co-equal status cards.
+- **The label preview must stay the real bitmap.** `LabelPreview` calls the same
+  `renderLabelImage` the BLE print path uses. Never rebuild the label layout in
+  widgets — a preview that can drift from the paper is worse than none.
+- **The smiley is `assets/capture-this-smiley.png`**, byte-identical to the
+  web's `public/capture-this-smiley.png` (sha256 `21977fb0…`). There is no
+  vector source anywhere in the repo. Animate it as a whole object; never trace
+  it to paths to animate a blink.
+- **Haptics carry physical meaning.** Heavy on a print that produced paper,
+  medium on printer connect, and a deliberate double-beat on an *uncertain*
+  print — the one state that must not feel like success.
+- **Never surface the legacy `OrderStatus` enum.** Rows showed
+  "Camera · confirmed" until 2026-07-25; the product exposes only needs-order /
+  captured / no-drink.
+
+### Web (`src/`) — frozen
+
 Use existing primitives before adding new styling:
 
 - `src/components/ui.tsx`
@@ -252,7 +307,27 @@ Design constraints:
 
 ## Current tests
 
-Existing tests (19 files in `tests/`):
+### iOS app — 97 tests
+
+```bash
+cd mobile && flutter analyze && flutter test
+```
+
+`mobile/test/` covers the label renderer (four goldens plus dimension
+assertions), the printer queue, board caching and offline cold start, print
+recovery, drink formatting, roster search and filtering, and four App Store
+screenshot goldens.
+
+**The App Store goldens are regression tests, not marketing assets.** They
+render with placeholder box glyphs and no smiley, so they could never be
+submissions; the real screenshots come from running
+`mobile/tool/app_store_screenshot.dart` on a device. Any UI change breaks all
+four at once — that is expected. Regenerate with `flutter test
+--update-goldens`, then `rm -rf mobile/test/failures` (nothing gitignores it).
+
+### Web — 19 files in `tests/`
+
+Frozen, but must stay green:
 
 - `auth.test.ts`
 - `label-copy.test.ts`
@@ -375,7 +450,7 @@ Local/private:
 ## Suggested first Claude prompt
 
 ```text
-You are taking over the Capture This Coffee repo. Start by reading CLAUDE.md, AGENTS.md, README.md, src/lib/types.ts, src/server/operator/context.ts, src/server/operator/queries.ts, src/app/operator-actions.ts, src/lib/production-share.ts, src/proxy.ts, src/app/productions/[id]/use-coffee-store.ts, src/app/labels/labels-client.tsx, supabase/schema.sql, and the specific files related to my task. This repo uses Next.js 16.2.11, so before editing Next-specific APIs, read the relevant docs in node_modules/next/dist/docs/. Preserve the current NIIMBOT strategy: the CTC Printer iOS app (mobile/) prints to the M2_H over BLE via the public label APIs; /labels PNG/CSV export is the fallback.
+You are taking over the Capture This Coffee repo. The iOS app in mobile/ is the product; the Next.js web app is frozen. Start by reading CLAUDE.md, AGENTS.md, docs/app-first-direction-2026-07-25.md, docs/offline-first-ios-handoff.md, mobile/README.md, mobile/lib/theme.dart, mobile/lib/main.dart, mobile/lib/widgets/, mobile/lib/label_painter.dart, mobile/lib/print_recovery.dart, supabase/schema.sql and supabase/migrations/, plus the specific files for my task. Preserve the printing path: it is proven on real hardware — do not change the niim_blue_flutter pin or printer firmware. If you must touch the frozen web (src/), it uses Next.js 16.2.11, so read node_modules/next/dist/docs/ first; keep npm run test/lint/build green and do not delete web code.
 ```
 
 ## Before handing work back
@@ -387,3 +462,6 @@ Claude should report:
 - Tests run and results.
 - Any unverified assumptions, especially around Supabase, deployment, or physical NIIMBOT printing.
 - Any existing unrelated git changes left untouched.
+- Whether anything was verified on a real device. The simulator has no
+  Bluetooth and no Taptic Engine, so BLE printing and haptics cannot be
+  confirmed there — say so rather than implying coverage.

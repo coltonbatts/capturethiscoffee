@@ -2,6 +2,21 @@
 
 Mobile-first coffee runner app for Capture This production shoots. Put today's people in the roster, collect their drinks, print their labels. Built for fast scanning on set—not internal ops docs.
 
+## Where the product lives
+
+**As of 2026-07-25 the iOS app in [`mobile/`](mobile/README.md) is the product
+and this Next.js app is frozen.** The app prints to the NIIMBOT M2_H directly
+over Bluetooth LE, renders labels on device, and works with no signal.
+
+Frozen means no new features in `src/`, no deleting web code, and keeping
+`npm run test` / `lint` / `build` green. `/run/[id]` in particular stays working
+— it is the zero-install runner board for a PA who will never install
+TestFlight.
+
+Read [`docs/app-first-direction-2026-07-25.md`](docs/app-first-direction-2026-07-25.md)
+before starting work on either half. Web setup and conventions below still apply
+to the frozen surface.
+
 ## Printer handoff
 
 The repository can build the web and iOS release candidates, but a green build
