@@ -81,8 +81,10 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     BoardCacheRepository? boardCacheRepository,
     CtcApiFactory? apiFactory,
     WorkspaceController? workspaceController,
+    OrderMutationOutbox? mutationOutbox,
   })  : _printRecoveryRepository =
             printRecoveryRepository ?? PreferencesPrintRecoveryRepository(),
+        _mutationOutbox = mutationOutbox,
         _workspace = workspaceController ??
             WorkspaceController(
               legacySessionRepository:
@@ -98,6 +100,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   final NiimbotBluetoothClient _client = NiimbotBluetoothClient();
   final PrintRecoveryRepository _printRecoveryRepository;
+  final OrderMutationOutbox? _mutationOutbox;
   final WorkspaceController _workspace;
   final bool _ownsWorkspace;
 
@@ -123,8 +126,14 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> start() async {
     WidgetsBinding.instance.addObserver(this);
     _workspace.addListener(_handleWorkspaceChanged);
-    _printRecoveryLedger =
-        await PrintRecoveryLedger.load(_printRecoveryRepository);
+    final mutationOutbox = _mutationOutbox;
+    if (mutationOutbox == null) {
+      _printRecoveryLedger =
+          await PrintRecoveryLedger.load(_printRecoveryRepository);
+    } else {
+      await mutationOutbox.start();
+      _printRecoveryLedger = SharedPrintRecoveryLedger(mutationOutbox);
+    }
     if (_ownsWorkspace) {
       await _workspace.start();
     }
@@ -420,7 +429,13 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     final currentQueue = queue;
     if (_workspace.servingCachedBoard || currentQueue == null) return;
     final serverConfirmed = currentQueue.labels
-        .where((label) => label.labelPrinted)
+        .where(
+          (label) =>
+              label.labelPrinted &&
+              (_workspace.mode != WorkspaceMode.authenticated ||
+                  _workspace.authenticatedBoard
+                      .isPrintServerConfirmed(label.orderId)),
+        )
         .map((label) => label.orderId);
     await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
     _emit();
@@ -723,10 +738,14 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       await _addEmergencyTextOverlay(page, item, printSize);
     }
 
+    // Persist uncertainty before the first physical packet. If the process is
+    // killed mid-task, the operator must inspect the printer rather than being
+    // offered a duplicate-safe-looking retry.
+    await _recordPrintRecovery(item, PrintRecoveryState.uncertain);
+
     try {
       await _printPage(page);
     } catch (error) {
-      await _recordPrintRecovery(item, PrintRecoveryState.uncertain);
       await _disconnectAfterAmbiguousPrint();
       unawaited(_hapticUncertain());
       _printerStatus = PrinterStatus.error;
@@ -736,7 +755,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
 
-    await _recordPrintRecovery(item, PrintRecoveryState.printedNeedsSync);
+    await _printRecoveryLedger?.markPhysicalPrintConfirmed(item.orderId);
     // Paper is out. The thump lands with the printer's own, so a print is
     // confirmed in the hand as well as on the screen — which matters on a set
     // loud enough that neither is audible.
@@ -802,9 +821,8 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
         state: state,
       ));
     } catch (error) {
-      // The ledger mutates before persistence. Keep the in-memory recovery and
-      // continue to the server sync, which may still complete successfully.
       _logLine('Could not persist print recovery: ${error.runtimeType}.');
+      rethrow;
     } finally {
       _emit();
     }

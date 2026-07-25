@@ -15,6 +15,144 @@ import 'dart:convert';
 import 'drink_format.dart';
 
 const _maximumRosterEntries = 1000;
+const orderTextLimit = 500;
+
+enum OrderField {
+  drinkType('drink_type'),
+  size('size'),
+  temperature('temperature'),
+  milkType('milk_type'),
+  sweetener('sweetener'),
+  caffeine('caffeine'),
+  specialNotes('special_notes'),
+  vendor('vendor'),
+  status('status');
+
+  const OrderField(this.column);
+
+  final String column;
+
+  static OrderField? fromColumn(String column) {
+    for (final field in values) {
+      if (field.column == column) return field;
+    }
+    return null;
+  }
+}
+
+const validOrderStatuses = {
+  'not_asked',
+  'confirmed',
+  'ordered',
+  'picked_up',
+  'delivered',
+  'no_order',
+};
+
+/// A typed, sparse ordinary-order patch.
+///
+/// `label_printed` deliberately cannot appear here. It is a monotonic physical
+/// fact and replays independently from compare-and-swap drink edits.
+class OrderPatch {
+  OrderPatch(Map<OrderField, String> values)
+      : values = Map.unmodifiable(_validatedValues(values));
+
+  factory OrderPatch.capture(BoardOrder order) => OrderPatch({
+        OrderField.drinkType: order.drinkType,
+        OrderField.size: order.size,
+        OrderField.temperature: order.temperature,
+        OrderField.milkType: order.milkType,
+        OrderField.sweetener: order.sweetener,
+        OrderField.caffeine: order.caffeine,
+        OrderField.specialNotes: order.specialNotes,
+        OrderField.vendor: order.vendor,
+        OrderField.status:
+            order.status == 'not_asked' || order.status == 'no_order'
+                ? 'confirmed'
+                : order.status,
+      });
+
+  factory OrderPatch.noDrink() => OrderPatch({OrderField.status: 'no_order'});
+
+  factory OrderPatch.fromJson(Object? value) {
+    if (value is! Map) throw const FormatException('Invalid order patch.');
+    final fields = <OrderField, String>{};
+    for (final entry in value.entries) {
+      final field = OrderField.fromColumn(entry.key.toString());
+      final fieldValue = entry.value;
+      if (field == null || fieldValue is! String) {
+        throw const FormatException('Invalid order patch field.');
+      }
+      fields[field] = fieldValue;
+    }
+    return OrderPatch(fields);
+  }
+
+  final Map<OrderField, String> values;
+
+  bool get isEmpty => values.isEmpty;
+
+  OrderPatch merge(OrderPatch later) =>
+      OrderPatch({...values, ...later.values});
+
+  BoardOrder apply(BoardOrder order) => order.copyWith(
+        drinkType: values[OrderField.drinkType],
+        size: values[OrderField.size],
+        temperature: values[OrderField.temperature],
+        milkType: values[OrderField.milkType],
+        sweetener: values[OrderField.sweetener],
+        caffeine: values[OrderField.caffeine],
+        specialNotes: values[OrderField.specialNotes],
+        vendor: values[OrderField.vendor],
+        status: values[OrderField.status],
+      );
+
+  Map<String, String> toColumns() => {
+        for (final entry in values.entries) entry.key.column: entry.value,
+      };
+
+  Map<String, String> toJson() => toColumns();
+
+  static Map<OrderField, String> snapshot(BoardOrder order) => {
+        OrderField.drinkType: order.drinkType,
+        OrderField.size: order.size,
+        OrderField.temperature: order.temperature,
+        OrderField.milkType: order.milkType,
+        OrderField.sweetener: order.sweetener,
+        OrderField.caffeine: order.caffeine,
+        OrderField.specialNotes: order.specialNotes,
+        OrderField.vendor: order.vendor,
+        OrderField.status: order.status,
+      };
+
+  static bool snapshotMatches(
+    BoardOrder order,
+    Map<OrderField, String> snapshot,
+  ) {
+    final current = OrderPatch.snapshot(order);
+    for (final field in OrderField.values) {
+      if (current[field] != snapshot[field]) return false;
+    }
+    return true;
+  }
+}
+
+Map<OrderField, String> _validatedValues(Map<OrderField, String> values) {
+  final result = <OrderField, String>{};
+  for (final entry in values.entries) {
+    final normalized = entry.value.trim();
+    if (normalized.length > orderTextLimit) {
+      throw FormatException('${entry.key.column} is too long.');
+    }
+    if (entry.key == OrderField.status &&
+        !validOrderStatuses.contains(normalized)) {
+      throw const FormatException('Invalid order status.');
+    }
+    result[entry.key] = normalized;
+  }
+  if (result.isEmpty) throw const FormatException('Order patch is empty.');
+  return result;
+}
 
 class BoardPerson {
   const BoardPerson({
@@ -34,6 +172,16 @@ class BoardPerson {
   final String company;
   final String photoUrl;
   final String usualOrder;
+
+  BoardPerson copyWith({String? usualOrder}) => BoardPerson(
+        id: id,
+        name: name,
+        role: role,
+        department: department,
+        company: company,
+        photoUrl: photoUrl,
+        usualOrder: usualOrder ?? this.usualOrder,
+      );
 
   factory BoardPerson.fromJson(Map<String, dynamic> json) => BoardPerson(
         id: _requiredString(json, 'id'),
@@ -95,6 +243,38 @@ class BoardOrder implements DrinkSummaryOrder {
 
   bool get isCaptured => isOrderCaptured(status);
 
+  bool get isNoDrink => status == 'no_order';
+
+  bool get needsOrder => status == 'not_asked';
+
+  BoardOrder copyWith({
+    String? drinkType,
+    String? size,
+    String? temperature,
+    String? milkType,
+    String? sweetener,
+    String? caffeine,
+    String? specialNotes,
+    String? vendor,
+    String? status,
+    bool? labelPrinted,
+    String? updatedAt,
+  }) =>
+      BoardOrder(
+        id: id,
+        drinkType: drinkType ?? this.drinkType,
+        size: size ?? this.size,
+        temperature: temperature ?? this.temperature,
+        milkType: milkType ?? this.milkType,
+        sweetener: sweetener ?? this.sweetener,
+        caffeine: caffeine ?? this.caffeine,
+        specialNotes: specialNotes ?? this.specialNotes,
+        vendor: vendor ?? this.vendor,
+        status: status ?? this.status,
+        labelPrinted: labelPrinted ?? this.labelPrinted,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
   factory BoardOrder.fromJson(Map<String, dynamic> json) {
     final labelPrinted = json['label_printed'];
     if (labelPrinted is! bool) {
@@ -151,6 +331,19 @@ class BoardRosterEntry {
   /// Null when the roster entry has no order row. The public API never creates
   /// orders, so the app can display these people but cannot capture for them.
   final BoardOrder? order;
+
+  BoardRosterEntry copyWith({
+    BoardPerson? person,
+    BoardOrder? order,
+  }) =>
+      BoardRosterEntry(
+        rosterId: rosterId,
+        groupLabel: groupLabel,
+        onSetToday: onSetToday,
+        sortOrder: sortOrder,
+        person: person ?? this.person,
+        order: order ?? this.order,
+      );
 
   /// `roster.group_label || person.department || "Set"` — the same resolution
   /// `buildPrinterQueue` and `buildCoffeeLabels` apply on the web.
@@ -246,6 +439,45 @@ class ProductionBoard {
   final BoardProduction production;
   final List<BoardRosterEntry> roster;
 
+  BoardOrder? orderById(String orderId) {
+    for (final entry in roster) {
+      if (entry.order?.id == orderId) return entry.order;
+    }
+    return null;
+  }
+
+  BoardRosterEntry? entryByOrderId(String orderId) {
+    for (final entry in roster) {
+      if (entry.order?.id == orderId) return entry;
+    }
+    return null;
+  }
+
+  ProductionBoard replaceOrder(BoardOrder order) => ProductionBoard(
+        production: production,
+        roster: List.unmodifiable([
+          for (final entry in roster)
+            if (entry.order?.id == order.id)
+              entry.copyWith(order: order)
+            else
+              entry,
+        ]),
+      );
+
+  ProductionBoard replacePersonUsual(String personId, String usualOrder) =>
+      ProductionBoard(
+        production: production,
+        roster: List.unmodifiable([
+          for (final entry in roster)
+            if (entry.person.id == personId)
+              entry.copyWith(
+                person: entry.person.copyWith(usualOrder: usualOrder),
+              )
+            else
+              entry,
+        ]),
+      );
+
   factory ProductionBoard.fromJson(Map<String, dynamic> json) {
     // The route wraps the board as { data: ProductionBoardDTO }.
     final envelope = json['data'];
@@ -291,6 +523,52 @@ class ProductionBoard {
       return null;
     }
   }
+}
+
+class BoardProgress {
+  const BoardProgress({
+    required this.total,
+    required this.needsOrder,
+    required this.captured,
+    required this.noDrink,
+    required this.printed,
+  });
+
+  final int total;
+  final int needsOrder;
+  final int captured;
+  final int noDrink;
+  final int printed;
+
+  int get decided => captured + noDrink;
+}
+
+BoardProgress productionBoardProgress(ProductionBoard? board) {
+  var total = 0;
+  var needsOrder = 0;
+  var captured = 0;
+  var noDrink = 0;
+  var printed = 0;
+  for (final entry in board?.roster ?? const <BoardRosterEntry>[]) {
+    if (!entry.onSetToday) continue;
+    total += 1;
+    final order = entry.order;
+    if (order == null || order.needsOrder) {
+      needsOrder += 1;
+    } else if (order.isNoDrink) {
+      noDrink += 1;
+    } else {
+      captured += 1;
+      if (order.labelPrinted) printed += 1;
+    }
+  }
+  return BoardProgress(
+    total: total,
+    needsOrder: needsOrder,
+    captured: captured,
+    noDrink: noDrink,
+    printed: printed,
+  );
 }
 
 class QueueLabel {

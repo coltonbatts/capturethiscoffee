@@ -19,6 +19,7 @@ status change.
 | Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
 | Build-7 offline-first source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on `main` | Verified locally and at `origin/main` before upload; includes on-device label rendering and durable local board caching |
 | Build-9 signed-in source | `47c4405` on `main` | Exact committed Build 9 app source; adds Supabase sign-in, Days, direct authenticated board access, per-user caching, and direct printed-status sync |
+| Build-10 implementation source | Local working tree from `6e54cc5` | Collect, optimistic shared board, durable conditional outbox, explicit conflicts, Realtime refresh signal, and monotonic printed-fact migration implemented; no archive, upload, production migration, or production-data write |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -134,6 +135,31 @@ Build 8 is now consumed and must not be reused.
 Build 9 is now consumed and must not be reused. Any shipping-code or embedded
 metadata change requires build 10 or higher.
 
+## Build 10 local implementation status
+
+Build 10 is currently implementation source plus automated evidence only. It is
+versioned `1.0.0 (10)`, but no archive or IPA has been produced and nothing has
+been uploaded. Packaging is deliberately blocked by the incomplete Build 9
+physical exit gate.
+
+The focused Build 10 tests cover:
+
+- complete-roster Collect states and optimistic Collect-to-Print updates;
+- durable coalescing order intent across simulated force-quit;
+- three offline captures plus two print facts replaying once after reconnect;
+- no second replay on a later refresh;
+- a competing server edit producing a visible conflict without overwrite;
+- printed-fact replay continuing despite an ordinary-field conflict;
+- local printed overlays not being mistaken for server confirmation;
+- active-only replay and debounced Realtime-triggered authoritative refresh.
+
+The monotonic printed-fact migration exists locally at
+`supabase/migrations/20260725120000_preserve_printed_order_facts.sql`. It has not
+been applied to production. A clean disposable local Supabase 2.109.1 stack
+verified the migration, authenticated RLS, stale-write refusal, monotonic
+printed facts, and the filtered `public.orders` Realtime signal. Application
+and verification in the intended private project remain pending.
+
 ## Automated verification
 
 | Check | Result |
@@ -152,6 +178,11 @@ metadata change requires build 10 or higher.
 | `flutter analyze` (build 9) | Passed, no issues |
 | `flutter test` (build 9) | 140/140 passed, including authenticated flow, user-scoped cache, direct-board adaptation, legacy fallback, and label goldens |
 | `flutter build ipa --release --export-options-plist=ios/ExportOptions.plist` with reviewed Supabase Dart defines (build 9) | Passed; archive and IPA report `1.0.0 (9)`, local IPA is 22,894,208 bytes |
+| `flutter analyze` (Build 10 local source) | Passed, no issues |
+| `flutter test` (Build 10 local source) | 158/158 passed, including Collect, serialized durable outbox writes, relaunch/replay, conflict, Realtime-signal, and monotonic print recovery coverage |
+| Frozen-web regressions with Build 10 local source | `npm test` 105/105, `npm run lint`, `npm run build`, and `npm run verify:niimbot-export` passed |
+| Clean disposable local Supabase verification | Passed: anonymous RLS refusal, authenticated read/write, successful then stale order and usual-order CAS, irreversible `label_printed: true`, and filtered authenticated Realtime update; production untouched |
+| Build 10 archive / IPA / upload | Not run; blocked by the incomplete Build 9 physical exit gate |
 | `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
 
 The build-6 IPA was inspected for version/build, bundle ID, iPhone-only device family,

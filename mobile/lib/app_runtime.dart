@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'auth_repository.dart';
+import 'board_controller.dart';
 import 'printer_controller.dart';
 import 'session_controller.dart';
 import 'supabase_config.dart';
@@ -26,6 +27,8 @@ class AppRuntime extends ChangeNotifier {
   final SessionController session;
   final WorkspaceController workspace;
   final PrinterController printer;
+
+  BoardController get board => workspace.authenticatedBoard;
 
   bool _disposed = false;
   bool _started = false;

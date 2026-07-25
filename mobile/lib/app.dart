@@ -11,6 +11,7 @@ import 'print_recovery.dart';
 import 'printer_controller.dart';
 import 'screens/about_screen.dart';
 import 'screens/configuration_screen.dart';
+import 'screens/collect_screen.dart';
 import 'screens/days_screen.dart';
 import 'screens/help_sheet.dart';
 import 'screens/home_screen.dart';
@@ -39,6 +40,7 @@ class PrinterApp extends StatefulWidget {
     this.selectedDayRepository,
     this.sessionRepository,
     this.printRecoveryRepository,
+    this.orderMutationOutboxRepository,
     this.boardCacheRepository,
     this.apiFactory,
     this.legacyTestMode,
@@ -55,6 +57,7 @@ class PrinterApp extends StatefulWidget {
   // the exact former root behavior.
   final SessionRepository? sessionRepository;
   final PrintRecoveryRepository? printRecoveryRepository;
+  final OrderMutationOutboxRepository? orderMutationOutboxRepository;
   final BoardCacheRepository? boardCacheRepository;
   final CtcApiFactory? apiFactory;
   final bool? legacyTestMode;
@@ -82,9 +85,16 @@ class _PrinterAppState extends State<PrinterApp> {
         (widget.sessionRepository != null ||
             widget.boardCacheRepository != null ||
             widget.apiFactory != null);
+    final mutationOutbox = OrderMutationOutbox(
+      widget.orderMutationOutboxRepository ??
+          (production != null
+              ? PreferencesOrderMutationOutboxRepository()
+              : MemoryOrderMutationOutboxRepository()),
+    );
 
     final workspace = WorkspaceController(
       repository: workspaceRepository,
+      mutationOutbox: mutationOutbox,
       authenticatedCacheRepository: widget.authenticatedBoardCacheRepository,
       selectedDayRepository: widget.selectedDayRepository,
       legacySessionRepository: widget.sessionRepository,
@@ -95,6 +105,8 @@ class _PrinterAppState extends State<PrinterApp> {
     final printer = PrinterController(
       workspaceController: workspace,
       printRecoveryRepository: widget.printRecoveryRepository,
+      mutationOutbox:
+          widget.printRecoveryRepository == null ? mutationOutbox : null,
     );
     _runtime = AppRuntime(
       configuration: configuration,
@@ -122,6 +134,7 @@ class _PrinterAppState extends State<PrinterApp> {
         home: const RootScreen(),
         routes: {
           DaysScreen.route: (_) => const DaysScreen(popAfterSelection: true),
+          CollectScreen.route: (_) => const CollectScreen(),
           PrintScreen.route: (_) => const PrintScreen(),
           RosterScreen.route: (_) => const RosterScreen(),
           RecoveryScreen.route: (_) => const RecoveryScreen(),

@@ -28,6 +28,7 @@ permanent target is an approved unlisted App Store link.
 | Build 9 committed source | `47c4405` (`Ship Build 9 signed-in day selection`) |
 | Build 9 uploaded/processed | Uploaded at 3:46 PM CDT on 2026-07-25; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
 | Build 9 internal availability | Assigned to internal group `Main` with one invite; locally signed release launch, signed-in day loading, and one physical M2_H reprint passed |
+| Build 10 local implementation | `1.0.0 (10)` source implemented from `6e54cc5`; Flutter 158/158, frozen-web 105/105 plus lint/build, and clean disposable local-Supabase RLS/CAS/printed-fact/Realtime verification passed; no archive, upload, or production migration |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -46,6 +47,10 @@ measurements, printer identity and firmware, batch behavior, interruption
 recovery, synchronization, cold-cup adhesion, and Luke's independent run still
 need the record in `docs/physical-release-test.md`.
 
+Build 10 must not be packaged or uploaded until that Build 9 gate is complete.
+Afterward it also needs the physical seven-step acceptance in
+`docs/build-10-implementation-2026-07-25.md` against a disposable fixture.
+
 ## Before upload
 
 1. Record owner approval of the already-live privacy/support wording.
@@ -56,9 +61,26 @@ need the record in `docs/physical-release-test.md`.
    `docs/physical-release-test.md`.
 5. Confirm App Store name is **Capture This** and upload screenshots containing
    only fictional data.
-6. Confirm source, archive, IPA, and App Store Connect all say
-   `1.0.0 (9)`. If any code, embedded metadata, or print constants change after
-   upload, bump to build 10 or higher and rebuild.
+6. For a future Build 10 upload, confirm source, archive, IPA, and App Store
+   Connect all say `1.0.0 (10)`. Do not create that archive until the Build 9
+   physical exit gate and Build 10 disposable-fixture acceptance are recorded.
+
+## Build 10 — what to test after the packaging gate opens
+
+- Load one existing Active production while online.
+- Enable airplane mode, force-quit, and cold-start from the authenticated cache.
+- Capture at least three orders; verify Collect progress and Print update
+  immediately.
+- Print at least two labels on the accepted M2_H and stock.
+- Force-quit with all mutations still pending, then relaunch offline.
+- Restore connectivity and verify every ordinary field and both monotonic
+  printed facts in Supabase, with no replay on a second refresh.
+- Make a competing edit from the frozen web/server surface and verify the phone
+  displays the local and server versions, stops, and requires an explicit
+  resolution.
+- Verify planning/complete days retain pending work but refuse replay and
+  physical printing.
+- Verify **Legacy link** remains functional.
 
 ## Build 9 — what to test
 

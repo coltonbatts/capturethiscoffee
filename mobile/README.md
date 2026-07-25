@@ -2,11 +2,11 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. Build 9 signs an
-owner-provisioned operator into Supabase, lists existing days, reads the selected
-board directly through authenticated RLS, and reports `label_printed` directly
-to Supabase. The Build 8 share-token path remains under **Legacy link** for this
-migration build.
+(`lib/label_painter.dart`) so printing never needs a signal. Build 10 signs an
+owner-provisioned operator into Supabase, loads an existing day, collects and
+edits orders from its complete roster, and durably queues order and physical
+print facts while offline. The Build 8 share-token path remains under
+**Legacy link** as the maintained fallback.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -23,12 +23,15 @@ frozen. See
    There is no public signup.
 2. Choose an existing Active day on **Days**. Planning and Complete days remain
    visible, but physical printing is paused unless the selected day is Active.
-3. **Connect printer** (force-quit the official NIIMBOT app first).
-4. Work the **deck**: it shows the next label at real size with one action —
+3. Open **Collect**. Accept a usual, take or edit an order, mark no-drink, and
+   optionally save the result as that person's usual. Local edits appear in
+   Collect and Print immediately and survive an offline relaunch.
+4. **Connect printer** (force-quit the official NIIMBOT app first).
+5. Work the **deck**: it shows the next label at real size with one action —
    **Print this label**. The app renders on device, prints, then marks
    `label_printed` through authenticated Supabase RLS. **Print all** runs the
    whole pending queue and stops on the first failure.
-5. To print someone out of order, find them in the **roster** below the deck and
+6. To print someone out of order, find them in the **roster** below the deck and
    tap the print icon on their row.
 
 If account access is unavailable during migration, choose **Legacy link** from
@@ -45,6 +48,7 @@ by separate session, workspace, and printer controllers.
 | **Sign in** (`lib/screens/sign_in_screen.dart`) | root state | Owner-provisioned email/password only; no signup. |
 | **Days** (`lib/screens/days_screen.dart`) | root or `/days` | Active, planning, and complete days with capture/print progress. Selects and restores a day. |
 | **Home** (`lib/screens/home_screen.dart`) | — | Where you land and return to. The mark, the day, and one entry per destination, each carrying its own state. |
+| **Collect** (`lib/screens/collect_screen.dart`) | `/collect` | Complete on-set roster with needs-order, captured, no-drink, pending-sync, setup-needed, and conflict states. |
 | **Deck** (`lib/screens/print_screen.dart`) | `/print` | Production name, sync age, labels-left, the next label, and one action. |
 | **Roster** (`lib/screens/roster_screen.dart`) | `/roster` | Search, To print / Printed / All with counts, dense rows that expand in place. |
 | **Unresolved** (`lib/screens/recovery_screen.dart`) | `/recovery` | The only place a print outcome can be resolved. |
@@ -91,6 +95,14 @@ anon key, and the user's session. Typed repositories read `productions`,
 into the same `ProductionBoard` used by the Build 8 roster, print queue, cache,
 preview, and label renderer. It makes no request to `/api/public/*`.
 
+`BoardController` owns the authenticated server board plus its optimistic
+outbox projection. Collect, Print, Home progress, cache, polling, and
+Realtime-triggered refreshes all use that one projected board. Ordinary order
+changes replay with a sparse update conditioned on the `updated_at` observed
+before the first local edit. A mismatch becomes a visible conflict. Realtime is
+only a signal to refetch; polling, resume, pull-to-refresh, and manual sync
+remain authoritative fallback paths.
+
 The following endpoints are retained only for **Legacy link** and the frozen web
 fallback:
 
@@ -119,6 +131,12 @@ day is also stored per user. A cold start with no signal restores the Keychain
 session, selected day, and cached roster immediately; printing works because
 labels render on device. Signing out removes the board from memory, and a
 different account can read only its own selected-day pointer and cached boards.
+
+Order changes and print facts share a durable, coalescing per-order outbox.
+Outbox records retain the first observed server revision, survive force-quit,
+and are overlaid on the cached board at cold start. Ordinary fields stop on a
+visible conflict. Confirmed `label_printed` facts replay independently and are
+not retired merely because the optimistic board displays them.
 
 The Legacy link cache remains in `lib/board_cache.dart`, scoped to `apiBase` +
 `productionId`, and is cleared when that production is unlinked.
@@ -182,7 +200,7 @@ flutter run \
 ```
 
 Use the same defines with `flutter build ipa`. Never provide the service-role or
-`sb_secret_…` key; Build 9 rejects it and shows a sanitized setup state.
+`sb_secret_…` key; the app rejects it and shows a sanitized setup state.
 
 ### 1. Install Flutter (~10 min)
 
@@ -297,6 +315,9 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
   direct Supabase data access. What the physical print baseline exists to test
   is in
   [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
+- Local Build 10 source uses `1.0.0+10`, but packaging and upload are blocked
+  until the Build 9 physical exit gate is complete. See
+  [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
 - Bump the build suffix for every later upload (`1.0.0+10`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store

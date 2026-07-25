@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'authenticated_workspace_cache.dart';
+import 'board_controller.dart';
 import 'board_cache.dart';
 import 'ctc_api.dart';
+import 'print_recovery.dart';
 import 'production_board.dart';
 import 'production_session.dart';
 import 'session_store.dart';
@@ -30,6 +32,8 @@ enum WorkspaceMode {
 class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
   WorkspaceController({
     WorkspaceRepository? repository,
+    BoardController? boardController,
+    OrderMutationOutbox? mutationOutbox,
     AuthenticatedBoardCacheRepository? authenticatedCacheRepository,
     SelectedDayRepository? selectedDayRepository,
     SessionRepository? legacySessionRepository,
@@ -37,18 +41,28 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     LegacyApiFactory? legacyApiFactory,
     this.legacyTestMode = false,
   })  : _repository = repository,
-        _authenticatedCacheRepository = authenticatedCacheRepository ??
-            PreferencesAuthenticatedBoardCacheRepository(),
+        _boardController = boardController ??
+            BoardController(
+              repository: repository,
+              cacheRepository: authenticatedCacheRepository ??
+                  PreferencesAuthenticatedBoardCacheRepository(),
+              outbox: mutationOutbox ??
+                  OrderMutationOutbox(
+                    MemoryOrderMutationOutboxRepository(),
+                  ),
+            ),
         _selectedDayRepository =
             selectedDayRepository ?? PreferencesSelectedDayRepository(),
         _legacySessionRepository =
             legacySessionRepository ?? KeychainSessionRepository(),
         _legacyCacheRepository =
             legacyCacheRepository ?? PreferencesBoardCacheRepository(),
-        _legacyApiFactory = legacyApiFactory ?? CtcApi.new;
+        _legacyApiFactory = legacyApiFactory ?? CtcApi.new {
+    _boardController.addListener(_handleAuthenticatedBoardChanged);
+  }
 
   final WorkspaceRepository? _repository;
-  final AuthenticatedBoardCacheRepository _authenticatedCacheRepository;
+  final BoardController _boardController;
   final SelectedDayRepository _selectedDayRepository;
   final SessionRepository _legacySessionRepository;
   final BoardCacheRepository _legacyCacheRepository;
@@ -75,6 +89,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
   int _generation = 0;
 
   WorkspaceMode get mode => _mode;
+  BoardController get authenticatedBoard => _boardController;
   String? get userId => _userId;
   List<DaySummary> get days => _days;
   GroupedDays get groupedDays => groupDays(_days);
@@ -88,17 +103,30 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     return null;
   }
 
-  ProductionBoard? get board => _board;
-  PrinterQueue? get queue => _queue;
+  ProductionBoard? get board =>
+      _mode == WorkspaceMode.authenticated ? _boardController.board : _board;
+  PrinterQueue? get queue =>
+      _mode == WorkspaceMode.authenticated ? _boardController.queue : _queue;
   ProductionSession? get legacySession => _legacySession;
   bool get hasLegacySession => _legacySession != null;
   bool get loadingLegacy => _loadingLegacy;
   bool get loadingDays => _loadingDays;
-  bool get busy => _busy;
-  String? get error => _error;
-  DateTime? get lastSyncedAt => _lastSyncedAt;
-  bool get servingCachedBoard => _servingCachedBoard;
-  String? get boardUnavailableReason => _boardUnavailableReason;
+  bool get busy => _busy || _boardController.busy;
+  String? get error =>
+      _error ??
+      (_mode == WorkspaceMode.authenticated ? _boardController.error : null);
+  DateTime? get lastSyncedAt => _mode == WorkspaceMode.authenticated
+      ? _boardController.lastSyncedAt
+      : _lastSyncedAt;
+  bool get servingCachedBoard => _mode == WorkspaceMode.authenticated
+      ? _boardController.servingCachedBoard
+      : _servingCachedBoard;
+  String? get boardUnavailableReason => _mode == WorkspaceMode.authenticated
+      ? _boardController.boardUnavailableReason
+      : _boardUnavailableReason;
+  String? get syncBlockedReason => _mode == WorkspaceMode.authenticated
+      ? _boardController.syncBlockedReason
+      : null;
 
   String? get productionId => switch (_mode) {
         WorkspaceMode.authenticated => _selectedDayId,
@@ -114,31 +142,31 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
       };
 
   bool get hasSelectedBoard =>
-      productionId != null && _board != null && _queue != null;
+      productionId != null && board != null && queue != null;
 
   static const staleBoardThreshold = Duration(minutes: 10);
 
   bool get boardIsStale {
-    if (_boardUnavailableReason != null) return false;
-    final syncedAt = _lastSyncedAt;
-    if (syncedAt == null || !_servingCachedBoard) return false;
+    if (boardUnavailableReason != null) return false;
+    final syncedAt = lastSyncedAt;
+    if (syncedAt == null || !servingCachedBoard) return false;
     return DateTime.now().difference(syncedAt) >= staleBoardThreshold;
   }
 
   String? get boardAgeLabel {
-    final syncedAt = _lastSyncedAt;
+    final syncedAt = lastSyncedAt;
     return syncedAt == null ? null : _ageLabel(syncedAt);
   }
 
   String get syncStatusLabel {
-    final syncedAt = _lastSyncedAt;
+    final syncedAt = lastSyncedAt;
     if (syncedAt == null) return 'Not synced yet';
-    if (_servingCachedBoard) return 'Offline · synced ${_ageLabel(syncedAt)}';
+    if (servingCachedBoard) return 'Offline · synced ${_ageLabel(syncedAt)}';
     return 'Synced ${_timeLabel(syncedAt)}';
   }
 
   String? get productionStatusLabel {
-    final current = _queue;
+    final current = queue;
     if (current == null || current.isProductionActive) return null;
     return 'Production ${current.productionStatus}';
   }
@@ -172,7 +200,8 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _userId = userId;
     _days = const [];
     _selectedDayId = null;
-    _clearBoard();
+    _boardController.deactivate();
+    _clearLegacyBoard();
     _loadingDays = true;
     _error = null;
     _emit();
@@ -182,25 +211,15 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
       if (!_isCurrent(generation, userId)) return;
       _selectedDayId = selected;
       if (selected != null) {
-        final cached = await _authenticatedCacheRepository.read(
+        await _boardController.activate(
           userId: userId,
           productionId: selected,
         );
         if (!_isCurrent(generation, userId)) return;
-        if (cached != null) {
-          _applyBoard(
-            cached.board,
-            syncedAt: cached.syncedAt,
-            fromCache: true,
-          );
-        }
       }
 
       await refreshDays(silent: true);
       if (!_isCurrent(generation, userId)) return;
-      if (_selectedDayId != null) {
-        await refreshBoard(silent: true);
-      }
     } finally {
       if (_isCurrent(generation, userId)) {
         _loadingDays = false;
@@ -220,7 +239,8 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _loadingDays = false;
     _busy = false;
     _error = null;
-    _clearBoard();
+    _boardController.deactivate();
+    _clearLegacyBoard();
     _emit();
   }
 
@@ -232,11 +252,11 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _busy = true;
     _error = null;
     _selectedDayId = productionId;
-    _clearBoard();
+    _boardController.deactivate();
     _emit();
     try {
       await _selectedDayRepository.write(userId, productionId);
-      final cached = await _authenticatedCacheRepository.read(
+      await _boardController.activate(
         userId: userId,
         productionId: productionId,
       );
@@ -245,15 +265,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
           _selectedDayId != productionId) {
         return false;
       }
-      if (cached != null) {
-        _applyBoard(
-          cached.board,
-          syncedAt: cached.syncedAt,
-          fromCache: true,
-        );
-      }
-      await refreshBoard(silent: true);
-      return _board != null;
+      return board != null;
     } finally {
       _busy = false;
       _emit();
@@ -315,28 +327,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _refreshAuthenticatedBoard() async {
-    final repository = _repository;
-    final userId = _userId;
-    final productionId = _selectedDayId;
-    if (repository == null || userId == null || productionId == null) return;
-    final board = await repository.fetchBoard(productionId);
-    if (_mode != WorkspaceMode.authenticated ||
-        _userId != userId ||
-        _selectedDayId != productionId) {
-      return;
-    }
-    final syncedAt = DateTime.now();
-    _applyBoard(board, syncedAt: syncedAt);
-    try {
-      await _authenticatedCacheRepository.write(AuthenticatedCachedBoard(
-        userId: userId,
-        productionId: productionId,
-        syncedAt: syncedAt,
-        board: board,
-      ));
-    } catch (_) {
-      // Cache failure degrades only the next cold start.
-    }
+    await _boardController.refresh(silent: true);
   }
 
   Future<void> _refreshLegacyBoard() async {
@@ -367,10 +358,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
         if (repository == null || productionId == null) {
           throw StateError('No authenticated day is selected.');
         }
-        await repository.markLabelPrinted(
-          productionId: productionId,
-          orderId: orderId,
-        );
+        await _boardController.ensureLabelPrinted(orderId);
       case WorkspaceMode.legacy:
         final api = _legacyApi;
         if (api == null) throw StateError('No legacy production is linked.');
@@ -386,6 +374,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _userId = null;
     _days = const [];
     _selectedDayId = null;
+    _boardController.deactivate();
     _mode = WorkspaceMode.legacy;
     final session = _legacySession;
     if (session != null) {
@@ -400,7 +389,8 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _legacyApi?.close();
     _legacyApi = null;
     _mode = WorkspaceMode.none;
-    _clearBoard();
+    _boardController.deactivate();
+    _clearLegacyBoard();
     _error = null;
     _emit();
   }
@@ -451,14 +441,15 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _legacyApi = null;
     _legacySession = null;
     _mode = WorkspaceMode.legacy;
-    _clearBoard();
+    _clearLegacyBoard();
     _error = null;
     _emit();
   }
 
   void dismissError() {
-    if (_error == null) return;
+    if (_error == null && _boardController.error == null) return;
     _error = null;
+    _boardController.dismissError();
     _emit();
   }
 
@@ -528,12 +519,17 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _emit();
   }
 
-  void _clearBoard() {
+  void _clearLegacyBoard() {
     _board = null;
     _queue = null;
     _lastSyncedAt = null;
     _servingCachedBoard = false;
     _boardUnavailableReason = null;
+  }
+
+  void _handleAuthenticatedBoardChanged() {
+    if (_disposed || _mode != WorkspaceMode.authenticated) return;
+    _emit();
   }
 
   bool _isCurrent(int generation, String userId) =>
@@ -593,6 +589,8 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _stopRefreshTimer();
     _legacyApi?.close();
+    _boardController.removeListener(_handleAuthenticatedBoardChanged);
+    _boardController.dispose();
     super.dispose();
   }
 }

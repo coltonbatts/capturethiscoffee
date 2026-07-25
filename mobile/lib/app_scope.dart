@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_runtime.dart';
+import 'board_controller.dart';
 import 'printer_controller.dart';
 import 'session_controller.dart';
 import 'workspace_controller.dart';
@@ -33,6 +34,9 @@ class PrinterScope extends InheritedNotifier<AppRuntime> {
 
   static WorkspaceController workspaceOf(BuildContext context) =>
       runtimeOf(context).workspace;
+
+  static BoardController boardOf(BuildContext context) =>
+      runtimeOf(context).board;
 
   static SessionController sessionOf(BuildContext context) =>
       runtimeOf(context).session;

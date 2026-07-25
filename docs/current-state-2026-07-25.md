@@ -1,4 +1,4 @@
-# Capture This current state — Build 9 boundary
+# Capture This current state — Build 10 implementation
 
 Last updated: 2026-07-25
 
@@ -27,6 +27,12 @@ remain available when the app or printer path is unavailable.
   day, and completed one physical M2_H reprint.
 - Build 9 is consumed. Any shipping-code or embedded-metadata change must use
   build 10 or later.
+- Build 10 implementation started from clean `main` at `6e54cc5`. It is local
+  source and automated evidence only: no Build 10 archive has been packaged,
+  no migration has been applied to production, and no binary has been uploaded.
+- Build 10 architecture, vertical slices, acceptance tests, and release
+  blockers are recorded in
+  `docs/build-10-implementation-2026-07-25.md`.
 
 ## What Build 9 can do
 
@@ -65,10 +71,10 @@ The current iOS **Roster** is a printable-label roster. People who still need an
 order are present in the cached board model but do not yet have an operating
 surface.
 
-## Build 9 exit gate
+## Build 9 exit gate — still blocking Build 10 packaging
 
-Do not begin Build 10 shipping work until the following Build 9 checks are
-recorded:
+Do not package or upload Build 10 until the following Build 9 checks are
+recorded. Local implementation and automated testing may continue:
 
 1. Online sign-in and selected-day restoration after force-quit.
 2. Airplane-mode cold start from an authenticated cached day.
@@ -115,6 +121,14 @@ Acceptance:
 5. Restore signal.
 6. Verify every order field and both printed facts reach Supabase exactly once.
 7. Create a competing web edit and verify the app stops on a visible conflict.
+
+The local Build 10 implementation now covers this workflow in app/controller
+tests, including three offline captures, two durable print facts, relaunch,
+single replay, and a competing-edit conflict. A clean disposable local Supabase
+stack also verifies authenticated RLS, conditional stale-write refusal,
+irreversible printed facts, and the filtered Realtime signal. The physical
+device run and intended non-production-project acceptance remain required;
+automated fakes and local database checks are not physical release evidence.
 
 ## Later builds
 
@@ -170,6 +184,8 @@ Read these in order:
 4. `mobile/README.md` — current app architecture and operating details.
 5. `docs/release-evidence-1.0.0.md` — verified artifact and release evidence.
 6. `docs/testflight-checklist.md` — physical/internal/external pilot gates.
+7. `docs/build-10-implementation-2026-07-25.md` — Build 10 architecture,
+   decisions, vertical slices, and implementation evidence.
 
 Older web-first strategy and operating documents are historical unless their
 opening status note says they have been reconciled with this boundary.

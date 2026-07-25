@@ -150,6 +150,23 @@ before update on orders
 for each row
 execute function set_updated_at();
 
+create or replace function public.preserve_order_label_printed()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.label_printed = old.label_printed or new.label_printed;
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_preserve_label_printed on orders;
+create trigger orders_preserve_label_printed
+before update of label_printed on orders
+for each row
+execute function preserve_order_label_printed();
+
 alter table clients enable row level security;
 alter table people enable row level security;
 alter table client_people enable row level security;

@@ -1,4 +1,4 @@
-// Capture This — Build 9.
+// Capture This — Build 10.
 //
 // Production startup only: initialize public Supabase configuration, then
 // hand the resulting repositories to the app shell.

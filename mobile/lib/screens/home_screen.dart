@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import '../app_scope.dart';
 import '../confirmations.dart';
 import '../printer_controller.dart';
+import '../production_board.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/motion.dart';
@@ -25,6 +26,7 @@ import '../widgets/print_deck.dart';
 import '../widgets/status_banners.dart';
 import '../workspace_controller.dart';
 import 'about_screen.dart';
+import 'collect_screen.dart';
 import 'days_screen.dart';
 import 'help_sheet.dart';
 import 'print_screen.dart';
@@ -50,6 +52,7 @@ String printEntryDestination(DeckBlock block) =>
 /// the print entry reads "3 labels to print" or "Print labels" depending on the
 /// queue, and a test that matched on that would be asserting the wrong thing.
 const rosterEntryKey = Key('home-roster-entry');
+const collectEntryKey = Key('home-collect-entry');
 const recoveryEntryKey = Key('home-recovery-entry');
 const printEntryKey = Key('home-print-entry');
 const printerEntryKey = Key('home-printer-entry');
@@ -62,12 +65,16 @@ class HomeScreen extends StatelessWidget {
     final runtime = PrinterScope.runtimeOf(context);
     final controller = PrinterScope.of(context);
     final recoveries = controller.currentRecoveryRecords;
+    final progress = productionBoardProgress(runtime.workspace.board);
+    final boardController = runtime.board;
 
     // Everything printed, nothing outstanding. The one moment the app gets to
     // be pleased with itself.
-    final finished = controller.totalCount > 0 &&
+    final finished = progress.total > 0 &&
+        progress.needsOrder == 0 &&
         controller.pendingLabels.isEmpty &&
-        recoveries.isEmpty;
+        recoveries.isEmpty &&
+        !boardController.hasPendingMutations;
 
     var step = 0;
 
@@ -120,6 +127,32 @@ class HomeScreen extends StatelessWidget {
                       StaleBoardNotice(controller: controller),
                       const SizedBox(height: 12),
                     ],
+                    CascadeIn(
+                      delay: CascadeIn.step(step++),
+                      child:
+                          runtime.workspace.mode == WorkspaceMode.authenticated
+                              ? _MenuCard(
+                                  key: collectEntryKey,
+                                  icon: Icons.local_cafe_outlined,
+                                  title: 'Collect',
+                                  detail: _collectDetail(
+                                    progress,
+                                    boardController.pendingMutationCount,
+                                    boardController.conflictCount,
+                                  ),
+                                  trailing: boardController.conflictCount > 0
+                                      ? const Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: CaptureColors.danger,
+                                        )
+                                      : null,
+                                  onTap: () => Navigator.of(context)
+                                      .pushNamed(CollectScreen.route),
+                                )
+                              : const SizedBox.shrink(),
+                    ),
+                    if (runtime.workspace.mode == WorkspaceMode.authenticated)
+                      const SizedBox(height: 10),
                     CascadeIn(
                       delay: CascadeIn.step(step++),
                       child: _PrintEntry(controller: controller),
@@ -178,6 +211,19 @@ class HomeScreen extends StatelessWidget {
     final people = '$total ${total == 1 ? 'person' : 'people'}';
     if (pending == 0) return '$people · every label printed';
     return '$people · $pending to print';
+  }
+
+  String _collectDetail(
+    BoardProgress progress,
+    int pending,
+    int conflicts,
+  ) {
+    if (conflicts > 0) {
+      return '$conflicts ${conflicts == 1 ? 'conflict needs' : 'conflicts need'} review';
+    }
+    final base =
+        '${progress.decided} of ${progress.total} decided · ${progress.needsOrder} need orders';
+    return pending == 0 ? base : '$base · $pending pending';
   }
 }
 

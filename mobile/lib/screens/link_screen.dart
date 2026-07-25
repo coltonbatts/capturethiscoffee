@@ -1,4 +1,4 @@
-// The Build 8 share-link flow, retained as Build 9's migration fallback.
+// The Build 8 share-link flow, retained as Build 10's fallback.
 //
 // This is not pushed as a route. It is what the root shows when there is no
 // session, so there is nothing to navigate back to — an operator with no linked
