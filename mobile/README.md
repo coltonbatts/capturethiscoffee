@@ -1,10 +1,17 @@
 # Capture This — NIIMBOT M2_H BLE (iPhone)
 
-Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered server-side by the Next.js app and fetched with the same production share-token auth the runner board uses.
+Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
+over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
+(`lib/label_painter.dart`) so printing never needs a signal; the app reaches the
+server only to read the board and report `label_printed`, using the same
+production share-token auth the runner board uses.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
 [`docs/HANDOFF.md`](../docs/HANDOFF.md).
+
+As of 2026-07-25 this app is the product's primary surface and the web is
+frozen. See [`docs/app-first-direction-2026-07-25.md`](../docs/app-first-direction-2026-07-25.md).
 
 ## Primary on-set workflow
 
@@ -14,8 +21,36 @@ recovery rules. The complete role-based handoff packet starts at
 2. Open the **runner share link** on the production board (URL shape: `https://…/run/{id}?token=…`; legacy `/productions/{id}` links also work during migration).
 3. On the iPhone, open **Capture This** → paste that full URL → **Link production**.
 4. **Connect printer** (force-quit the official NIIMBOT app first).
-5. Tap **Print** on each label in the queue. The app renders the label on device, prints, then marks `label_printed` via the public order PATCH route.
-6. Use **Refresh** after runner-board changes. Toggle the chip to show already-printed labels.
+5. Work the **deck**: it shows the next label at real size with one action —
+   **Print this label**. The app renders on device, prints, then marks
+   `label_printed` via the public order PATCH route. **Print all** runs the
+   whole pending queue and stops on the first failure.
+6. To print someone out of order, find them in the **roster** below the deck and
+   tap the print icon on their row.
+
+## Screen structure
+
+One scrolling surface, ordered so the most-repeated action is first and
+everything else appears only when it matters.
+
+| Surface | What it is |
+|---|---|
+| **Deck** (`lib/widgets/print_deck.dart`) | The primary surface. Production name, sync age, labels-left count, the next label, and one action. |
+| **Label preview** (`lib/widgets/label_preview.dart`) | Calls the same `renderLabelImage` the print path uses, so the preview cannot drift from the paper. |
+| **Roster** (`lib/widgets/roster_section.dart`) | Search plus To print / Printed / All. Compact rows; rows needing a decision expand with their full explanation. |
+| Exceptions | Error banner, paused-production explanation, and print recovery render only when they apply. |
+| Diagnostics | Recent activity, collapsed. |
+
+The deck answers "can I print right now?" in its own button rather than making
+the operator assemble that from separate status cards. Blocking reasons are
+ordered by fixability: disconnected → production not active → recovery pending.
+
+Design tokens live in `lib/theme.dart` and mirror the web's `--capture-*`
+custom properties: cream paper `#F7F3EA`, ink `#050505`, hairline rules, and
+yellow `#F2EB0C` at full strength on exactly one action per screen. The smiley
+in `lib/widgets/brand_mark.dart` is byte-identical to the web's
+`public/capture-this-smiley.png`; there is no vector source, so animate it as a
+whole object and never trace it.
 
 The linked production token is stored in the iOS Keychain. If the physical
 print succeeds but the server update fails, use **Sync only**; do not print the
@@ -193,11 +228,11 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Existing TestFlight pilot: `1.0.0+5`.
-- Next handoff candidate: `1.0.0+6`. Its signed App Store IPA was built and
-  inspected locally; it must be uploaded and physically accepted before
-  replacing build 5.
-- Bump the build suffix for every later upload (`1.0.0+7`, `1.0.0+8`, …).
+- Builds 5, 6, and 7 are uploaded and **consumed**; none may be reused.
+- Current source is `1.0.0+8`, bumped for the UI rework and not yet built or
+  uploaded. What it exists to test is in
+  [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
+- Bump the build suffix for every later upload (`1.0.0+9`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.

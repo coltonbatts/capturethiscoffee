@@ -39,8 +39,117 @@ class _PlanningApi extends CtcApi {
   void close() {}
 }
 
+const _rosterSession = ProductionSession(
+  apiBase: 'https://coffee.capturethis.com',
+  productionId: 'roster-production',
+  token: 'fixture-token',
+);
+
+class _RosterApi extends CtcApi {
+  _RosterApi(super.session);
+
+  @override
+  Future<ProductionBoard> fetchBoard() async => boardFixture(
+        name: 'Roster Day',
+        status: 'active',
+        productionId: 'roster-production',
+        roster: [
+          boardEntry(
+            orderId: 'order-maya',
+            personName: 'Maya Rodriguez',
+            drink: 'Oat flat white',
+            group: 'Camera',
+            sortOrder: 1,
+          ),
+          boardEntry(
+            orderId: 'order-jonah',
+            personName: 'Jonah Bell',
+            drink: 'Iced americano',
+            group: 'Grip',
+            sortOrder: 2,
+          ),
+          boardEntry(
+            orderId: 'order-dana',
+            personName: 'Dana Whitfield',
+            drink: 'Cortado',
+            group: 'Art',
+            labelPrinted: true,
+            sortOrder: 3,
+          ),
+        ],
+      );
+
+  @override
+  void close() {}
+}
+
+Future<void> _pumpRoster(WidgetTester tester) async {
+  await tester.pumpWidget(PrinterApp(
+    sessionRepository: MemorySessionRepository(_rosterSession),
+    boardCacheRepository: MemoryBoardCacheRepository(),
+    printRecoveryRepository: MemoryPrintRecoveryRepository(),
+    apiFactory: _RosterApi.new,
+  ));
+  await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(
+    find.byType(TextField),
+    300,
+    scrollable: find.byType(Scrollable).last,
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('roster search narrows the list to one person',
+      (WidgetTester tester) async {
+    await _pumpRoster(tester);
+    expect(find.text('Maya Rodriguez'), findsOneWidget);
+    expect(find.text('Jonah Bell'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'maya');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Maya Rodriguez'), findsOneWidget);
+    expect(find.text('Jonah Bell'), findsNothing);
+  });
+
+  testWidgets('roster search matches the drink, not just the name',
+      (WidgetTester tester) async {
+    await _pumpRoster(tester);
+
+    await tester.enterText(find.byType(TextField), 'americano');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Jonah Bell'), findsOneWidget);
+    expect(find.text('Maya Rodriguez'), findsNothing);
+  });
+
+  testWidgets('the printed filter shows only labels already printed',
+      (WidgetTester tester) async {
+    await _pumpRoster(tester);
+
+    // Default view is what is left to do, so a printed label is out of sight.
+    expect(find.text('Dana Whitfield'), findsNothing);
+
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Printed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Printed'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dana Whitfield'), findsOneWidget);
+    expect(find.text('Maya Rodriguez'), findsNothing);
+  });
+
+  testWidgets('a search with no match explains itself',
+      (WidgetTester tester) async {
+    await _pumpRoster(tester);
+
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nobody matches “zzz”.'), findsOneWidget);
+  });
 
   testWidgets('Printer app renders link screen', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -83,15 +192,15 @@ void main() {
     );
     expect(find.text('Printing paused'), findsOneWidget);
     expect(find.text('Production planning'), findsOneWidget);
+    // The roster's per-person print control is an icon button since the deck
+    // became the primary print path; the rule it enforces is unchanged.
+    final rowPrintButton = find.widgetWithIcon(IconButton, Icons.print);
     await tester.scrollUntilVisible(
-      find.widgetWithText(FilledButton, 'Print'),
+      rowPrintButton,
       300,
       scrollable: find.byType(Scrollable).last,
     );
-    final printButton = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Print'),
-    );
-    expect(printButton.onPressed, isNull);
+    expect(tester.widget<IconButton>(rowPrintButton).onPressed, isNull);
   });
 
   test('parseProductionShareUrl accepts the canonical runner link', () {
