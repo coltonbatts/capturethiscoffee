@@ -50,8 +50,43 @@ record in `docs/physical-release-test.md`.
 5. Confirm App Store name is **Capture This** and upload screenshots containing
    only fictional data.
 6. Confirm source, archive, IPA, and App Store Connect all say
-   `1.0.0 (6)`. If any code, embedded metadata, or print constants change after
-   upload, bump to build 7 or higher and rebuild.
+   `1.0.0 (7)`. If any code, embedded metadata, or print constants change after
+   upload, bump to build 8 or higher and rebuild.
+
+## Build 7 — what to test
+
+Build 7 changes how labels are produced and how the app survives without a
+signal. Both changes are verified in software only. Neither has touched real
+hardware or a real dead zone, so this build is the test.
+
+**1. The label now renders on device.** The app no longer downloads a PNG per
+label; `mobile/lib/label_painter.dart` draws it. The two renderers will never be
+byte-identical, so what matters is whether the physical label is right.
+
+- Print one label and compare it against a build-6 label for the same person.
+- Check the drink line specifically: a two-line drink puts its second baseline
+  at y=292 with the rule at y=293, so descenders can read as a strikethrough.
+  That is a design bug shared with the web renderer, not a port error.
+- Check a long name (over 18 characters flips font size and baseline).
+- Print on holographic stock, since that is the intended production stock.
+
+**2. Printing no longer needs a signal.** Confirm this deliberately rather than
+hoping to hit a dead zone:
+
+- Link a production with a signal, then put the phone in airplane mode.
+- Force-quit the app and relaunch. The roster should appear immediately and the
+  summary line should read `Offline · synced N min ago`.
+- Print a label with the printer connected over Bluetooth. This is the whole
+  point of builds 6 and 7 together — it should work.
+- Leave it offline past ten minutes and confirm the "Working offline" banner
+  appears.
+- Turn the signal back on and confirm the banner clears and the line reads
+  `Synced HH:MM:SS`.
+
+**Known gap to expect, not report:** if the coordinator marks the production
+**complete** while the app is open, the board 404s and the app says "Working
+offline" over a finished day. The error banner underneath tells the truth. That
+is recorded and belongs with the Phase D work.
 
 ## Build and upload
 

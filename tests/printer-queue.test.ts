@@ -83,6 +83,7 @@ describe("printer queue helpers", () => {
         id: "prod-1",
         name: "Launch shoot",
         status: "active",
+        clientName: "Capture This",
       },
       designId: "grid-01",
       labels: [
@@ -96,6 +97,16 @@ describe("printer queue helpers", () => {
         },
       ],
     });
+  });
+
+  it("reports an empty client name when the production has no client", () => {
+    const data: CoffeeData = {
+      ...sampleData,
+      clients: [],
+      productions: [{ ...sampleData.productions[0]!, client_id: "" }],
+    };
+
+    assert.equal(buildPrinterQueue(data, "prod-1")?.production.clientName, "");
   });
 
   it("keeps uncaptured and off-set orders out of the printer queue", () => {

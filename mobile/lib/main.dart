@@ -1,7 +1,11 @@
 // Capture This Coffee — NIIMBOT M2_H direct BLE printer app.
 //
-// Phase 2: load a production share link, fetch server-rendered label PNGs,
-// print over BLE, and mark label_printed via the public order PATCH route.
+// Load a production share link, render label PNGs on device, print over BLE,
+// and mark label_printed via the public order PATCH route.
+//
+// Labels are rendered locally by label_painter.dart rather than downloaded, so
+// printing does not require a signal. The queue fetch still does; caching it is
+// Phase B of docs/offline-first-ios-handoff.md.
 
 import 'dart:async';
 import 'dart:typed_data';
@@ -11,8 +15,12 @@ import 'package:image/image.dart' as img;
 import 'package:niim_blue_flutter/niim_blue_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'board_cache.dart';
 import 'ctc_api.dart';
+import 'label_content.dart';
+import 'label_painter.dart';
 import 'print_recovery.dart';
+import 'production_board.dart';
 import 'printer_validation.dart';
 import 'production_session.dart';
 import 'session_store.dart';
@@ -23,7 +31,7 @@ const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
-const String kAppVersion = '1.0.0 (6)';
+const String kAppVersion = '1.0.0 (7)';
 const _printerScanTimeout = Duration(seconds: 8);
 const _printOperationTimeout = Duration(seconds: 60);
 
@@ -44,11 +52,13 @@ class PrinterApp extends StatelessWidget {
     super.key,
     this.sessionRepository,
     this.printRecoveryRepository,
+    this.boardCacheRepository,
     this.apiFactory,
   });
 
   final SessionRepository? sessionRepository;
   final PrintRecoveryRepository? printRecoveryRepository;
+  final BoardCacheRepository? boardCacheRepository;
   final CtcApiFactory? apiFactory;
 
   @override
@@ -147,6 +157,7 @@ class PrinterApp extends StatelessWidget {
       home: PrinterHome(
         sessionRepository: sessionRepository,
         printRecoveryRepository: printRecoveryRepository,
+        boardCacheRepository: boardCacheRepository,
         apiFactory: apiFactory,
       ),
     );
@@ -270,11 +281,13 @@ class PrinterHome extends StatefulWidget {
     super.key,
     this.sessionRepository,
     this.printRecoveryRepository,
+    this.boardCacheRepository,
     this.apiFactory,
   });
 
   final SessionRepository? sessionRepository;
   final PrintRecoveryRepository? printRecoveryRepository;
+  final BoardCacheRepository? boardCacheRepository;
   final CtcApiFactory? apiFactory;
 
   @override
@@ -314,11 +327,20 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
   CtcApi? _api;
   late final SessionRepository _sessionRepository;
   late final PrintRecoveryRepository _printRecoveryRepository;
+  late final BoardCacheRepository _boardCacheRepository;
   late final CtcApiFactory _apiFactory;
   PrintRecoveryLedger? _printRecoveryLedger;
   PrinterQueue? _queue;
   Timer? _queueRefreshTimer;
-  DateTime? _lastQueueRefreshAt;
+
+  /// When the server last confirmed the board on screen — not when the app last
+  /// read it back off disk. An operator needs the age of the data.
+  DateTime? _lastSyncedAt;
+
+  /// True while the board on screen came from disk and has not been confirmed
+  /// by the server since. Drives the offline banner.
+  bool _servingCachedBoard = false;
+
   String _queueSignature = '';
   bool _showPrinted = false;
   bool _connected = false;
@@ -337,6 +359,8 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         widget.sessionRepository ?? KeychainSessionRepository();
     _printRecoveryRepository =
         widget.printRecoveryRepository ?? PreferencesPrintRecoveryRepository();
+    _boardCacheRepository =
+        widget.boardCacheRepository ?? PreferencesBoardCacheRepository();
     _apiFactory = widget.apiFactory ?? (session) => CtcApi(session);
     WidgetsBinding.instance.addObserver(this);
     _restoreSession();
@@ -357,7 +381,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       if (_session != null) {
         _startQueueRefreshTimer();
-        unawaited(_refreshQueue(silent: true));
+        unawaited(_refreshBoard(silent: true));
       }
       if (_connected && !_busy) {
         unawaited(_verifyConnectionAfterResume());
@@ -373,9 +397,11 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
       final results = await Future.wait<Object?>([
         _sessionRepository.read(),
         PrintRecoveryLedger.load(_printRecoveryRepository),
+        _readCachedBoard(),
       ]);
       final saved = results[0] as ProductionSession?;
       final ledger = results[1] as PrintRecoveryLedger;
+      final cached = results[2] as CachedBoard?;
       if (!mounted) return;
       setState(() {
         _session = saved;
@@ -383,10 +409,23 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         _printRecoveryLedger = ledger;
         _loadingSession = false;
       });
-      if (saved != null) {
-        _startQueueRefreshTimer();
-        await _refreshQueue(silent: true);
+
+      if (saved == null) return;
+
+      // Show the cached board before touching the network. On a stage with no
+      // signal this is the entire difference between a usable app and an empty
+      // one — the session survives in the Keychain, but the roster does not.
+      if (cached != null && cached.belongsTo(saved)) {
+        await _applyBoard(
+          cached.board,
+          silent: true,
+          syncedAt: cached.syncedAt,
+          fromCache: true,
+        );
       }
+
+      _startQueueRefreshTimer();
+      await _refreshBoard(silent: true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -621,13 +660,17 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
       if (!mounted || confirmed != true) return;
     }
     await _sessionRepository.clear();
+    // Unlinking must take the roster with it. The token is the access control,
+    // but the cached crew names and drinks are the actual data.
+    await _boardCacheRepository.clear();
     _stopQueueRefreshTimer();
     _api?.close();
     setState(() {
       _session = null;
       _api = null;
       _queue = null;
-      _lastQueueRefreshAt = null;
+      _lastSyncedAt = null;
+      _servingCachedBoard = false;
       _queueSignature = '';
       _operatorError = null;
       _failedBatchLabel = null;
@@ -640,7 +683,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     _stopQueueRefreshTimer();
     _queueRefreshTimer = Timer.periodic(_queueRefreshInterval, (_) {
       if (!mounted || _busy || _api == null) return;
-      unawaited(_refreshQueue(silent: true));
+      unawaited(_refreshBoard(silent: true));
     });
   }
 
@@ -657,50 +700,106 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           );
         }
         final api = _apiFactory(parsed);
-        late final PrinterQueue queue;
+        late final ProductionBoard board;
         try {
-          queue = await _fetchQueue(api);
+          board = await _fetchBoard(api);
         } finally {
           api.close();
         }
         if (!mounted) return;
         await _saveSession(parsed);
-        await _applyQueue(queue);
+        await _applyBoard(board, session: parsed);
       });
 
-  Future<PrinterQueue> _fetchQueue(CtcApi api) async {
+  Future<ProductionBoard> _fetchBoard(CtcApi api) async {
     try {
-      return await api.fetchQueue();
+      return await api.fetchBoard();
     } catch (error) {
-      throw Exception('Queue fetch failed. ${_errorText(error)}');
+      throw Exception('Board fetch failed. ${_errorText(error)}');
     }
   }
 
-  Future<void> _applyQueue(PrinterQueue queue, {bool silent = false}) async {
-    final serverConfirmed = queue.labels
-        .where((label) => label.labelPrinted)
-        .map((label) => label.orderId);
-    await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+  Future<CachedBoard?> _readCachedBoard() async {
+    try {
+      return await _boardCacheRepository.read();
+    } catch (error) {
+      // A damaged cache must never block a launch. The app falls back to the
+      // network exactly as it did before there was a cache.
+      _logLine('Cached board unavailable: ${error.runtimeType}.');
+      return null;
+    }
+  }
+
+  /// Puts a board on screen, from either the server or disk.
+  ///
+  /// [fromCache] is not cosmetic. Cached data must not be treated as server
+  /// confirmation: clearing a print-recovery record needs the server to have
+  /// said `label_printed`, and a cache written before the print was recorded
+  /// would wrongly retire a label that still needs syncing.
+  Future<void> _applyBoard(
+    ProductionBoard board, {
+    bool silent = false,
+    bool fromCache = false,
+    DateTime? syncedAt,
+    ProductionSession? session,
+  }) async {
+    final queue = PrinterQueue.fromBoard(board);
+
+    if (!fromCache) {
+      final serverConfirmed = queue.labels
+          .where((label) => label.labelPrinted)
+          .map((label) => label.orderId);
+      await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+    }
     if (!mounted) return;
+
     final nextSignature = _signatureForQueue(queue);
     final changed = nextSignature != _queueSignature;
     final pendingCount =
         queue.labels.where((label) => !label.labelPrinted).length;
+    final stamp = syncedAt ?? DateTime.now();
 
     setState(() {
       _queue = queue;
       _queueSignature = nextSignature;
-      _lastQueueRefreshAt = DateTime.now();
+      _lastSyncedAt = stamp;
+      _servingCachedBoard = fromCache;
     });
+
+    if (!fromCache) {
+      await _writeCachedBoard(board, session: session, syncedAt: stamp);
+    }
 
     if (!silent || changed) {
       _logLine(
-        'Queue: ${queue.labels.length} labels, $pendingCount to print for ${queue.productionName}.',
+        'Queue: ${queue.labels.length} labels, $pendingCount to print for '
+        '${queue.productionName}${fromCache ? ' (cached)' : ''}.',
       );
     }
   }
 
-  Future<void> _refreshQueue({bool silent = false}) async {
+  Future<void> _writeCachedBoard(
+    ProductionBoard board, {
+    ProductionSession? session,
+    required DateTime syncedAt,
+  }) async {
+    final target = session ?? _session;
+    if (target == null) return;
+    try {
+      await _boardCacheRepository.write(CachedBoard(
+        apiBase: target.apiBase,
+        productionId: target.productionId,
+        syncedAt: syncedAt,
+        board: board,
+      ));
+    } catch (error) {
+      // Failing to cache degrades the next cold start; it must not fail the
+      // refresh that just succeeded.
+      _logLine('Could not cache the board: ${error.runtimeType}.');
+    }
+  }
+
+  Future<void> _refreshBoard({bool silent = false}) async {
     final api = _api;
     if (api == null) {
       if (!silent) {
@@ -713,9 +812,9 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     }
 
     Future<void> action() async {
-      final queue = await _fetchQueue(api);
+      final board = await _fetchBoard(api);
       if (!mounted) return;
-      await _applyQueue(queue, silent: silent);
+      await _applyBoard(board, silent: silent);
     }
 
     if (silent) {
@@ -723,13 +822,18 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         await action();
       } catch (error) {
         final message = _errorText(error);
-        setState(() => _operatorError = message);
+        setState(() {
+          _operatorError = message;
+          // A failed refresh over an existing board means what is on screen is
+          // now stale, whether it came from disk or from an earlier fetch.
+          if (_queue != null) _servingCachedBoard = true;
+        });
         _logLine(message);
       }
       return;
     }
 
-    await _run('Refresh queue', action);
+    await _run('Refresh board', action);
   }
 
   String _signatureForQueue(PrinterQueue queue) => queue.labels
@@ -742,6 +846,36 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     final minute = value.minute.toString().padLeft(2, '0');
     final second = value.second.toString().padLeft(2, '0');
     return '$hour:$minute:$second';
+  }
+
+  /// How old the board on screen is, in words an operator can act on.
+  String _ageLabel(DateTime value) {
+    final minutes = DateTime.now().difference(value).inMinutes;
+    if (minutes < 1) return 'moments ago';
+    if (minutes == 1) return '1 min ago';
+    if (minutes < 60) return '$minutes min ago';
+    final hours = (minutes / 60).floor();
+    if (hours == 1) return '1 hour ago';
+    if (hours < 24) return '$hours hours ago';
+    final days = (hours / 24).floor();
+    return days == 1 ? '1 day ago' : '$days days ago';
+  }
+
+  /// The line under the queue metrics. Never says "synced" about stale data.
+  String get _syncStatusLabel {
+    final syncedAt = _lastSyncedAt;
+    if (syncedAt == null) return 'Not synced yet';
+    if (_servingCachedBoard) return 'Offline · synced ${_ageLabel(syncedAt)}';
+    return 'Synced ${_timeLabel(syncedAt)}';
+  }
+
+  /// A board older than this is called out loudly rather than in small print.
+  static const _staleBoardThreshold = Duration(minutes: 10);
+
+  bool get _boardIsStale {
+    final syncedAt = _lastSyncedAt;
+    if (syncedAt == null || !_servingCachedBoard) return false;
+    return DateTime.now().difference(syncedAt) >= _staleBoardThreshold;
   }
 
   String _errorText(Object error) {
@@ -1029,14 +1163,26 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
 
     setState(() => _printerStatus = _PrinterStatus.printing);
 
-    _logLine('Fetching PNG for ${item.personName}…');
+    // Rendered on device, not fetched. Downloading one PNG per label made
+    // printing impossible without a signal, even for orders captured hours
+    // earlier — see docs/offline-first-ios-handoff.md.
+    _logLine('Rendering label for ${item.personName}…');
     late final Uint8List bytes;
     try {
-      bytes = await api.fetchLabelPng(item.orderId, queue.designId);
+      bytes = await renderLabelPng(
+        LabelContent.fromQueue(
+          orderId: item.orderId,
+          personName: item.personName,
+          drink: item.drink,
+          group: item.group,
+          productionName: queue.productionName,
+          clientName: queue.clientName,
+        ),
+      );
     } catch (error) {
       setState(() => _printerStatus = _PrinterStatus.error);
       throw Exception(
-        'PNG download failed for ${item.personName}. ${_errorText(error)}',
+        'Could not render the label for ${item.personName}. ${_errorText(error)}',
       );
     }
 
@@ -1044,7 +1190,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     if (decoded == null) {
       setState(() => _printerStatus = _PrinterStatus.error);
       throw Exception(
-        'PNG download failed for ${item.personName}. Could not decode label PNG.',
+        'Could not decode the rendered label for ${item.personName}.',
       );
     }
     final printSize = _printSizeFor(decoded);
@@ -1100,7 +1246,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     }
 
     await _printRecoveryLedger?.clear(item.orderId);
-    await _refreshQueue(silent: true);
+    await _refreshBoard(silent: true);
   }
 
   Future<void> _recordPrintRecovery(
@@ -1160,7 +1306,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
           await api.markLabelPrinted(item.orderId);
           await _printRecoveryLedger?.clear(item.orderId);
           if (mounted) setState(() {});
-          await _refreshQueue(silent: true);
+          await _refreshBoard(silent: true);
         },
       );
 
@@ -1528,9 +1674,6 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
     final printed =
         queue?.labels.where((label) => label.labelPrinted).length ?? 0;
     final attention = _currentRecoveryRecords.length;
-    final refreshed = _lastQueueRefreshAt == null
-        ? 'Not refreshed yet'
-        : _timeLabel(_lastQueueRefreshAt!);
 
     return Card(
       child: Padding(
@@ -1563,6 +1706,10 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
                 ),
               ),
             ],
+            if (_boardIsStale) ...[
+              const SizedBox(height: 12),
+              _buildStaleBoardNotice(context),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -1577,12 +1724,19 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             Row(
               children: [
                 Expanded(
-                  child: Text('Total: $total · Last refresh: $refreshed'),
+                  child: Text(
+                    'Total: $total · $_syncStatusLabel',
+                    style: _servingCachedBoard
+                        ? theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          )
+                        : null,
+                  ),
                 ),
                 IconButton(
-                  onPressed: _busy ? null : () => _refreshQueue(),
+                  onPressed: _busy ? null : () => _refreshBoard(),
                   icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh queue',
+                  tooltip: 'Refresh board',
                 ),
               ],
             ),
@@ -1594,6 +1748,55 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
               onChanged: _busy
                   ? null
                   : (value) => setState(() => _showPrinted = value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Loud, not small print.
+  ///
+  /// The dangerous case is not an empty app — that is obvious. It is a full,
+  /// normal-looking roster that silently predates someone changing their order.
+  Widget _buildStaleBoardNotice(BuildContext context) {
+    final theme = Theme.of(context);
+    final syncedAt = _lastSyncedAt;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _captureYellow.withValues(alpha: 0.35),
+        border: Border.all(color: _captureInk, width: 1.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.cloud_off, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Working offline',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    syncedAt == null
+                        ? 'This roster has not been synced.'
+                        : 'This roster is from ${_ageLabel(syncedAt)}. Orders '
+                            'captured since then are not shown. Printing still '
+                            'works.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -2028,7 +2231,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
         title: const _BrandAppBarTitle(detail: 'On-set controller'),
         actions: [
           IconButton(
-            onPressed: _busy ? null : () => _refreshQueue(),
+            onPressed: _busy ? null : () => _refreshBoard(),
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh queue',
           ),
@@ -2051,7 +2254,7 @@ class _PrinterHomeState extends State<PrinterHome> with WidgetsBindingObserver {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
-                  if (!_busy) await _refreshQueue();
+                  if (!_busy) await _refreshBoard();
                 },
                 child: ListView(
                   padding: const EdgeInsets.all(12),

@@ -22,6 +22,12 @@ export type PrinterQueueResponse = {
     id: string;
     name: string;
     status: string;
+    /**
+     * The label's brand line is `production name / client name`. The printer app
+     * renders labels locally, so it needs the client name the server-side
+     * renderer gets from `buildCoffeeLabels`.
+     */
+    clientName: string;
   };
   designId: typeof defaultLabelDesignId;
   labels: PrinterQueueItem[];
@@ -30,6 +36,8 @@ export type PrinterQueueResponse = {
 export function buildPrinterQueue(data: CoffeeData, productionId: string): PrinterQueueResponse | null {
   const production = data.productions.find((item) => item.id === productionId);
   if (!production) return null;
+
+  const client = data.clients.find((item) => item.id === production.client_id);
 
   const items = printableLabelItemsForProduction(data, productionId);
   const labels = items.map((item) => ({
@@ -46,6 +54,7 @@ export function buildPrinterQueue(data: CoffeeData, productionId: string): Print
       id: production.id,
       name: production.name,
       status: production.status,
+      clientName: client?.name || "",
     },
     designId: defaultLabelDesignId,
     labels,
