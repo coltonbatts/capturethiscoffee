@@ -189,6 +189,30 @@ side-by-side bundle configured only for the disposable project. Physical gates
 checks are still open. See
 `docs/build-10-release-validation-2026-07-25.md`.
 
+## Production migration state — 2026-07-27
+
+Before this date, production `lehwhehssjfudyrtljus` was applied through
+`20260703120000_authenticated_full_access`, which the owner ran by hand in the
+Supabase SQL editor. Manual SQL-editor runs do not write to
+`supabase_migrations.schema_migrations`, so production's CLI migration ledger
+must **not** be trusted and `supabase db push` must **not** be run against it —
+it would attempt to replay twelve older migrations, including a
+`drop table … cascade` in `20260624130000_drop_print_station_tables.sql` and a
+row deletion in `20260605124500_remove_example_people.sql`.
+
+On 2026-07-27 the owner explicitly authorized applying the two migrations Build
+10 assumes, and applied them by hand in the production SQL editor.
+
+| Migration | Purpose | Production status |
+|---|---|---|
+| `20260725120000_preserve_printed_order_facts.sql` | `orders_preserve_label_printed` trigger making `label_printed: true` irreversible | **Applied and verified.** `pg_trigger` reports `orders_preserve_label_printed` with `tgenabled = 'O'`, alongside the pre-existing `orders_set_updated_at` |
+| `20260706120000_enable_orders_realtime.sql` | Adds `public.orders` to the `supabase_realtime` publication | **Not yet verified.** The publication-membership query has not been returned. The migration is wrapped in an `if exists (… pubname = 'supabase_realtime')` guard, so it silently no-ops when that publication is absent — a successful run is not evidence that `orders` is published |
+
+Until the publication query is returned, treat Realtime on production as
+unconfirmed. Build 10 degrades safely if it is absent: Realtime is only a
+refresh signal, and ten-second polling, app-resume refresh, pull-to-refresh, and
+manual sync all remain authoritative.
+
 ## Automated verification
 
 | Check | Result |
