@@ -31,10 +31,12 @@ itself is maintained and carries its own last-updated date.
 | Document | Use it for |
 | --- | --- |
 | [Physical release test](physical-release-test.md) | Required device, printer, stock, and recovery acceptance |
+| [Build 10 pilot and hardware handoff](build-10-pilot-handoff-2026-07-27.md) | Current status, exact physical worksheet, mailing gate, and buddy sign-off |
 | [Build 10 validation](build-10-release-validation-2026-07-25.md) | Current detailed acceptance record |
 | [Release evidence](release-evidence-1.0.0.md) | Source, build, deployment, and physical evidence |
 | [TestFlight checklist](testflight-checklist.md) | Internal and external beta distribution |
-| [App Store release](app-store-release.md) | Permanent distribution dossier |
+| [Build 10 TestFlight metadata](build-10-external-testflight-metadata-2026-07-27.md) | Current owner-approval copy for external beta review |
+| [Historical Build 6 App Store dossier](app-store-release.md) | Prior metadata evidence; not current submission copy |
 | [Production readiness](production-readiness-checklist.md) | Full technical and operational audit |
 | [Review fixture](review-production-fixture.md) | Fictional App Review data |
 

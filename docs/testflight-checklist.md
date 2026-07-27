@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-27
+Last updated: 2026-07-27 17:31 CDT
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -16,7 +16,7 @@ permanent target is an approved unlisted App Store link.
 | iPhone-only target, app/privacy manifests, permissions, licenses | Verified in build 5 IPA |
 | Next handoff source `1.0.0+6` | Implemented with in-app operating guide and Active-production print guard |
 | Signed App Store IPA for `1.0.0 (6)` | Exact recorded artifact uploaded through Xcode Organizer on 2026-07-24; SHA-256 recorded in release evidence |
-| Production `/privacy` and `/support` | Live; both returned 200 on 2026-07-23 |
+| Production `/privacy` and `/support` | Live; both returned 200 again at 17:22 CDT on 2026-07-27 and visibly identified Capture This plus `info@capturethis.com`; owner wording approval remains open |
 | Stable fictional review production | Pending private operator access |
 | Build 6 uploaded/processed | Upload completed at 12:57 PM CDT; App Store Connect reports processing `Complete`, binary `Validated`, and TestFlight status `Ready to Submit` |
 | Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone. The first confirmed reprint on newly loaded holographic stock printed on the first attempt through direct Bluetooth LE, with no laptop, USB, print station, official NIIMBOT app, or other printing bridge. Photo-backed milestone recorded on 2026-07-24 |
@@ -31,9 +31,10 @@ permanent target is an approved unlisted App Store link.
 | Build 10 source and backend | `1.0.0 (10)` app code committed at `fea2fc3`; clean archive source `ab5edb8` matches `origin/main`. Flutter 158/158 and analysis pass. Production monotonic printed-fact trigger is applied and verified; production Realtime publication membership remains unverified, with polling/resume/manual fallbacks retained |
 | Build 10 signed App Store IPA | `1.0.0 (10)`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`; production host present, disposable host absent, public `anon` key only, Apple Distribution signed, `get-task-allow = false` |
 | Build 10 upload/processing | Xcode command-line upload succeeded at 4:24 PM CDT on 2026-07-27. At 4:26 PM Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` for the existing internal tester |
-| TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
+| TestFlight beta metadata | Current Build 10 packet is `docs/build-10-external-testflight-metadata-2026-07-27.md`; feedback email, review contact, owner approval, and secure production fixture remain open |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
+| Build 10 expiration | **Pending authoritative App Store Connect value.** Expected around 2026-10-25, but do not use the estimate as the handoff record |
 | Buddy invited by email | Pending owner-supplied email / approved build |
 | Buddy install, sign-in, day selection, M2_H print, and sync pilot | Pending physical hardware |
 
@@ -43,16 +44,17 @@ the application privacy manifest, and the 1.0 product version.
 
 Build 10 is the current internal TestFlight candidate. Build 6's first-try
 holographic reprint and Build 9's signed-in direct-Supabase reprint
-prove the intended direct-Bluetooth path. Both remain smoke tests, not the full
-physical release gate: authenticated airplane-mode restoration, exact stock
-measurements, printer identity and firmware, batch behavior, interruption
-recovery, synchronization, cold-cup adhesion, and Luke's independent run still
-need the record in `docs/physical-release-test.md`.
+prove the intended direct-Bluetooth path. Both remain smoke tests, not Build
+10 physical acceptance. Build 9 checks 1, 2, 5, 6, and 9 physically passed;
+Gate 3 failed with the accepted single-label limitation; checks 4, 7, 8, and
+10 plus the complete Build 10 run remain open in
+`docs/physical-release-test.md`.
 
-The preserved Build 9 IPA embeds the production Supabase host and must not be
-used for fictional acceptance writes. Run exact source `47c4405` in release
-mode on the physical iPhone with the explicitly authorized disposable public
-URL/key; do not archive, export, or upload that validation install.
+Historical validation note: the preserved Build 9 IPA embeds the production
+Supabase host, so an isolated `47c4405` bundle was used for the disposable
+Build 9 baseline. Do not use either Build 9 target for current Build 10
+acceptance. Use the exact TestFlight `1.0.0 (10)` with the separately approved
+fictional account and Active day in the production backend.
 
 **Unattended batch printing is not a supported capability.** The ten-label batch
 check failed twice on 2026-07-27, each time on the batch's own first label, with
@@ -69,37 +71,36 @@ seven-step acceptance in `docs/build-10-implementation-2026-07-25.md`; the
 exact ten-row audit and combined operator worksheet are in
 `docs/build-10-release-validation-2026-07-25.md`.
 
-## Before upload
+## Build 10 external-TestFlight preflight
 
-1. Record owner approval of the already-live privacy/support wording.
-2. Rotate the affected temporary credential identified during the release audit.
-3. Create the fictional stable fixture in
-   `docs/review-production-fixture.md`; keep its token out of Git and notes.
-4. Run every required verification command and the physical gate in
-   `docs/physical-release-test.md`.
-5. Confirm App Store name is **Capture This** and upload screenshots containing
-   only fictional data.
-6. Build 10 source, archive, IPA, and TestFlight availability are confirmed as
-   `1.0.0 (10)`. Install it from TestFlight and complete device acceptance.
+The binary is already uploaded. Do not upload another binary during this
+workflow unless Build 10 is marked Internal Only, Apple requires a binary
+change, or an approved release-blocking fix is necessary.
+
+1. Obtain owner approval for the exact Build 10 beta copy and missing fields in
+   `docs/build-10-external-testflight-metadata-2026-07-27.md`.
+2. Obtain explicit approval before creating the owner-provisioned fictional
+   account and Active production specified in
+   `docs/review-production-fixture.md`.
+3. Keep credentials only in App Store Connect secure Test Information fields
+   or another explicitly approved secure channel.
+4. Confirm Build 10 is not marked **TestFlight Internal Only**.
+5. Complete Test Information, add Build 10 to `Capture This crew pilot`, and
+   submit only after the owner explicitly approves the external write.
+6. Record Apple's authoritative expiration and review status.
+7. Do not invite the buddy until Apple approves Build 10 for external testing.
 
 ## Build 10 — internal TestFlight device acceptance
 
-- Load one existing Active production while online.
-- Enable airplane mode, force-quit, and cold-start from the authenticated cache.
-- Capture at least three orders; verify Collect progress and Print update
-  immediately.
-- Print at least two labels on the accepted M2_H and stock.
-- Force-quit with all mutations still pending, then relaunch offline.
-- Restore connectivity and verify every ordinary field and both monotonic
-  printed facts in Supabase, with no replay on a second refresh.
-- Make a competing edit from the frozen web/server surface and verify the phone
-  displays the local and server versions, stops, and requires an explicit
-  resolution.
-- Verify planning/complete days retain pending work but refuse replay and
-  physical printing.
-- Verify **Legacy link** remains functional.
+Use the numbered physical worksheet in
+`docs/build-10-pilot-handoff-2026-07-27.md`. It covers the exact TestFlight
+identity; online and airplane-mode restoration; three offline captures; at
+least two individual prints; relaunch; exactly-once replay; both conflict
+choices; Planning/Complete refusal; haptics; Reduce Motion; deliberate
+single-label interruption; reconnect; background/resume; Legacy and `/labels`
+fallback; Realtime/fallback observation; and sanitized evidence.
 
-## Build 9 — what to test
+## Historical Build 9 baseline — do not send as current What to Test
 
 - Fresh install → owner-provisioned sign-in → Days → select an Active day.
 - Confirm the selected direct-Supabase board drives the roster and print deck.
@@ -111,7 +112,8 @@ exact ten-row audit and combined operator worksheet are in
 - Sign out and confirm another account cannot see the prior account's cached
   board or unresolved recovery details.
 - Confirm **Legacy link** still opens a Build 8 production share link.
-- Exercise batch stop/recovery and uncertain-print resolution on the real M2_H.
+- Preserve the recorded batch failure and uncertain-print evidence. Do not ask
+  another tester to use **Print all** as an acceptance requirement.
 
 ## Build 7 — what to test
 
@@ -165,8 +167,9 @@ Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
 `docs/release-evidence-1.0.0.md`.
 
-Do not reuse build number 9. It was uploaded on 2026-07-25; use `1.0.0+10` or
-higher for any replacement binary.
+Do not reuse build numbers 9 or 10. If a replacement binary is genuinely
+required, stop and document why Build 11 is necessary before changing
+`mobile/pubspec.yaml` or packaging anything.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a
@@ -180,10 +183,11 @@ archive/IPA agreement when the checked-in export options were used.
 2. Confirm export compliance from actual build behavior; the binary declares no
    non-exempt encryption. The account owner makes the final attestation.
 3. Add the beta description, **What to Test**, feedback email, contact, privacy
-   URL, and support URL from `docs/app-store-release.md`.
-4. Create an external group named `Capture This crew pilot`.
-5. After its physical gate passes, add build 9 and submit it for TestFlight App
-   Review.
+   URL, support URL, review notes, and secure demo instructions from
+   `docs/build-10-external-testflight-metadata-2026-07-27.md`.
+4. Use the existing external group `Capture This crew pilot`.
+5. Add Build 10 and submit it for TestFlight App Review only after the owner
+   explicitly approves the final packet and submission.
 6. After approval, invite the buddy by email rather than a broadly shareable
    public link. Do not include the production share token in the invitation.
 7. Send the fictional review URL privately and keep the fixture active.
@@ -202,9 +206,12 @@ Record:
 - Account sign-in and Active day selected: pass/fail _____
 - Legacy-link fallback: pass/fail _____
 - Exact M2_H / firmware / stock: _____
-- Short/long/batch labels: pass/fail _____
+- Short/long labels printed sequentially, one at a time: pass/fail _____
 - Interrupted print recovery: pass/fail _____
+- Retry versus sync-only decision explained correctly: pass/fail _____
+- Power-cycle/reconnect and background/resume: pass/fail _____
 - Successful prints synced to Supabase/hosted board: pass/fail _____
+- TestFlight expiration: _____
 - Feedback/crash report: _____
 - Release-blocking issue: none / describe _____
 

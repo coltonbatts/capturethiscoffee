@@ -1,8 +1,16 @@
 # Capture This physical release gate
 
+Last updated: 2026-07-27
+
 Run this only with the signed release-candidate build on a real iPhone and the
 actual NIIMBOT M2_H/stock. Hardware support is not passed by simulator, mock,
 PNG, or archive evidence.
+
+The current target is the exact TestFlight Build 10, `1.0.0 (10)`. Use the
+numbered Build 10 worksheet and hardware mailing gate in
+[`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md).
+The Build 9 material below is preserved baseline evidence; it is not permission
+to substitute a detached Build 9 install for Build 10 acceptance.
 
 ## Partial milestones recorded — July 24-25, 2026
 
@@ -43,8 +51,8 @@ attempted after a resolved recovery succeeded. The app behaved correctly
 throughout: it recorded uncertainty before the packet, stopped at the failing
 label, tore down BLE, and never advanced. Root cause was not isolated. The owner
 accepted **single-label printing as the supported operating mode** and recorded
-unattended batch printing as a documented product limitation. Step 6's "batch of
-at least 10 labels" therefore cannot currently be satisfied and must not be
+unattended batch printing as a documented product limitation. The historical
+"batch of at least 10 labels" requirement therefore failed and must not be
 reported as satisfied.
 
 Checks 4, 7, 8, and 10 remain open; no physical pass is inferred for them.
@@ -54,13 +62,13 @@ seven-step acceptance, and timestamped result fields are maintained in
 [`build-10-release-validation-2026-07-25.md`](build-10-release-validation-2026-07-25.md).
 Do not mark a row passed from automated coverage.
 
-The preserved Build 9 IPA was inspected on 2026-07-27 and contains the
-production Supabase hostname. It is provenance evidence, not an authorized
-acceptance target. Do not perform these fictional writes with that IPA. Run
-exact Build 9 source `47c4405` on the iPhone in release mode with the explicitly
-authorized disposable project's public URL/key, without creating an archive or
-IPA, and confirm that only fictional disposable data is visible before
-continuing.
+Historical Build 9 target note: the preserved Build 9 IPA was inspected on
+2026-07-27 and contains the production Supabase hostname, so the recorded
+Build 9 baseline used exact source `47c4405` in an isolated release bundle
+configured for the disposable project's public URL/key. Do not use either
+Build 9 target for current acceptance. The current target is the exact
+production-configured TestFlight Build 10 with the approved fictional
+production account/day.
 
 The safe detached `47c4405` source passed Flutter analysis plus 140/140 tests
 with `niim_blue_flutter: 1.0.1`. Its disposable-host-only release build is
@@ -86,9 +94,9 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 - Measured label width × height: _____ mm × _____ mm
 - Shape and feed: rectangle/round/other _____; die-cut/continuous _____
 - App density: _____
-- Fictional/disposable production used: _____
-- Disposable invited account issued by / cleanup owner: _____ / _____
-- Disposable link issued by / revocation owner: _____ / _____
+- Fictional production/backend used: _____
+- Fictional review account issued by / cleanup owner: _____ / _____
+- Legacy fallback link issued by / revocation owner: _____ / _____
 
 ## Guided test
 
@@ -99,15 +107,18 @@ can read the fixture. Preserve it until the physical evidence queries finish.
    account, and select the supplied fictional Active day.
 5. Power off other nearby NIIMBOT printers, connect the one M2_H, and confirm
    the app does not accept another model.
-6. Print a short name/drink, a long name, a long drink, one confirmed reprint,
-   and a batch of at least 10 labels.
+6. Print a short name/drink, a long name, and a long drink sequentially, using
+   the single-label action for each. Do not use **Print all** or unattended
+   batch printing.
 7. For every sample, inspect orientation, cropping, density, alignment, name
-   hierarchy, drink readability, feed gaps, and label-to-order correctness.
+   hierarchy, drink readability, feed gaps, and label-to-order correctness
+   before starting the next label.
 8. Confirm every successful physical print changes the Supabase order and
    hosted web board to printed.
-9. During a second batch, interrupt Bluetooth. For the affected label, inspect
-   the physical printer before choosing either **Label printed — sync only** or
-   **Nothing printed — retry**. Confirm no accidental duplicate.
+9. During a later single-label print, deliberately interrupt Bluetooth. For
+   the affected label, inspect the physical printer before choosing either
+   **Label printed — sync only** or **Nothing printed — retry**. Confirm no
+   accidental duplicate.
 10. Power-cycle the printer, reconnect, refresh, and print one more label.
 11. Background the app, resume it, reconnect when prompted, and print one more
     label.
@@ -125,9 +136,10 @@ can read the fixture. Preserve it until the physical evidence queries finish.
     complete one `/labels` fallback drill.
 17. Photograph representative short/long labels and the cold-cup result without
     exposing a production token or real personal data.
-18. Have Luke repeat sign in → select day → connect → print → hosted sync →
-    airplane-mode restore → interrupted recovery → fallback himself, without
-    Colton touching the phone or dashboard.
+18. Have the receiving operator repeat sign in → select day → connect → short
+    and long labels one at a time → hosted sync → airplane-mode restore →
+    interrupted single-label recovery → fallback, without Colton touching the
+    phone or dashboard.
 
 ## Result
 
@@ -135,8 +147,8 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 - Long name: pass/fail + notes _____
 - Long drink: pass/fail + notes _____
 - Confirmed reprint: pass/fail + notes _____
-- 10+ batch count / successes: _____ / _____
-- Label-to-order correctness for the entire batch: pass/fail + notes _____
+- Sequential single-label count / usable outputs: _____ / _____
+- Label-to-order correctness for every individual print: pass/fail + notes _____
 - Interrupted label physically printed? _____
 - Recovery choice/result: _____
 - Every physical success synced to Supabase/hosted board? _____
@@ -151,7 +163,7 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 - Orientation/cropping/density/alignment/readability: _____
 - Feed gaps / skipped stock / ribbon behavior: _____
 - Representative fictional-data photo filenames/location: _____
-- Luke independent end-to-end pilot: pass/fail + notes _____
+- Receiving operator's independent end-to-end pilot: pass/fail + notes _____
 - Release-blocking issue: none / describe _____
 
 ## Acceptance and release
@@ -170,8 +182,10 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 - Printer may leave Colton's possession: yes/no _____
 
 The gate passes only when the tester reports the exact record above, all label
-types are usable, successful prints synchronize, interruption recovery avoids
-duplicates, Luke completes the flow independently, and the stock survives the
-cold-cup check. If tuning changes print
-width, density, or the server preset, increment the iOS build, rerun automated
-verification, and repeat the smallest affected physical cases.
+types are usable one at a time, successful prints synchronize, interruption
+recovery avoids duplicates, the receiving operator completes the flow
+independently, and the stock survives the cold-cup check. A failed batch gate
+is carried as an accepted limitation and is never promoted to a pass. If
+tuning changes print width, density, or the server preset, increment the iOS
+build, rerun automated verification, and repeat the smallest affected physical
+cases.

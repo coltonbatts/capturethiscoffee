@@ -1,6 +1,6 @@
 # Capture This handoff hub
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
 Start here whenever Capture This changes hands. This page is the index and
 definition of done; the linked documents contain the detailed procedures and
@@ -16,21 +16,30 @@ orders, turns them into correctly labeled cups, and keeps the production board
 in sync.
 
 Supabase is the shared source of truth for productions, rosters, orders, and
-printed status. Build 9 signs the operator into the Capture This iPhone app,
-lists existing days, reads the selected board directly, prints captured orders
-to the accepted NIIMBOT M2_H, and synchronizes each successful label. The
-frozen website remains the setup, order-capture, zero-install runner, and export
-fallback until Builds 10-12 complete the iOS loop.
+printed status. Build 10 signs the operator into the Capture This iPhone app,
+lists existing days, collects and edits orders offline, prints captured orders
+one at a time to the accepted NIIMBOT M2_H, durably replays changes, and stops
+on visible conflicts. The frozen website remains necessary for day, people,
+roster, link, summary, zero-install runner, and export setup that has not moved
+into the app.
 
 ## Current release position
 
-- Build 9 source is committed at `47c4405`.
-- TestFlight build 9 is uploaded, processed, and assigned to the internal
-  `Main` group. It is consumed; use build 10 or later for any code change.
-- The account owner installed a signed Build 9 release, selected an
-  authenticated day, and completed one physical M2_H reprint.
-- Build 9's airplane-mode, 10-label batch, interruption recovery, sign-out
-  isolation, adhesion, and independent-operator checks remain open.
+- Build 10 application source is `fea2fc3`; its clean archive source is
+  `ab5edb8`; the uploaded artifact is `1.0.0 (10)`.
+- Build 10 became available to the existing internal TestFlight tester at
+  16:26 CDT on 2026-07-27. External review has not been submitted and the
+  buddy cannot install yet.
+- Build 10 has no physical device acceptance. Build 9 baseline checks 1, 2, 5,
+  6, and 9 passed; checks 4, 7, 8, and 10 remain open.
+- Build 9 Gate 3 failed twice. Unattended batch printing is not supported and
+  must never be reported as a pass. The supported operating mode is one label
+  at a time.
+- The exact current status, mailing gate, hardware inventory, and buddy
+  worksheet are in
+  [`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md).
+- The owner-approval copy for external TestFlight is in
+  [`build-10-external-testflight-metadata-2026-07-27.md`](build-10-external-testflight-metadata-2026-07-27.md).
 - TestFlight is temporary. The durable distribution target is an
   Apple-approved unlisted App Store link.
 - The handoff is not complete until the named day-of operator passes the
@@ -88,14 +97,16 @@ to choose the current printer path.
 
 ## Standard day-of sequence
 
-1. A signed-in web operator confirms the roster, captures drinks, and marks the
-   production Active. Build 10 moves drink capture into the app.
+1. A signed-in web operator creates the day and confirms the people/roster,
+   then marks the production Active. Build 10 can collect and edit drinks after
+   that existing day is available.
 2. The label operator opens Capture This, signs in, and selects the existing
    Active day.
 3. The operator force-quits the official NIIMBOT app, powers off other NIIMBOT
    printers, and connects the accepted M2_H.
-4. The operator refreshes, reviews the person and drink, prints, and waits for
-   synchronization before moving on.
+4. The operator refreshes, reviews the person and drink, and prints exactly one
+   label. The operator physically inspects it and confirms its recovery/sync
+   state before starting another label. Do not use **Print all**.
 5. For an interrupted print, the operator inspects the physical output before
    choosing sync-only or retry. The operator never guesses.
 6. If Capture This is unavailable, a signed-in operator uses `/labels` for the
@@ -126,9 +137,11 @@ The receiving operator must complete this without the outgoing operator touching
 the phone or dashboard:
 
 1. Install/open the named build.
-2. Sign in with a disposable invited account and select a fictional Active day.
+2. Sign in with an individual owner-provisioned fictional account and select a
+   fictional Active day.
 3. Connect the exact accepted M2_H.
-4. Print short, long, intentional-reprint, and 10+ batch cases.
+4. Print short and long labels sequentially, one at a time. Do not use
+   **Print all** or unattended batch printing.
 5. Confirm every physical success appears printed in Supabase and on the hosted board.
 6. Recover one interrupted/uncertain print without a duplicate.
 7. Power-cycle/reconnect and background/resume.

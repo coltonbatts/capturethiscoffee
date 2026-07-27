@@ -1,6 +1,6 @@
 # Capture This 1.0.0 release evidence
 
-Last updated: 2026-07-27
+Last updated: 2026-07-27 17:31 CDT
 
 This file separates verified evidence from pending claims. Update it after each
 preview/production deployment, TestFlight upload, physical run, and Apple
@@ -23,6 +23,7 @@ status change.
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
+| Live privacy/support | `https://coffee.capturethis.com/privacy` and `/support` | Both returned HTTP 200 at 17:22 CDT on 2026-07-27 and visibly identified Capture This plus `info@capturethis.com`; owner wording approval remains open |
 | Live Vercel deployment | `dpl_5QSYwoDepaRhT9sXcYgtL5hYtiJ3` | READY, production, verified 2026-07-24 |
 | Live deployed Git commit | `e1e9ff40346ddfb606074f1927b72e171d94c546` | Latest `main`, verified through Vercel |
 | Release preview deployment | `dpl_2J6VJTBb4cV79he7mJhCgyhBRqaS` / commit `dc4f33008a368feeff01b0a9817d053692ce1396` | READY |
@@ -151,7 +152,9 @@ physical gates remain release/pilot risks; upload does not mark them passed.
 | Upload workflow/time | Xcode command-line distribution reported `Upload succeeded` at 4:24 PM CDT on 2026-07-27 |
 | Processing | Complete by 4:26 PM CDT. Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` |
 | Internal availability | Ready to install through TestFlight for the existing internal tester; the availability email was received at 4:26 PM CDT |
-| Physical status | Build 10 has no device time yet. Physical gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode |
+| Physical status | Build 10 has no recorded physical device acceptance. The paired iPhone reports production bundle `1.0.0 (10)`, but that installation fact is not a visible open/version check or physical pass. Build 9 baseline gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode. A 17:31 CDT read-only container audit confirmed Fictional Operator 02 still has one unresolved uncertain record after paper emerged and requires physical inspection before any recovery choice |
+| External TestFlight | Existing group `Capture This crew pilot` has no build or tester assigned; review not submitted; current packet is `docs/build-10-external-testflight-metadata-2026-07-27.md` | Blocked on owner-approved contact/metadata fields and an explicitly authorized production fictional account plus Active day |
+| TestFlight expiration | Expected around 2026-10-25 from the 90-day window | Estimate only; authoritative App Store Connect date still required. A 2026-07-27 read-only browser attempt reached Apple sign-in because no authenticated session was connected; no App Store field changed |
 
 The focused Build 10 tests cover:
 
@@ -256,7 +259,7 @@ manual sync all remain authoritative.
 | Final post-tool regression | Before 12:20 CDT on 2026-07-27: Flutter analysis and 158/158 tests, frozen-web 105/105, warning-free lint, production build, and unchanged 591×354 NIIMBOT verification passed |
 | Detached Build 9 physical source | Clean `47c4405`; `niim_blue_flutter: 1.0.1`; Flutter analysis and 140/140 tests passed. A disposable-host-only release build was installed directly in isolated bundle `com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or upload occurred |
 | Build 10 archive / IPA / upload | Passed on 2026-07-27: clean production-configured archive `1.0.0 (10)`, signed IPA SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`, Xcode command-line `Upload succeeded`, and TestFlight availability email received at 4:26 PM CDT |
-| `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
+| `npm audit --omit=dev` | **Failed again at 17:22 CDT on 2026-07-27:** three high package findings remain in Next 16.2.11's bundled PostCSS 8.4.31 and Sharp 0.34.5 paths; top-level Sharp is 0.35.3. The suggested force fix would install breaking Next 9.3.3, so no dependency was changed |
 
 The build-6 IPA was inspected for version/build, bundle ID, iPhone-only device family,
 portrait orientation, export-compliance flag, Bluetooth copy, application and
@@ -299,10 +302,10 @@ batch/recovery demo remains pending the full physical M2_H gate.
 | Leaked temporary credential rotation | Blocked on owner | Rotate the affected temporary Supabase/Auth credential; never reuse it |
 | Public Supabase signup disabled | Verified live | Public settings reported `disable_signup: true` |
 | Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
-| Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
+| Stable fictional review production | Blocked on explicit production-write approval, private operator access, and named cleanup owner | Owner-provisioned invited account plus Active fictional production; credentials stored only in App Store Connect/private handoff |
 | Physical iPhone + M2_H test | Checks 1, 2, 5, 6, 9 passed on 2026-07-27. **Check 3, the unattended ten-label batch, FAILED** — two runs, both stopped on the batch's first label with a printer acknowledgement timeout (`0x04 inPageStart`, then `0xe4 inPageEnd`); owner accepted single-label printing as the supported mode. Checks 4, 7, 8, 10 open | Complete the remaining rows in `docs/physical-release-test.md`. The batch row is closed as failed-with-limitation and must never be reported as a pass |
 | App Store Connect build status | Build 10 upload succeeded at 4:24 PM CDT; by 4:26 PM Apple/TestFlight reported `1.0.0 (10)` available to test for the existing internal tester | Install from TestFlight and complete Build 10 device acceptance |
-| External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 9 after its physical gate passes, submit for Beta App Review, then record Luke's pilot |
+| External TestFlight | Group created; Build 10 not assigned; review not submitted; buddy not invited | Approve the Build 10 metadata/contact fields, create the secure production fictional fixture with explicit authority, confirm the build is not Internal Only, submit Build 10 for Beta App Review, record the exact expiration, then invite the buddy by email only after Apple approval |
 | App Review | Pending | Production submission status and reviewer correspondence |
 | Unlisted request | Pending | Apple-approved Unlisted App status |
 | Permanent App Store link | Pending | Direct URL verified and final clean-device print smoke test |

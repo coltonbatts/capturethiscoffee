@@ -3,8 +3,8 @@
 > **Historical web-first/Build 6 checklist.** Preserve it as prior evidence,
 > but use [`current-state-2026-07-25.md`](current-state-2026-07-25.md),
 > [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and
-> [`physical-release-test.md`](physical-release-test.md) for the active Build 9
-> boundary.
+> [`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md)
+> for the active Build 10 boundary.
 
 Last updated: 2026-07-23 (printer handoff audit)
 
@@ -180,6 +180,10 @@ Fail if fallback export is unavailable or produces a blank/cropped asset.
 
 ### A3a. Historical fallback: save-as-template + Batch Print timing
 
+This is a historical NIIMBOT-official-app fallback experiment, not a supported
+Capture This batch capability and not a Build 10 acceptance requirement.
+Build 10 direct printing is one label at a time.
+
 As a fallback, the NIIMBOT app has a separate batch mechanism from the CSV path in A5: it
 lets you multi-select several already-saved templates in **My Templates**
 and print them all in one pass via **Batch Print**. This step tests whether
@@ -223,6 +227,10 @@ text smears or the label lifts — this is a stock/ribbon issue to raise
 with the tech lead, not something to fix by re-exporting.
 
 ### A5. Export and validate the fallback CSV batch path
+
+This tests the authenticated `/labels` CSV fallback through NIIMBOT's own app.
+It does not change the failed Capture This **Print all** gate and must not be
+reported as direct-app batch support.
 
 Steps:
 1. In `/labels`, select several (3+) active orders for the same production.

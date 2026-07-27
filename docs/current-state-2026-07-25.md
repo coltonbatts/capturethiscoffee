@@ -34,6 +34,16 @@ remain available when the app or printer path is unavailable.
   signed and exported as `1.0.0 (10)`, uploaded at 4:24 PM CDT on 2026-07-27,
   and reported available to the existing internal TestFlight tester at
   4:26 PM CDT.
+- Build 10 is the current controlled-pilot candidate. The external group
+  `Capture This crew pilot` exists with no build or tester assigned; Beta App
+  Review has not been submitted. Owner-approved metadata/contact fields and a
+  fictional invited account plus Active production in the production backend
+  are required first. The exact external packet is
+  `docs/build-10-external-testflight-metadata-2026-07-27.md`.
+- Build 10 has no physical device acceptance. The printer must not be mailed
+  until the exact TestFlight Build 10 is exercised with the accepted M2_H and
+  the hardware inventory is signed. Current status and worksheets are in
+  `docs/build-10-pilot-handoff-2026-07-27.md`.
 - Build 10 architecture, vertical slices, acceptance tests, and release
   blockers are recorded in
   `docs/build-10-implementation-2026-07-25.md`.
@@ -79,8 +89,13 @@ remain available when the app or printer path is unavailable.
   documented product limitation. No shipping code, printer-library pin, firmware,
   geometry, or density was changed.
 - Checks 4, 7, 8, and 10 remain open.
+- A read-only iPhone-container audit at 17:31 CDT on 2026-07-27 confirmed
+  Fictional Operator 02 still has exactly one local `uncertain` record after
+  one label emerged during the failed batch. It must not be resolved until the
+  physical paper is inspected. Database or app state cannot decide that
+  recovery action.
 
-## What Build 9 can do
+## Historical Build 9 capability baseline
 
 - Initialize from reviewed public Supabase configuration.
 - Sign in with an owner-provisioned email/password and restore the session from
@@ -99,7 +114,7 @@ remain available when the app or printer path is unavailable.
 Normal signed-in operation does not call `src/app/api/public/*`. Those routes
 remain for the zero-install runner and legacy-link fallback.
 
-## What Build 9 cannot do
+## What Build 9 could not do before Build 10
 
 - Capture or edit a drink.
 - Mark a person no-drink or accept/update their usual order.
@@ -117,10 +132,11 @@ The current iOS **Roster** is a printable-label roster. People who still need an
 order are present in the cached board model but do not yet have an operating
 surface.
 
-## Build 10 physical acceptance — still open after TestFlight upload
+## Physical baseline and Build 10 acceptance — still open
 
 The owner explicitly authorized the internal TestFlight upload to obtain Build
-10 device time. That upload does not close the following physical checks:
+10 device time. That upload does not close the following Build 9 baseline
+checks or replace Build 10's own physical worksheet:
 
 1. Online sign-in and selected-day restoration after force-quit.
 2. Airplane-mode cold start from an authenticated cached day.
@@ -135,6 +151,11 @@ The owner explicitly authorized the internal TestFlight upload to obtain Build
 10. Independent operator run without the builder touching the phone.
 
 Automated checks are necessary but do not replace this gate.
+Build 10 must additionally complete the 25 direct-observation rows in
+`docs/build-10-pilot-handoff-2026-07-27.md`, including three offline captures,
+two individual prints, exactly-once replay, both conflict choices, inactive-day
+refusal, haptics, Reduce Motion, single-label interruption, reconnect,
+background/resume, fallbacks, and Realtime or polling/manual-refresh evidence.
 
 ## Build 10 — close the on-set loop
 
@@ -242,6 +263,12 @@ Read these in order:
 8. `docs/build-10-release-validation-2026-07-25.md` — exact remaining gate
    status, physical session order, disposable-project acceptance, and evidence
    record.
+9. `docs/build-10-pilot-handoff-2026-07-27.md` — current status table, exact
+   Build 10 physical worksheet, hardware mailing gate, buddy acceptance, and
+   controlled-pilot versus product-independence backlog.
+10. `docs/build-10-external-testflight-metadata-2026-07-27.md` — current beta
+    description, What to Test, review notes, hardware explanation, secure demo
+    instructions, and owner-approval fields.
 
 Older web-first strategy and operating documents are historical unless their
 opening status note says they have been reconciled with this boundary.

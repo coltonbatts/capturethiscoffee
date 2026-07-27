@@ -5,6 +5,8 @@
 > [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and the complete-app
 > metadata rewrite is a Build 13 gate in
 > [`current-state-2026-07-25.md`](current-state-2026-07-25.md).
+> The current Build 10 external-TestFlight copy is
+> [`build-10-external-testflight-metadata-2026-07-27.md`](build-10-external-testflight-metadata-2026-07-27.md).
 
 Last updated: 2026-07-23
 
@@ -92,7 +94,11 @@ throughout review.
 - Secure review production URL: **APP STORE CONNECT ONLY**
 - Demo video attachment: **PENDING PHYSICAL TEST**
 
-## External TestFlight metadata
+## Historical Build 6 external-TestFlight metadata — do not use
+
+The copy below preserves what was proposed for Build 6. Its batch-print request
+is now known to be unsafe as a current tester instruction: Build 9 Gate 3
+failed twice, and Build 10 supports deliberate single-label printing only.
 
 **Beta description**
 
