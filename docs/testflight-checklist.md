@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -28,7 +28,7 @@ permanent target is an approved unlisted App Store link.
 | Build 9 committed source | `47c4405` (`Ship Build 9 signed-in day selection`) |
 | Build 9 uploaded/processed | Uploaded at 3:46 PM CDT on 2026-07-25; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
 | Build 9 internal availability | Assigned to internal group `Main` with one invite; locally signed release launch, signed-in day loading, and one physical M2_H reprint passed |
-| Build 10 local implementation | `1.0.0 (10)` source implemented from `6e54cc5`; Flutter 158/158, frozen-web 105/105 plus lint/build, and clean disposable local-Supabase RLS/CAS/printed-fact/Realtime verification passed; no archive, upload, or production migration |
+| Build 10 local implementation | `1.0.0 (10)` committed and pushed at `fea2fc3`; Flutter 158/158, frozen-web 105/105 plus warning-free lint/build/geometry, and clean disposable local-Supabase verification pass. Build 10 migrations are applied only in authorized disposable project `svqxznvyrbmbqihekkwo`. Ledger/schema/RLS/publication, anonymous refusal, two-user authenticated RLS/CAS/conflict/printed-fact/Realtime, and transient cleanup all pass. Fictional physical fixture `build10-20260727-a` is seeded and readable by both users. Final post-tool regressions passed before 12:20 CDT on 2026-07-27. No archive, upload, or production migration |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -47,9 +47,16 @@ measurements, printer identity and firmware, batch behavior, interruption
 recovery, synchronization, cold-cup adhesion, and Luke's independent run still
 need the record in `docs/physical-release-test.md`.
 
+The preserved Build 9 IPA embeds the production Supabase host and must not be
+used for fictional acceptance writes. Run exact source `47c4405` in release
+mode on the physical iPhone with the explicitly authorized disposable public
+URL/key; do not archive, export, or upload that validation install.
+
 Build 10 must not be packaged or uploaded until that Build 9 gate is complete.
 Afterward it also needs the physical seven-step acceptance in
 `docs/build-10-implementation-2026-07-25.md` against a disposable fixture.
+The exact ten-row audit and combined operator worksheet are in
+`docs/build-10-release-validation-2026-07-25.md`.
 
 ## Before upload
 

@@ -25,6 +25,40 @@ release gate passed until authenticated offline restoration, account isolation,
 the remaining hardware record, batch, synchronization, recovery, adhesion, and
 independent-operator checks are complete.
 
+## Build 9 exit audit — 2026-07-25 18:53 CDT
+
+The initial release-validation audit found all ten named exit checks open.
+During the direct physical session on 2026-07-27, checks 1, 2, 5, 6, and 9
+passed: authenticated and airplane-mode cold starts restored correctly,
+printed-but-unsynced recovery synced without a duplicate, Account A's durable
+recovery did not leak into Account B and returned only to Account A, and a
+fictional label remained clean and readable on a cold cup. The exact-ten batch
+rerun and checks 4, 7, 8, and 10 remain open; no physical pass is inferred for
+them.
+
+The exact per-check evidence gap, shortest combined session, Build 10
+seven-step acceptance, and timestamped result fields are maintained in
+[`build-10-release-validation-2026-07-25.md`](build-10-release-validation-2026-07-25.md).
+Do not mark a row passed from automated coverage.
+
+The preserved Build 9 IPA was inspected on 2026-07-27 and contains the
+production Supabase hostname. It is provenance evidence, not an authorized
+acceptance target. Do not perform these fictional writes with that IPA. Run
+exact Build 9 source `47c4405` on the iPhone in release mode with the explicitly
+authorized disposable project's public URL/key, without creating an archive or
+IPA, and confirm that only fictional disposable data is visible before
+continuing.
+
+The safe detached `47c4405` source passed Flutter analysis plus 140/140 tests
+with `niim_blue_flutter: 1.0.1`. Its disposable-host-only release build is
+installed directly in isolated bundle
+`com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or
+upload was created. Disposable fixture `build10-20260727-a` contains separate
+batch, recovery, Build 10 acceptance, Planning, and Complete days. Following a
+no-paper interruption and verified single-label retry, one fresh fictional
+replacement row restored exactly ten unprinted batch labels. Both test accounts
+can read the fixture. Preserve it until the physical evidence queries finish.
+
 ## Record first
 
 - Date/tester: _____

@@ -1,6 +1,6 @@
 # Capture This 1.0.0 release evidence
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
 This file separates verified evidence from pending claims. Update it after each
 preview/production deployment, TestFlight upload, physical run, and Apple
@@ -19,7 +19,7 @@ status change.
 | Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
 | Build-7 offline-first source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on `main` | Verified locally and at `origin/main` before upload; includes on-device label rendering and durable local board caching |
 | Build-9 signed-in source | `47c4405` on `main` | Exact committed Build 9 app source; adds Supabase sign-in, Days, direct authenticated board access, per-user caching, and direct printed-status sync |
-| Build-10 implementation source | Local working tree from `6e54cc5` | Collect, optimistic shared board, durable conditional outbox, explicit conflicts, Realtime refresh signal, and monotonic printed-fact migration implemented; no archive, upload, production migration, or production-data write |
+| Build-10 implementation source | `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943` on `main`, verified locally and at `origin/main` | Collect, optimistic shared board, durable conditional outbox, explicit conflicts, Realtime refresh signal, and monotonic printed-fact migration implemented; no Build 10 archive, upload, production migration, or production-data write |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -158,7 +158,36 @@ The monotonic printed-fact migration exists locally at
 been applied to production. A clean disposable local Supabase 2.109.1 stack
 verified the migration, authenticated RLS, stale-write refusal, monotonic
 printed facts, and the filtered `public.orders` Realtime signal. Application
-and verification in the intended private project remain pending.
+and verification in production remain prohibited.
+
+On 2026-07-27, the owner authorized private disposable project
+`capture-this-build10-disposable` (`svqxznvyrbmbqihekkwo`). After an exact
+dry-run, the pre-Build-10 schema snapshot, orders-Realtime migration, and Build
+10 migration were applied there. Remote migration history records all three,
+a second dry-run reports up to date, authenticated remote schema dumps verify
+the two order triggers, core RLS, and `public.orders` publication membership,
+and an anonymous orders read was refused with HTTP 401 / Postgres `42501`.
+Public-key sessions for both disposable users then passed authenticated RLS,
+conditional order/usual conflicts, competing-value preservation, irreversible
+printed facts, identical-update revision detection, and filtered Realtime.
+Transient verifier rows were removed and audited absent. Persistent fictional
+fixture `build10-20260727-a` was seeded with five days, 24 people, and 48
+orders for physical acceptance. After the first ten-label batch stopped before
+paper emerged, one uniquely named fictional replacement person/order was added
+through Account A's public RLS session so a fresh ten-label queue could be run
+without resetting the now-printed retry row. The fixture therefore now has five
+days, 25 people, and 49 orders. Production project
+`lehwhehssjfudyrtljus` was never linked or mutated.
+
+At 18:48–18:53 CDT on 2026-07-25, release validation reran the full local
+evidence from clean `fea2fc3`: Flutter analysis and 158/158 tests, frozen-web
+105/105 tests, lint, Next.js production build, 591×354 NIIMBOT verification,
+and a fresh localhost-only Supabase proof all passed. A physical iPhone 16 on
+iOS 18.7.2 is running exact detached Build 9 from `47c4405` in an isolated
+side-by-side bundle configured only for the disposable project. Physical gates
+1, 2, 5, 6, and 9 have passed; the ten-label rerun and the remaining physical
+checks are still open. See
+`docs/build-10-release-validation-2026-07-25.md`.
 
 ## Automated verification
 
@@ -178,10 +207,17 @@ and verification in the intended private project remain pending.
 | `flutter analyze` (build 9) | Passed, no issues |
 | `flutter test` (build 9) | 140/140 passed, including authenticated flow, user-scoped cache, direct-board adaptation, legacy fallback, and label goldens |
 | `flutter build ipa --release --export-options-plist=ios/ExportOptions.plist` with reviewed Supabase Dart defines (build 9) | Passed; archive and IPA report `1.0.0 (9)`, local IPA is 22,894,208 bytes |
+| Preserved Build 9 embedded target audit | The IPA's Dart AOT framework contains the production Supabase hostname, not the authorized disposable hostname. It is provenance evidence only and is prohibited for fictional acceptance writes |
 | `flutter analyze` (Build 10 local source) | Passed, no issues |
 | `flutter test` (Build 10 local source) | 158/158 passed, including Collect, serialized durable outbox writes, relaunch/replay, conflict, Realtime-signal, and monotonic print recovery coverage |
 | Frozen-web regressions with Build 10 local source | `npm test` 105/105, `npm run lint`, `npm run build`, and `npm run verify:niimbot-export` passed |
 | Clean disposable local Supabase verification | Passed: anonymous RLS refusal, authenticated read/write, successful then stale order and usual-order CAS, irreversible `label_printed: true`, and filtered authenticated Realtime update; production untouched |
+| Authorized disposable remote Supabase migration preflight | Passed for `svqxznvyrbmbqihekkwo`: exact dry-run, three applied migration-ledger entries, second dry-run up to date, trigger/RLS/publication schema verification, and anonymous `orders` refusal |
+| Remote-safe Supabase verifier and post-change regression | `scripts/verify-build10-remote-supabase.mjs` syntax and its authorized-host/production-host/privileged-key guards passed. At 11:59 CDT on 2026-07-27, Flutter analysis and 158/158 tests plus frozen-web 105/105 tests, lint, production build, and NIIMBOT export verification all passed |
+| Authenticated disposable remote verification | Passed with two public-key user sessions: authenticated RLS, order/usual CAS plus stale refusal, competing-value preservation, irreversible printed fact, identical-update revision advance, filtered Realtime, and zero-row cleanup audit |
+| Physical fixture manager | Safety guards and syntax passed; seeded `build10-20260727-a` with five fictional days, 24 people, and 48 orders; Account B verified expected counts. One fresh fictional replacement person/order was later added through the public authenticated RLS path after a no-paper batch interruption, yielding 25 people and 49 orders without resetting any printed row |
+| Final post-tool regression | Before 12:20 CDT on 2026-07-27: Flutter analysis and 158/158 tests, frozen-web 105/105, warning-free lint, production build, and unchanged 591×354 NIIMBOT verification passed |
+| Detached Build 9 physical source | Clean `47c4405`; `niim_blue_flutter: 1.0.1`; Flutter analysis and 140/140 tests passed. A disposable-host-only release build was installed directly in isolated bundle `com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or upload occurred |
 | Build 10 archive / IPA / upload | Not run; blocked by the incomplete Build 9 physical exit gate |
 | `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
 

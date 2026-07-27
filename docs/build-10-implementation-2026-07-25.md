@@ -1,6 +1,6 @@
 # Capture This Build 10 implementation record
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
 ## Boundary
 
@@ -15,7 +15,9 @@ build. The accepted `niim_blue_flutter: 1.0.1`, M2_H assumptions, and `grid-01`
 label geometry are unchanged.
 
 The implementation started from clean `main` at `6e54cc5`. Build 9's exact
-committed app source remains `47c4405`.
+committed app source remains `47c4405`. The completed Build 10 implementation
+is committed and pushed at `fea2fc3` (`Ship Build 10 offline collection and
+sync`).
 
 ## Build 9 baseline and release blockers
 
@@ -149,6 +151,25 @@ signal, while polling and manual refresh remain authoritative. The disposable
 fixture was removed after the check. No production data or configuration was
 used.
 
+On 2026-07-27, the owner explicitly authorized disposable remote project
+`capture-this-build10-disposable` (`svqxznvyrbmbqihekkwo`). A reviewed dry-run
+showed exactly the pre-Build-10 schema snapshot, the orders-Realtime migration,
+and `20260725120000_preserve_printed_order_facts.sql`. Those three migrations
+were applied. Remote migration history, a second dry-run reporting up to date,
+and authenticated schema dumps verified both order triggers, core RLS, and
+`public.orders` publication membership. An anonymous orders read was refused
+with HTTP 401 / Postgres `42501`. The guarded public-key/two-user verifier then
+passed authenticated RLS, conditional order/usual conflict refusal,
+competing-value preservation, irreversible printed facts, `updated_at` replay
+detection, and filtered Realtime. Its transient fixture cleanup audit returned
+zero rows. A persistent five-day, 24-person, 48-order fictional physical
+fixture was seeded under tag `build10-20260727-a` and independently read by
+Account B. After a no-paper interruption, one fresh fictional replacement
+person/order was added through Account A's public RLS session so the exact
+ten-label run can be retried without resetting a printed fact; current totals
+are 25 people and 49 orders. Production project
+`lehwhehssjfudyrtljus` was never linked or mutated.
+
 ## Vertical slices and acceptance tests
 
 | Slice | Implementation acceptance | Automated evidence |
@@ -177,14 +198,36 @@ Current full regression evidence:
 - clean local Supabase verification — passed for RLS, conditional conflict
   refusal, monotonic printed facts, and filtered Realtime.
 
+After the remote verifier and guarded physical-fixture manager were added, the
+complete Flutter and frozen-web suites were rerun and passed again before 12:20
+CDT on 2026-07-27. The final lint run had no warnings. Both tools' syntax,
+project-host refusal, and service-role/secret-key refusal passed. Exact detached
+Build 9 source `47c4405` also passed analysis and 140/140 tests with
+`niim_blue_flutter: 1.0.1`. A release-mode build containing the disposable
+hostname and no production hostname was installed directly in isolated bundle
+`com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or
+upload occurred.
+
+The release-validation takeover reran this evidence from clean `fea2fc3` on
+2026-07-25 at 18:48–18:53 CDT. Flutter analysis and 158/158 tests, frozen-web
+105/105 tests, lint, production build, NIIMBOT geometry, and the clean
+localhost-only Supabase proof all passed. A connected physical iPhone 16 on iOS
+18.7.2 is running that isolated Build 9. Direct physical checks 1, 2, 5, 6, and
+9 have passed; the interrupted ten-label attempt does not pass its batch gate,
+and the remaining physical checks stay open. The exact row audit and operator
+worksheet are in
+`docs/build-10-release-validation-2026-07-25.md`.
+
 ## Handoff gates
 
 Before any Build 10 archive or upload:
 
 - finish and record all ten Build 9 physical exit checks;
 - apply and verify the monotonic printed-fact migration in the intended
-  Supabase project;
-- verify `public.orders` is in the Supabase Realtime publication;
+  Supabase project — applied and functionally verified in the authorized
+  disposable project;
+- verify `public.orders` is in the Supabase Realtime publication — remote
+  schema verification passed;
 - run the seven-step Build 10 acceptance target against a disposable fixture;
 - rerun Flutter analysis/tests and the frozen web regression suite;
 - record source commit, archive identity, IPA hash, signing, and App Store

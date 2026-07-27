@@ -1,6 +1,6 @@
 # Capture This current state — Build 10 implementation
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
 ## Executive decision
 
@@ -27,12 +27,45 @@ remain available when the app or printer path is unavailable.
   day, and completed one physical M2_H reprint.
 - Build 9 is consumed. Any shipping-code or embedded-metadata change must use
   build 10 or later.
-- Build 10 implementation started from clean `main` at `6e54cc5`. It is local
-  source and automated evidence only: no Build 10 archive has been packaged,
-  no migration has been applied to production, and no binary has been uploaded.
+- Build 10 implementation started from clean `main` at `6e54cc5` and is
+  committed and pushed at `fea2fc3` (`Ship Build 10 offline collection and
+  sync`). It remains source and automated evidence only: no Build 10 archive
+  has been packaged, no migration has been applied to production, and no
+  binary has been uploaded.
 - Build 10 architecture, vertical slices, acceptance tests, and release
   blockers are recorded in
   `docs/build-10-implementation-2026-07-25.md`.
+- The exact physical-gate audit, disposable-project preflight, shortest
+  practical operator session, and live evidence worksheet are in
+  `docs/build-10-release-validation-2026-07-25.md`.
+- On 2026-07-27, the Build 10 migrations were applied only to the explicitly
+  authorized disposable remote project `svqxznvyrbmbqihekkwo`. Ledger, schema,
+  RLS, Realtime publication, anonymous refusal, authenticated conditional
+  writes/conflicts, monotonic printed facts, and filtered Realtime all passed.
+  The transient verifier rows were removed and a cleanup audit found zero.
+- Guarded public-key/user-session tooling seeded persistent fictional fixture
+  `build10-20260727-a`: initially exactly 10 Build 9 batch labels, 12 recovery
+  labels, 24 uncaptured Build 10 orders, one Planning order, and one Complete
+  order. Both disposable accounts can read it. After the first batch attempt
+  stopped without paper, Operator 01 was safely retried and one fresh fictional
+  replacement person/order was added through Account A's public RLS session.
+  The fixture now has 25 people and 49 orders, including exactly ten fresh
+  unprinted labels on the Build 9 batch day.
+- After the final fixture-tool change, Flutter analysis and 158/158 tests plus
+  frozen-web 105/105 tests, warning-free lint, production build, and NIIMBOT
+  geometry all passed again before 12:20 CDT.
+- The preserved Build 9 IPA embeds the production Supabase host. It must remain
+  provenance evidence only during acceptance. The ten Build 9 physical checks
+  require an exact detached `47c4405` release-mode device run configured with
+  the disposable public URL/key; this creates no archive or upload. That clean
+  detached source passed analysis plus 140/140 tests and is installed directly
+  in isolated bundle `com.capturethis.ctcprinter.build10validation`; its signed
+  app contains the disposable hostname and no production hostname.
+- Physical Build 9 checks 1, 2, 5, 6, and 9 have passed on the iPhone. The first
+  ten-label run stopped safely before its first label, its durable recovery and
+  account isolation behaved correctly, and the known no-paper retry produced
+  exactly one label. A fresh exact-ten queue is ready, but the batch gate and
+  checks 4, 7, 8, and 10 remain open.
 
 ## What Build 9 can do
 
@@ -126,9 +159,15 @@ The local Build 10 implementation now covers this workflow in app/controller
 tests, including three offline captures, two durable print facts, relaunch,
 single replay, and a competing-edit conflict. A clean disposable local Supabase
 stack also verifies authenticated RLS, conditional stale-write refusal,
-irreversible printed facts, and the filtered Realtime signal. The physical
-device run and intended non-production-project acceptance remain required;
-automated fakes and local database checks are not physical release evidence.
+irreversible printed facts, and the filtered Realtime signal. On 2026-07-27,
+the owner explicitly authorized disposable remote project
+`capture-this-build10-disposable` (`svqxznvyrbmbqihekkwo`). The pre-Build-10
+schema, orders-Realtime migration, and Build 10 printed-fact migration were
+applied there after an exact dry-run. Migration history, a second dry-run,
+remote schema dumps, publication membership, and anonymous RLS refusal passed.
+Authenticated fictional-fixture verification has passed. The remaining
+physical device checks are still required; automated fakes and database checks
+are not physical release evidence.
 
 ## Later builds
 
@@ -186,6 +225,9 @@ Read these in order:
 6. `docs/testflight-checklist.md` — physical/internal/external pilot gates.
 7. `docs/build-10-implementation-2026-07-25.md` — Build 10 architecture,
    decisions, vertical slices, and implementation evidence.
+8. `docs/build-10-release-validation-2026-07-25.md` — exact remaining gate
+   status, physical session order, disposable-project acceptance, and evidence
+   record.
 
 Older web-first strategy and operating documents are historical unless their
 opening status note says they have been reconciled with this boundary.
