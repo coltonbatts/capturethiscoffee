@@ -1,0 +1,62 @@
+name: Bug report
+description: Report reproducible product or engineering behavior
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use fictional data. Do not include credentials, production links, share
+        tokens, signing assets, or private crew/client information.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - iPhone app
+        - Web operator app
+        - Public runner
+        - Label export
+        - Supabase or sync
+        - Documentation or release tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and its operating impact.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open…
+        2. Select…
+        3. Observe…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App/build, commit, device/browser, OS, printer model/firmware, and network state as relevant.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I used fictional data and removed secrets and private client information.
+          required: true

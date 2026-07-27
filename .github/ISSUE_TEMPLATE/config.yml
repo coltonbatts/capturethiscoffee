@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Product support
+    url: https://coffee.capturethis.com/support
+    about: Get help with accounts, day-of setup, printing, and recovery.
+  - name: Private security report
+    url: https://github.com/coltonbatts/capturethiscoffee/security/advisories/new
+    about: Report a suspected vulnerability without exposing it publicly.
