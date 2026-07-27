@@ -1,6 +1,6 @@
 # Build 10 pilot, printer, and operator handoff
 
-Last updated: 2026-07-27 18:42 CDT
+Last updated: 2026-07-27 18:44 CDT
 
 Build 10 is the current controlled-pilot candidate. It is internally available
 through TestFlight, but it is not externally approved, physically accepted, or
@@ -17,7 +17,7 @@ ready to leave Colton's possession.
 | Failed with accepted limitation | Build 9 Gate 3 failed twice on the first batch label because printer acknowledgements timed out. It is not a pass. Single-label printing is the supported mode; Print all and unattended batch printing are unsupported |
 | Still open | Build 9 checks 4, 7, 8, and 10; the complete Build 10 physical acceptance; exact TestFlight expiration; production Realtime publication membership; representative sanitized photos; hardware/consumable details; external review and buddy pilot |
 | Still open — print safety | Read-only phone-container audit at 17:31 CDT confirmed Fictional Operator 02 still has exactly one durable `uncertain` record after paper emerged. Its paper must be physically inspected before any recovery choice. Never resolve it from database or app state alone |
-| Blocked on owner input or approval | Exact external-TestFlight copy was approved at 18:42 CDT on 2026-07-27. Still open: review contact; feedback-email approval; buddy identity/email; privacy/support wording approval; secure production fixture owner/cleanup; production fixture creation; explicit Beta App Review submission approval; temporary credential rotation; dependency-risk decision; ownership/backup register |
+| Blocked on owner input or approval | Exact external-TestFlight copy was approved at 18:42 CDT on 2026-07-27; review contact name is Kait Batts. Still open: review phone/email; feedback-email approval; buddy identity/email; privacy/support wording approval; secure production fixture owner/cleanup; production fixture creation; explicit Beta App Review submission approval; temporary credential rotation; dependency-risk decision; ownership/backup register |
 | Blocked on Apple | Beta App Review decision and external availability after an approved submission |
 | Post-pilot | Builds 11–13 product-independence work, complete App Store metadata, unlisted App Store approval, permanent-link clean install, two-person replacement-build capability, backup/restore program, and release tag |
 
@@ -134,6 +134,13 @@ together safely.
 
 Colton must not operate the buddy's phone, printer controls, or dashboard during
 this pass. Assistance must be recorded and may leave the independent gate open.
+
+An in-house independent Build 10 run is planned on Colton's wife's phone
+because she is physically available. If Colton does not operate her phone,
+printer controls, or dashboard, that run may close the independent-operator
+physical gate. It does not replace the post-shipping buddy acceptance unless
+the owner explicitly designates her as the external pilot. Her name, iPhone,
+iOS, invitation email, and TestFlight expiration remain to be recorded.
 
 | Observation | Result |
 |---|---|

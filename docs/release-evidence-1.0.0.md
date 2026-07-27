@@ -1,6 +1,6 @@
 # Capture This 1.0.0 release evidence
 
-Last updated: 2026-07-27 18:42 CDT
+Last updated: 2026-07-27 18:44 CDT
 
 This file separates verified evidence from pending claims. Update it after each
 preview/production deployment, TestFlight upload, physical run, and Apple
@@ -153,7 +153,7 @@ physical gates remain release/pilot risks; upload does not mark them passed.
 | Processing | Complete by 4:26 PM CDT. Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` |
 | Internal availability | Ready to install through TestFlight for the existing internal tester; the availability email was received at 4:26 PM CDT |
 | Physical status | Build 10 has no recorded physical device acceptance. The paired iPhone reports production bundle `1.0.0 (10)`, but that installation fact is not a visible open/version check or physical pass. Build 9 baseline gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode. A 17:31 CDT read-only container audit confirmed Fictional Operator 02 still has one unresolved uncertain record after paper emerged and requires physical inspection before any recovery choice |
-| External TestFlight | Existing group `Capture This crew pilot` has no build or tester assigned; review not submitted. Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27 | Blocked on review contacts, separate feedback/privacy/support attestations, an explicitly authorized production fictional account plus Active day, and explicit submission approval |
+| External TestFlight | Existing group `Capture This crew pilot` has no build or tester assigned; review not submitted. Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Review contact name is Kait Batts | Blocked on review phone/email, separate feedback/privacy/support attestations, an explicitly authorized production fictional account plus Active day, and explicit submission approval |
 | TestFlight expiration | Expected around 2026-10-25 from the 90-day window | Estimate only; authoritative App Store Connect date still required. A 2026-07-27 read-only browser attempt reached Apple sign-in because no authenticated session was connected; no App Store field changed |
 
 The focused Build 10 tests cover:

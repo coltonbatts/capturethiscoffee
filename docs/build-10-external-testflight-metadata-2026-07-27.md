@@ -1,6 +1,6 @@
 # Build 10 external TestFlight metadata packet
 
-Last updated: 2026-07-27 18:42 CDT
+Last updated: 2026-07-27 18:44 CDT
 
 Status: **COPY APPROVED — CONTACTS, SEPARATE OWNER ATTESTATIONS, SECURE REVIEW
 FIXTURE, AND SUBMISSION APPROVAL REQUIRED.**
@@ -150,8 +150,8 @@ written in the Codex task at 18:42 CDT on 2026-07-27. This approval does not
 supply or approve any separate field below and does not authorize production
 fixture writes, Beta App Review submission, or a tester invitation.
 
-- Review contact first name: **OWNER INPUT**
-- Review contact last name: **OWNER INPUT**
+- Review contact first name: `Kait`
+- Review contact last name: `Batts`
 - Review phone: **OWNER INPUT**
 - Review email: **OWNER INPUT**
 - Approve `info@capturethis.com` as tester feedback address: **yes/no**
