@@ -1,6 +1,6 @@
 # Build 10 external TestFlight metadata packet
 
-Last updated: 2026-07-27 18:44 CDT
+Last updated: 2026-07-27 18:46 CDT
 
 Status: **COPY APPROVED — CONTACTS, SEPARATE OWNER ATTESTATIONS, SECURE REVIEW
 FIXTURE, AND SUBMISSION APPROVAL REQUIRED.**
@@ -152,7 +152,7 @@ fixture writes, Beta App Review submission, or a tester invitation.
 
 - Review contact first name: `Kait`
 - Review contact last name: `Batts`
-- Review phone: **OWNER INPUT**
+- Review phone: **SUPPLIED PRIVATELY 2026-07-27 — APP STORE CONNECT ONLY**
 - Review email: **OWNER INPUT**
 - Approve `info@capturethis.com` as tester feedback address: **yes/no**
 - Buddy first name: **OWNER INPUT**
