@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-27 17:31 CDT
+Last updated: 2026-07-27 18:42 CDT
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -31,7 +31,7 @@ permanent target is an approved unlisted App Store link.
 | Build 10 source and backend | `1.0.0 (10)` app code committed at `fea2fc3`; clean archive source `ab5edb8` matches `origin/main`. Flutter 158/158 and analysis pass. Production monotonic printed-fact trigger is applied and verified; production Realtime publication membership remains unverified, with polling/resume/manual fallbacks retained |
 | Build 10 signed App Store IPA | `1.0.0 (10)`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`; production host present, disposable host absent, public `anon` key only, Apple Distribution signed, `get-task-allow = false` |
 | Build 10 upload/processing | Xcode command-line upload succeeded at 4:24 PM CDT on 2026-07-27. At 4:26 PM Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` for the existing internal tester |
-| TestFlight beta metadata | Current Build 10 packet is `docs/build-10-external-testflight-metadata-2026-07-27.md`; feedback email, review contact, owner approval, and secure production fixture remain open |
+| TestFlight beta metadata | Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Feedback email, review contact, separate privacy/support approval, secure production fixture, and submission approval remain open |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
 | Build 10 expiration | **Pending authoritative App Store Connect value.** Expected around 2026-10-25, but do not use the estimate as the handoff record |

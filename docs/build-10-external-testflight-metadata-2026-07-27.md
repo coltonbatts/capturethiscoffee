@@ -1,8 +1,9 @@
 # Build 10 external TestFlight metadata packet
 
-Last updated: 2026-07-27 17:31 CDT
+Last updated: 2026-07-27 18:42 CDT
 
-Status: **DRAFT COMPLETE — OWNER APPROVAL AND SECURE REVIEW FIXTURE REQUIRED.**
+Status: **COPY APPROVED — CONTACTS, SEPARATE OWNER ATTESTATIONS, SECURE REVIEW
+FIXTURE, AND SUBMISSION APPROVAL REQUIRED.**
 
 This is the current external-TestFlight packet for Capture This
 `1.0.0 (10)`. It supersedes the historical Build 6 beta copy in
@@ -141,7 +142,13 @@ from the actual uploaded binary and answer any Apple follow-up truthfully.
 ## Owner approval block
 
 No App Store Connect write, external-review submission, or tester invitation
-is authorized by this draft.
+is authorized by the copy approval.
+
+The owner approved the beta description, What to Test, review notes, demo
+instructions, hardware explanation, and export-compliance draft exactly as
+written in the Codex task at 18:42 CDT on 2026-07-27. This approval does not
+supply or approve any separate field below and does not authorize production
+fixture writes, Beta App Review submission, or a tester invitation.
 
 - Review contact first name: **OWNER INPUT**
 - Review contact last name: **OWNER INPUT**
@@ -156,7 +163,7 @@ is authorized by this draft.
 - Cleanup date or trigger: **OWNER INPUT**
 - Approve the beta description, What to Test, review notes, demo instructions,
   hardware explanation, and export-compliance draft exactly as written:
-  **yes/no**
+  **YES — approved 2026-07-27 18:42 CDT**
 
 ## Submission controls
 

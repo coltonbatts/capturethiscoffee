@@ -1,6 +1,6 @@
 # Build 10 pilot, printer, and operator handoff
 
-Last updated: 2026-07-27 17:31 CDT
+Last updated: 2026-07-27 18:42 CDT
 
 Build 10 is the current controlled-pilot candidate. It is internally available
 through TestFlight, but it is not externally approved, physically accepted, or
@@ -17,7 +17,7 @@ ready to leave Colton's possession.
 | Failed with accepted limitation | Build 9 Gate 3 failed twice on the first batch label because printer acknowledgements timed out. It is not a pass. Single-label printing is the supported mode; Print all and unattended batch printing are unsupported |
 | Still open | Build 9 checks 4, 7, 8, and 10; the complete Build 10 physical acceptance; exact TestFlight expiration; production Realtime publication membership; representative sanitized photos; hardware/consumable details; external review and buddy pilot |
 | Still open — print safety | Read-only phone-container audit at 17:31 CDT confirmed Fictional Operator 02 still has exactly one durable `uncertain` record after paper emerged. Its paper must be physically inspected before any recovery choice. Never resolve it from database or app state alone |
-| Blocked on owner input or approval | Review contact; feedback-email approval; buddy identity/email; privacy/support wording approval; secure production fixture owner/cleanup; production fixture creation; temporary credential rotation; dependency-risk decision; ownership/backup register |
+| Blocked on owner input or approval | Exact external-TestFlight copy was approved at 18:42 CDT on 2026-07-27. Still open: review contact; feedback-email approval; buddy identity/email; privacy/support wording approval; secure production fixture owner/cleanup; production fixture creation; explicit Beta App Review submission approval; temporary credential rotation; dependency-risk decision; ownership/backup register |
 | Blocked on Apple | Beta App Review decision and external availability after an approved submission |
 | Post-pilot | Builds 11–13 product-independence work, complete App Store metadata, unlisted App Store approval, permanent-link clean install, two-person replacement-build capability, backup/restore program, and release tag |
 
@@ -25,7 +25,7 @@ ready to leave Colton's possession.
 
 | Question | Current answer |
 |---|---|
-| May Build 10 be submitted for external TestFlight now? | **No.** The candidate may proceed after owner approval of the metadata/contact fields and creation of the secure fictional production fixture. Submission itself requires explicit approval |
+| May Build 10 be submitted for external TestFlight now? | **No.** The exact metadata copy is approved, but the contact fields, separate owner attestations, secure fictional production fixture, and explicit submission approval remain open |
 | May the buddy install now? | **No.** Build 10 is not approved for external testing and the buddy must not be invited before Apple approves it |
 | May the printer be mailed now? | **No.** Build 10 has no recorded physical device session, Operator 02 remains unresolved, and the inventory/firmware/consumable/packing record is incomplete |
 | Is Capture This fully released or operationally independent? | **No.** A controlled pilot can use existing Active days, owner-provisioned accounts, website setup, single-label printing, documented fallback, and named support; permanent independence remains later work |

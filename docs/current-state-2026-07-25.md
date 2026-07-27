@@ -36,9 +36,11 @@ remain available when the app or printer path is unavailable.
   4:26 PM CDT.
 - Build 10 is the current controlled-pilot candidate. The external group
   `Capture This crew pilot` exists with no build or tester assigned; Beta App
-  Review has not been submitted. Owner-approved metadata/contact fields and a
-  fictional invited account plus Active production in the production backend
-  are required first. The exact external packet is
+  Review has not been submitted. The owner approved the exact external beta
+  copy at 18:42 CDT on 2026-07-27. Review contacts, separate feedback and
+  privacy/support attestations, a fictional invited account plus Active
+  production in the production backend, and explicit submission approval are
+  still required. The exact external packet is
   `docs/build-10-external-testflight-metadata-2026-07-27.md`.
 - Build 10 has no physical device acceptance. The printer must not be mailed
   until the exact TestFlight Build 10 is exercised with the accepted M2_H and
