@@ -12,7 +12,7 @@
     "create-demo-user": "node scripts/create-demo-user.mjs"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^0.1.100",
+    "@napi-rs/canvas": "^1.0.2",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.86.0",
     "lucide-react": "^0.562.0",
