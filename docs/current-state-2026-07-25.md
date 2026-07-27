@@ -61,11 +61,19 @@ remain available when the app or printer path is unavailable.
   detached source passed analysis plus 140/140 tests and is installed directly
   in isolated bundle `com.capturethis.ctcprinter.build10validation`; its signed
   app contains the disposable hostname and no production hostname.
-- Physical Build 9 checks 1, 2, 5, 6, and 9 have passed on the iPhone. The first
-  ten-label run stopped safely before its first label, its durable recovery and
-  account isolation behaved correctly, and the known no-paper retry produced
-  exactly one label. A fresh exact-ten queue is ready, but the batch gate and
-  checks 4, 7, 8, and 10 remain open.
+- Physical Build 9 checks 1, 2, 5, 6, and 9 have passed on the iPhone.
+- **Check 3, the unattended ten-label batch, has FAILED.** Two `Print all` runs
+  stopped on the batch's own first label: Operator 01 timed out awaiting
+  `0x04 inPageStart` with no paper, and Operator 02 timed out awaiting
+  `0xe4 inPageEnd` after one label emerged. The app's stop, durable-uncertainty,
+  BLE teardown, and refusal to advance were all correct; the printer's
+  acknowledgement is what did not arrive. Root cause was not isolated — firmware,
+  ribbon/stock lot, BLE conditions, and the 10 s acknowledgement window all
+  remain uneliminated. On 2026-07-27 the owner accepted **single-label printing
+  as the supported operating mode** and recorded unattended batch printing as a
+  documented product limitation. No shipping code, printer-library pin, firmware,
+  geometry, or density was changed.
+- Checks 4, 7, 8, and 10 remain open.
 
 ## What Build 9 can do
 
@@ -111,7 +119,8 @@ recorded. Local implementation and automated testing may continue:
 
 1. Online sign-in and selected-day restoration after force-quit.
 2. Airplane-mode cold start from an authenticated cached day.
-3. Ten-label batch on the accepted M2_H and stock.
+3. Ten-label batch on the accepted M2_H and stock. **Failed 2026-07-27; closed
+   with an owner-accepted limitation rather than a pass.**
 4. Bluetooth interruption, relaunch, and correct uncertain-print resolution.
 5. Printed-but-unsynced recovery through **Sync only** without a duplicate.
 6. Sign-out and second-account cache isolation.

@@ -1,9 +1,16 @@
 # Capture This Build 10 release validation
 
-Last updated: 2026-07-27 14:12 CDT
+Last updated: 2026-07-27 15:52 CDT
 
 Status: **HOLD — no Build 10 archive, IPA, upload, production migration, or
 production-data write.**
+
+**Gate 3 (unattended ten-label batch) is recorded as FAILED, not pending.** Two
+`Print all` runs stopped on the batch's own first label. The owner decided on
+2026-07-27 to accept single-label printing as the supported operating mode,
+record the batch restriction as a documented product limitation, and continue
+validating the remaining gates rather than debug the print path in this
+engagement. See "Gate 3 failure record and batch-print diagnosis" below.
 
 This is the live orchestration record for the remaining Build 9 physical exit
 gate and the Build 10 disposable-project acceptance. It records only observed
@@ -63,6 +70,60 @@ temporary work directory was moved to Trash.
   no fixture row was changed, and no physical gate was promoted. Printer,
   firmware, ribbon, stock, cold-cup, and independent-operator readiness still
   require owner confirmation.
+
+## Second validation takeover recheck — 2026-07-27 14:43 CDT
+
+Claude Code took over release validation and reconfirmed the environment before
+touching anything. All checks below are read-only; no install, launch, write,
+migration, commit, push, or packaging occurred.
+
+- Local `HEAD`, `main`, and `origin/main` all resolve to
+  `63c95da74abe8dcceadab887ef71af01cad8b437` (`Record Build 10 release
+  validation`). The main worktree is clean with no untracked files. Build 10
+  application source remains `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943`; the
+  newer commit adds validation documents and guarded tooling only.
+- The detached Build 9 worktree at
+  `/private/tmp/capture-this-build9-physical.iBY4NX/worktree` is still clean at
+  exact `47c440556da52e7e59ab81b7fd77186087013331`, still declares
+  `version: 1.0.0+9`, and still pins `niim_blue_flutter: 1.0.1`. The main
+  worktree declares `version: 1.0.0+10` with the same pinned printer library.
+- The physical iPhone 16 (`iPhone17,3`) is `connected` to this Mac. Both
+  `com.capturethis.ctcprinter.build10validation` and the preserved
+  `com.capturethis.ctcprinter` report `1.0.0 (9)`. The isolated validation
+  bundle is the only acceptance target.
+- The five named Keychain items under account `capture-this-build10` are
+  present and non-empty. Values were read only into non-echoed command
+  substitutions, were never printed, and were never written to a file. The
+  disposable API URL is derived from the recorded ref rather than stored as a
+  secret.
+- Read-only authenticated fixture inspect at 14:41 CDT, through Account A's
+  public RLS session against `svqxznvyrbmbqihekkwo` only:
+
+  | Fixture day | Status | Roster | Orders | Captured + unprinted | Not asked |
+  |---|---|---|---|---|---|
+  | Build 9 · Ten Label Batch | active | 11 | 11 | **10** | 0 |
+  | Build 9 · Recovery Active | active | 12 | 12 | 10 | 0 |
+  | Build 10 · Acceptance Active | active | 24 | 24 | 0 | 24 |
+  | Build 10 · Planning Refusal | planning | 1 | 1 | 1 | 0 |
+  | Build 10 · Complete Refusal | complete | 1 | 1 | 1 | 0 |
+
+- The batch day's ten unprinted order IDs match the documented rerun map
+  exactly. Fictional Operator 01 (`4ac691a3-8129-44d3-b3d3-4c574a566290`)
+  remains irreversibly printed at revision
+  `2026-07-27T19:03:36.09936+00:00`. Operators 02–10 all still hold their
+  original seed revision `2026-07-27T17:19:10.27894+00:00`, and Fictional Batch
+  Replacement 11 holds `2026-07-27T19:05:49.715755+00:00`. No row was touched.
+- On the Recovery day, the two printed rows are the spoiled Operator 11
+  (`5f3448ff-…`) and the legitimately printed Operator 12 (`2edd27a4-…`). Ten
+  unprinted recovery rows remain available as fresh rows for later retryable
+  physical cases.
+- The `supabase-postgres-best-practices` skill named in the handoff is **not
+  installed** in this environment; the official Supabase plugin directory is
+  empty and the skill is not registered. Its substance is applied manually
+  instead: public anon/publishable key only, RLS-scoped user sessions, no
+  service-role key, no direct database password, conditional
+  `updated_at` compare-and-swap writes, and no production access. This is
+  recorded as a tooling limitation, not a skipped check.
 
 ## Disposable Build 9 device install — 2026-07-27 12:40 CDT
 
@@ -224,16 +285,21 @@ and prerequisite smoke observations are not promoted to physical passes.
 |---|---|---|---|
 | 1 | Online sign-in and selected-day restoration after force-quit | Colton force-quit the isolated disposable Build 9 after Account A selected Recovery Active with 12 labels, then the exact isolated bundle was relaunched at 12:55 CDT on 2026-07-27 | **Passed.** The authenticated account, selected day, and exact 12-label board restored without a sign-in prompt or unexpected recovery. BLE did not persist across process death and required explicit reconnection |
 | 2 | Airplane-mode authenticated cold start | Colton force-quit Build 9, enabled Airplane Mode with Bluetooth retained, and the exact isolated bundle was relaunched at 12:57 CDT on 2026-07-27 | **Passed.** Account A, Recovery Active, the exact 12-label cached board, and offline/staleness state restored without unexpected recovery; `M2_H-I409130491` reconnected with only Bluetooth available and the 12-label print action enabled |
-| 3 | Ten-label M2_H batch | At 13:19 CDT, the first exact ten-label run stopped on Fictional Operator 01 after the M2_H disconnected and the app reported an uncertain outcome with `Timeout waiting for response (waited for 0x4)`; the app correctly stopped before Operator 02. After the verified no-paper retry, one fresh replacement row restored exactly ten unprinted labels | **Open / rerun ready.** Await a refreshed in-app count of ten, then complete one uninterrupted run for Operators 02–10 plus Fictional Batch Replacement 11, with full physical and hosted audit |
-| 4 | BLE interruption and uncertain-print recovery | At 13:19 CDT, an organic M2_H disconnect stopped the ten-label run on Operator 01 with a durable uncertain outcome; Colton confirmed no paper, the record survived Account A sign-out/sign-in isolation, and **Nothing printed — retry** produced exactly one complete Operator 01 label. Hosted state then became irreversibly printed | **Open.** The organic no-paper recovery passed without a duplicate, but the separately prescribed deliberate BLE interruption and its haptic observation remain open |
+| 3 | Ten-label M2_H batch | Two runs attempted. 13:19 CDT stopped on Operator 01 waiting `0x04` `inPageStart` with no paper. 15:44 CDT stopped on Operator 02 waiting `0xe4` `inPageEnd` after one label emerged. Both stopped on the batch's own first label; neither advanced past it | **FAILED.** Not achievable on current hardware/firmware/consumables. Root cause not isolated. Owner accepted single-label printing as the supported mode on 2026-07-27 and recorded unattended batch printing as a documented limitation |
+| 4 | BLE interruption and uncertain-print recovery | Two organic uncertain outcomes now cover **both** physical branches. 13:19 CDT Operator 01: `inPageStart` timeout, no paper, resolved with **Nothing printed — retry**, produced exactly one label. 15:44 CDT Operator 02: `inPageEnd` timeout, paper emerged, pending resolution via **Label printed — sync only** | **Open.** Both branches are covered organically and the protocol stage matched the physical result each time, but the prescribed *deliberate* interruption and its unobserved uncertain haptic remain open |
 | 5 | Printed-but-unsynced **Sync only** recovery | Fictional Operator 12 physically printed offline at 13:04 CDT, persisted as `printedNeedsSync` across force-quit/relaunch, and was resolved after connectivity returned with the printer disconnected | **Passed.** No duplicate paper emerged; hosted order `2edd27a4-c831-42be-913e-62754ccae4ce` is `label_printed: true` at revision `2026-07-27T18:15:38.512892+00:00`; the local recovery ledger is empty. The separately spoiled Operator 11 row is excluded |
 | 6 | Two-account cache isolation | With Account A's Operator 01 uncertain record deliberately left unresolved, Colton signed out and authenticated as Account B. Account B opened on a clean **Choose a day** screen, inherited neither Account A's selected-day pointer nor its unresolved-label state, and legitimately saw the shared hosted ten-label day as 0/10 printed. After returning to Account A, the exact red **Batch stopped at Fictional Operator 01** state and nine-label queue returned only there | **Passed.** Account-scoped selected-day and recovery state remained isolated while shared hosted fixture data remained correctly visible to both accounts |
 | 7 | Planning/complete-day print refusal | Widget/controller refusal tests pass | **Open.** No physical-device refusal for both statuses; Build 10 pending-write replay refusal also remains to be observed |
-| 8 | Haptics and Reduce Motion | Reduce Motion widget tests pass; simulator cannot prove haptics | **Open.** Success and uncertain haptics are not physically distinguished, and Reduce Motion has not been inspected on the iPhone |
+| 8 | Haptics and Reduce Motion | Reduce Motion widget tests pass; simulator cannot prove haptics. At 15:44 CDT an uncertain print fired the double-beat path, but Colton was not holding the phone and **did not observe it**. Recorded as not observed — neither a pass nor a fail | **Open.** Success and uncertain haptics are still not physically distinguished, and Reduce Motion has not been inspected on the iPhone |
 | 9 | Cold-cup adhesion and readability | Fictional Operator 12's 50×30 mm holographic label was applied to a cold cup from 13:08 through at least 13:16 CDT | **Passed.** Colton directly inspected it and reported no lift, smear, fade, contrast, or readability issue. A fictional-only evidence photo has been requested |
 | 10 | Independent operator run | No evidence | **Open.** Luke has not completed the prescribed flow without Colton touching the phone or dashboard |
 
 No Build 10 packaging or upload is allowed while any row above is open.
+
+Row 3 is closed as **failed with an owner-accepted limitation** rather than
+passed. It no longer blocks progress through the remaining gates, but it must be
+carried into the handoff as a stated restriction on supported operation, and it
+must never be reported as a pass. Rows 4, 7, 8, and 10 remain genuinely open.
 
 ## Credential handoff and handling
 
@@ -398,8 +464,8 @@ printed and the following exact ten are unprinted.
 
 | Rerun label | Fictional operator | Order ID | Drink | Result |
 |---|---|---|---|---|
-| 1 | Fictional Operator 02 | `1456b740-8cbf-4c64-b70f-6abac7349ec7` | Fictional validation latte 02 | pending |
-| 2 | Fictional Operator 03 | `420a4a22-8ec7-4437-a43a-389a15db2d12` | Fictional validation latte 03 | pending |
+| 1 | Fictional Operator 02 | `1456b740-8cbf-4c64-b70f-6abac7349ec7` | Fictional validation latte 02 | **Uncertain at 15:44:48 CDT** — `inPageEnd` timeout, one physical label emerged, batch stopped here. Awaiting physical inspection and **Label printed — sync only** |
+| 2 | Fictional Operator 03 | `420a4a22-8ec7-4437-a43a-389a15db2d12` | Fictional validation latte 03 | **Printed and synced** 15:56:49 CDT via the single-label action; hosted revision `2026-07-27T20:56:49.29934+00:00` |
 | 3 | Fictional Operator 04 | `471efdc1-18ad-4cbc-a2b2-79e51f82aa20` | Fictional validation latte 04 | pending |
 | 4 | Fictional Operator 05 | `ea0033f2-2a5a-4d90-87a2-22d8b187cf1f` | Fictional validation latte 05 | pending |
 | 5 | Fictional Operator 06 | `439b0152-3aec-4dd7-80ed-f44f366c699c` | Fictional validation latte 06 | pending |
@@ -408,6 +474,154 @@ printed and the following exact ten are unprinted.
 | 8 | Fictional Operator 09 | `dc17a0bd-641f-41c5-911c-f1b705a4b262` | Fictional validation latte 09 | pending |
 | 9 | Fictional Operator 10 | `1802b680-c3e6-4332-b1c2-baecabdfc113` | Fictional validation latte 10 | pending |
 | 10 | Fictional Batch Replacement 11 | `f8f95590-a854-4d39-a617-fd22ba013c6f` | Fictional validation latte 11 | pending; initial revision `2026-07-27T19:05:49.715755+00:00` |
+
+Rerun labels 2–10 were **never attempted**. The 15:44 CDT run stopped at rerun
+label 1 and the batch gate was then closed as failed by owner decision, so no
+third attempt was made. Those nine rows remain untouched, unprinted, and at
+their original seed revision `2026-07-27T17:19:10.27894+00:00`. They are
+available as fresh single-print rows for the remaining gates; the Recovery day
+holds ten more.
+
+## Gate 3 failure record and batch-print diagnosis — 2026-07-27 15:52 CDT
+
+### What happened
+
+The second exact ten-label run started at approximately 15:44 CDT with the
+refreshed batch day, ten unprinted rows, and a connected `M2_H-I409130491`.
+Colton confirmed the queue and pressed **Print all (10)**.
+
+One physical label emerged for Fictional Operator 02, then the batch stopped.
+The app displayed:
+
+> Batch stopped at: Fictional Operator 02 · build10-20260727-a — Medium, Hot,
+> Fictional validation latte 02, Oat milk, Disposable test order 02
+>
+> Print all pending failed: The print outcome for Fictional Operator 02 ·
+> build10-20260727-a is uncertain. Check the physical printer, then choose
+> "Label printed — sync only" or "Nothing printed — retry." Timeout waiting
+> response (waited for 0xe4)
+
+The deck fell back to **Connect printer** with **Print all (9)** disabled,
+confirming the uncertain branch's deliberate BLE teardown. The batch did not
+advance to Operator 03.
+
+### Exact device and hosted state
+
+A read-only copy of the isolated app's preference container was taken at
+15:46 CDT. It contains only fictional fixture data and no credential or session
+material. The Build 9 ledger key `ctc_print_recovery_v1` held exactly one
+record:
+
+| Field | Value |
+|---|---|
+| Order | `1456b740-8cbf-4c64-b70f-6abac7349ec7` (Fictional Operator 02) |
+| State | **`uncertain`** — not `printedNeedsSync` |
+| Created | `2026-07-27T20:44:48.427775Z` = 15:44:48 CDT |
+| Scope | `user:f08c47f8-…` / production `498cefee-…` |
+
+A read-only authenticated hosted audit at 15:50 CDT confirmed Operator 02
+remained `label_printed: false` at its original seed revision
+`2026-07-27T17:19:10.27894+00:00`. Nothing reached Supabase. Only Operator 01
+is printed on that day.
+
+### Protocol diagnosis
+
+`M2_H` resolves to the **B1 print task**
+(`print_task_factory.dart`; `PrinterModel.m2H` is in the `PrintTaskName.b1`
+list). The app treats every label as an independent session — `printInit()`,
+`printPage()`, `waitForFinished()` with `totalPages: 1`, the heartbeat stopped
+for the duration and restarted after, wrapped in a 60-second
+`_printOperationTimeout`. Inside `printPage`, the pinned library sends
+`pageStart` → image data → `pageEnd` and waits `pageTimeoutMs` = **10 000 ms**
+for each acknowledgement.
+
+The two awaited opcodes decode exactly, and each one predicted the physical
+outcome that was actually observed:
+
+| Attempt | Awaited | `commands.dart` name | Stage reached | Predicted paper | Observed paper |
+|---|---|---|---|---|---|
+| Operator 01, 13:19 CDT | `0x04` | `inPageStart` | printer never acknowledged starting the page | none | **none** — confirmed by inspection |
+| Operator 02, 15:44 CDT | `0xe4` | `inPageEnd` | page started and image data sent; finish never acknowledged | paper already fed | **paper emerged** |
+
+This agreement between protocol stage and physical result is positive evidence
+that the app's uncertainty model is sound: it does not know the outcome, and it
+is correct not to know it.
+
+### What passed inside the failure
+
+- The uncertain fact was durably recorded **before** the failure surfaced.
+- The batch stopped at the failing label and named it, rather than continuing.
+- BLE was torn down, forcing an explicit reconnect.
+- Operator 03 and everything after it were left untouched and unprinted.
+- No hosted row was written, so no printed fact was created for a label whose
+  outcome is unknown.
+
+### What failed
+
+- **Two of two `Print all` runs stopped on the batch's own first label.**
+- Across the whole campaign, **three of five physical print attempts ended in an
+  uncertain outcome** (Operators 11, 01, 02). Every single-label print that was
+  attempted after a resolved recovery succeeded (Operators 12, 01 retry).
+- The gate requires one uninterrupted ten-label run. That has not occurred and,
+  on this evidence, is not currently achievable.
+
+### Root cause: not determined
+
+Because each label is already an isolated print session, "batch" is not
+structurally different from ten sequential single prints, so batching alone does
+not explain the failures. The remaining candidate variables were **not** isolated
+in this engagement and must not be presented as ruled out:
+
+- printer firmware — deliberately unknown and deliberately not updated;
+- ribbon and stock brand/lot — unknown;
+- BLE interference or link quality in the test location;
+- whether the 10 000 ms per-packet acknowledgement window is tight for this
+  device, stock, and density (`kDensity = 3`);
+- printer thermal or mechanical recovery time between back-to-back sessions.
+
+Determining which of these applies requires instrumented repeat runs and is a
+debugging engagement, not a validation pass.
+
+### Single-label printing confirmed working after the batch failure
+
+At 15:56:49 CDT Colton connected the M2_H and used the yellow single-label
+**Print this label** action. Fictional Operator 03
+(`420a4a22-8ec7-4437-a43a-389a15db2d12`) printed cleanly and synchronized
+immediately: the hosted row advanced to `label_printed: true` at revision
+`2026-07-27T20:56:49.29934+00:00`. Nine unprinted rows remain on the batch day.
+
+Single-label printing is now **three for three** across the campaign — Operator
+12 offline, the Operator 01 recovery retry, and Operator 03 — against **zero for
+two** for `Print all`. This is the evidence base for accepting single-label
+printing as the supported operating mode.
+
+The deck did not block on Operator 02's outstanding recovery record, and that is
+correct rather than a defect. `deckBlock` returns `recoveryPending` only when
+`pendingLabels.isEmpty && currentRecoveryRecords.isNotEmpty` — recovery blocks
+the deck only once the queue's own top item is the one awaiting a physical
+check. With nine other labels pending, printing legitimately continued.
+
+### Outstanding: Fictional Operator 02 is still unresolved
+
+As of 15:56 CDT the ledger still holds the `uncertain` record for Operator 02,
+and its hosted row is still `label_printed: false` at the original seed
+revision. A physical label for Operator 02 was reported as emerged but was never
+inspected and never resolved through either recovery action.
+
+This is a live loose end, and it is the exact shape of the error that spoiled
+Operator 11: an uncertain record resolved without physical inspection. It must
+be closed by inspecting the paper and choosing **Label printed — sync only** if
+a usable Operator 02 label exists, or **Nothing printed — retry** if it does
+not. Until then, Operator 02 must not be counted as printed and must not be
+counted as unprinted.
+
+### Owner decision
+
+On 2026-07-27 the owner chose to record Gate 3 as failed with this diagnosis,
+continue validating the remaining gates, and hand off with **single-label
+printing as the supported operating mode**. Unattended batch printing is a
+documented product limitation, not a claimed capability. No shipping code,
+`niim_blue_flutter` pin, printer firmware, geometry, or density was changed.
 
 ## Shortest practical physical session
 
@@ -592,7 +806,10 @@ Results:
 
 Build 10 remains on hold until:
 
-- all ten Build 9 rows are observed and recorded as passed;
+- all ten Build 9 rows are observed and recorded, each either passed or — as
+  with row 3 — explicitly failed, diagnosed, and accepted by the owner as a
+  stated product limitation. A row may never be left merely unobserved, and a
+  failed row may never be softened into a pass;
 - the Build 10 migration and Realtime publication are verified only in the
   explicitly named disposable project;
 - the Build 10 seven-step scenario, refresh fallbacks, and inactive-day guards

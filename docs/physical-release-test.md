@@ -32,9 +32,22 @@ During the direct physical session on 2026-07-27, checks 1, 2, 5, 6, and 9
 passed: authenticated and airplane-mode cold starts restored correctly,
 printed-but-unsynced recovery synced without a duplicate, Account A's durable
 recovery did not leak into Account B and returned only to Account A, and a
-fictional label remained clean and readable on a cold cup. The exact-ten batch
-rerun and checks 4, 7, 8, and 10 remain open; no physical pass is inferred for
-them.
+fictional label remained clean and readable on a cold cup.
+
+**Check 3, the unattended ten-label batch, failed on 2026-07-27.** Two
+`Print all` runs each stopped on the batch's own first label with a printer
+acknowledgement timeout — Operator 01 awaiting `0x04 inPageStart` (no paper) and
+Operator 02 awaiting `0xe4 inPageEnd` (one label emerged). Three of five physical
+print attempts in the campaign ended uncertain, while every single-label print
+attempted after a resolved recovery succeeded. The app behaved correctly
+throughout: it recorded uncertainty before the packet, stopped at the failing
+label, tore down BLE, and never advanced. Root cause was not isolated. The owner
+accepted **single-label printing as the supported operating mode** and recorded
+unattended batch printing as a documented product limitation. Step 6's "batch of
+at least 10 labels" therefore cannot currently be satisfied and must not be
+reported as satisfied.
+
+Checks 4, 7, 8, and 10 remain open; no physical pass is inferred for them.
 
 The exact per-check evidence gap, shortest combined session, Build 10
 seven-step acceptance, and timestamped result fields are maintained in

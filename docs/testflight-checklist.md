@@ -52,6 +52,14 @@ used for fictional acceptance writes. Run exact source `47c4405` in release
 mode on the physical iPhone with the explicitly authorized disposable public
 URL/key; do not archive, export, or upload that validation install.
 
+**Unattended batch printing is not a supported capability.** The ten-label batch
+check failed twice on 2026-07-27, each time on the batch's own first label, with
+a printer acknowledgement timeout. The owner accepted single-label printing as
+the supported operating mode. Any TestFlight **What to Test** copy, beta
+description, or tester instruction must say "print labels one at a time" and must
+not ask a tester to exercise **Print all**. Full diagnosis is in
+`docs/build-10-release-validation-2026-07-25.md`.
+
 Build 10 must not be packaged or uploaded until that Build 9 gate is complete.
 Afterward it also needs the physical seven-step acceptance in
 `docs/build-10-implementation-2026-07-25.md` against a disposable fixture.
