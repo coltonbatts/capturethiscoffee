@@ -1,6 +1,6 @@
 # Build 10 external TestFlight metadata packet
 
-Last updated: 2026-07-27 18:48 CDT
+Last updated: 2026-07-27 18:49 CDT
 
 Status: **COPY APPROVED — CONTACTS, SEPARATE OWNER ATTESTATIONS, SECURE REVIEW
 FIXTURE, AND SUBMISSION APPROVAL REQUIRED.**
@@ -24,7 +24,7 @@ public TestFlight link into this file, Review Notes, or tester-facing copy.
 | External group | `Capture This crew pilot` |
 | Privacy URL | `https://coffee.capturethis.com/privacy` |
 | Support URL | `https://coffee.capturethis.com/support` |
-| Proposed feedback email | `info@capturethis.com` — **OWNER APPROVAL REQUIRED** |
+| Tester feedback email | `info@capturethis.com` was **DECLINED** by the owner on 2026-07-27; replacement address required and must be stored only in App Store Connect |
 
 ## Exact beta app description
 
@@ -154,7 +154,10 @@ fixture writes, Beta App Review submission, or a tester invitation.
 - Review contact last name: `Batts`
 - Review phone: **SUPPLIED PRIVATELY 2026-07-27 — APP STORE CONNECT ONLY**
 - Review email: **SUPPLIED PRIVATELY 2026-07-27 — APP STORE CONNECT ONLY**
-- Approve `info@capturethis.com` as tester feedback address: **yes/no**
+- Approve `info@capturethis.com` as tester feedback address:
+  **NO — declined 2026-07-27**
+- Replacement tester feedback email:
+  **OWNER INPUT — APP STORE CONNECT ONLY**
 - Buddy first name: **OWNER INPUT**
 - Buddy last name: **OWNER INPUT**
 - Buddy invitation email: **OWNER INPUT**
