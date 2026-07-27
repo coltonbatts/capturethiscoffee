@@ -26,7 +26,8 @@ Future<void> _loadLabelFonts() async {
 /// The fixtures are chosen to exercise every branch `drawGrid01` can take:
 /// short vs long name (the 18-character threshold flips font size and baseline),
 /// one-line vs wrapped vs ellipsised drink, and missing optional fields.
-const _fixtures = <String, ({String name, String drink, String group, String client})>{
+const _fixtures =
+    <String, ({String name, String drink, String group, String client})>{
   'grid-01-short-name': (
     name: 'Jordan Lee',
     drink: 'Iced oat latte',
@@ -60,18 +61,25 @@ void main() {
   setUpAll(_loadLabelFonts);
 
   _fixtures.forEach((golden, fixture) {
-    testWidgets('renders $golden', (tester) async {
-      final image = await renderLabelImage(LabelContent.fromQueue(
-        orderId: 'order-a1b2c3d4',
-        personName: fixture.name,
-        drink: fixture.drink,
-        group: fixture.group,
-        productionName: 'Review Day',
-        clientName: fixture.client,
-      ));
-      addTearDown(image.dispose);
+    testWidgets(
+      'renders $golden',
+      (tester) async {
+        final image = await renderLabelImage(LabelContent.fromQueue(
+          orderId: 'order-a1b2c3d4',
+          personName: fixture.name,
+          drink: fixture.drink,
+          group: fixture.group,
+          productionName: 'Review Day',
+          clientName: fixture.client,
+        ));
+        addTearDown(image.dispose);
 
-      await expectLater(image, matchesGoldenFile('goldens/labels/$golden.png'));
-    });
+        await expectLater(
+          image,
+          matchesGoldenFile('goldens/labels/$golden.png'),
+        );
+      },
+      tags: 'golden',
+    );
   });
 }

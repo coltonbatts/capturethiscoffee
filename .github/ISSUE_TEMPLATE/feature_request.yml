@@ -1,0 +1,30 @@
+name: Product proposal
+description: Propose a focused product or workflow improvement
+title: "[Proposal]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Operating problem
+      description: What job is difficult today, and who encounters it?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the result without prescribing implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and constraints
+      description: Note offline, printer, privacy, release, or fallback constraints.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link fictional examples or describe observed frequency. Do not include private client data.
