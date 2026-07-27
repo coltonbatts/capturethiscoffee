@@ -19,7 +19,7 @@ status change.
 | Build-6 handoff source | `da0cb8c8820c1e8e7d61ab5c1af9d70c2f2bc7fc` on `main` | Verified locally and at `origin/main` before upload; adds the in-app operating guide, Active-production print guard, and consolidated handoff hub |
 | Build-7 offline-first source | `88f97dcabe7d94a31bd1fe62eae55d6ccc0e595a` on `main` | Verified locally and at `origin/main` before upload; includes on-device label rendering and durable local board caching |
 | Build-9 signed-in source | `47c4405` on `main` | Exact committed Build 9 app source; adds Supabase sign-in, Days, direct authenticated board access, per-user caching, and direct printed-status sync |
-| Build-10 implementation source | `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943` on `main`, verified locally and at `origin/main` | Collect, optimistic shared board, durable conditional outbox, explicit conflicts, Realtime refresh signal, and monotonic printed-fact migration implemented; no Build 10 archive, upload, production migration, or production-data write |
+| Build-10 implementation source | App code at `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943`; clean archive source `ab5edb8bc6d0bf582746b81e1815dd0574a83320` on `main`, matching `origin/main` | Collect, optimistic shared board, durable conditional outbox, explicit conflicts, Realtime refresh signal, and monotonic printed-fact migration implemented; later commits through the archive source are release-evidence documentation only |
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
@@ -135,12 +135,23 @@ Build 8 is now consumed and must not be reused.
 Build 9 is now consumed and must not be reused. Any shipping-code or embedded
 metadata change requires build 10 or higher.
 
-## Build 10 local implementation status
+## TestFlight build 10 status
 
-Build 10 is currently implementation source plus automated evidence only. It is
-versioned `1.0.0 (10)`, but no archive or IPA has been produced and nothing has
-been uploaded. Packaging is deliberately blocked by the incomplete Build 9
-physical exit gate.
+The owner explicitly authorized packaging and uploading Build 10 on 2026-07-27
+to obtain its first device time through internal TestFlight. The incomplete
+physical gates remain release/pilot risks; upload does not mark them passed.
+
+| Item | Confirmed result |
+|---|---|
+| Source | Clean `main` at `ab5edb8bc6d0bf582746b81e1815dd0574a83320`, matching `origin/main`; Build 10 app implementation is `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943` |
+| Local artifact | `mobile/build/ios/ipa-build10/ctc_printer.ipa`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7` |
+| Artifact identity | `1.0.0 (10)` / `com.capturethis.ctcprinter`; Apple Distribution signed for team `YW8K4837YB`; `get-task-allow = false`; `beta-reports-active = true` |
+| Release configuration | Dart AOT contains production host `lehwhehssjfudyrtljus.supabase.co` once, disposable host `svqxznvyrbmbqihekkwo.supabase.co` zero times, and one public `anon` JWT for the matching production ref; no privileged JWT |
+| Automated verification | Immediately before archive, `flutter analyze` passed with no issues and `flutter test` passed 158/158 |
+| Upload workflow/time | Xcode command-line distribution reported `Upload succeeded` at 4:24 PM CDT on 2026-07-27 |
+| Processing | Complete by 4:26 PM CDT. Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` |
+| Internal availability | Ready to install through TestFlight for the existing internal tester; the availability email was received at 4:26 PM CDT |
+| Physical status | Build 10 has no device time yet. Physical gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode |
 
 The focused Build 10 tests cover:
 
@@ -153,12 +164,14 @@ The focused Build 10 tests cover:
 - local printed overlays not being mistaken for server confirmation;
 - active-only replay and debounced Realtime-triggered authoritative refresh.
 
-The monotonic printed-fact migration exists locally at
-`supabase/migrations/20260725120000_preserve_printed_order_facts.sql`. It has not
-been applied to production. A clean disposable local Supabase 2.109.1 stack
-verified the migration, authenticated RLS, stale-write refusal, monotonic
-printed facts, and the filtered `public.orders` Realtime signal. Application
-and verification in production remain prohibited.
+The monotonic printed-fact migration exists at
+`supabase/migrations/20260725120000_preserve_printed_order_facts.sql` and is
+applied and trigger-verified in production. A clean disposable local Supabase
+2.109.1 stack separately verified the migration, authenticated RLS,
+stale-write refusal, monotonic printed facts, and the filtered `public.orders`
+Realtime signal. Production Realtime publication membership remains
+unverified, but Build 10 retains polling, resume, pull-to-refresh, and manual
+refresh fallbacks.
 
 On 2026-07-27, the owner authorized private disposable project
 `capture-this-build10-disposable` (`svqxznvyrbmbqihekkwo`). After an exact
@@ -242,7 +255,7 @@ manual sync all remain authoritative.
 | Physical fixture manager | Safety guards and syntax passed; seeded `build10-20260727-a` with five fictional days, 24 people, and 48 orders; Account B verified expected counts. One fresh fictional replacement person/order was later added through the public authenticated RLS path after a no-paper batch interruption, yielding 25 people and 49 orders without resetting any printed row |
 | Final post-tool regression | Before 12:20 CDT on 2026-07-27: Flutter analysis and 158/158 tests, frozen-web 105/105, warning-free lint, production build, and unchanged 591×354 NIIMBOT verification passed |
 | Detached Build 9 physical source | Clean `47c4405`; `niim_blue_flutter: 1.0.1`; Flutter analysis and 140/140 tests passed. A disposable-host-only release build was installed directly in isolated bundle `com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or upload occurred |
-| Build 10 archive / IPA / upload | Not run; blocked by the incomplete Build 9 physical exit gate |
+| Build 10 archive / IPA / upload | Passed on 2026-07-27: clean production-configured archive `1.0.0 (10)`, signed IPA SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`, Xcode command-line `Upload succeeded`, and TestFlight availability email received at 4:26 PM CDT |
 | `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
 
 The build-6 IPA was inspected for version/build, bundle ID, iPhone-only device family,
@@ -288,7 +301,7 @@ batch/recovery demo remains pending the full physical M2_H gate.
 | Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
 | Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
 | Physical iPhone + M2_H test | Checks 1, 2, 5, 6, 9 passed on 2026-07-27. **Check 3, the unattended ten-label batch, FAILED** — two runs, both stopped on the batch's first label with a printer acknowledgement timeout (`0x04 inPageStart`, then `0xe4 inPageEnd`); owner accepted single-label printing as the supported mode. Checks 4, 7, 8, 10 open | Complete the remaining rows in `docs/physical-release-test.md`. The batch row is closed as failed-with-limitation and must never be reported as a pass |
-| App Store Connect build status | Build 9 uploaded, processing complete, internally available in `Main` | Preserve the processed build and use build 10+ for any replacement |
+| App Store Connect build status | Build 10 upload succeeded at 4:24 PM CDT; by 4:26 PM Apple/TestFlight reported `1.0.0 (10)` available to test for the existing internal tester | Install from TestFlight and complete Build 10 device acceptance |
 | External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 9 after its physical gate passes, submit for Beta App Review, then record Luke's pilot |
 | App Review | Pending | Production submission status and reviewer correspondence |
 | Unlisted request | Pending | Apple-approved Unlisted App status |

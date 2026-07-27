@@ -310,15 +310,15 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Builds 5 through 9 are uploaded and **consumed**; none may be reused.
+- Builds 5 through 10 are uploaded and **consumed**; none may be reused.
 - Build 9 source is committed at `47c4405`. It adds signed-in day selection and
   direct Supabase data access. What the physical print baseline exists to test
   is in
   [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
-- Local Build 10 source uses `1.0.0+10`, but packaging and upload are blocked
-  until the Build 9 physical exit gate is complete. See
+- Build 10 `1.0.0+10` was uploaded and made available to the internal
+  TestFlight tester on 2026-07-27. Physical acceptance remains open. See
   [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
-- Bump the build suffix for every later upload (`1.0.0+10`, …).
+- Bump the build suffix for every later upload (`1.0.0+11`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.

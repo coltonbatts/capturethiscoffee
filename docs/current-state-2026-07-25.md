@@ -20,7 +20,8 @@ remain available when the app or printer path is unavailable.
 ## Source and release boundary
 
 - Build 9 source snapshot: `47c4405` (`Ship Build 9 signed-in day selection`).
-- App version: `1.0.0 (9)` / bundle `com.capturethis.ctcprinter`.
+- Current TestFlight app version: `1.0.0 (10)` / bundle
+  `com.capturethis.ctcprinter`.
 - Build 9 was uploaded and processed in App Store Connect on 2026-07-25 and is
   assigned to the internal `Main` TestFlight group.
 - The account owner installed a signed Build 9 release, opened an authenticated
@@ -29,20 +30,24 @@ remain available when the app or printer path is unavailable.
   build 10 or later.
 - Build 10 implementation started from clean `main` at `6e54cc5` and is
   committed and pushed at `fea2fc3` (`Ship Build 10 offline collection and
-  sync`). It remains source and automated evidence only: no Build 10 archive
-  has been packaged, no migration has been applied to production, and no
-  binary has been uploaded.
+  sync`). A clean production-configured archive was created from `ab5edb8`,
+  signed and exported as `1.0.0 (10)`, uploaded at 4:24 PM CDT on 2026-07-27,
+  and reported available to the existing internal TestFlight tester at
+  4:26 PM CDT.
 - Build 10 architecture, vertical slices, acceptance tests, and release
   blockers are recorded in
   `docs/build-10-implementation-2026-07-25.md`.
 - The exact physical-gate audit, disposable-project preflight, shortest
   practical operator session, and live evidence worksheet are in
   `docs/build-10-release-validation-2026-07-25.md`.
-- On 2026-07-27, the Build 10 migrations were applied only to the explicitly
+- On 2026-07-27, the Build 10 migrations were first verified in the explicitly
   authorized disposable remote project `svqxznvyrbmbqihekkwo`. Ledger, schema,
   RLS, Realtime publication, anonymous refusal, authenticated conditional
   writes/conflicts, monotonic printed facts, and filtered Realtime all passed.
   The transient verifier rows were removed and a cleanup audit found zero.
+  The owner later applied both migrations by hand in production. The monotonic
+  printed-fact trigger is verified enabled; production Realtime publication
+  membership remains unverified, with polling/resume/manual fallbacks retained.
 - Guarded public-key/user-session tooling seeded persistent fictional fixture
   `build10-20260727-a`: initially exactly 10 Build 9 batch labels, 12 recovery
   labels, 24 uncaptured Build 10 orders, one Planning order, and one Complete
@@ -112,10 +117,10 @@ The current iOS **Roster** is a printable-label roster. People who still need an
 order are present in the cached board model but do not yet have an operating
 surface.
 
-## Build 9 exit gate — still blocking Build 10 packaging
+## Build 10 physical acceptance — still open after TestFlight upload
 
-Do not package or upload Build 10 until the following Build 9 checks are
-recorded. Local implementation and automated testing may continue:
+The owner explicitly authorized the internal TestFlight upload to obtain Build
+10 device time. That upload does not close the following physical checks:
 
 1. Online sign-in and selected-day restoration after force-quit.
 2. Airplane-mode cold start from an authenticated cached day.

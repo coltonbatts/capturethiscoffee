@@ -1,9 +1,9 @@
 # Capture This Build 10 release validation
 
-Last updated: 2026-07-27 15:52 CDT
+Last updated: 2026-07-27 16:26 CDT
 
-Status: **HOLD — no Build 10 archive, IPA, upload, production migration, or
-production-data write.**
+Status: **INTERNAL TESTFLIGHT READY — Build 10 is available to test. Physical
+release acceptance remains on hold.**
 
 **Gate 3 (unattended ten-label batch) is recorded as FAILED, not pending.** Two
 `Print all` runs stopped on the batch's own first label. The owner decided on
@@ -21,9 +21,10 @@ pass.
 
 | Item | Observed evidence | Status |
 |---|---|---|
-| Source | Clean `main` at `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943` (`Ship Build 10 offline collection and sync`) | Verified |
-| Remote | `git ls-remote origin refs/heads/main` returned the same full commit at 18:53 CDT | Verified |
-| Build 10 package state | No Build 10 archive or IPA exists. The preserved archive and `mobile/build/ios/ipa/ctc_printer.ipa` are Build 9 (`1.0.0 (9)`, SHA-256 `b74965478bfbbb40863557eb8a5d8295d163e15e8ea4a68306cc8330492dd80e`) | Verified |
+| Source | Build 10 app implementation `fea2fc3e0f8cb4a8039eade6f2d8362fd681a943`; clean archive source `ab5edb8bc6d0bf582746b81e1815dd0574a83320` on `main`, with only release-evidence changes after the app commit | Verified |
+| Remote | Archive-time `origin/main` matched `ab5edb8bc6d0bf582746b81e1815dd0574a83320` | Verified |
+| Build 10 package state | `mobile/build/ios/ipa-build10/ctc_printer.ipa` is `1.0.0 (10)`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`; Apple Distribution signed with production host present and disposable host absent | Verified and uploaded |
+| TestFlight state | Xcode upload succeeded at 4:24 PM CDT; Apple/TestFlight reported Build 10 available to the existing internal tester at 4:26 PM CDT | Ready to test |
 | Connected phone | Physical iPhone 16, iOS 18.7.2, paired with developer mode enabled | Available |
 | Preserved installed app | `com.capturethis.ctcprinter` reports `1.0.0 (9)` on the connected phone | Production-configured provenance app; prohibited for acceptance writes |
 | Isolated validation app | Exact detached Build 9 `47c4405`, release mode, bundle `com.capturethis.ctcprinter.build10validation`; signed AOT contains the disposable hostname once and production hostname zero times | Installed directly and in active physical use; no archive, IPA export, or upload |
@@ -804,18 +805,22 @@ Results:
 
 ## Release decision
 
-Build 10 remains on hold until:
+Build 10 is available through internal TestFlight, but release/pilot acceptance
+remains on hold until:
 
 - all ten Build 9 rows are observed and recorded, each either passed or — as
   with row 3 — explicitly failed, diagnosed, and accepted by the owner as a
   stated product limitation. A row may never be left merely unobserved, and a
   failed row may never be softened into a pass;
-- the Build 10 migration and Realtime publication are verified only in the
-  explicitly named disposable project;
+- the production Realtime publication membership query is recorded; the
+  production monotonic printed-fact trigger is already verified enabled, and
+  the disposable project separately passed both migrations;
 - the Build 10 seven-step scenario, refresh fallbacks, and inactive-day guards
   pass on the physical phone/printer/stock;
 - fictional fixtures, accounts, and links are cleaned up;
 - regressions are rerun after any code change;
-- the owner explicitly authorizes any archive, push, or TestFlight upload.
+- the owner explicitly authorizes any later archive, push, or TestFlight
+  upload. The Build 10 archive/upload was authorized and completed on
+  2026-07-27.
 
 Final gate decision / tester / timestamp: _____

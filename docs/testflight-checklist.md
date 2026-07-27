@@ -28,7 +28,9 @@ permanent target is an approved unlisted App Store link.
 | Build 9 committed source | `47c4405` (`Ship Build 9 signed-in day selection`) |
 | Build 9 uploaded/processed | Uploaded at 3:46 PM CDT on 2026-07-25; App Store Connect reports upload `Complete` and TestFlight status `Ready to Submit` |
 | Build 9 internal availability | Assigned to internal group `Main` with one invite; locally signed release launch, signed-in day loading, and one physical M2_H reprint passed |
-| Build 10 local implementation | `1.0.0 (10)` committed and pushed at `fea2fc3`; Flutter 158/158, frozen-web 105/105 plus warning-free lint/build/geometry, and clean disposable local-Supabase verification pass. Build 10 migrations are applied only in authorized disposable project `svqxznvyrbmbqihekkwo`. Ledger/schema/RLS/publication, anonymous refusal, two-user authenticated RLS/CAS/conflict/printed-fact/Realtime, and transient cleanup all pass. Fictional physical fixture `build10-20260727-a` is seeded and readable by both users. Final post-tool regressions passed before 12:20 CDT on 2026-07-27. No archive, upload, or production migration |
+| Build 10 source and backend | `1.0.0 (10)` app code committed at `fea2fc3`; clean archive source `ab5edb8` matches `origin/main`. Flutter 158/158 and analysis pass. Production monotonic printed-fact trigger is applied and verified; production Realtime publication membership remains unverified, with polling/resume/manual fallbacks retained |
+| Build 10 signed App Store IPA | `1.0.0 (10)`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`; production host present, disposable host absent, public `anon` key only, Apple Distribution signed, `get-task-allow = false` |
+| Build 10 upload/processing | Xcode command-line upload succeeded at 4:24 PM CDT on 2026-07-27. At 4:26 PM Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` for the existing internal tester |
 | TestFlight beta metadata | Beta description, privacy URL, and build-6 **What to Test** saved from `docs/app-store-release.md`; feedback email and review contact remain blank pending owner input |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; blocked on feedback email, first/last name, phone, email, and the private fictional review fixture |
@@ -39,8 +41,8 @@ Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
 
-Build 9 is the current processed internal TestFlight candidate. Build 6's
-first-try holographic reprint and Build 9's signed-in direct-Supabase reprint
+Build 10 is the current internal TestFlight candidate. Build 6's first-try
+holographic reprint and Build 9's signed-in direct-Supabase reprint
 prove the intended direct-Bluetooth path. Both remain smoke tests, not the full
 physical release gate: authenticated airplane-mode restoration, exact stock
 measurements, printer identity and firmware, batch behavior, interruption
@@ -60,10 +62,11 @@ description, or tester instruction must say "print labels one at a time" and mus
 not ask a tester to exercise **Print all**. Full diagnosis is in
 `docs/build-10-release-validation-2026-07-25.md`.
 
-Build 10 must not be packaged or uploaded until that Build 9 gate is complete.
-Afterward it also needs the physical seven-step acceptance in
-`docs/build-10-implementation-2026-07-25.md` against a disposable fixture.
-The exact ten-row audit and combined operator worksheet are in
+On 2026-07-27 the owner explicitly authorized packaging and uploading Build 10
+to obtain its first device time through internal TestFlight. That upload does
+not close the remaining physical gates. Build 10 still needs the physical
+seven-step acceptance in `docs/build-10-implementation-2026-07-25.md`; the
+exact ten-row audit and combined operator worksheet are in
 `docs/build-10-release-validation-2026-07-25.md`.
 
 ## Before upload
@@ -76,11 +79,10 @@ The exact ten-row audit and combined operator worksheet are in
    `docs/physical-release-test.md`.
 5. Confirm App Store name is **Capture This** and upload screenshots containing
    only fictional data.
-6. For a future Build 10 upload, confirm source, archive, IPA, and App Store
-   Connect all say `1.0.0 (10)`. Do not create that archive until the Build 9
-   physical exit gate and Build 10 disposable-fixture acceptance are recorded.
+6. Build 10 source, archive, IPA, and TestFlight availability are confirmed as
+   `1.0.0 (10)`. Install it from TestFlight and complete device acceptance.
 
-## Build 10 — what to test after the packaging gate opens
+## Build 10 — internal TestFlight device acceptance
 
 - Load one existing Active production while online.
 - Enable airplane mode, force-quit, and cold-start from the authenticated cache.
