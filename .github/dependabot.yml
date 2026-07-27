@@ -3,31 +3,40 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 1
     groups:
-      npm-minor-and-patch:
+      npm-patches:
         update-types:
-          - minor
           - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
 
   - package-ecosystem: pub
     directory: /mobile
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 1
     ignore:
       - dependency-name: niim_blue_flutter
-    groups:
-      flutter-minor-and-patch:
+      - dependency-name: "*"
         update-types:
-          - minor
+          - version-update:semver-major
+          - version-update:semver-minor
+    groups:
+      flutter-patches:
+        update-types:
           - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 1
+    groups:
+      github-actions:
+        patterns:
+          - "*"
