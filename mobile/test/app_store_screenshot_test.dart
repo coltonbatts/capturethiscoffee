@@ -114,79 +114,95 @@ PrinterApp _fixtureApp({List<PrintRecoveryRecord> recoveries = const []}) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('App Store screenshot — link production', (tester) async {
-    await _renderAppStoreScreenshot(
-      tester,
-      app: PrinterApp(
-        sessionRepository: MemorySessionRepository(),
-        boardCacheRepository: MemoryBoardCacheRepository(),
-    printRecoveryRepository: MemoryPrintRecoveryRepository(),
-      ),
-      golden: '01-link-production.png',
-    );
-  });
-
-  testWidgets('App Store screenshot — fictional pending queue', (tester) async {
-    await _renderAppStoreScreenshot(
-      tester,
-      app: _fixtureApp(),
-      golden: '02-pending-queue.png',
-      openFromHome: printEntryKey,
-    );
-  });
-
-  testWidgets('App Store screenshot — print sync recovery', (tester) async {
-    await _renderAppStoreScreenshot(
-      tester,
-      app: _fixtureApp(recoveries: [
-        PrintRecoveryRecord(
-          apiBase: _session.apiBase,
-          productionId: _session.productionId,
-          orderId: 'order-alex',
-          personName: 'Alex North',
-          drink: 'Black coffee',
-          createdAt: DateTime.utc(2026, 7, 15, 18),
-          state: PrintRecoveryState.printedNeedsSync,
-        ),
-        PrintRecoveryRecord(
-          apiBase: _session.apiBase,
-          productionId: _session.productionId,
-          orderId: 'order-cameron',
-          personName: 'Cameron Ellington-Smythe',
-          drink: 'Iced americano',
-          createdAt: DateTime.utc(2026, 7, 15, 18, 1),
-          state: PrintRecoveryState.uncertain,
-        ),
-      ]),
-      golden: '03-print-sync-recovery.png',
-      openFromHome: recoveryEntryKey,
-    );
-  });
-
-  testWidgets('App Store screenshot — in-app operating guide', (tester) async {
-    tester.view.devicePixelRatio = 3;
-    tester.view.physicalSize = const Size(1320, 2868);
-    addTearDown(tester.view.reset);
-
-    const boundaryKey = Key('app-store-screenshot-boundary');
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: boundaryKey,
-        child: PrinterApp(
+  testWidgets(
+    'App Store screenshot — link production',
+    (tester) async {
+      await _renderAppStoreScreenshot(
+        tester,
+        app: PrinterApp(
           sessionRepository: MemorySessionRepository(),
           boardCacheRepository: MemoryBoardCacheRepository(),
-    printRecoveryRepository: MemoryPrintRecoveryRepository(),
+          printRecoveryRepository: MemoryPrintRecoveryRepository(),
         ),
-      ),
-    );
-    await tester.pump();
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('How to use Capture This'));
-    await tester.pumpAndSettle();
+        golden: '01-link-production.png',
+      );
+    },
+    tags: 'golden',
+  );
 
-    await expectLater(
-      find.byKey(boundaryKey),
-      matchesGoldenFile('goldens/app-store/04-in-app-guide.png'),
-    );
-  });
+  testWidgets(
+    'App Store screenshot — fictional pending queue',
+    (tester) async {
+      await _renderAppStoreScreenshot(
+        tester,
+        app: _fixtureApp(),
+        golden: '02-pending-queue.png',
+        openFromHome: printEntryKey,
+      );
+    },
+    tags: 'golden',
+  );
+
+  testWidgets(
+    'App Store screenshot — print sync recovery',
+    (tester) async {
+      await _renderAppStoreScreenshot(
+        tester,
+        app: _fixtureApp(recoveries: [
+          PrintRecoveryRecord(
+            apiBase: _session.apiBase,
+            productionId: _session.productionId,
+            orderId: 'order-alex',
+            personName: 'Alex North',
+            drink: 'Black coffee',
+            createdAt: DateTime.utc(2026, 7, 15, 18),
+            state: PrintRecoveryState.printedNeedsSync,
+          ),
+          PrintRecoveryRecord(
+            apiBase: _session.apiBase,
+            productionId: _session.productionId,
+            orderId: 'order-cameron',
+            personName: 'Cameron Ellington-Smythe',
+            drink: 'Iced americano',
+            createdAt: DateTime.utc(2026, 7, 15, 18, 1),
+            state: PrintRecoveryState.uncertain,
+          ),
+        ]),
+        golden: '03-print-sync-recovery.png',
+        openFromHome: recoveryEntryKey,
+      );
+    },
+    tags: 'golden',
+  );
+
+  testWidgets(
+    'App Store screenshot — in-app operating guide',
+    (tester) async {
+      tester.view.devicePixelRatio = 3;
+      tester.view.physicalSize = const Size(1320, 2868);
+      addTearDown(tester.view.reset);
+
+      const boundaryKey = Key('app-store-screenshot-boundary');
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: boundaryKey,
+          child: PrinterApp(
+            sessionRepository: MemorySessionRepository(),
+            boardCacheRepository: MemoryBoardCacheRepository(),
+            printRecoveryRepository: MemoryPrintRecoveryRepository(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('How to use Capture This'));
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byKey(boundaryKey),
+        matchesGoldenFile('goldens/app-store/04-in-app-guide.png'),
+      );
+    },
+    tags: 'golden',
+  );
 }
