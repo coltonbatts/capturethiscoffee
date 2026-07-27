@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-27 18:46 CDT
+Last updated: 2026-07-27 18:48 CDT
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -33,7 +33,7 @@ permanent target is an approved unlisted App Store link.
 | Build 10 upload/processing | Xcode command-line upload succeeded at 4:24 PM CDT on 2026-07-27. At 4:26 PM Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` for the existing internal tester |
 | TestFlight beta metadata | Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Feedback email, review contact, separate privacy/support approval, secure production fixture, and submission approval remain open |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
-| First external Beta App Review | Not submitted; review contact is Kait Batts and the phone was supplied privately for App Store Connect only. Blocked on review email, feedback email approval, separate privacy/support approval, and the private fictional review fixture |
+| First external Beta App Review | Not submitted; review contact is Kait Batts and the phone/email were supplied privately for App Store Connect only. Blocked on feedback email approval, separate privacy/support approval, and the private fictional review fixture |
 | Build 10 expiration | **Pending authoritative App Store Connect value.** Expected around 2026-10-25, but do not use the estimate as the handoff record |
 | Buddy invited by email | Pending owner-supplied email / approved build |
 | Buddy install, sign-in, day selection, M2_H print, and sync pilot | Pending physical hardware |
