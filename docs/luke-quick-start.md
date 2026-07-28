@@ -1,6 +1,6 @@
 # Capture This — Luke’s quick start
 
-Revision: 2026-07-27 / Build 10 controlled pilot
+Revision: 2026-07-27 / Build 11 release candidate
 
 This is the whole routine. Once you do it once, it should feel pretty simple.
 
@@ -9,7 +9,7 @@ This is the whole routine. Once you do it once, it should feel pretty simple.
 Grab:
 
 - Your iPhone with **Capture This** installed.
-- Confirm the app shows `1.0.0 (10)` and record the TestFlight expiration.
+- Confirm the app shows `1.0.0 (11)` and record the TestFlight expiration.
 - The NIIMBOT M2_H printer.
 - The owner-provisioned Capture This email/password.
 - The name of the Active production day.
@@ -33,11 +33,11 @@ If the app finds more than one printer, turn off the extras and try again.
 
 1. Tap **Refresh** to get the latest orders.
 2. Double-check the person’s name and drink.
-3. Tap the single-label **Print** action. Do not use **Print all**.
+3. Tap the individual **Print** action.
 4. Inspect the paper and wait for the app's recovery/sync state before moving
    to another person.
 
-Print one label at a time. Unattended batch printing is not supported.
+Finish and verify one label at a time before starting another.
 
 ## If something goes wrong
 

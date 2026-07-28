@@ -7,7 +7,6 @@
 import 'package:flutter/material.dart';
 
 import '../app_scope.dart';
-import '../confirmations.dart';
 import '../widgets/print_deck.dart';
 import '../widgets/status_banners.dart';
 
@@ -45,8 +44,8 @@ class PrintScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   children: [
                     PrintDeck(
-                      productionName:
-                          controller.queue?.productionName ?? 'Production loading',
+                      productionName: controller.queue?.productionName ??
+                          'Production loading',
                       statusLabel: controller.productionStatusLabel,
                       content: controller.deckContent,
                       nextUpName:
@@ -69,21 +68,11 @@ class PrintScreen extends StatelessWidget {
                         final item = controller.deckLabel;
                         if (item != null) controller.printLabel(item);
                       },
-                      onPrintAll: () async {
-                        final count = controller.pendingLabels.length;
-                        if (count == 0) {
-                          await controller.printAllPending();
-                          return;
-                        }
-                        if (!await confirmPrintAll(context, count)) return;
-                        await controller.printAllPending();
-                      },
                       onConnect: controller.connectPrinter,
                       onDisconnect: controller.disconnectPrinter,
                       onRefresh: () => controller.refreshBoard(),
                     ),
-                    if (controller.operatorError != null ||
-                        controller.failedBatchLabel != null)
+                    if (controller.operatorError != null)
                       OperatorErrorBanner(controller: controller),
                     InactiveProductionCard(controller: controller),
                     ActivityLog(controller: controller),

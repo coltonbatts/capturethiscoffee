@@ -1,12 +1,13 @@
 # Capture This standard operating procedure
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
 
-**Build 9 transition:** the iOS app now signs in, lists existing days, reads the
-selected board directly from Supabase, caches it per user/day, and synchronizes
-printed status directly. Day/people/roster setup, drink capture, summary, and
-closeout remain on the frozen web until Builds 10-12. The current build boundary
-is in [current-state-2026-07-25.md](current-state-2026-07-25.md).
+**Build 11 release-candidate boundary:** the iOS app signs in, selects an
+existing day, collects and edits drinks, works offline, resolves conflicts,
+prints one label at a time, and recovers conservatively. Day/people/roster
+setup, summary, and closeout remain on the frozen web. The current build
+boundary is in
+[current-state-2026-07-25.md](current-state-2026-07-25.md).
 
 ## Purpose
 
@@ -14,7 +15,7 @@ Capture This is the drink-order tool for a production day. The whole
 workflow is one sentence: put today's people on the roster, collect their
 drinks, print their labels. Each roster person either still needs their drink
 order taken, has a drink captured, or is marked "no drink." Once drinks are
-captured, labels print as a batch.
+captured, labels are printed deliberately one at a time.
 
 ## Scope
 
@@ -30,7 +31,7 @@ Related docs:
 
 - [Handoff hub](HANDOFF.md)
 - [Luke Quick Start](luke-quick-start.md)
-- [Physical release test and acceptance](physical-release-test.md)
+- [Build 11 physical release worksheet](build-11-physical-release-worksheet-2026-07-27.md)
 - [Operational ownership and handoff](operational-handoff.md)
 - [Label image export](label-image-export.md)
 - [App experience map](app-experience-map.md)
@@ -51,25 +52,27 @@ Supabase is the source of truth for:
 - Coffee orders.
 - Printed label status.
 
-Build 9 reads the same data directly after sign-in. Use the frozen website for
+Build 11 reads the same data directly after sign-in. Use the frozen website for
 setup, runner/order capture, summaries, and fallback label export until those
 capabilities move to iOS.
 
 ### Capture This iPhone app
 
-The native iPhone **Capture This** app is the primary on-set print path. Build 9
-uses an owner-provisioned Supabase account, lists existing days, reads the
-selected board directly through authenticated RLS, prints to the NIIMBOT M2_H
-over Bluetooth LE, and marks each order `label_printed` directly. It keeps the
-condensed operating and recovery guide inside the app, caches the selected board
-for offline printing, and pauses new physical prints unless the day is Active.
-The production-share URL remains under **Advanced · Legacy link**.
+The native iPhone **Capture This** app is the primary on-set print path. Build
+11 uses an owner-provisioned Supabase account, lists existing days, collects and
+edits orders, reads the selected board directly through authenticated RLS,
+prints one label at a time to the NIIMBOT M2_H over Bluetooth LE, and marks
+each order `label_printed` directly. It keeps the condensed operating and
+recovery guide inside the app, caches the selected board for offline operation,
+and pauses new physical prints unless the day is Active. The production-share
+URL remains under **Advanced · Legacy link**.
 
 ### `/labels` fallback
 
 The web `/labels` screen is an authenticated fallback/advanced export screen for
-PNG download/share, CSV batch export, preview, and test labels. Use it when CTC
-Printer is unavailable or when a manual export is needed.
+PNG download/share, CSV export, preview, and test labels. Use it when Capture
+This is unavailable or when a manual export is needed. Physical fallback
+printing remains one label at a time.
 
 ### Key Rule
 
@@ -115,7 +118,7 @@ Responsibilities:
 - Open CTC Printer.
 - Sign in and select the Active day.
 - Connect the NIIMBOT M2_H.
-- Print pending labels.
+- Print pending labels one at a time.
 - Confirm `label_printed` updates after successful prints.
 - Inspect the physical output.
 
@@ -136,7 +139,7 @@ production share link. The link token scopes reads and order edits to one
 production. Anonymous direct Supabase table reads and order updates are not
 allowed.
 
-The signed-in iOS operator does not use that token. Normal Build 9 operation
+The signed-in iOS operator does not use that token. Normal Build 11 operation
 uses the invited user's authenticated Supabase session; the token path is a
 fallback.
 
@@ -192,8 +195,8 @@ On the device the runner will use:
 3. Tap **Take order**, enter a drink, and save.
 4. Mark another person **No drink** and confirm the progress count updates.
 5. Quick-add a guest and save a simple drink.
-6. Confirm the header shows the captured count and the **Print labels** batch
-   action.
+6. Confirm the header shows the captured count and the **Print labels**
+   fallback-export entry.
 
 ### 5. Verify CTC Printer
 
@@ -276,15 +279,16 @@ is collected when everyone is either captured or marked no drink.
 Use labels when physical cup tracking or the Capture This Coffee brand moment is
 needed.
 
-Printing is batch-oriented: the queue and the `/labels` screen both cover every
-captured drink for the day, and "unprinted" selection keeps reprints cheap.
+The iPhone workflow is single-label only. The queue shows every captured drink,
+but the operator reviews, prints, and physically checks one label before
+starting another. `/labels` remains a separate manual PNG/CSV fallback.
 
 From Capture This:
 
 1. Confirm the production is active.
 2. Sign in and select the correct day.
 3. Refresh the queue.
-4. Print each pending label.
+4. Print each pending label individually, inspecting the result before the next.
 5. Confirm the app and web day board show the printed badge.
 6. Inspect the physical label.
 
@@ -292,10 +296,10 @@ If the physical label printed but the web update failed, do not print it again.
 Use **Sync only** after connectivity returns. If the result is uncertain,
 inspect the printer and physical stock first, then select **Label printed — sync
 only** or **Nothing printed — retry**. The app keeps this recovery state across
-restarts and excludes unresolved labels from batch printing.
+restarts and excludes unresolved labels from the print queue.
 
 From the web (signed-in), tap **Print labels** on the production page to open
-the batch on `/labels` with every captured drink preselected.
+the `/labels` fallback. Select, export, print, and inspect one label at a time.
 
 If Capture This is unavailable, use `/labels` for PNG or CSV fallback export.
 Do not assume the current physical media is verified until a test print
@@ -324,10 +328,9 @@ confirms it.
 
 1. Open `/labels`.
 2. Select the production and labels.
-3. Use **Export CSV** for NIIMBOT batch templates, or **Export PNG** for
-   individual label assets.
+3. Use **Export PNG** for the selected individual label.
 4. Import the fallback asset in the official NIIMBOT app.
-5. Test one physical label before printing a full run.
+5. Print and inspect that one physical label before selecting another.
 
 ### If Share Is Unavailable On `/labels`
 
@@ -341,7 +344,7 @@ confirms it.
 2. Confirm the exported PNG preview is not blank in CTC.
 3. Confirm the NIIMBOT app media size and orientation.
 4. Check whether the app is scaling or fitting the image.
-5. Test one label before printing a full batch.
+5. Test one label and inspect it before printing another.
 6. Record the final import settings in [label-image-export.md](label-image-export.md).
 
 ## Post-Shoot Closeout

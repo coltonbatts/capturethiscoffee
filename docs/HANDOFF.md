@@ -8,6 +8,9 @@ evidence.
 
 Current engineering and release status:
 [`current-state-2026-07-25.md`](current-state-2026-07-25.md).
+The current go/no-go decision, blockers, readiness percentages, and shortest
+owner sequence are in
+[`build-11-release-readiness-2026-07-27.md`](build-11-release-readiness-2026-07-27.md).
 
 ## Product in one sentence
 
@@ -16,7 +19,7 @@ orders, turns them into correctly labeled cups, and keeps the production board
 in sync.
 
 Supabase is the shared source of truth for productions, rosters, orders, and
-printed status. Build 10 signs the operator into the Capture This iPhone app,
+printed status. Build 11 signs the operator into the Capture This iPhone app,
 lists existing days, collects and edits orders offline, prints captured orders
 one at a time to the accepted NIIMBOT M2_H, durably replays changes, and stops
 on visible conflicts. The frozen website remains necessary for day, people,
@@ -27,6 +30,10 @@ into the app.
 
 - Build 10 application source is `fea2fc3`; its clean archive source is
   `ab5edb8`; the uploaded artifact is `1.0.0 (10)`.
+- Build 11, `1.0.0 (11)`, is the local next release candidate. It removes every
+  shipping batch-print action, corrects the app privacy manifest, and refreshes
+  the screenshot/review packet. It is not committed, uploaded, or physically
+  accepted.
 - Build 10 became available to the existing internal TestFlight tester at
   16:26 CDT on 2026-07-27. External review has not been submitted and the
   buddy cannot install yet.
@@ -38,8 +45,10 @@ into the app.
 - The exact current status, mailing gate, hardware inventory, and buddy
   worksheet are in
   [`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md).
-- The owner-approval copy for external TestFlight is in
-  [`build-10-external-testflight-metadata-2026-07-27.md`](build-10-external-testflight-metadata-2026-07-27.md).
+- The exact next-build physical worksheet is
+  [`build-11-physical-release-worksheet-2026-07-27.md`](build-11-physical-release-worksheet-2026-07-27.md).
+- The next-build external review draft is
+  [`build-11-external-review-packet-2026-07-27.md`](build-11-external-review-packet-2026-07-27.md).
 - TestFlight is temporary. The durable distribution target is an
   Apple-approved unlisted App Store link.
 - The handoff is not complete until the named day-of operator passes the
@@ -51,7 +60,7 @@ into the app.
 |---|---|---|
 | Day-of label operator | [Luke Quick Start](luke-quick-start.md) | Link, connect, print, and recover safely |
 | Coordinator / runner | [Standard operating procedure](standard-operating-procedure.md) | Prepare the production, collect drinks, coordinate printing, and close out |
-| Hardware acceptance tester | [Physical release test](physical-release-test.md) | Verify the exact phone, M2_H, firmware, ribbon, stock, batch behavior, sync, and cold-cup result |
+| Hardware acceptance tester | [Build 11 physical worksheet](build-11-physical-release-worksheet-2026-07-27.md) | Verify the exact phone, M2_H, firmware, ribbon, stock, individual printing/recovery, sync, and cold-cup result |
 | Platform / business owner | [Operational handoff](operational-handoff.md) | Assign ownership for accounts, billing, backups, support, distribution, stock, and replacement builds |
 | Apple release operator | [TestFlight checklist](testflight-checklist.md) and [App Store dossier](app-store-release.md) | Build, upload, pilot, submit, and maintain the permanent distribution path |
 | Engineer | [Mobile README](../mobile/README.md) and [release evidence](release-evidence-1.0.0.md) | Reproduce, verify, diagnose, and document a release |
@@ -98,7 +107,7 @@ to choose the current printer path.
 ## Standard day-of sequence
 
 1. A signed-in web operator creates the day and confirms the people/roster,
-   then marks the production Active. Build 10 can collect and edit drinks after
+   then marks the production Active. Build 11 can collect and edit drinks after
    that existing day is available.
 2. The label operator opens Capture This, signs in, and selects the existing
    Active day.
@@ -106,7 +115,7 @@ to choose the current printer path.
    printers, and connects the accepted M2_H.
 4. The operator refreshes, reviews the person and drink, and prints exactly one
    label. The operator physically inspects it and confirms its recovery/sync
-   state before starting another label. Do not use **Print all**.
+   state before starting another label. The shipping UI has no batch action.
 5. For an interrupted print, the operator inspects the physical output before
    choosing sync-only or retry. The operator never guesses.
 6. If Capture This is unavailable, a signed-in operator uses `/labels` for the
@@ -116,7 +125,7 @@ to choose the current printer path.
 8. After the run, the owner records issues, powers down the printer, and revokes
    disposable links when they are no longer needed.
 
-The same condensed sequence is available inside Build 9 from the help icon, so
+The same condensed sequence is available inside Build 11 from the help icon, so
 the operator can read it without repository access.
 
 ## Failure decision table
@@ -140,8 +149,8 @@ the phone or dashboard:
 2. Sign in with an individual owner-provisioned fictional account and select a
    fictional Active day.
 3. Connect the exact accepted M2_H.
-4. Print short and long labels sequentially, one at a time. Do not use
-   **Print all** or unattended batch printing.
+4. Print short and long labels sequentially, one at a time; confirm no batch
+   action is present.
 5. Confirm every physical success appears printed in Supabase and on the hosted board.
 6. Recover one interrupted/uncertain print without a duplicate.
 7. Power-cycle/reconnect and background/resume.

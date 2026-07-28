@@ -115,8 +115,7 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     _Hero(controller: controller, finished: finished),
                     const SizedBox(height: 28),
-                    if (controller.operatorError != null ||
-                        controller.failedBatchLabel != null) ...[
+                    if (controller.operatorError != null) ...[
                       OperatorErrorBanner(controller: controller),
                       const SizedBox(height: 12),
                     ],
@@ -475,8 +474,9 @@ class _FooterActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final runtime = PrinterScope.runtimeOf(context);
     final authenticated = runtime.workspace.mode == WorkspaceMode.authenticated;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         TextButton(
           onPressed: controller.busy

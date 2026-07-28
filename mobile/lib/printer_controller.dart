@@ -6,11 +6,10 @@
 // account or navigation state.
 //
 // The split line is confirmation. This class never shows a dialog and never
-// takes a BuildContext: `printAllPending` prints, `clearSession` clears, and
-// `retryUncertainPrint` retries, unconditionally. Deciding whether the operator
-// meant it belongs to the screen that asked. That keeps every destructive
-// operation testable without pumping a widget, and it keeps the confirmation
-// copy next to the button that triggers it.
+// takes a BuildContext: `clearSession` clears and `retryUncertainPrint` retries,
+// unconditionally. Deciding whether the operator meant it belongs to the
+// screen that asked. That keeps every destructive operation testable without
+// pumping a widget, and it keeps confirmation copy next to its trigger.
 //
 // Translation notes from the State it replaces:
 //   * `setState(...)` became a mutation followed by `notifyListeners()`.
@@ -118,7 +117,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   bool _busy = false;
   PrinterStatus _printerStatus = PrinterStatus.disconnected;
   String? _operatorError;
-  String? _failedBatchLabel;
   String? _connectedDeviceName;
 
   // ---------------------------------------------------------------- lifecycle
@@ -181,7 +179,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   bool get loadingSession => _workspace.loadingLegacy;
   PrinterStatus get printerStatus => _printerStatus;
   String? get operatorError => _operatorError ?? _workspace.error;
-  String? get failedBatchLabel => _failedBatchLabel;
   bool get servingCachedBoard => _workspace.servingCachedBoard;
   DateTime? get lastSyncedAt => _workspace.lastSyncedAt;
   int get printSuccessToken => _printSuccessToken;
@@ -341,12 +338,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     return _workspace.boardAgeLabel;
   }
 
-  String labelTitle(QueueLabel item) {
-    final drink = item.drink.trim();
-    if (drink.isEmpty) return item.personName;
-    return '${item.personName} - $drink';
-  }
-
   PrintRecoveryRecord? recoveryFor(String orderId) =>
       _printRecoveryLedger?[orderId];
 
@@ -365,13 +356,10 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void dismissError() {
-    if (_operatorError == null &&
-        _failedBatchLabel == null &&
-        _workspace.error == null) {
+    if (_operatorError == null && _workspace.error == null) {
       return;
     }
     _operatorError = null;
-    _failedBatchLabel = null;
     _workspace.dismissError();
     // Dismissing the message also clears the error *state*, otherwise the
     // printer stays latched in `error` with nothing on screen explaining why
@@ -390,7 +378,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> clearSession() async {
     await _workspace.clearLegacySession();
     _operatorError = null;
-    _failedBatchLabel = null;
     _emit();
   }
 
@@ -618,30 +605,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
         () => _printOneLabel(item),
         affectsPrinter: true,
       );
-
-  /// Unconditional — the screen confirms first. Stops at the first failure and
-  /// records which label it stopped on, because "the batch stopped" is useless
-  /// without "and this is the one you are holding".
-  Future<bool> printAllPending() async {
-    final pending = pendingLabels;
-    if (pending.isEmpty) {
-      return _run('Print all pending', () async {
-        throw Exception('No pending labels to print.');
-      });
-    }
-
-    return _run('Print all pending', () async {
-      for (final item in pending) {
-        try {
-          await _printOneLabel(item);
-        } catch (_) {
-          _failedBatchLabel = labelTitle(item);
-          _emit();
-          rethrow;
-        }
-      }
-    }, affectsPrinter: true);
-  }
 
   Future<void> _printOneLabel(QueueLabel item) async {
     // Checked before the cached status, which cannot be trusted once the server
@@ -948,7 +911,6 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     if (_busy) return false;
     _busy = true;
     _operatorError = null;
-    _failedBatchLabel = null;
     if (_printerStatus == PrinterStatus.error) {
       _printerStatus =
           _connected ? PrinterStatus.connected : PrinterStatus.disconnected;

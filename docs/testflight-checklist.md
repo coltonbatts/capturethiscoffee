@@ -1,6 +1,6 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-27 18:49 CDT
+Last updated: 2026-07-28
 
 External TestFlight is the final pilot, not the permanent distribution. The
 permanent target is an approved unlisted App Store link.
@@ -32,6 +32,7 @@ permanent target is an approved unlisted App Store link.
 | Build 10 signed App Store IPA | `1.0.0 (10)`, 23,128,931 bytes, SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`; production host present, disposable host absent, public `anon` key only, Apple Distribution signed, `get-task-allow = false` |
 | Build 10 upload/processing | Xcode command-line upload succeeded at 4:24 PM CDT on 2026-07-27. At 4:26 PM Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` for the existing internal tester |
 | TestFlight beta metadata | Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Feedback email, review contact, separate privacy/support approval, secure production fixture, and submission approval remain open |
+| Build 11 local release candidate | `1.0.0 (11)` removes the unsupported shipping batch action, corrects the application privacy manifest, and adds current screenshots/review worksheets. It is not committed, uploaded, processed, or physically accepted |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
 | First external Beta App Review | Not submitted; review contact is Kait Batts and the phone/email were supplied privately for App Store Connect only. Owner declined `info@capturethis.com` for tester feedback. Blocked on a replacement feedback email, separate privacy/support approval, and the private fictional review fixture |
 | Build 10 expiration | **Pending authoritative App Store Connect value.** Expected around 2026-10-25, but do not use the estimate as the handoff record |
@@ -43,7 +44,10 @@ Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
 
-Build 10 is the current internal TestFlight candidate. Build 6's first-try
+Build 10 remains the current internal TestFlight build. Build 11 is the next
+local release candidate and is required before any external pilot because the
+Build 10 UI still exposes the unsupported batch action and its privacy manifest
+is incomplete. Build 6's first-try
 holographic reprint and Build 9's signed-in direct-Supabase reprint
 prove the intended direct-Bluetooth path. Both remain smoke tests, not Build
 10 physical acceptance. Build 9 checks 1, 2, 5, 6, and 9 physically passed;
@@ -61,8 +65,8 @@ fictional account and Active day in the production backend.
 check failed twice on 2026-07-27, each time on the batch's own first label, with
 a printer acknowledgement timeout. The owner accepted single-label printing as
 the supported operating mode. Any TestFlight **What to Test** copy, beta
-description, or tester instruction must say "print labels one at a time" and must
-not ask a tester to exercise **Print all**. Full diagnosis is in
+description, or tester instruction must say "print labels one at a time."
+Build 11 removes the batch control entirely. Full historical diagnosis is in
 `docs/build-10-release-validation-2026-07-25.md`.
 
 On 2026-07-27 the owner explicitly authorized packaging and uploading Build 10
@@ -72,29 +76,39 @@ seven-step acceptance in `docs/build-10-implementation-2026-07-25.md`; the
 exact ten-row audit and combined operator worksheet are in
 `docs/build-10-release-validation-2026-07-25.md`.
 
-## Build 10 external-TestFlight preflight
+## Build 11 external-TestFlight preflight
 
-The binary is already uploaded. Do not upload another binary during this
-workflow unless Build 10 is marked Internal Only, Apple requires a binary
-change, or an approved release-blocking fix is necessary.
+Build 10 is internal evidence only and must not be advanced to external review.
+Build 11 is not uploaded. Do not upload or modify App Store Connect until the
+owner explicitly authorizes the exact action.
 
-1. Obtain owner approval for the exact Build 10 beta copy and missing fields in
-   `docs/build-10-external-testflight-metadata-2026-07-27.md`.
-2. Obtain explicit approval before creating the owner-provisioned fictional
+1. Complete automated, source-review, archive, privacy-manifest, and screenshot
+   verification for Build 11.
+2. After explicit commit authorization, commit the reviewed source and produce
+   and inspect a reproducible Build 11 artifact from that committed state.
+3. Obtain owner approval for the Build 11 copy and missing fields in
+   `docs/build-11-external-review-packet-2026-07-27.md`.
+4. Obtain explicit approval before creating the owner-provisioned fictional
    account and Active production specified in
    `docs/review-production-fixture.md`.
-3. Keep credentials only in App Store Connect secure Test Information fields
+5. Keep credentials only in App Store Connect secure Test Information fields
    or another explicitly approved secure channel.
-4. Confirm Build 10 is not marked **TestFlight Internal Only**.
-5. Complete Test Information, add Build 10 to `Capture This crew pilot`, and
-   submit only after the owner explicitly approves the external write.
-6. Record Apple's authoritative expiration and review status.
-7. Do not invite the buddy until Apple approves Build 10 for external testing.
+6. After separate upload authorization, upload Build 11 and confirm it is not
+   marked
+   **TestFlight Internal Only**.
+7. Install the processed Build 11 from TestFlight and complete the direct
+   physical gate in
+   `docs/build-11-physical-release-worksheet-2026-07-27.md`.
+8. After separate authorization, deploy the approved privacy/support wording,
+   complete Test Information, add Build 11 to `Capture This crew pilot`, and
+   submit it for Beta App Review.
+9. Record Apple's authoritative expiration and review status. Do not invite the
+   buddy until Apple approves Build 11 for external testing.
 
-## Build 10 — internal TestFlight device acceptance
+## Build 11 — exact TestFlight device acceptance
 
 Use the numbered physical worksheet in
-`docs/build-10-pilot-handoff-2026-07-27.md`. It covers the exact TestFlight
+`docs/build-11-physical-release-worksheet-2026-07-27.md`. It covers the exact TestFlight
 identity; online and airplane-mode restoration; three offline captures; at
 least two individual prints; relaunch; exactly-once replay; both conflict
 choices; Planning/Complete refusal; haptics; Reduce Motion; deliberate
@@ -168,9 +182,10 @@ Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
 `docs/release-evidence-1.0.0.md`.
 
-Do not reuse build numbers 9 or 10. If a replacement binary is genuinely
-required, stop and document why Build 11 is necessary before changing
-`mobile/pubspec.yaml` or packaging anything.
+Do not reuse build numbers 9 or 10. Build 11 remains available only because it
+has not been uploaded. Rebuild it from the reviewed committed source before
+upload. After any Build 11 upload, a replacement binary must use a new build
+number; stop and document why before changing `mobile/pubspec.yaml`.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a
@@ -185,9 +200,9 @@ archive/IPA agreement when the checked-in export options were used.
    non-exempt encryption. The account owner makes the final attestation.
 3. Add the beta description, **What to Test**, feedback email, contact, privacy
    URL, support URL, review notes, and secure demo instructions from
-   `docs/build-10-external-testflight-metadata-2026-07-27.md`.
+   `docs/build-11-external-review-packet-2026-07-27.md`.
 4. Use the existing external group `Capture This crew pilot`.
-5. Add Build 10 and submit it for TestFlight App Review only after the owner
+5. Add Build 11 and submit it for TestFlight App Review only after the owner
    explicitly approves the final packet and submission.
 6. After approval, invite the buddy by email rather than a broadly shareable
    public link. Do not include the production share token in the invitation.

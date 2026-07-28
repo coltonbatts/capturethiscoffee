@@ -1,18 +1,19 @@
-# Fictional Build 10 App Review and buddy-pilot fixture
+# Fictional Build 11 App Review and buddy-pilot fixture
 
 Last updated: 2026-07-27
 
 Status: **PLANNED — PRODUCTION WRITE NOT YET AUTHORIZED.**
 
-Build 10 is production-configured. The separate disposable Supabase fixture
+Build 11 will be production-configured. The separate disposable Supabase fixture
 cannot be used by the uploaded IPA. Create this fixture in the production
 backend only after the owner explicitly approves the production writes and
 names the provisioning and cleanup owner.
 
 Do not commit or print the resulting account email, password, production ID,
 share token, URL, or credential-bearing screenshot. The mobile app receives
-only the production public URL/key already embedded in Build 10; never use a
-service-role key in the app, tester instructions, or fixture tooling.
+only the production public URL/key embedded in the reviewed Build 11 artifact;
+never use a service-role key in the app, tester instructions, or fixture
+tooling.
 
 ## Required account and lifecycle
 
@@ -91,7 +92,7 @@ them:
 - `Apple Review Complete Refusal — Fictional`, status Complete, one captured
   unprinted order.
 
-Use only reserved fictional rows. Build 10 must retain pending work but refuse
+Use only reserved fictional rows. Build 11 must retain pending work but refuse
 replay and physical printing while the day is Planning or Complete. Restore a
 day to Active only when needed for explicit conflict resolution and cleanup.
 
@@ -99,7 +100,7 @@ day to Active only when needed for explicit conflict resolution and cleanup.
 
 Before every submission or pilot:
 
-1. Sign in through Build 10 with the individual review account.
+1. Sign in through Build 11 with the individual review account.
 2. Confirm only the intended fictional workspace data is visible.
 3. Confirm `Apple Review Coffee Run — Fictional` is Active.
 4. Confirm needs-order, captured, no-drink, short, long, conflict, and at least

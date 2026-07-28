@@ -3,8 +3,10 @@
 > **Historical web-first/Build 6 checklist.** Preserve it as prior evidence,
 > but use [`current-state-2026-07-25.md`](current-state-2026-07-25.md),
 > [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and
-> [`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md)
-> for the active Build 10 boundary.
+> [`build-11-release-readiness-2026-07-27.md`](build-11-release-readiness-2026-07-27.md)
+> for the active Build 11 source boundary. Use the
+> [`Build 11 physical worksheet`](build-11-physical-release-worksheet-2026-07-27.md)
+> for current hardware acceptance; Build 10 records remain historical evidence.
 
 Last updated: 2026-07-23 (printer handoff audit)
 

@@ -12,15 +12,15 @@ Printer is unavailable or an advanced PNG/CSV export is needed.
 ## Fallback On-Set Workflow
 
 1. Open `/labels` on the phone.
-2. Choose the production and one or more active labels.
+2. Choose the production and one active label.
 3. Preview the label.
 4. Tap **Share** when the phone supports sharing PNG files, or **Export PNG**.
 5. Open the NIIMBOT app.
 6. Import the PNG and save it as a template (My Templates).
-7. Repeat steps 1-6 for each cup. Import/save is still one at a time — there is no bulk-import of multiple external PNGs at once.
-8. Once several templates are saved, use the NIIMBOT app's **Batch Print** feature (Home → My Templates → Batch Print) to multi-select them, set a copy count for each, and print the whole stack in one continuous pass instead of printing each cup individually.
-
-Note: NIIMBOT's Batch Print does not accept templates built from a CSV/data source — that's a separate batch mechanism (see "Physical Unknowns" below) and the two don't combine.
+7. Print exactly one physical label and inspect its person, drink, orientation,
+   crop, density, feed, and stock before continuing.
+8. Repeat steps 1–7 for each remaining cup. Do not start the next print until
+   the prior physical result is known.
 
 ## Current Fallback Export Preset
 
@@ -53,10 +53,6 @@ Section A to verify, then record the result here and in the preset.
 
 Record the final media and import settings here after physical testing.
 
-## Source note
-
-The Batch Print behavior described above (multi-select saved templates,
-print in one pass, data-source templates excluded) comes from NIIMBOT's own
-in-app help center, document id 4166, "How to Use Batch Printing?" — surfaced
-2026-07-01. Not yet confirmed against the actual M2 + app on this printer;
-treat as documented app behavior, not yet a verified CTC workflow.
+This fallback is intentionally sequential. Research into other NIIMBOT
+workflows is preserved in historical investigation documents, but those paths
+are not accepted Capture This release procedures.

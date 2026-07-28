@@ -1,4 +1,4 @@
-# Capture This current state — Build 10 implementation
+# Capture This current state — Build 11 release hardening
 
 Last updated: 2026-07-27
 
@@ -22,30 +22,43 @@ remain available when the app or printer path is unavailable.
 - Build 9 source snapshot: `47c4405` (`Ship Build 9 signed-in day selection`).
 - Current TestFlight app version: `1.0.0 (10)` / bundle
   `com.capturethis.ctcprinter`.
+- Next local release candidate: `1.0.0 (11)` / the same bundle. Build 11 is not
+  committed, uploaded, submitted, or physically accepted.
 - Build 9 was uploaded and processed in App Store Connect on 2026-07-25 and is
   assigned to the internal `Main` TestFlight group.
 - The account owner installed a signed Build 9 release, opened an authenticated
   day, and completed one physical M2_H reprint.
-- Build 9 is consumed. Any shipping-code or embedded-metadata change must use
-  build 10 or later.
+- Builds 9 and 10 are consumed. Any new binary must use build 11 or later.
 - Build 10 implementation started from clean `main` at `6e54cc5` and is
   committed and pushed at `fea2fc3` (`Ship Build 10 offline collection and
   sync`). A clean production-configured archive was created from `ab5edb8`,
   signed and exported as `1.0.0 (10)`, uploaded at 4:24 PM CDT on 2026-07-27,
   and reported available to the existing internal TestFlight tester at
   4:26 PM CDT.
-- Build 10 is the current controlled-pilot candidate. The external group
+- Build 10 remains the current internal TestFlight evidence build. It must not
+  advance to external review because its shipping UI still exposes the failed
+  batch action and its application privacy manifest has an empty collected-data
+  declaration.
+- Build 11 is the next controlled-pilot candidate. Starting from repository
+  `HEAD 08cbeec`, the release-hardening working tree removes every shipping
+  batch action and the controller batch method, preserves single-label
+  recovery, updates identity to `1.0.0 (11)`, corrects the app privacy manifest,
+  and replaces stale Build 5 screenshots with seven current fictional assets.
+  Source and policy changes remain local pending final verification and owner
+  decisions.
+- The external group
   `Capture This crew pilot` exists with no build or tester assigned; Beta App
   Review has not been submitted. The owner approved the exact external beta
-  copy at 18:42 CDT on 2026-07-27. Review contacts, separate feedback and
+  copy for Build 10 at 18:42 CDT on 2026-07-27; that exact-copy approval does
+  not approve the new Build 11 packet. Review contacts, separate feedback and
   privacy/support attestations, a fictional invited account plus Active
   production in the production backend, and explicit submission approval are
-  still required. The exact external packet is
-  `docs/build-10-external-testflight-metadata-2026-07-27.md`.
-- Build 10 has no physical device acceptance. The printer must not be mailed
-  until the exact TestFlight Build 10 is exercised with the accepted M2_H and
+  still required. The Build 11 draft is
+  `docs/build-11-external-review-packet-2026-07-27.md`.
+- Build 11 has no physical device acceptance. The printer must not be mailed
+  until the exact TestFlight Build 11 is exercised with the accepted M2_H and
   the hardware inventory is signed. Current status and worksheets are in
-  `docs/build-10-pilot-handoff-2026-07-27.md`.
+  `docs/build-11-physical-release-worksheet-2026-07-27.md`.
 - Build 10 architecture, vertical slices, acceptance tests, and release
   blockers are recorded in
   `docs/build-10-implementation-2026-07-25.md`.
@@ -134,7 +147,7 @@ The current iOS **Roster** is a printable-label roster. People who still need an
 order are present in the cached board model but do not yet have an operating
 surface.
 
-## Physical baseline and Build 10 acceptance — still open
+## Physical baseline and Build 11 acceptance — still open
 
 The owner explicitly authorized the internal TestFlight upload to obtain Build
 10 device time. That upload does not close the following Build 9 baseline
@@ -153,8 +166,8 @@ checks or replace Build 10's own physical worksheet:
 10. Independent operator run without the builder touching the phone.
 
 Automated checks are necessary but do not replace this gate.
-Build 10 must additionally complete the 25 direct-observation rows in
-`docs/build-10-pilot-handoff-2026-07-27.md`, including three offline captures,
+Build 11 must complete the direct-observation rows in
+`docs/build-11-physical-release-worksheet-2026-07-27.md`, including three offline captures,
 two individual prints, exactly-once replay, both conflict choices, inactive-day
 refusal, haptics, Reduce Motion, single-label interruption, reconnect,
 background/resume, fallbacks, and Realtime or polling/manual-refresh evidence.
@@ -208,7 +221,11 @@ are not physical release evidence.
 
 ## Later builds
 
-### Build 11 — prepare the day
+Build number 11 is now consumed by release hardening, so the earlier
+capability-roadmap numbers shift by at least one. Do not implement this scope
+until the external-pilot and physical gates clear.
+
+### Build 12 or later — prepare the day (previously planned as Build 11)
 
 - Day create/edit/activate/delete.
 - People create/edit/archive, usuals, notes, and photos.
@@ -217,7 +234,7 @@ are not physical release evidence.
 - Transactional Postgres functions for multi-row day/roster/order creation.
 - Creation remains online-only and must fail honestly while offline.
 
-### Build 12 — complete the operating loop
+### Build 13 or later — complete the operating loop (previously planned as Build 12)
 
 - Grouped and by-person coffee-shop summaries.
 - Native copy/share.
@@ -226,7 +243,7 @@ are not physical release evidence.
 - Local `grid-01` PNG sharing.
 - Remove Legacy link from the normal root flow.
 
-### Build 13 — client handoff release candidate
+### Build 14 or later — independent app-first handoff (previously planned as Build 13)
 
 - Final physical and dead-zone drills.
 - Independent install-to-closeout operator run.
@@ -265,12 +282,15 @@ Read these in order:
 8. `docs/build-10-release-validation-2026-07-25.md` — exact remaining gate
    status, physical session order, disposable-project acceptance, and evidence
    record.
-9. `docs/build-10-pilot-handoff-2026-07-27.md` — current status table, exact
-   Build 10 physical worksheet, hardware mailing gate, buddy acceptance, and
-   controlled-pilot versus product-independence backlog.
-10. `docs/build-10-external-testflight-metadata-2026-07-27.md` — current beta
+9. `docs/build-11-physical-release-worksheet-2026-07-27.md` — exact next-build
+   physical gate and evidence record.
+10. `docs/build-11-external-review-packet-2026-07-27.md` — current beta
     description, What to Test, review notes, hardware explanation, secure demo
     instructions, and owner-approval fields.
+11. `docs/app-store-privacy-build-11-2026-07-27.md` — manifest evidence and
+    nutrition-label draft.
+12. `docs/build-11-release-readiness-2026-07-27.md` — verification, blockers,
+    readiness percentages, go/no-go, and next owner actions.
 
 Older web-first strategy and operating documents are historical unless their
 opening status note says they have been reconciled with this boundary.

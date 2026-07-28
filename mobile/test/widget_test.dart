@@ -189,6 +189,32 @@ void main() {
     expect(find.text('Maya Rodriguez'), findsNothing);
   });
 
+  testWidgets('shipping UI offers individual printing and no batch action',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(PrinterApp(
+      sessionRepository: MemorySessionRepository(_rosterSession),
+      boardCacheRepository: MemoryBoardCacheRepository(),
+      printRecoveryRepository: MemoryPrintRecoveryRepository(),
+      apiFactory: _RosterApi.new,
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(printEntryKey));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Print all'), findsNothing);
+    expect(find.byIcon(Icons.stacked_bar_chart), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(rosterEntryKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Maya Rodriguez'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Print this label'), findsOneWidget);
+    expect(find.textContaining('Print all'), findsNothing);
+  });
+
   testWidgets('a search with no match explains itself',
       (WidgetTester tester) async {
     await _pumpRoster(tester);
@@ -205,7 +231,7 @@ void main() {
     await tester.pumpWidget(PrinterApp(
       sessionRepository: MemorySessionRepository(),
       boardCacheRepository: MemoryBoardCacheRepository(),
-    printRecoveryRepository: MemoryPrintRecoveryRepository(),
+      printRecoveryRepository: MemoryPrintRecoveryRepository(),
     ));
     await tester.pump();
     expect(find.text('Link production'), findsOneWidget);
@@ -216,13 +242,15 @@ void main() {
     await tester.pumpWidget(PrinterApp(
       sessionRepository: MemorySessionRepository(),
       boardCacheRepository: MemoryBoardCacheRepository(),
-    printRecoveryRepository: MemoryPrintRecoveryRepository(),
+      printRecoveryRepository: MemoryPrintRecoveryRepository(),
     ));
     await tester.pump();
     await tester.tap(find.byTooltip('How to use Capture This'));
     await tester.pumpAndSettle();
     expect(find.text('How to use Capture This'), findsOneWidget);
     expect(find.text('Link an active production'), findsOneWidget);
+    expect(find.text('Print one label and verify'), findsOneWidget);
+    expect(find.textContaining('Print all'), findsNothing);
   });
 
   testWidgets('planning productions visibly pause physical printing',
@@ -303,6 +331,7 @@ void main() {
     expect(find.text('Unresolved labels'), findsOneWidget);
     expect(find.text('Label printed — sync only'), findsOneWidget);
     expect(find.text('Nothing printed — retry'), findsOneWidget);
+    expect(find.textContaining('Print all'), findsNothing);
   });
 
   test('a blocked print sends the operator where the fix is', () {
