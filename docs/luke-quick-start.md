@@ -1,5 +1,7 @@
 # Capture This — Luke’s quick start
 
+Revision: 2026-07-27 / Build 11 release candidate
+
 This is the whole routine. Once you do it once, it should feel pretty simple.
 
 ## Before you start
@@ -7,6 +9,7 @@ This is the whole routine. Once you do it once, it should feel pretty simple.
 Grab:
 
 - Your iPhone with **Capture This** installed.
+- Confirm the app shows `1.0.0 (11)` and record the TestFlight expiration.
 - The NIIMBOT M2_H printer.
 - The owner-provisioned Capture This email/password.
 - The name of the Active production day.
@@ -30,10 +33,11 @@ If the app finds more than one printer, turn off the extras and try again.
 
 1. Tap **Refresh** to get the latest orders.
 2. Double-check the person’s name and drink.
-3. Tap **Print**.
-4. Wait for the app to say the label printed and synced before moving on.
+3. Tap the individual **Print** action.
+4. Inspect the paper and wait for the app's recovery/sync state before moving
+   to another person.
 
-That’s it.
+Finish and verify one label at a time before starting another.
 
 ## If something goes wrong
 
@@ -43,7 +47,8 @@ First, look at the printer and see whether a usable label came out.
   the shared production board it printed without printing a second copy.
 - **Nothing came out:** choose **Nothing printed — retry**.
 - **You aren’t sure:** stop and text Colton. Don’t guess and accidentally print
-  a duplicate.
+  a duplicate. Use the named support contact in the handoff if Colton is not
+  the agreed support owner.
 
 If the printer disconnects:
 
@@ -56,7 +61,7 @@ Never update the printer firmware as a troubleshooting step.
 
 ## If the app still won’t print
 
-Text Colton with:
+Use the support contact recorded on the shipped kit. Send:
 
 - What you were trying to do.
 - The exact error message.
@@ -64,5 +69,6 @@ Text Colton with:
 - Your iPhone model and iOS version.
 
 Don’t send a password, a production link, or a screenshot that shows private
-crew data. If account access is unavailable and the owner asks you to use
-**Advanced · Legacy link**, treat that production link as private.
+crew data. A signed-in operator can use the authenticated `/labels` page for
+fallback PNG/CSV export. If the owner asks you to use **Advanced · Legacy
+link**, treat that production link as private.

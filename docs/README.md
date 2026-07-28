@@ -30,11 +30,17 @@ itself is maintained and carries its own last-updated date.
 
 | Document | Use it for |
 | --- | --- |
-| [Physical release test](physical-release-test.md) | Required device, printer, stock, and recovery acceptance |
-| [Build 10 validation](build-10-release-validation-2026-07-25.md) | Current detailed acceptance record |
+| [Build 11 readiness](build-11-release-readiness-2026-07-27.md) | Current source review, verification, blockers, and owner approval boundary |
+| [Build 11 physical worksheet](build-11-physical-release-worksheet-2026-07-27.md) | Required exact-TestFlight-build device, printer, stock, and recovery acceptance |
+| [Build 11 external review packet](build-11-external-review-packet-2026-07-27.md) | Current owner-approval copy and private App Review inputs |
+| [Build 11 privacy review](app-store-privacy-build-11-2026-07-27.md) | Current App Privacy and manifest reconciliation |
+| [Build 10 pilot and hardware handoff](build-10-pilot-handoff-2026-07-27.md) | Historical Build 10 handoff and unresolved physical evidence |
+| [Build 10 validation](build-10-release-validation-2026-07-25.md) | Historical detailed acceptance record |
+| [Physical release test](physical-release-test.md) | Historical Build 9/10 physical record; do not convert blanks into Build 11 passes |
 | [Release evidence](release-evidence-1.0.0.md) | Source, build, deployment, and physical evidence |
 | [TestFlight checklist](testflight-checklist.md) | Internal and external beta distribution |
-| [App Store release](app-store-release.md) | Permanent distribution dossier |
+| [Build 10 TestFlight metadata](build-10-external-testflight-metadata-2026-07-27.md) | Historical owner-approved Build 10 beta copy; Build 10 is internal evidence only |
+| [Historical Build 6 App Store dossier](app-store-release.md) | Prior metadata evidence; not current submission copy |
 | [Production readiness](production-readiness-checklist.md) | Full technical and operational audit |
 | [Review fixture](review-production-fixture.md) | Fictional App Review data |
 

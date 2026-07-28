@@ -44,8 +44,7 @@ class RecoveryScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  if (controller.operatorError != null ||
-                      controller.failedBatchLabel != null) ...[
+                  if (controller.operatorError != null) ...[
                     OperatorErrorBanner(controller: controller),
                     const SizedBox(height: 12),
                   ],
@@ -57,8 +56,8 @@ class RecoveryScreen extends StatelessWidget {
                     // up until they are resolved.
                     Text(
                       records.length == 1
-                          ? 'This label is held out of Print next and Print all until you resolve it.'
-                          : 'These ${records.length} labels are held out of Print next and Print all until you resolve them.',
+                          ? 'This label is held out of the print queue until you resolve it.'
+                          : 'These ${records.length} labels are held out of the print queue until you resolve them.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),

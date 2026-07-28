@@ -34,9 +34,15 @@ export default function SupportPage() {
           <li>Open Capture This, sign in, and choose the Active day.</li>
           <li>Force-quit the official NIIMBOT app.</li>
           <li>Wake the M2_H and tap Connect printer.</li>
-          <li>Print one test label before starting a batch.</li>
-          <li>Confirm the printed status synchronizes in Capture This.</li>
+          <li>Review the person and drink, then print exactly one label.</li>
+          <li>
+            Inspect the paper and confirm its recovery or synchronization state
+            before starting the next label.
+          </li>
         </ol>
+        <p>
+          Print and physically verify one label at a time before continuing.
+        </p>
         <p>
           Use <strong>Advanced · Legacy link</strong> only when the coordinator
           asks you to test the fallback production URL.

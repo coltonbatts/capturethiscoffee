@@ -1,6 +1,6 @@
 // The print deck — the app's primary surface.
 //
-// It replaces three stacked cards (printer status, queue summary, batch
+// It replaces three stacked cards (printer status, queue summary, print
 // actions) with one. The point is not density for its own sake: those three
 // cards each held a fragment of the answer to "can I print right now?", and the
 // operator had to assemble it. Here the deck answers it, and the single action
@@ -50,7 +50,6 @@ class PrintDeck extends StatefulWidget {
     required this.block,
     required this.printSuccessToken,
     required this.onPrint,
-    required this.onPrintAll,
     required this.onConnect,
     required this.onDisconnect,
     required this.onRefresh,
@@ -91,7 +90,6 @@ class PrintDeck extends StatefulWidget {
   final int printSuccessToken;
 
   final VoidCallback onPrint;
-  final VoidCallback onPrintAll;
   final VoidCallback onConnect;
   final VoidCallback onDisconnect;
   final VoidCallback onRefresh;
@@ -417,26 +415,10 @@ class _PrintDeckState extends State<PrintDeck>
   }
 
   Widget _secondaryActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed:
-                _canPrint && widget.pending > 1 ? widget.onPrintAll : null,
-            icon: const Icon(Icons.stacked_bar_chart, size: 18),
-            label: Text('Print all (${widget.pending})'),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed:
-                widget.busy || !widget.connected ? null : widget.onDisconnect,
-            icon: const Icon(Icons.bluetooth_disabled, size: 18),
-            label: const Text('Disconnect'),
-          ),
-        ),
-      ],
+    return OutlinedButton.icon(
+      onPressed: widget.busy || !widget.connected ? null : widget.onDisconnect,
+      icon: const Icon(Icons.bluetooth_disabled, size: 18),
+      label: const Text('Disconnect'),
     );
   }
 }

@@ -1,10 +1,51 @@
 # Capture This 1.0.0 release evidence
 
-Last updated: 2026-07-27
+Last updated: 2026-07-27 23:21 CDT
 
 This file separates verified evidence from pending claims. Update it after each
 preview/production deployment, TestFlight upload, physical run, and Apple
 status change.
+
+## Build 11 local release-hardening evidence — 2026-07-27
+
+Build 11 is a local, signed release candidate only. It was built from an
+uncommitted hardening working tree rooted at `main`
+`08cbeec7010f076eec40082aca81f8071110b7f7`. Because the working tree is not a
+commit, this artifact is verification evidence, not the upload artifact. No
+commit, push, deployment, production mutation, upload, tester invitation, or
+Apple submission occurred.
+
+| Item | Verified result |
+|---|---|
+| Identity | `1.0.0 (11)`, `com.capturethis.ctcprinter`, display name Capture This |
+| Scope | Every shipping batch affordance/callback/controller entry removed; one-label printing and conservative recovery preserved |
+| Flutter dependency resolution | `flutter pub get` passed |
+| Flutter static analysis | `flutter analyze` passed with no issues |
+| Flutter tests | 164/164 passed, including no-batch shipping UI, individual actions/recovery, identity drift, and seven App Store image regressions |
+| Local signed archive | `mobile/build/ios/archive-build11/Runner.xcarchive`, 181.6 MB before export |
+| App Store IPA | `mobile/build/ios/ipa-build11/ctc_printer.ipa`, 23,124,902 bytes |
+| IPA SHA-256 | `6271d8e5636c86291038e120eb23475dda43efcfb2a08699e12b5c3d1fa2d8ae` |
+| Export signing | Apple Distribution; team `YW8K4837YB`; `get-task-allow=false`; beta reports entitlement present |
+| Platform | arm64, iPhone device family `[1]`, portrait, minimum iOS 13.0 |
+| Toolchain | Xcode 26.2 / iPhoneOS SDK 26.2, satisfying the current iOS 26 SDK submission floor |
+| Bluetooth/export | Both purpose strings present; `ITSAppUsesNonExemptEncryption=false` |
+| App icons | Every source icon is the declared dimension with no alpha, including 1024×1024; exported 120×120 and 152×152 assets also report no alpha |
+| Privacy packaging | App manifest plus Flutter, app_links, secure storage, shared preferences, and URL launcher manifests are present and `plutil`-valid |
+| Required-reason reconciliation | Flutter declares file timestamp (`0A2A.1`, `C617.1`) and system boot time (`35F9.1`); shared preferences declares UserDefaults (`1C8F.1`); other included plugin manifests declare no required-reason APIs |
+| App-owned privacy declaration | Email Address, User ID, Other User Content, and Other Diagnostic Data; all linked, App Functionality, tracking false |
+| Embedded backend boundary | Production Supabase host occurs once; disposable host occurs zero times; exactly one JWT is present and its role is `anon`; no complete `sb_secret_` value is present. Literal `service_role`/`sb_secret_` guard strings are expected because the app rejects privileged keys at startup |
+| Printer dependency | Exact `niim_blue_flutter: 1.0.1` pin preserved |
+| Frozen-web tests | `npm test` 105/105 passed |
+| Frozen-web lint/build/export | `npm run lint`, `npm run build`, and `npm run verify:niimbot-export` passed; 591×354 geometry unchanged |
+| Web client secret boundary | 55 static client artifacts contain no service-role environment marker, service-role marker, or complete `sb_secret_` value |
+| Dependency audit | `npm audit --omit=dev` exited 1 with three high transitive findings in Next's bundled PostCSS 8.4.31 and Sharp 0.34.5; force fix would install Next 9.3.3 and was not run |
+| App Store screenshots | Seven fictional 1320×2868 portrait RGB PNGs, no alpha; all visually inspected; no connected printer or physical success fabricated |
+| Upload/Apple state | Not uploaded, not processed, not entered in App Store Connect, not submitted |
+| Physical state | Not run. All Build 11 physical rows remain blank; the historical Operator 02 uncertain record remains unresolved |
+
+The archive emitted Flutter's existing nonblocking CocoaPods-to-Swift-Package
+migration notice. No dependency integration, printer firmware, printer library,
+geometry, density, or irreversible printed-fact behavior was changed.
 
 ## Source and deployment
 
@@ -23,6 +64,7 @@ status change.
 | Release pull requests | [PR #9](https://github.com/coltonbatts/capturethiscoffee/pull/9) and [PR #10](https://github.com/coltonbatts/capturethiscoffee/pull/10) | PR #9 merged; PR #10 reviewed for the current candidate |
 | Release tag | Proposed `capture-this-v1.0.0` after physical/external pilot pass | Pending |
 | Live URL | `https://coffee.capturethis.com` | HTTPS 200 verified |
+| Live privacy/support | `https://coffee.capturethis.com/privacy` and `/support` | Both returned HTTP 200 at 17:22 CDT on 2026-07-27 and visibly identified Capture This plus `info@capturethis.com`; owner wording approval remains open |
 | Live Vercel deployment | `dpl_5QSYwoDepaRhT9sXcYgtL5hYtiJ3` | READY, production, verified 2026-07-24 |
 | Live deployed Git commit | `e1e9ff40346ddfb606074f1927b72e171d94c546` | Latest `main`, verified through Vercel |
 | Release preview deployment | `dpl_2J6VJTBb4cV79he7mJhCgyhBRqaS` / commit `dc4f33008a368feeff01b0a9817d053692ce1396` | READY |
@@ -151,7 +193,9 @@ physical gates remain release/pilot risks; upload does not mark them passed.
 | Upload workflow/time | Xcode command-line distribution reported `Upload succeeded` at 4:24 PM CDT on 2026-07-27 |
 | Processing | Complete by 4:26 PM CDT. Apple/TestFlight emailed that `Capture This Printer 1.0.0 (10) for iOS is now available to test` |
 | Internal availability | Ready to install through TestFlight for the existing internal tester; the availability email was received at 4:26 PM CDT |
-| Physical status | Build 10 has no device time yet. Physical gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode |
+| Physical status | Build 10 has no recorded physical device acceptance. The paired iPhone reports production bundle `1.0.0 (10)`, but that installation fact is not a visible open/version check or physical pass. Build 9 baseline gates 4, 7, 8, and 10 remain open; Gate 3 remains a recorded batch failure with single-label printing as the supported mode. A 17:31 CDT read-only container audit confirmed Fictional Operator 02 still has one unresolved uncertain record after paper emerged and requires physical inspection before any recovery choice |
+| External TestFlight | Existing group `Capture This crew pilot` has no build or tester assigned; review not submitted. Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Review contact is Kait Batts; the phone/email were supplied privately and are not stored in Git. Owner declined `info@capturethis.com` for tester feedback | Blocked on a replacement feedback email, separate privacy/support attestations, an explicitly authorized production fictional account plus Active day, and explicit submission approval |
+| TestFlight expiration | Expected around 2026-10-25 from the 90-day window | Estimate only; authoritative App Store Connect date still required. A 2026-07-27 read-only browser attempt reached Apple sign-in because no authenticated session was connected; no App Store field changed |
 
 The focused Build 10 tests cover:
 
@@ -256,7 +300,7 @@ manual sync all remain authoritative.
 | Final post-tool regression | Before 12:20 CDT on 2026-07-27: Flutter analysis and 158/158 tests, frozen-web 105/105, warning-free lint, production build, and unchanged 591×354 NIIMBOT verification passed |
 | Detached Build 9 physical source | Clean `47c4405`; `niim_blue_flutter: 1.0.1`; Flutter analysis and 140/140 tests passed. A disposable-host-only release build was installed directly in isolated bundle `com.capturethis.ctcprinter.build10validation`; no archive, IPA export, or upload occurred |
 | Build 10 archive / IPA / upload | Passed on 2026-07-27: clean production-configured archive `1.0.0 (10)`, signed IPA SHA-256 `7a578953a32c5437f082392141b06559bce81eaab7252657ee9aa2366e9e30b7`, Xcode command-line `Upload succeeded`, and TestFlight availability email received at 4:26 PM CDT |
-| `npm audit --omit=dev` | **Failed:** three high package findings remain in Next-bundled PostCSS 8.4.31 and Sharp 0.34.5; Next.js core advisories were removed by 16.2.11 and top-level Sharp is 0.35.3 |
+| `npm audit --omit=dev` | **Failed again at 17:22 CDT on 2026-07-27:** three high package findings remain in Next 16.2.11's bundled PostCSS 8.4.31 and Sharp 0.34.5 paths; top-level Sharp is 0.35.3. The suggested force fix would install breaking Next 9.3.3, so no dependency was changed |
 
 The build-6 IPA was inspected for version/build, bundle ID, iPhone-only device family,
 portrait orientation, export-compliance flag, Bluetooth copy, application and
@@ -268,12 +312,13 @@ The web build's 54 client artifacts contain no
 JWT. The configured service-role value is not available locally and was not
 copied into evidence.
 
-Three provisional App Store PNGs are recorded under
+Seven current Build 11 App Store PNGs are recorded under
 `docs/app-store-assets/iphone-6.9/`. Each was visually inspected, is exactly
-1320×2868, has no alpha channel, and contains only fictional data. A real
-connected/printing image now records the first build-6 holographic reprint in
-`docs/milestones/2026-07-24-build-6-holographic-first-print.md`. A complete
-batch/recovery demo remains pending the full physical M2_H gate.
+1320×2868 RGB with no alpha channel, contains only fictional data, and does not
+claim a printer connection or physical success. A historical real
+connected/printing image records the first Build 6 holographic reprint in
+`docs/milestones/2026-07-24-build-6-holographic-first-print.md`; it is not Build
+11 acceptance evidence.
 
 ## Live boundary evidence
 
@@ -295,14 +340,14 @@ batch/recovery demo remains pending the full physical M2_H gate.
 
 | Gate | Status | Required evidence |
 |---|---|---|
-| Privacy/support deployment | Verified live | Both routes returned 200; owner wording approval still needs a named attestation |
+| Privacy/support deployment | Existing pages are live; corrected Build 11 source copy is not deployed | Owner/legal approval, named contact owners, explicit deployment approval, then live verification |
 | Leaked temporary credential rotation | Blocked on owner | Rotate the affected temporary Supabase/Auth credential; never reuse it |
 | Public Supabase signup disabled | Verified live | Public settings reported `disable_signup: true` |
-| Dependency security gate | Next.js 16.2.11 deployed; residual audit findings open | Resolve or explicitly accept the residual bundled PostCSS/Sharp findings |
-| Stable fictional review production | Blocked on private operator access | Active non-expiring fixture; token stored only in App Store Connect/private handoff |
-| Physical iPhone + M2_H test | Checks 1, 2, 5, 6, 9 passed on 2026-07-27. **Check 3, the unattended ten-label batch, FAILED** — two runs, both stopped on the batch's first label with a printer acknowledgement timeout (`0x04 inPageStart`, then `0xe4 inPageEnd`); owner accepted single-label printing as the supported mode. Checks 4, 7, 8, 10 open | Complete the remaining rows in `docs/physical-release-test.md`. The batch row is closed as failed-with-limitation and must never be reported as a pass |
-| App Store Connect build status | Build 10 upload succeeded at 4:24 PM CDT; by 4:26 PM Apple/TestFlight reported `1.0.0 (10)` available to test for the existing internal tester | Install from TestFlight and complete Build 10 device acceptance |
-| External TestFlight | Group created; build not assigned and review not submitted | Supply owner-approved feedback/review contact fields and private fictional fixture, assign build 9 after its physical gate passes, submit for Beta App Review, then record Luke's pilot |
+| Dependency security gate | Next.js 16.2.11 deployed; three high bundled PostCSS/Sharp findings remain open | Named owner accepts `dependency-risk-acceptance-2026-07-27.md`, or a supported upstream fix is reviewed and deployed |
+| Stable fictional review production | Blocked on explicit production-write approval, private operator access, and named cleanup owner | Owner-provisioned invited account plus Active fictional production; credentials stored only in App Store Connect/private handoff |
+| Physical iPhone + M2_H test | Historical Build 9 checks 1, 2, 5, 6, 9 passed; batch failed twice and remains failed-with-limitation. Build 11 has no physical observations | Complete every direct-observation row in `build-11-physical-release-worksheet-2026-07-27.md`; never resolve the uncertain Operator 02 record without inspecting paper |
+| App Store Connect build status | Build 10 is internal TestFlight evidence. Build 11 exists only as a local signed verification artifact | After code/owner gates and explicit upload approval, create a reproducible committed Build 11 artifact, upload, and record processing/expiration |
+| External TestFlight | Group created; no Build 11, review submission, or buddy invitation | Approve Build 11 packet/contacts/privacy/support, authorize and verify the fictional fixture, authorize upload, complete physical gate, authorize Beta App Review, then invite only after Apple approval |
 | App Review | Pending | Production submission status and reviewer correspondence |
 | Unlisted request | Pending | Apple-approved Unlisted App status |
 | Permanent App Store link | Pending | Direct URL verified and final clean-device print smoke test |

@@ -1,6 +1,6 @@
 # Capture This release and operations handoff
 
-Last updated: 2026-07-23
+Last updated: 2026-07-27
 
 This handoff grants roles, not shared passwords. Fill the ownership and renewal
 register with the account holders before the printer moves. Luke's one-page
@@ -11,6 +11,13 @@ point and definition of done are in [the handoff hub](HANDOFF.md).
 
 - GitHub: `https://github.com/coltonbatts/capturethiscoffee`
 - Production branch: `main`
+- Current internal TestFlight build: Build 10, `1.0.0 (10)`, application
+  source `fea2fc3`, clean archive source `ab5edb8`, internally available in
+  TestFlight. External review, physical acceptance, and buddy installation are
+  still open.
+- Next local release candidate: Build 11, `1.0.0 (11)`. Its shipping UI exposes
+  only individual printing. It is not committed, uploaded, physically
+  accepted, or externally approved.
 - Release work branch: `codex/release-1.0.0` was merged through PR #9 on
   2026-07-20. The current release-candidate commit and pull request are recorded
   in `release-evidence-1.0.0.md`.
@@ -90,12 +97,15 @@ build number.
 
 ## Day-of production
 
-1. A signed-in operator creates the client/production, fictional test order,
-   roster, and runner link.
+1. A signed-in website operator creates the client/production, roster, and
+   fallback runner link, then marks the day Active. Build 11 can collect and
+   edit orders after the existing day is loaded.
 2. Confirm the production is active and test the link in a private browser.
-3. The printer operator installs Capture This, links the URL, force-quits the
+3. The printer operator installs Capture This, signs in with the individual
+   owner-provisioned account, selects the existing Active day, force-quits the
    official NIIMBOT app, and powers off other nearby NIIMBOT printers.
 4. Connect only the physically verified M2_H. Do not update printer firmware.
+   Print and physically verify one label at a time.
 5. If a print succeeds but sync fails, do not tap Print again. Use **Sync only**.
    If the outcome is uncertain, inspect the printer/physical label and choose
    **Label printed — sync only** or **Nothing printed — retry**.
@@ -126,8 +136,9 @@ build number.
 
 - Support mailbox: `info@capturethis.com` (**OWNER APPROVAL AND NAMED OWNER**)
 - Check Vercel runtime errors and availability before a shoot and during review.
-- No crash-reporting SDK is in build 5. Record device/iOS/app build, printer
-  firmware, stock, last successful step, and sanitized error copy for incidents.
+- No crash-reporting SDK is recorded in Build 11. Record device/iOS/app build,
+  printer firmware, stock, last successful step, and sanitized error copy for
+  incidents.
 - Never log or screenshot a production token. Revoke it if exposed.
 - Review Supabase database health/storage, authentication events, and backup
   status on an agreed schedule.
@@ -224,17 +235,20 @@ The handoff does not pass because automated tests pass. Luke must personally,
 without Colton operating the phone or dashboard:
 
 - [ ] Install/open the supported app from the documented distribution path.
-- [ ] Receive and link a disposable active-production URL.
+- [ ] Sign in with the individual fictional account and select the existing
+      fictional Active day.
 - [ ] Connect the exact accepted M2_H.
-- [ ] Print short, long, intentional-reprint, and 10+ batch cases.
+- [ ] Print short and long labels sequentially, one at a time, and confirm the
+      shipping deck exposes only the individual action.
 - [ ] Verify successful `label_printed` synchronization on the hosted web app.
 - [ ] Recover an interrupted/uncertain print without an accidental duplicate.
 - [ ] Power-cycle/reconnect and background/resume successfully.
 - [ ] Export and print one `/labels` fallback asset.
 - [ ] Identify whom to contact and provide only sanitized incident evidence.
 
-Complete [the physical release record](physical-release-test.md) during the same
-session.
+Complete
+[the Build 11 physical release worksheet](build-11-physical-release-worksheet-2026-07-27.md)
+during the same session.
 
 ## Final inventory and sign-off
 
@@ -242,20 +256,29 @@ session.
 |---|---|---|
 | M2_H printer | Asset/serial: _____ | _____ |
 | Charger/cable | _____ | _____ |
-| Ribbon installed + spare | Part/source: _____ | _____ |
-| Label stock + spare | Dimensions/shape/part/source: _____ | _____ |
+| Ribbon installed | Type/color/brand/lot/condition: _____ | _____ |
+| Spare ribbon | Part/quantity/condition: _____ | _____ |
+| Ribbon reorder source | Supplier/listing/SKU/purchaser: _____ | _____ |
+| Label stock installed | Brand/type/finish/lot/feed: _____ | _____ |
+| Label stock dimensions | Measured width × height: _____ | _____ |
+| Spare stock | Part/quantity/roll count: _____ | _____ |
+| Stock reorder source | Supplier/listing/SKU/purchaser: _____ | _____ |
 | Firmware record | Version only; no update: _____ | _____ |
 | Supported Capture This app | Version/build/install path: _____ | _____ |
+| TestFlight lifecycle | Exact expiration/renewal owner: _____ | _____ |
 | Luke Quick Start | Revision/date: _____ | _____ |
 | `/labels` fallback guide | Web account confirmed: _____ | _____ |
 | Account invitations | Services/roles: _____ | _____ |
-| Open limitations | _____ | _____ |
-| Support boundary | None or written scope: _____ | _____ |
+| Open limitation | One-label-at-a-time support acknowledged: _____ | _____ |
+| Support boundary | Contact/hours/term/response target/scope: _____ | _____ |
+| Evidence photos | Fictional short/long/cold-cup paths: _____ | _____ |
+| Packing/shipping | Packing accepted/carrier/tracking/recipient: _____ | _____ |
 
 - Luke acceptance — name/signature/date: _____
 - Physical asset owner — name/signature/date: _____
 - Platform/account owner — name/signature/date: _____
 - Colton support boundary accepted — name/signature/date: _____
+- **Printer may leave Colton's possession: yes/no** _____
 
 ## Post-test token, access, and data cleanup
 

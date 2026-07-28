@@ -22,10 +22,7 @@ class OperatorErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final message = controller.operatorError;
-    final failedBatchLabel = controller.failedBatchLabel;
-    if (message == null && failedBatchLabel == null) {
-      return const SizedBox.shrink();
-    }
+    if (message == null) return const SizedBox.shrink();
 
     return Material(
       color: Theme.of(context).colorScheme.errorContainer,
@@ -38,17 +35,7 @@ class OperatorErrorBanner extends StatelessWidget {
             const Icon(Icons.warning_amber),
             const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (failedBatchLabel != null)
-                    Text(
-                      'Batch stopped at: $failedBatchLabel',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  if (message != null) Text(message),
-                ],
-              ),
+              child: Text(message),
             ),
             IconButton(
               onPressed: controller.dismissError,

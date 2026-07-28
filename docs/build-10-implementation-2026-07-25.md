@@ -2,6 +2,15 @@
 
 Last updated: 2026-07-27
 
+> **Implementation-time decision record.** Build 10 was later archived,
+> uploaded, and made internally available with explicit owner authorization.
+> Use
+> [`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md)
+> and [`current-state-2026-07-25.md`](current-state-2026-07-25.md) for current
+> release, external-TestFlight, physical, and mailing gates. Pre-upload
+> prohibitions below preserve the implementation boundary; they are not a
+> claim that the completed upload did not occur.
+
 ## Boundary
 
 Build 10 closes the existing-day operating loop in the iOS app:
@@ -26,7 +35,8 @@ one signed-in day load plus one physical M2_H reprint recorded. Its automated
 baseline was 140 Flutter tests and 104 web tests, with Flutter analysis, web
 lint, and web build passing.
 
-All ten Build 9 physical exit checks remain open or only software-tested:
+At this implementation cutoff, all ten Build 9 physical exit checks were open
+or only software-tested:
 
 1. force-quit authenticated restoration;
 2. airplane-mode authenticated cold start;
@@ -39,8 +49,10 @@ All ten Build 9 physical exit checks remain open or only software-tested:
 9. cold-cup adhesion and readability;
 10. an independent operator run.
 
-These are release blockers. Build 10 may be implemented and tested locally, but
-must not be packaged or uploaded until the physical record is complete.
+These were the original release blockers. The owner later explicitly
+authorized the Build 10 archive/upload before every physical row closed in
+order to obtain TestFlight device time. That exception did not convert an open
+or failed physical row into a pass.
 
 ## Architecture decisions
 
@@ -117,8 +129,9 @@ until the authoritative server board reports `label_printed: true`.
 
 Migration `20260725120000_preserve_printed_order_facts.sql` adds a trigger that
 makes `label_printed: true` irreversible in Postgres. This protects the physical
-fact even from a stale full-row write by an older client. The migration has not
-been applied to production.
+fact even from a stale full-row write by an older client. It was not applied to
+production at the implementation cutoff; the owner later applied it by hand
+and its production trigger is verified enabled.
 
 ### Refresh behavior
 
@@ -218,9 +231,10 @@ and the remaining physical checks stay open. The exact row audit and operator
 worksheet are in
 `docs/build-10-release-validation-2026-07-25.md`.
 
-## Handoff gates
+## Historical pre-upload handoff gates
 
-Before any Build 10 archive or upload:
+The implementation record originally required the following before any Build
+10 archive or upload:
 
 - finish and record all ten Build 9 physical exit checks;
 - apply and verify the monotonic printed-fact migration in the intended
@@ -233,5 +247,8 @@ Before any Build 10 archive or upload:
 - record source commit, archive identity, IPA hash, signing, and App Store
   Connect status.
 
-No production data mutation, migration application, archive, upload, or push is
-authorized by this implementation record.
+This implementation record itself authorized no production data mutation,
+migration application, archive, upload, or push. Later owner authorizations and
+their observed results are recorded in
+`docs/build-10-release-validation-2026-07-25.md` and
+`docs/release-evidence-1.0.0.md`.

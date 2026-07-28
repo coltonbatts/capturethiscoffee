@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       summary="This policy describes the Capture This Coffee iOS app, its frozen web fallback, and the shared production service."
     >
       <p className="text-sm font-bold text-zinc-600">
-        Effective date: July 25, 2026
+        Effective date: July 27, 2026
       </p>
 
       <PublicInfoSection title="What the service handles">
@@ -31,8 +31,11 @@ export default function PrivacyPage() {
           The current iOS app requests the existing days and the selected
           day&apos;s production, client name, on-set roster, crew names, roles,
           departments, usual drinks, drink orders, and printed status directly
-          from the shared service. It does not request private person notes or
-          dietary notes in the current day board.
+          from the shared service. An operator can collect or edit day-specific
+          drink details, mark no-drink, and optionally update a usual drink.
+          Those changes are sent to the shared service under the signed-in
+          account. The current iOS day board does not request private person
+          notes or dietary notes.
         </p>
         <p>
           A fallback production share link contains a secret token that grants
@@ -44,9 +47,10 @@ export default function PrivacyPage() {
       <PublicInfoSection title="How the information is used">
         <p>
           Production information is used only to operate the coffee-order and
-          label-printing workflow: loading a production queue, rendering a
-          label, printing it, and synchronizing successful print status back to
-          the hosted service.
+          label-printing workflow: loading a day, collecting or editing its
+          orders, rendering a label, printing one label at a time, resolving
+          conflicts, replaying offline work, and synchronizing successful print
+          status back to the hosted service.
         </p>
         <p>
           The iOS app communicates directly with Supabase over HTTPS for
@@ -75,7 +79,9 @@ export default function PrivacyPage() {
           later app version, or the app is removed. If a physical print cannot
           be synchronized immediately, the app stores a small local recovery
           record until the operator resolves the print status. The app does not
-          keep rendered label images as a permanent local archive.
+          keep rendered label images as a permanent local archive. Nearby
+          Bluetooth device details, label previews, and printer packets are
+          processed locally and are not uploaded to Supabase or Vercel.
         </p>
         <p>
           Production, account, and order records remain in the hosted service
@@ -101,9 +107,10 @@ export default function PrivacyPage() {
           The current iOS app does not contain advertising, cross-app tracking,
           third-party marketing analytics, or a crash-reporting SDK. Capture
           This does not sell production or crew information. Standard hosting
-          and security logs may record technical request information needed to
-          operate and protect the service; production share tokens are not
-          intentionally written to application logs.
+          and security logs may retain an IP address, request time, user agent,
+          request path, response status, and authenticated account identifier as
+          needed to operate and protect the service. Production share tokens
+          are not intentionally written to application logs.
         </p>
       </PublicInfoSection>
 
@@ -120,6 +127,12 @@ export default function PrivacyPage() {
           </a>
           . Include the production name and date, but do not email a production
           share token.
+        </p>
+        <p>
+          The iOS app has no account-creation or public-signup flow. Accounts
+          are provisioned by an owner outside the app. An invited operator can
+          use the same contact to request that an account and associated
+          information be reviewed or deleted.
         </p>
       </PublicInfoSection>
 

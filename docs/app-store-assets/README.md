@@ -1,37 +1,58 @@
 # App Store screenshot assets
 
-The `iphone-6.9/` PNGs are provisional English (U.S.) App Store screenshots
-captured from the iPhone 17 Pro Max simulator at an accepted 6.9-inch portrait
-size of 1320×2868 pixels.
+The seven English (U.S.) PNGs in `iphone-6.9/` are truthful Build 11
+release-candidate screens generated from the shipping Flutter UI at an
+Apple-accepted 6.9-inch portrait size of 1320×2868 pixels.
 
-These files represent the build-5 UI. Build 6 adds a production-status chip and
-an in-app operating guide, so recapture the entire final set before submitting
-build 6. The Flutter golden files are layout regression artifacts that use the
-test font; they are not App Store screenshots.
+| File | Current release-candidate screen |
+|---|---|
+| `01-invited-account-sign-in.png` | Blank invited-account sign-in; no credentials entered |
+| `02-existing-days.png` | Existing Active, Planning, and Complete day selection |
+| `03-collect-orders.png` | Order collection and editing |
+| `04-individual-print-deck.png` | Cached individual-print deck and real local label preview; printer visibly disconnected |
+| `05-offline-conflict.png` | Offline pending mutation and visible conflict protection |
+| `06-duplicate-safe-recovery.png` | Uncertain single-label recovery choices that prevent duplicate printing |
+| `07-about-release.png` | About, privacy/support links, and `1.0.0 (11)` identity |
 
-| File | Screen | Data source |
-|---|---|---|
-| `01-link-production.png` | Unlinked production entry screen | Actual release UI, no token entered |
-| `02-pending-queue.png` | Fictional pending label queue | Non-shipping `mobile/tool/app_store_screenshot.dart` fixture |
-| `03-print-sync-recovery.png` | Duplicate-safe sync/uncertain recovery summary | Same non-shipping fictional fixture |
+Every name, company, day, order, user ID, and email domain in the fixture is
+fictional. The fixture performs no network request. The assets show no password,
+token, production identifier, notification, real crew information, or claimed
+physical print. The disconnected and offline states are intentional: no
+connected M2_H or successful paper output was fabricated.
 
-The source images have no alpha channel or transparency. They contain no live
-production identifiers, share token, crew data, notifications, or account
-information. The fixture is compiled only when its `tool/` entry point is
-selected; the release archive continues to use `mobile/lib/main.dart`.
+The source goldens are under `mobile/test/goldens/app-store/`. The test harness
+loads the bundled Geist, Geist Mono, Arial, and Material Icons fonts so Flutter's
+test-only block font cannot leak into the images. It asserts the output is
+exactly 1320×2868. The committed App Store copies are then flattened to RGB.
 
-Regenerate on the 6.9-inch simulator, then remove alpha:
+Flutter's rasterizer can move a handful of antialiasing pixels between the
+release Mac and GitHub's macOS 15 runner even with the same Flutter version and
+bundled fonts. The App Store golden comparator therefore permits at most
+`0.01%` differing pixels (about 379 of 3,785,760) while dimensions remain
+exact. This is narrow enough that a one-pixel full-width line, shifted layout,
+or changed copy still fails. Release assets still require exact regeneration
+on the release Mac plus human visual inspection; CI tolerance is not permission
+to replace or approve store assets automatically.
+
+Regenerate and verify:
 
 ```bash
 cd mobile
-flutter build ios --simulator --debug \
-  -t tool/app_store_screenshot.dart \
-  --dart-define=APP_STORE_SCREEN=queue
+flutter test test/app_store_screenshot_test.dart --update-goldens
+flutter test test/app_store_screenshot_test.dart
+cp test/goldens/app-store/*.png \
+  ../docs/app-store-assets/iphone-6.9/
 dart run tool/flatten_app_store_png.dart \
-  ../docs/app-store-assets/iphone-6.9/02-pending-queue.png
+  ../docs/app-store-assets/iphone-6.9/*.png
+file ../docs/app-store-assets/iphone-6.9/*.png
+sips -g pixelWidth -g pixelHeight -g hasAlpha \
+  ../docs/app-store-assets/iphone-6.9/*.png
 ```
 
-Before submission, consider adding a screenshot or short video from the exact
-physically tested M2_H flow. Never fake the connected state. Recheck every
-final asset for dimensions, alpha, fictional data, accurate version UI, and
-absence of tokens immediately before upload.
+The final seven files were visually inspected on 2026-07-27 after generation.
+Each is 1320×2868, 8-bit RGB, non-interlaced, with no alpha channel.
+
+Immediately before App Store Connect upload, rerun the harness, visually inspect
+every file, and reconfirm fictional data, accurate release identity, dimensions,
+and alpha status. A real printer photo or video is optional and may be added
+only from a directly observed physical session using fictional data.

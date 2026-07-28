@@ -1,9 +1,10 @@
 # Capture This Build 10 release validation
 
-Last updated: 2026-07-27 16:26 CDT
+Last updated: 2026-07-27 17:31 CDT
 
-Status: **INTERNAL TESTFLIGHT READY — Build 10 is available to test. Physical
-release acceptance remains on hold.**
+Status: **INTERNAL TESTFLIGHT CANDIDATE — Build 10 is available internally.
+External review, Build 10 physical acceptance, and printer handoff remain
+open.**
 
 **Gate 3 (unattended ten-label batch) is recorded as FAILED, not pending.** Two
 `Print all` runs stopped on the batch's own first label. The owner decided on
@@ -16,6 +17,12 @@ This is the live orchestration record for the remaining Build 9 physical exit
 gate and the Build 10 disposable-project acceptance. It records only observed
 evidence. An automated or source-level pass is never promoted to a physical
 pass.
+
+The current production-configured Build 10 worksheet, hardware mailing gate,
+and buddy pilot are maintained in
+[`build-10-pilot-handoff-2026-07-27.md`](build-10-pilot-handoff-2026-07-27.md).
+The disposable project used for Build 9 baseline work cannot be reached by the
+uploaded production-configured Build 10 IPA.
 
 ## Verified starting point
 
@@ -295,7 +302,11 @@ and prerequisite smoke observations are not promoted to physical passes.
 | 9 | Cold-cup adhesion and readability | Fictional Operator 12's 50×30 mm holographic label was applied to a cold cup from 13:08 through at least 13:16 CDT | **Passed.** Colton directly inspected it and reported no lift, smear, fade, contrast, or readability issue. A fictional-only evidence photo has been requested |
 | 10 | Independent operator run | No evidence | **Open.** Luke has not completed the prescribed flow without Colton touching the phone or dashboard |
 
-No Build 10 packaging or upload is allowed while any row above is open.
+This table was the pre-upload gate. The owner later explicitly authorized the
+Build 10 archive and internal-TestFlight upload with rows 4, 7, 8, and 10 still
+open and Gate 3 closed as a failed, accepted limitation. That authorization
+did not turn any physical row into a pass and does not authorize a replacement
+binary.
 
 Row 3 is closed as **failed with an owner-accepted limitation** rather than
 passed. It no longer blocks progress through the remaining gates, but it must be
@@ -616,6 +627,14 @@ a usable Operator 02 label exists, or **Nothing printed — retry** if it does
 not. Until then, Operator 02 must not be counted as printed and must not be
 counted as unprinted.
 
+Read-only confirmation at 17:31 CDT on 2026-07-27: the paired iPhone still
+reports the isolated bundle at `1.0.0 (9)`, and its preferences contain exactly
+one `ctc_print_recovery_v1` row for Operator 02 order
+`1456b740-8cbf-4c64-b70f-6abac7349ec7`, state `uncertain`, created
+`2026-07-27T20:44:48.427775Z`. No app was launched and no recovery choice was
+made. The production bundle is installed at `1.0.0 (10)`, which is installation
+evidence only and not a physical Build 10 pass.
+
 ### Owner decision
 
 On 2026-07-27 the owner chose to record Gate 3 as failed with this diagnosis,
@@ -624,10 +643,16 @@ printing as the supported operating mode**. Unattended batch printing is a
 documented product limitation, not a claimed capability. No shipping code,
 `niim_blue_flutter` pin, printer firmware, geometry, or density was changed.
 
-## Shortest practical physical session
+## Historical pre-upload physical-session plan
 
-Complete the phases in order. Keep the cold-cup timer running while the batch,
-recovery, and isolation checks execute.
+The phases below preserve the Build 9/disposable and direct-install plan used
+before the production-configured TestFlight upload. Do not follow them as the
+current Build 10 acceptance route. Use the exact TestFlight build and the
+numbered current worksheet in
+`docs/build-10-pilot-handoff-2026-07-27.md`.
+
+The historical plan was to complete the phases in order and keep the cold-cup
+timer running while the batch, recovery, and isolation checks executed.
 
 The preserved Build 9 IPA is production-configured and must not be used for
 fictional acceptance writes. Before Phase A, use a detached temporary worktree
@@ -697,19 +722,25 @@ builder intervention was required.
 
 Only after Phases A and B pass may Build 9 be replaced on the phone.
 
-### Phase C — install Build 10 without packaging
+### Phase C — superseded direct-install plan
 
-After all ten Build 9 checks pass, install Build 10 directly on the connected
-iPhone from clean `fea2fc3` using a reviewed release-mode device run with only
-the disposable project's public URL and anon/publishable key. This is not an
-archive or IPA and must not be uploaded. Reconfirm the displayed version/build
-is `1.0.0 (10)`.
+This was the pre-upload plan. The owner later authorized a clean,
+production-configured archive and upload, and Build 10 is now internally
+available through TestFlight. Current Build 10 acceptance must use that exact
+TestFlight `1.0.0 (10)` and a fictional account plus Active day in the
+production backend. Do not substitute the separate disposable Supabase project:
+the uploaded IPA does not contain its host.
 
 Record the exact command with credentials redacted, source commit, install
 timestamp, phone model/iOS, and app version. If the source changes, stop,
 review the diff, and rerun Flutter plus frozen-web regressions before continuing.
 
 ### Phase D — Build 10 seven-step acceptance
+
+For the current exact TestFlight Build 10, perform this scenario with the
+owner-approved fictional invited account and Active day in the production
+backend. The uploaded IPA cannot use the separate disposable project. Never
+place production credentials or identifiers into this record.
 
 1. Account A loads the existing fictional Active day online. Capture a
    server-side T0 snapshot of every target order's ordinary fields,
@@ -754,7 +785,15 @@ Conflict evidence:
 
 ### Phase E — refresh fallbacks and inactive-day replay refusal
 
-Use the disposable project only.
+Steps 1–5 below preserve the original disposable-project fault-injection plan.
+Do not remove or add production publication membership merely to make a
+physical test. On the current production-configured TestFlight build, make one
+safe fictional update, observe whether Realtime refreshes the phone, and
+otherwise record polling, resume, pull-to-refresh, or manual sync as the
+fallback actually observed. Production publication membership remains a
+separate read-only database query.
+
+The original fault-injection procedure was for the disposable project only:
 
 1. While `public.orders` is published, make a fictional Account B update and
    record that the phone refreshes authoritative board data after the filtered
@@ -805,8 +844,8 @@ Results:
 
 ## Release decision
 
-Build 10 is available through internal TestFlight, but release/pilot acceptance
-remains on hold until:
+Build 10 is available through internal TestFlight, but physical release,
+printer mailing, and the buddy pilot remain on hold until:
 
 - all ten Build 9 rows are observed and recorded, each either passed or — as
   with row 3 — explicitly failed, diagnosed, and accepted by the owner as a
@@ -817,10 +856,17 @@ remains on hold until:
   the disposable project separately passed both migrations;
 - the Build 10 seven-step scenario, refresh fallbacks, and inactive-day guards
   pass on the physical phone/printer/stock;
-- fictional fixtures, accounts, and links are cleaned up;
+- fictional fixtures, accounts, and links have named cleanup owners and remain
+  available through Apple review and the buddy pilot; clean them only after
+  neither still needs them;
 - regressions are rerun after any code change;
 - the owner explicitly authorizes any later archive, push, or TestFlight
   upload. The Build 10 archive/upload was authorized and completed on
   2026-07-27.
+
+External Beta App Review is separately blocked on the owner-approved Build 10
+metadata/contact fields and the production fictional fixture. It does not
+require another binary unless Build 10 is Internal Only, Apple requires a
+binary change, or an approved release-blocking fix is necessary.
 
 Final gate decision / tester / timestamp: _____

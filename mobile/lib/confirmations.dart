@@ -6,9 +6,8 @@
 // once the roster, the deck, and the recovery screen can all reach the same
 // operation, the same action asked three different ways is a real hazard.
 //
-// Every one of these guards something physical: a duplicate label on a cup, a
-// recovery record stranded on a device, a batch that cannot be recalled once
-// the printhead starts.
+// Every one of these guards something physical: a duplicate label on a cup or
+// a recovery record stranded on a device.
 
 import 'package:flutter/material.dart';
 
@@ -38,30 +37,6 @@ Future<bool> confirmChangeProduction(
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Change production'),
-        ),
-      ],
-    ),
-  );
-  return confirmed == true;
-}
-
-Future<bool> confirmPrintAll(BuildContext context, int count) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Print all pending?'),
-      content: Text(
-        'This will print $count labels. The batch will stop if any label fails.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton.icon(
-          onPressed: () => Navigator.of(context).pop(true),
-          icon: const Icon(Icons.print),
-          label: const Text('Print all'),
         ),
       ],
     ),

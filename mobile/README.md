@@ -2,11 +2,11 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. Build 10 signs an
-owner-provisioned operator into Supabase, loads an existing day, collects and
-edits orders from its complete roster, and durably queues order and physical
-print facts while offline. The Build 8 share-token path remains under
-**Legacy link** as the maintained fallback.
+(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (11)`
+release-candidate source signs an owner-provisioned operator into Supabase,
+loads an existing day, collects and edits orders from its complete roster, and
+durably queues order and physical print facts while offline. The Build 8
+share-token path remains under **Legacy link** as the maintained fallback.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -29,8 +29,8 @@ frozen. See
 4. **Connect printer** (force-quit the official NIIMBOT app first).
 5. Work the **deck**: it shows the next label at real size with one action —
    **Print this label**. The app renders on device, prints, then marks
-   `label_printed` through authenticated Supabase RLS. **Print all** runs the
-   whole pending queue and stops on the first failure.
+   `label_printed` through authenticated Supabase RLS. Inspect that label and
+   its recovery or synchronization state before starting the next one.
 6. To print someone out of order, find them in the **roster** below the deck and
    tap the print icon on their row.
 
@@ -234,15 +234,15 @@ Open `ios/Runner/Info.plist` and add inside the top-level `<dict>`:
 
 ```xml
 <key>NSBluetoothAlwaysUsageDescription</key>
-<string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H so you can print coffee labels for the linked production.</string>
+<string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H and print coffee cup labels.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
-<string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and send coffee labels for printing.</string>
+<string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and print coffee cup labels.</string>
 ```
 
 Open `ios/Podfile`, uncomment/set the platform line to:
 
 ```ruby
-platform :ios, '12.0'
+platform :ios, '13.0'
 ```
 
 Then:
@@ -284,14 +284,15 @@ it.
 ## Known quirks / troubleshooting
 
 - **Flutter suggests removing CocoaPods during archive** → this is currently a
-  non-blocking migration notice. The signed build-6 IPA succeeds with the
+  non-blocking migration notice. The signed Build 11 IPA succeeds with the
   checked-in Podfile/lockfile and xcconfig includes. Do not remove CocoaPods or
   rewrite the iOS dependency setup during a release without a clean diff,
   archive comparison, and physical M2_H regression test.
 - **Connect finds nothing** → NIIMBOT app still running somewhere (also check iPad/other phones), or the printer went to sleep (power-cycle it), or iOS Bluetooth permission was denied (Settings → Capture This).
 - **Multiple printers found** → power off every NIIMBOT except the intended M2_H. The pinned printer library cannot safely select among scan results, so the app refuses to guess.
 - **Print times out** → usually the RFID/roll check. Lid closed? Genuine roll? Ribbon installed (M2_H is thermal transfer)?
-- **Prints but repeats/hangs after page 1** → known heartbeat/print-task quirk on some models; grab the log, we'll adjust the heartbeat handling.
+- **A print repeats or hangs** → stop, inspect the paper, and use the
+  duplicate-safe recovery choice before attempting another label.
 - **Output too light/dark** → change `kDensity` (1–5).
 - **Do NOT update the printer firmware.** The open protocol is reverse-engineered; current firmware is confirmed working and the M2_H famously refuses downgrades.
 - **Queue empty** → roster members need `on_set_today` and orders not in `no_order` status.
@@ -318,10 +319,13 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 - Build 10 `1.0.0+10` was uploaded and made available to the internal
   TestFlight tester on 2026-07-27. Physical acceptance remains open. See
   [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
-- Bump the build suffix for every later upload (`1.0.0+11`, …).
+- Build 11 `1.0.0+11` is the next local release candidate. Its shipping deck
+  exposes only individual printing; it is not uploaded or submitted.
+- Bump the build suffix for every later upload (`1.0.0+12`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.
-- Testers need **HTTPS** production share URLs (not LAN `http://`)
+- A Legacy-link tester needs an **HTTPS** production share URL (not LAN
+  `http://`); normal Build 11 operation uses invited-account sign-in.
 - Internal testers: no review. External testers: beta review + privacy policy URL.
 - Builds expire after **90 days** — rebuild quarterly.

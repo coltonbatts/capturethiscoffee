@@ -57,10 +57,10 @@ Future<void> showQuickStart(BuildContext context) async {
             ),
             _HelpStep(
               number: '4',
-              title: 'Print and wait for sync',
+              title: 'Print one label and verify',
               body: legacy
-                  ? 'Use Print, Print next, or Print all pending. Wait for the printed status to synchronize before moving on.'
-                  : 'Use Print, Print next, or Print all pending. A loaded day stays printable offline; the app keeps successful-paper evidence until printed status synchronizes.',
+                  ? 'Review the person and drink, print one label, inspect the paper, and wait for printed status to synchronize before starting the next label.'
+                  : 'Review the person and drink, print one label, then inspect its paper and recovery or sync state before starting the next. A loaded day stays printable offline.',
             ),
             const _HelpStep(
               number: '5',
@@ -87,6 +87,7 @@ Future<void> showQuickStart(BuildContext context) async {
                         ? '• Never share or screenshot the production link.'
                         : '• Use Legacy link only for the migration fallback.'),
                     const Text('• Never update printer firmware on set.'),
+                    const Text('• Print one label at a time.'),
                     const Text('• Never reprint when the app says Sync only.'),
                     Text(legacy
                         ? '• Keep internet access available while printing.'

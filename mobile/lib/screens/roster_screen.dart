@@ -79,8 +79,7 @@ class _RosterScreenState extends State<RosterScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Column(
                 children: [
-                  if (controller.operatorError != null ||
-                      controller.failedBatchLabel != null) ...[
+                  if (controller.operatorError != null) ...[
                     OperatorErrorBanner(controller: controller),
                     const SizedBox(height: 12),
                   ],

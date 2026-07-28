@@ -1,11 +1,12 @@
 # iOS complete-product plan
 
-Last updated: 2026-07-25
+Last updated: 2026-07-28
 
-**Current boundary:** Build 9 implementation is committed at `47c4405`. Its
-automated and one-label physical smoke tests passed; the full Build 9 physical
-exit gate remains open. Build 10 is now the order-capture vertical slice on an
-existing day. See
+**Current boundary:** Build 10, `1.0.0 (10)`, is preserved as internal
+TestFlight evidence only. Build 11, `1.0.0 (11)`, is the uncommitted local
+release-hardening candidate: it removes the unsupported batch control,
+corrects the application privacy manifest, and replaces stale App Store
+screenshots. Build 11 has not been uploaded or physically accepted. See
 [`current-state-2026-07-25.md`](current-state-2026-07-25.md).
 
 ## Decision
@@ -65,9 +66,9 @@ The app is the complete product when all of these are true:
    and optionally update the person's usual order.
 6. Order capture and label printing work through a cold start with no signal,
    and queued writes reconcile visibly when signal returns.
-7. The user can connect the M2_H, print one or many labels, reprint
-   intentionally, and resolve an interrupted print without producing an
-   accidental duplicate.
+7. The user can connect the M2_H, print labels deliberately one at a time,
+   reprint intentionally, and resolve an interrupted print without producing
+   an accidental duplicate.
 8. The user can view, copy, and share the coffee-shop summary, see capture and
    print completion, and close the day.
 9. The app can create and share a scoped runner link when the zero-install web
@@ -103,7 +104,7 @@ general-purpose local database sync engine.
 | **Days** | Pick today, see status/progress, create a day, switch days |
 | **Day home** | One operational overview: Collect, Print, Roster, Summary, sync, printer |
 | **Collect** | Search/filter people, accept usuals, edit drinks, mark no drink |
-| **Print** | The proven Build 8 deck, batch print, intentional reprint |
+| **Print** | The proven deck, single-label print, intentional reprint |
 | **Roster** | Add existing people, quick add, bulk paste, edit group/on-set/order |
 | **People** | Search, create/edit/archive, photo, usual order, notes |
 | **Summary** | Grouped shop order, by-person view, copy/share, capture/print counts |
@@ -299,7 +300,33 @@ Acceptance:
 - Completing a day with pending writes cannot silently strand or delete them.
 - Capture and print progress agree on every screen.
 
-### Build 11 — create the day and prepare the roster
+### Build 11 — release hardening — LOCAL CANDIDATE
+
+Goal: make the proven single-label Build 10 workflow safe to evaluate
+externally without adding product scope.
+
+- Remove every shipping batch-print action, callback, state, and instruction.
+- Preserve individual print, deliberate reprint, offline replay, conflict
+  protection, durable uncertain recovery, sync-only recovery, and monotonic
+  `label_printed: true`.
+- Correct the application privacy manifest and reconcile App Privacy answers
+  with actual data handling.
+- Replace stale store screenshots with deterministic fictional captures from
+  the current shipping UI.
+- Prepare the external-review packet and exact-build physical worksheet.
+
+Acceptance:
+
+- Source review and the full local automated matrix pass.
+- The reviewed committed source is rebuilt and its signed archive/IPA identity,
+  privacy manifests, entitlements, hosts, and embedded public-key role pass
+  inspection.
+- The exact processed TestFlight Build 11 passes the physical worksheet on the
+  named iPhone/M2_H/firmware/stock.
+- Owner-controlled policy, fixture, metadata, upload, and App Store Connect
+  actions remain separate explicit approvals.
+
+### Build 12 or later — create the day and prepare the roster
 
 Goal: all pre-production setup moves to iOS after the on-set loop is proven.
 
@@ -324,7 +351,7 @@ Acceptance:
 - Going offline during setup yields an honest retryable failure, not a fake
   local success.
 
-### Build 12 — complete the operating loop
+### Build 13 or later — complete the operating loop
 
 Goal: there is no normal reason to open the operator website.
 
@@ -333,7 +360,7 @@ Goal: there is no normal reason to open the operator website.
 - Add day closeout with capture/print/pending-sync checks.
 - Mint, copy, and share a scoped `/run/[id]?token=...` fallback link from the
   app.
-- Add local single/batch `grid-01` PNG sharing as the first iOS fallback when
+- Add local single-label `grid-01` PNG sharing as the first iOS fallback when
   BLE printing is unavailable.
 - Keep the advanced web `/labels` route as the final emergency fallback; do
   not port the seven unused label designs.
@@ -352,7 +379,7 @@ Acceptance:
 - A day cannot be closed accidentally with unresolved physical prints or
   unsynced mutations.
 
-### Build 13 — client handoff release candidate
+### Build 14 or later — client handoff release candidate
 
 Goal: prove the product can leave the builder's hands.
 
@@ -384,22 +411,22 @@ Acceptance:
 | Capability | Current state | Target build |
 |---|---:|---:|
 | Home/navigation/design system | Done | Preserve |
-| Direct M2_H printing | Done; full Build 9 physical gate open | Pre-Build 10 |
+| Direct M2_H printing | Implemented; exact Build 11 physical gate open | Build 11 gate |
 | Local label rendering | Done | Preserve |
 | Cached offline board | Done, authenticated user/day scoped | Preserve |
-| Print recovery | Done | Build 10 generalized outbox |
+| Print recovery | Done, including durable uncertain/sync-only states | Preserve |
 | Sign in/session | Done | Preserve |
 | Days list/select | Done | Preserve |
-| Create/edit/complete day | Web only | Build 11/12 |
-| People/photos/usuals | Web only | Build 11 |
-| Roster build/bulk add | Web only | Build 11 |
-| Order capture | Web only | Build 10 |
-| Offline capture replay | Missing | Build 10 |
-| Realtime reconciliation | Missing | Build 10 |
-| Coffee-shop summary/share | Web only | Build 12 |
-| Create fallback runner link | Web only | Build 12 |
-| Local PNG fallback | Web only | Build 12 |
-| Client-independent handoff | Incomplete | Build 13 |
+| Create/edit/complete day | Web only | Build 12+ |
+| People/photos/usuals | Web only | Build 12+ |
+| Roster build/bulk add | Web only | Build 12+ |
+| Order capture | Done on an existing day | Preserve |
+| Offline capture replay | Done with durable coalescing outbox | Preserve |
+| Realtime reconciliation | Implemented as a refresh signal with fallbacks; production publication membership unverified | Preserve / verify operationally |
+| Coffee-shop summary/share | Web only | Build 13+ |
+| Create fallback runner link | Web only | Build 13+ |
+| Local PNG fallback | Web only | Build 13+ |
+| Client-independent handoff | Incomplete | Build 14+ |
 
 ## Verification required on every build
 
@@ -417,7 +444,8 @@ npm run lint
 npm run build
 ```
 
-Also keep the four label goldens unchanged and visually compare server/app
+Keep the label and App Store screenshot goldens unchanged unless an intentional
+reviewed UI change requires regeneration. Visually compare server/app label
 renderers when label-related dependencies move:
 
 ```bash
@@ -430,7 +458,7 @@ Manual, proportional to the build:
 - Real accepted M2_H and stock for every release candidate.
 - Cold start online and offline.
 - Background/resume and session refresh.
-- Single print, batch print, intentional reprint, interrupted print.
+- Sequential single-label print, intentional reprint, interrupted print.
 - Two-device sync when order or roster behavior changes.
 - VoiceOver, Dynamic Type, Reduce Motion, keyboard/focus, and large roster.
 - Sanitized fictional data only in screenshots, logs, and review fixtures.
@@ -448,18 +476,13 @@ Manual, proportional to the build:
 - Do not add multi-tenancy or complex roles during this migration.
 - Do not treat passing automated tests as the physical printer release gate.
 
-## Next implementation slice
+## Next authorized boundary
 
-After the Build 9 physical exit gate:
+Stop after Build 11 release hardening. The next work is owner-controlled:
+approve the release packet and private inputs, authorize a source commit and
+reproducible rebuild, authorize upload, and complete the exact-TestFlight-build
+physical worksheet. Do not add day/people/roster creation, summary/share,
+closeout, runner-link creation, or local-PNG features during this release.
 
-1. Split board/outbox ownership from online workspace/setup ownership before
-   order writes make `WorkspaceController` another monolith.
-2. Add a Collect screen that uses every on-set board row, including needs-order
-   and no-drink people.
-3. Add typed order patches and optimistic in-memory reconciliation.
-4. Persist a coalescing order outbox with the observed server `updated_at`.
-5. Replay conditionally, surface conflicts, and preserve physical printed facts.
-6. Prove capture → print → relaunch → reconnect on a real phone and M2_H.
-
-Stop there, complete Build 10 acceptance, and only then add day/people/roster
-creation.
+Only after Build 11 clears its release boundary should a separately authorized
+Build 12-or-later slice begin day, people, and roster creation.
