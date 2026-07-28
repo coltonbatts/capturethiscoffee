@@ -25,6 +25,15 @@ loads the bundled Geist, Geist Mono, Arial, and Material Icons fonts so Flutter'
 test-only block font cannot leak into the images. It asserts the output is
 exactly 1320×2868. The committed App Store copies are then flattened to RGB.
 
+Flutter's rasterizer can move a handful of antialiasing pixels between the
+release Mac and GitHub's macOS 15 runner even with the same Flutter version and
+bundled fonts. The App Store golden comparator therefore permits at most
+`0.01%` differing pixels (about 379 of 3,785,760) while dimensions remain
+exact. This is narrow enough that a one-pixel full-width line, shifted layout,
+or changed copy still fails. Release assets still require exact regeneration
+on the release Mac plus human visual inspection; CI tolerance is not permission
+to replace or approve store assets automatically.
+
 Regenerate and verify:
 
 ```bash

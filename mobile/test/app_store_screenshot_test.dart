@@ -12,6 +12,7 @@ import 'package:ctc_printer/session_store.dart';
 import 'package:ctc_printer/supabase_config.dart';
 import 'package:ctc_printer/workspace_models.dart';
 import 'package:ctc_printer/workspace_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,37 @@ const _user = AuthSession(
 
 const _productionId = 'apple-review-coffee-run';
 const _scopeKey = 'user:apple-review-user';
+const _goldenPrecisionTolerance = 0.0001;
+
+class _AppStoreGoldenComparator extends LocalFileComparator {
+  _AppStoreGoldenComparator(
+    super.testFile, {
+    required double precisionTolerance,
+  })  : assert(
+          precisionTolerance >= 0 && precisionTolerance <= 1,
+          'precisionTolerance must be between 0 and 1',
+        ),
+        _precisionTolerance = precisionTolerance;
+
+  final double _precisionTolerance;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+    final passed = result.passed || result.diffPercent <= _precisionTolerance;
+    if (passed) {
+      result.dispose();
+      return true;
+    }
+
+    final error = await generateFailureOutput(result, golden, basedir);
+    result.dispose();
+    throw FlutterError(error);
+  }
+}
 
 File _materialIconsFont() {
   final configuredRoot = Platform.environment['FLUTTER_ROOT'];
@@ -309,7 +341,18 @@ Future<void> _openAbout(WidgetTester tester) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(_loadScreenshotFonts);
+  late GoldenFileComparator previousGoldenFileComparator;
+  setUpAll(() async {
+    await _loadScreenshotFonts();
+    previousGoldenFileComparator = goldenFileComparator;
+    goldenFileComparator = _AppStoreGoldenComparator(
+      Uri.parse('test/app_store_screenshot_test.dart'),
+      precisionTolerance: _goldenPrecisionTolerance,
+    );
+  });
+  tearDownAll(() {
+    goldenFileComparator = previousGoldenFileComparator;
+  });
 
   testWidgets(
     'App Store screenshot — invited account sign in',
