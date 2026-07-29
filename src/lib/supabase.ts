@@ -339,6 +339,126 @@ export type Database = {
         };
         Returns: string;
       };
+      fetch_day_summaries: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          name: string;
+          client_name: string;
+          shoot_date: string | null;
+          status: ProductionStatus;
+          total: number;
+          captured: number;
+          skipped: number;
+          printed: number;
+        }[];
+      };
+      setup_add_person_to_roster: {
+        Args: {
+          p_production_id: string;
+          p_person_id: string;
+          p_group_label?: string | null;
+          p_on_set_today?: boolean;
+        };
+        Returns: Json;
+      };
+      setup_bulk_add_roster: {
+        Args: {
+          p_production_id: string;
+          p_people: Json;
+        };
+        Returns: Json;
+      };
+      setup_create_day: {
+        Args: {
+          p_name: string;
+          p_client_id?: string | null;
+          p_client_name?: string | null;
+          p_shoot_date?: string | null;
+          p_location?: string | null;
+          p_runner_name?: string | null;
+          p_notes?: string | null;
+          p_status?: ProductionStatus;
+          p_seed_default_roster?: boolean;
+        };
+        Returns: Json;
+      };
+      setup_create_person: {
+        Args: {
+          p_name: string;
+          p_type?: PersonType;
+          p_role?: string | null;
+          p_department?: string | null;
+          p_company?: string | null;
+          p_photo_url?: string | null;
+          p_usual_order?: string | null;
+          p_dietary_notes?: string | null;
+          p_notes?: string | null;
+          p_active?: boolean;
+        };
+        Returns: Json;
+      };
+      setup_create_person_and_add_to_roster: {
+        Args: {
+          p_production_id: string;
+          p_name: string;
+          p_type?: PersonType;
+          p_role?: string | null;
+          p_department?: string | null;
+          p_company?: string | null;
+          p_photo_url?: string | null;
+          p_usual_order?: string | null;
+          p_dietary_notes?: string | null;
+          p_notes?: string | null;
+          p_group_label?: string | null;
+          p_on_set_today?: boolean;
+          p_link_to_client?: boolean;
+        };
+        Returns: Json;
+      };
+      setup_delete_planning_day: {
+        Args: {
+          p_production_id: string;
+        };
+        Returns: string;
+      };
+      setup_reorder_roster: {
+        Args: {
+          p_production_id: string;
+          p_roster_ids: string[];
+        };
+        Returns: Json;
+      };
+      setup_update_day: {
+        Args: {
+          p_production_id: string;
+          p_name: string;
+          p_client_id?: string | null;
+          p_client_name?: string | null;
+          p_shoot_date?: string | null;
+          p_location?: string | null;
+          p_runner_name?: string | null;
+          p_notes?: string | null;
+          p_status?: ProductionStatus;
+        };
+        Returns: Json;
+      };
+      setup_update_person: {
+        Args: {
+          p_person_id: string;
+          p_name: string;
+          p_type?: PersonType;
+          p_role?: string | null;
+          p_department?: string | null;
+          p_company?: string | null;
+          p_photo_url?: string | null;
+          p_usual_order?: string | null;
+          p_dietary_notes?: string | null;
+          p_notes?: string | null;
+          p_active?: boolean;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       person_type: PersonType;

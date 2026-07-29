@@ -29,6 +29,49 @@ class DaySummary {
   final int skipped;
   final int printed;
 
+  factory DaySummary.fromRpc(Map<String, dynamic> json) {
+    final id = _requiredString(json, 'id');
+    final name = _requiredString(json, 'name');
+    final clientName = json['client_name'];
+    final status = json['status'];
+    final total = json['total'];
+    final captured = json['captured'];
+    final skipped = json['skipped'];
+    final printed = json['printed'];
+    if (clientName is! String ||
+        status is! String ||
+        !const {'planning', 'active', 'complete'}.contains(status) ||
+        total is! num ||
+        captured is! num ||
+        skipped is! num ||
+        printed is! num) {
+      throw const FormatException('Invalid day summary result.');
+    }
+    final totalCount = _summaryCount(total);
+    final capturedCount = _summaryCount(captured);
+    final skippedCount = _summaryCount(skipped);
+    final printedCount = _summaryCount(printed);
+    if (totalCount < 0 ||
+        capturedCount < 0 ||
+        skippedCount < 0 ||
+        printedCount < 0 ||
+        capturedCount + skippedCount > totalCount ||
+        printedCount > capturedCount) {
+      throw const FormatException('Invalid day summary counts.');
+    }
+    return DaySummary(
+      id: id,
+      name: name,
+      clientName: clientName,
+      shootDate: _parseRpcDate(json['shoot_date']),
+      status: status,
+      total: totalCount,
+      captured: capturedCount,
+      skipped: skippedCount,
+      printed: printedCount,
+    );
+  }
+
   DayGroup get group => switch (status) {
         'active' => DayGroup.active,
         'complete' => DayGroup.complete,
@@ -41,6 +84,13 @@ class DaySummary {
   int get capturePercent => total == 0 ? 0 : ((decided / total) * 100).round();
   int get printPercent =>
       printable == 0 ? 0 : ((printed / printable) * 100).round();
+}
+
+int _summaryCount(num value) {
+  if (!value.isFinite || value != value.toInt() || value > 1000000) {
+    throw const FormatException('Invalid day summary count.');
+  }
+  return value.toInt();
 }
 
 class GroupedDays {
@@ -77,6 +127,39 @@ GroupedDays groupDays(Iterable<DaySummary> days) {
     planning: List.unmodifiable(planning),
     complete: List.unmodifiable(complete),
   );
+}
+
+List<DaySummary> daySummariesFromRpc(Object? value) {
+  if (value is! List || value.length > 2000) {
+    throw const FormatException('Invalid day summary response.');
+  }
+  return value.map((row) {
+    if (row is Map<String, dynamic>) return DaySummary.fromRpc(row);
+    if (row is Map) {
+      try {
+        return DaySummary.fromRpc(Map<String, dynamic>.from(row));
+      } catch (_) {
+        throw const FormatException('Invalid day summary row.');
+      }
+    }
+    throw const FormatException('Invalid day summary row.');
+  }).toList(growable: false);
+}
+
+DateTime? _parseRpcDate(Object? value) {
+  if (value == null) return null;
+  if (value is! String || !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
+    throw const FormatException('Invalid day summary date.');
+  }
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null ||
+      '${parsed.year.toString().padLeft(4, '0')}-'
+              '${parsed.month.toString().padLeft(2, '0')}-'
+              '${parsed.day.toString().padLeft(2, '0')}' !=
+          value) {
+    throw const FormatException('Invalid day summary date.');
+  }
+  return parsed;
 }
 
 int _compareUpcoming(DaySummary a, DaySummary b) {
