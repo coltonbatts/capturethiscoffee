@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth_repository.dart';
+import 'setup_repository.dart';
 import 'supabase_config.dart';
 import 'workspace_repository.dart';
 
@@ -52,11 +53,13 @@ class ProductionSupabaseDependencies {
   const ProductionSupabaseDependencies({
     required this.configuration,
     this.authRepository,
+    this.setupRepository,
     this.workspaceRepository,
   });
 
   final SupabaseConfiguration configuration;
   final AuthRepository? authRepository;
+  final SetupRepository? setupRepository;
   final WorkspaceRepository? workspaceRepository;
 }
 
@@ -78,6 +81,7 @@ Future<ProductionSupabaseDependencies> initializeProductionSupabase() async {
   return ProductionSupabaseDependencies(
     configuration: configuration,
     authRepository: SupabaseAuthRepository(client),
+    setupRepository: SupabaseSetupRepository(client),
     workspaceRepository: SupabaseWorkspaceRepository(client),
   );
 }

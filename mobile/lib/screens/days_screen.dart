@@ -5,6 +5,9 @@ import '../theme.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/motion.dart';
 import '../workspace_models.dart';
+import 'day_editor_screen.dart';
+import 'people_screen.dart';
+import 'setup_roster_screen.dart';
 
 class DaysScreen extends StatelessWidget {
   const DaysScreen({
@@ -27,6 +30,13 @@ class DaysScreen extends StatelessWidget {
         automaticallyImplyLeading: popAfterSelection,
         title: const BrandAppBarTitle(detail: 'Days'),
         actions: [
+          IconButton(
+            onPressed: workspace.busy
+                ? null
+                : () => Navigator.of(context).pushNamed(PeopleScreen.route),
+            icon: const Icon(Icons.people_outline),
+            tooltip: 'People',
+          ),
           IconButton(
             onPressed: workspace.busy ? null : () => workspace.refreshDays(),
             icon: const Icon(Icons.refresh),
@@ -60,8 +70,24 @@ class DaysScreen extends StatelessWidget {
                     Text('Choose a day', style: CaptureType.pageTitle),
                     const SizedBox(height: 8),
                     Text(
-                      'Existing workspace days only. Setup stays read-only in this build.',
+                      'Select a prepared day, or create and organize one here.',
                       style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      key: const Key('create-day'),
+                      style: CaptureButtons.accent,
+                      onPressed: workspace.busy
+                          ? null
+                          : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const DayEditorScreen(
+                                    openRosterAfterSave: true,
+                                  ),
+                                ),
+                              ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create a day'),
                     ),
                     if (workspace.error != null) ...[
                       const SizedBox(height: 16),
@@ -80,6 +106,7 @@ class DaysScreen extends StatelessWidget {
                           days: grouped.active,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
+                          onSetup: (id) => _setup(context, id),
                         ),
                       if (grouped.planning.isNotEmpty)
                         _DaySection(
@@ -87,6 +114,7 @@ class DaysScreen extends StatelessWidget {
                           days: grouped.planning,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
+                          onSetup: (id) => _setup(context, id),
                         ),
                       if (grouped.complete.isNotEmpty)
                         _DaySection(
@@ -94,6 +122,7 @@ class DaysScreen extends StatelessWidget {
                           days: grouped.complete,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
+                          onSetup: (id) => _setup(context, id),
                         ),
                     ],
                     const SizedBox(height: 20),
@@ -120,6 +149,14 @@ class DaysScreen extends StatelessWidget {
     if (!context.mounted || !selected) return;
     if (popAfterSelection) Navigator.of(context).pop();
   }
+
+  void _setup(BuildContext context, String id) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SetupRosterScreen(productionId: id),
+      ),
+    );
+  }
 }
 
 class _DaySection extends StatelessWidget {
@@ -128,12 +165,14 @@ class _DaySection extends StatelessWidget {
     required this.days,
     required this.selectedDayId,
     required this.onSelected,
+    required this.onSetup,
   });
 
   final String title;
   final List<DaySummary> days;
   final String? selectedDayId;
   final ValueChanged<String> onSelected;
+  final ValueChanged<String> onSetup;
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +188,7 @@ class _DaySection extends StatelessWidget {
               day: day,
               selected: day.id == selectedDayId,
               onTap: () => onSelected(day.id),
+              onSetup: () => onSetup(day.id),
             ),
         ],
       ),
@@ -161,11 +201,13 @@ class _DayCard extends StatelessWidget {
     required this.day,
     required this.selected,
     required this.onTap,
+    required this.onSetup,
   });
 
   final DaySummary day;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback onSetup;
 
   @override
   Widget build(BuildContext context) {
@@ -237,9 +279,20 @@ class _DayCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: Icon(Icons.chevron_right),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          key: Key('setup-day-${day.id}'),
+                          onPressed: onSetup,
+                          icon: const Icon(Icons.tune, size: 20),
+                          tooltip: 'Set up ${day.name}',
+                        ),
+                        const Icon(Icons.chevron_right, size: 20),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -315,7 +368,7 @@ class _EmptyDays extends StatelessWidget {
           Text('No days found', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
-            'Create the day in the existing operator workspace, then refresh.',
+            'Create a planning day to build its roster here.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),

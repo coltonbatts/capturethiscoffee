@@ -32,6 +32,7 @@ import 'help_sheet.dart';
 import 'print_screen.dart';
 import 'recovery_screen.dart';
 import 'roster_screen.dart';
+import 'setup_roster_screen.dart';
 
 /// Where the print entry goes, given what is blocking it.
 ///
@@ -52,6 +53,7 @@ String printEntryDestination(DeckBlock block) =>
 /// the print entry reads "3 labels to print" or "Print labels" depending on the
 /// queue, and a test that matched on that would be asserting the wrong thing.
 const rosterEntryKey = Key('home-roster-entry');
+const setupEntryKey = Key('home-setup-entry');
 const collectEntryKey = Key('home-collect-entry');
 const recoveryEntryKey = Key('home-recovery-entry');
 const printEntryKey = Key('home-print-entry');
@@ -125,6 +127,26 @@ class HomeScreen extends StatelessWidget {
                     ] else if (controller.boardIsStale) ...[
                       StaleBoardNotice(controller: controller),
                       const SizedBox(height: 12),
+                    ],
+                    if (runtime.workspace.mode == WorkspaceMode.authenticated &&
+                        runtime.workspace.selectedDayId != null) ...[
+                      CascadeIn(
+                        delay: CascadeIn.step(step++),
+                        child: _MenuCard(
+                          key: setupEntryKey,
+                          icon: Icons.tune,
+                          title: 'Prepare day',
+                          detail: 'People, groups, order, and day details',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => SetupRosterScreen(
+                                productionId: runtime.workspace.selectedDayId!,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                     ],
                     CascadeIn(
                       delay: CascadeIn.step(step++),
