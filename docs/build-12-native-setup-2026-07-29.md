@@ -1,13 +1,14 @@
-# Build 12 native setup — draft implementation
+# Build 12 native setup — release candidate
 
 Date: 2026-07-29
-Lane: `codex/build-12-native-setup` only
-Release identity: unchanged at `1.0.0+11`
+Lane: `codex/build-12-native-setup`
+Release identity: `1.0.0+12`
 
-This is implementation and automated evidence for the Build 12 draft. It has
-not been deployed, uploaded, assigned to testers, or applied to production
-Supabase. It does not change or satisfy Build 11's physical/external-pilot
-acceptance gate.
+The implementation and automated evidence below were completed before release.
+Deployment, production-migration, App Store Connect, and TestFlight statements
+are release evidence and will be recorded only after those actions actually
+finish. Selecting Build 12's unique source-controlled identity does not change
+or satisfy Build 11's physical/external-pilot acceptance gate.
 
 ## Product result
 
@@ -132,12 +133,15 @@ npm run verify:build12-setup
 The script refuses any URL whose host is not `127.0.0.1`, `localhost`, or
 `::1`. It creates only fictional records and removes them when complete.
 
-## Explicit non-claims
+## Release-evidence boundary
 
-- No production migration or production data change was performed.
-- No web or iOS deployment was performed.
-- No build number/version was changed.
+- The Build 12 production migration, merge, web deployment, signed upload,
+  processing, and internal-group assignment are not implementation evidence.
+  Their actual outcomes must be appended after release rather than inferred
+  from the checks above.
+- The source-controlled release identity is `1.0.0+12`; App Store Connect
+  processing and tester availability must be verified separately.
 - No printer dependency, firmware assumption, label geometry, density, print
   flow, or recovery behavior was changed.
-- No physical printer acceptance is claimed or required for this draft.
+- No physical printer acceptance is claimed by this milestone.
 - Build 11's physical/external-pilot gate remains open and unchanged.

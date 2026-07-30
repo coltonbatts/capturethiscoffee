@@ -9,7 +9,7 @@ import '../external_links.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
 
-const String kAppVersion = '1.0.0 (11)';
+const String kAppVersion = '1.0.0 (12)';
 
 final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');

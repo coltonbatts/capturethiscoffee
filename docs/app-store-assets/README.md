@@ -12,7 +12,7 @@ Apple-accepted 6.9-inch portrait size of 1320×2868 pixels.
 | `04-individual-print-deck.png` | Cached individual-print deck and real local label preview; printer visibly disconnected |
 | `05-offline-conflict.png` | Offline pending mutation and visible conflict protection |
 | `06-duplicate-safe-recovery.png` | Uncertain single-label recovery choices that prevent duplicate printing |
-| `07-about-release.png` | About, privacy/support links, and `1.0.0 (11)` identity |
+| `07-about-release.png` | About, privacy/support links, and `1.0.0 (12)` identity |
 
 Every name, company, day, order, user ID, and email domain in the fixture is
 fictional. The fixture performs no network request. The assets show no password,

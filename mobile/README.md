@@ -2,14 +2,14 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (11)`
+(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (12)`
 release-candidate source signs an owner-provisioned operator into Supabase,
 loads an existing day, collects and edits orders from its complete roster, and
 durably queues order and physical print facts while offline. The Build 8
 share-token path remains under **Legacy link** as the maintained fallback.
-The isolated Build 12 draft adds online-only native pre-production setup:
+Build 12 adds online-only native pre-production setup:
 day creation/editing, People, private photos, roster building/reordering, and
-reviewed atomic bulk import. It does not change the `1.0.0+11` release identity.
+reviewed atomic bulk import.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -41,7 +41,7 @@ If account access is unavailable during migration, choose **Legacy link** from
 Sign in, Days, or the setup screen and paste the runner share URL. That path is
 the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
 
-## Native setup workflow (Build 12 draft)
+## Native setup workflow (Build 12)
 
 1. From **Days**, create a Planning day or open the setup control on an existing
    day. Setup changes require a live authenticated connection.
@@ -354,8 +354,11 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 - Build 10 `1.0.0+10` was uploaded and made available to the internal
   TestFlight tester on 2026-07-27. Physical acceptance remains open. See
   [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
-- Build 11 `1.0.0+11` is the next local release candidate. Its shipping deck
-  exposes only individual printing; it is not uploaded or submitted.
+- Build 11 `1.0.0+11` was uploaded and assigned to the existing internal
+  TestFlight group on 2026-07-28. Its shipping deck exposes only individual
+  printing; physical acceptance remains open.
+- Build 12 `1.0.0+12` is the native-setup release candidate. Upload,
+  processing, and internal assignment are recorded only after they occur.
 - Bump the build suffix for every later upload (`1.0.0+12`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
