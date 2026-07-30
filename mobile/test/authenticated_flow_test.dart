@@ -13,6 +13,8 @@ import 'package:ctc_printer/screens/home_screen.dart';
 import 'package:ctc_printer/screens/sign_in_screen.dart';
 import 'package:ctc_printer/session_controller.dart';
 import 'package:ctc_printer/session_store.dart';
+import 'package:ctc_printer/setup_controller.dart';
+import 'package:ctc_printer/setup_repository.dart';
 import 'package:ctc_printer/supabase_config.dart';
 import 'package:ctc_printer/workspace_controller.dart';
 import 'package:ctc_printer/workspace_models.dart';
@@ -253,6 +255,7 @@ void main() {
       session: SessionController(auth),
       workspace: workspace,
       printer: printer,
+      setup: SetupController(MemorySetupRepository()),
     );
     addTearDown(runtime.dispose);
     await runtime.start();

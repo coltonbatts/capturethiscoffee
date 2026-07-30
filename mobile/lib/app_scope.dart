@@ -13,6 +13,7 @@ import 'app_runtime.dart';
 import 'board_controller.dart';
 import 'printer_controller.dart';
 import 'session_controller.dart';
+import 'setup_controller.dart';
 import 'workspace_controller.dart';
 
 class PrinterScope extends InheritedNotifier<AppRuntime> {
@@ -40,4 +41,7 @@ class PrinterScope extends InheritedNotifier<AppRuntime> {
 
   static SessionController sessionOf(BuildContext context) =>
       runtimeOf(context).session;
+
+  static SetupController setupOf(BuildContext context) =>
+      runtimeOf(context).setup;
 }

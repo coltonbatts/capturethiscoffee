@@ -6,15 +6,14 @@ import type {
   UpdateProductionInput,
 } from "@/lib/operator-inputs";
 import type { Database } from "@/lib/supabase";
-import type { Client, Person, Production } from "@/lib/types";
+import type { Client, Production } from "@/lib/types";
 import { requireOperatorContext } from "./context";
 import {
   OperatorDataError,
   requireOperatorRow,
   throwOperatorDatabaseError,
 } from "./errors";
-import { mapClient, mapPerson, mapProduction, mapRoster } from "./mappers";
-import { toInitialOrderInsert } from "./order-drafts";
+import { mapClient, mapProduction } from "./mappers";
 import {
   normalizeNewProductionInput,
   normalizeProductionPatch,
@@ -34,63 +33,35 @@ export async function createProduction(
     );
   }
 
-  const { client, clientId } = await resolveClient(
-    supabase,
-    normalized.client_id,
-    normalized.new_client_name,
-  );
-  const productionResult = await supabase
-    .from("productions")
-    .insert({
-      name: normalized.name,
-      client_id: clientId,
-      shoot_date: nullableText(normalized.shoot_date, 20),
-      location: nullableText(normalized.location, 500),
-      runner_name: nullableText(normalized.runner_name, 200),
-      notes: nullableText(normalized.notes, 2000),
-      status: "active",
-    })
-    .select("*")
-    .single();
+  const productionResult = await supabase.rpc("setup_create_day", {
+    p_name: normalized.name,
+    p_client_id: normalized.client_id || null,
+    p_client_name: nullableText(normalized.new_client_name, 200),
+    p_shoot_date: nullableText(normalized.shoot_date, 20),
+    p_location: nullableText(normalized.location, 500),
+    p_runner_name: nullableText(normalized.runner_name, 200),
+    p_notes: nullableText(normalized.notes, 2000),
+    // Preserve the frozen fallback's existing create behavior. Native Build 12
+    // passes planning/false instead.
+    p_status: "active",
+    p_seed_default_roster: true,
+  });
   throwOperatorDatabaseError(
     productionResult.error,
     "Could not create production.",
   );
-  const production = mapProduction(
-    requireOperatorRow(productionResult.data, "Could not create production."),
+  const payload = requireObject(
+    productionResult.data,
+    "Could not create production.",
   );
-
-  const rosterPeople = await defaultRosterPeople(supabase, clientId);
-  if (rosterPeople.length) {
-    const rosterResult = await supabase
-      .from("production_roster")
-      .insert(
-        rosterPeople.map((person, index) => ({
-          production_id: production.id,
-          person_id: person.id,
-          group_label:
-            person.department ||
-            (person.type === "client_contact" ? client.name : person.company) ||
-            "Set",
-          on_set_today: true,
-          sort_order: index + 1,
-        })),
-      )
-      .select("*");
-    throwOperatorDatabaseError(rosterResult.error, "Could not create roster.");
-
-    const roster = (rosterResult.data || []).map(mapRoster);
-    const orders = roster.flatMap((item) => {
-      const person = rosterPeople.find((candidate) => candidate.id === item.person_id);
-      return person ? [toInitialOrderInsert(production, item, person)] : [];
-    });
-    if (orders.length) {
-      const orderResult = await supabase.from("orders").insert(orders);
-      throwOperatorDatabaseError(orderResult.error, "Could not create order drafts.");
-    }
-  }
-
-  return production;
+  return mapProduction(
+    requireOperatorRow(
+      payload.production as
+        | Database["public"]["Tables"]["productions"]["Row"]
+        | null,
+      "Could not create production.",
+    ),
+  );
 }
 
 export async function updateProduction(
@@ -212,36 +183,9 @@ async function resolveClient(
   return { client: mapClient(result.data), clientId };
 }
 
-async function defaultRosterPeople(
-  supabase: SupabaseClient<Database>,
-  clientId: string,
-): Promise<Person[]> {
-  const [linksResult, crewResult] = await Promise.all([
-    supabase
-      .from("client_people")
-      .select("person_id")
-      .eq("client_id", clientId)
-      .eq("active", true),
-    supabase
-      .from("people")
-      .select("*")
-      .eq("type", "crew")
-      .eq("active", true)
-      .order("name", { ascending: true })
-      .limit(4),
-  ]);
-  throwOperatorDatabaseError(linksResult.error, "Could not load client people.");
-  throwOperatorDatabaseError(crewResult.error, "Could not load crew.");
-  const personIds = (linksResult.data || []).map((item) => item.person_id);
-  const linkedResult = personIds.length
-    ? await supabase.from("people").select("*").in("id", personIds)
-    : { data: [], error: null };
-  throwOperatorDatabaseError(linkedResult.error, "Could not load client people.");
-
-  const combined = [...(linkedResult.data || []), ...(crewResult.data || [])].map(
-    mapPerson,
-  );
-  return combined.filter(
-    (person, index) => combined.findIndex((item) => item.id === person.id) === index,
-  );
+function requireObject(value: unknown, message: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new OperatorDataError(message, "database");
+  }
+  return value as Record<string, unknown>;
 }

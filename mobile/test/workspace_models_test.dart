@@ -3,6 +3,73 @@ import 'package:ctc_printer/workspace_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('day summary RPC handles empty and bounded large results', () {
+    expect(daySummariesFromRpc(const []), isEmpty);
+    final row = _summary(
+      'large',
+      status: 'active',
+      total: 1000000,
+      captured: 400000,
+      skipped: 100000,
+      printed: 200000,
+    );
+    final summary = daySummariesFromRpc([row]).single;
+    expect(summary.total, 1000000);
+    expect(summary.decided, 500000);
+    expect(summary.capturePercent, 50);
+    expect(summary.printPercent, 50);
+  });
+
+  test('day summary RPC maps planning, active, and complete deterministically',
+      () {
+    final grouped = groupDays(daySummariesFromRpc([
+      _summary('complete', status: 'complete', date: '2026-07-20'),
+      _summary('planning', status: 'planning', date: '2026-07-30'),
+      _summary('active', status: 'active', date: '2026-07-25'),
+      _summary('empty', status: 'planning', date: null),
+    ]));
+    expect(grouped.active.single.id, 'active');
+    expect(
+      grouped.planning.map((day) => day.id),
+      ['planning', 'empty'],
+    );
+    expect(grouped.complete.single.id, 'complete');
+  });
+
+  test('day summary RPC rejects malformed and impossible results', () {
+    expect(() => daySummariesFromRpc('not a list'), throwsFormatException);
+    expect(
+      () => daySummariesFromRpc([
+        _summary('fractional', total: 1.5),
+      ]),
+      throwsFormatException,
+    );
+    expect(
+      () => daySummariesFromRpc([
+        _summary('impossible', total: 1, captured: 1, skipped: 1),
+      ]),
+      throwsFormatException,
+    );
+    expect(
+      () => daySummariesFromRpc([
+        _summary('printed', total: 1, captured: 0, printed: 1),
+      ]),
+      throwsFormatException,
+    );
+    expect(
+      () => daySummariesFromRpc([
+        _summary('bad-date', date: '2026-02-31'),
+      ]),
+      throwsFormatException,
+    );
+    expect(
+      () => daySummariesFromRpc([
+        {1: 'non-string keys'},
+      ]),
+      throwsFormatException,
+    );
+  });
+
   test('days group by status and expose capture and print progress', () {
     final days = ProductionBoardRowAdapter.daysFromRows(
       productions: [
@@ -71,6 +138,27 @@ void main() {
     expect(queue.productionName, 'active day');
   });
 }
+
+Map<String, dynamic> _summary(
+  String id, {
+  String status = 'planning',
+  String? date = '2026-07-29',
+  num total = 0,
+  num captured = 0,
+  num skipped = 0,
+  num printed = 0,
+}) =>
+    {
+      'id': id,
+      'name': '$id day',
+      'client_name': 'Fictional Client',
+      'shoot_date': date,
+      'status': status,
+      'total': total,
+      'captured': captured,
+      'skipped': skipped,
+      'printed': printed,
+    };
 
 Map<String, dynamic> _production(
   String id, {

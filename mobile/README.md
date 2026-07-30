@@ -2,11 +2,14 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (11)`
+(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (12)`
 release-candidate source signs an owner-provisioned operator into Supabase,
 loads an existing day, collects and edits orders from its complete roster, and
 durably queues order and physical print facts while offline. The Build 8
 share-token path remains under **Legacy link** as the maintained fallback.
+Build 12 adds online-only native pre-production setup:
+day creation/editing, People, private photos, roster building/reordering, and
+reviewed atomic bulk import.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -38,6 +41,24 @@ If account access is unavailable during migration, choose **Legacy link** from
 Sign in, Days, or the setup screen and paste the runner share URL. That path is
 the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
 
+## Native setup workflow (Build 12)
+
+1. From **Days**, create a Planning day or open the setup control on an existing
+   day. Setup changes require a live authenticated connection.
+2. Find existing people or quick-create them with role, department, company,
+   usual order, private dietary notes, general notes, and an optional camera or
+   photo-library image. Person photos remain in the private `person-photos`
+   bucket and are displayed with short-lived signed URLs.
+3. Add people individually, or paste newline/comma-separated names into **Bulk
+   roster**. The preview collapses whitespace and resolves duplicate, archived,
+   existing, and already-rostered names before the atomic write becomes
+   available.
+4. Drag to reorder, edit a group, toggle on-set state, or remove a roster entry.
+   Every accepted member has exactly one matching initial order.
+5. Choose **Continue to Collect & Print**. That selection loads the same
+   `ProductionBoard` used by Collect, Print, progress, offline cache, conflicts,
+   and recovery. Setup has no local mutation outbox.
+
 ## Screen structure
 
 Sign in and Days now precede the Build 8 day surfaces. Root state is coordinated
@@ -47,6 +68,9 @@ by separate session, workspace, and printer controllers.
 |---|---|---|
 | **Sign in** (`lib/screens/sign_in_screen.dart`) | root state | Owner-provisioned email/password only; no signup. |
 | **Days** (`lib/screens/days_screen.dart`) | root or `/days` | Active, planning, and complete days with capture/print progress. Selects and restores a day. |
+| **Day setup** (`lib/screens/day_editor_screen.dart`) | pushed from Days/setup roster | Online-only create/edit/status and server-enforced Planning-only deletion. |
+| **People** (`lib/screens/people_screen.dart`) | `/people` | Dense search, create/edit/archive, usuals, notes, and private photos. |
+| **Setup roster** (`lib/screens/setup_roster_screen.dart`) | pushed from Days/Home | Find/quick-create, bulk review, groups, on-set state, remove, and atomic reorder. |
 | **Home** (`lib/screens/home_screen.dart`) | — | Where you land and return to. The mark, the day, and one entry per destination, each carrying its own state. |
 | **Collect** (`lib/screens/collect_screen.dart`) | `/collect` | Complete on-set roster with needs-order, captured, no-drink, pending-sync, setup-needed, and conflict states. |
 | **Deck** (`lib/screens/print_screen.dart`) | `/print` | Production name, sync age, labels-left, the next label, and one action. |
@@ -94,6 +118,13 @@ anon key, and the user's session. Typed repositories read `productions`,
 `clients`, `production_roster`, `people`, and `orders`, then adapt those rows
 into the same `ProductionBoard` used by the Build 8 roster, print queue, cache,
 preview, and label renderer. It makes no request to `/api/public/*`.
+
+The Days list is the exception to broad board loading: it calls the typed
+`fetch_day_summaries()` aggregate and downloads only day identity, status,
+date/client display values, and deterministic progress counts. `SetupController`
+and `SetupRepository` own online setup state separately from `BoardController`;
+multi-row setup changes use the `setup_*` Postgres functions and only update UI
+state after the server returns success.
 
 `BoardController` owns the authenticated server board plus its optimistic
 outbox projection. Collect, Print, Home progress, cache, polling, and
@@ -237,6 +268,10 @@ Open `ios/Runner/Info.plist` and add inside the top-level `<dict>`:
 <string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H and print coffee cup labels.</string>
 <key>NSBluetoothPeripheralUsageDescription</key>
 <string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and print coffee cup labels.</string>
+<key>NSCameraUsageDescription</key>
+<string>Capture This uses the camera to add a crew photo that helps invited operators identify fictional and real roster members.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Capture This uses your photo library when you choose a crew photo for the private person directory.</string>
 ```
 
 Open `ios/Podfile`, uncomment/set the platform line to:
@@ -319,8 +354,11 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 - Build 10 `1.0.0+10` was uploaded and made available to the internal
   TestFlight tester on 2026-07-27. Physical acceptance remains open. See
   [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
-- Build 11 `1.0.0+11` is the next local release candidate. Its shipping deck
-  exposes only individual printing; it is not uploaded or submitted.
+- Build 11 `1.0.0+11` was uploaded and assigned to the existing internal
+  TestFlight group on 2026-07-28. Its shipping deck exposes only individual
+  printing; physical acceptance remains open.
+- Build 12 `1.0.0+12` is the native-setup release candidate. Upload,
+  processing, and internal assignment are recorded only after they occur.
 - Bump the build suffix for every later upload (`1.0.0+12`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store

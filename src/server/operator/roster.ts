@@ -5,16 +5,14 @@ import type {
   NewPersonInput,
   UpdateRosterInput,
 } from "@/lib/operator-inputs";
+import type { Database } from "@/lib/supabase";
 import type { Order, Person, ProductionRoster } from "@/lib/types";
 import { requireOperatorContext } from "./context";
 import {
   OperatorDataError,
-  requireOperatorRow,
   throwOperatorDatabaseError,
 } from "./errors";
-import { mapOrder, mapProduction, mapRoster } from "./mappers";
-import { toInitialOrderInsert } from "./order-drafts";
-import { insertPerson } from "./people";
+import { mapOrder, mapPerson, mapRoster } from "./mappers";
 import {
   normalizePersonInput,
   normalizeRosterPatch,
@@ -29,32 +27,16 @@ export async function addRosterPerson(
   const { supabase } = await requireOperatorContext();
   const production_id = requireId(productionId, "Production ID");
   const person_id = requireId(personId, "Person ID");
-  const [productionResult, personResult, rosterResult] = await Promise.all([
-    supabase.from("productions").select("*").eq("id", production_id).maybeSingle(),
-    supabase.from("people").select("*").eq("id", person_id).maybeSingle(),
-    supabase
-      .from("production_roster")
-      .select("id", { count: "exact", head: true })
-      .eq("production_id", production_id),
-  ]);
-  throwOperatorDatabaseError(productionResult.error, "Could not load production.");
-  throwOperatorDatabaseError(personResult.error, "Could not load person.");
-  throwOperatorDatabaseError(rosterResult.error, "Could not load roster.");
-  if (!productionResult.data || !personResult.data) {
-    throw new OperatorDataError("Production or person not found.", "not_found");
-  }
-  const production = mapProduction(productionResult.data);
-  const person = {
-    ...personResult.data,
-    role: personResult.data.role || "",
-    department: personResult.data.department || "",
-    company: personResult.data.company || "",
-    photo_url: personResult.data.photo_url || "",
-    usual_order: personResult.data.usual_order || "",
-    dietary_notes: personResult.data.dietary_notes || "",
-    notes: personResult.data.notes || "",
-  } satisfies Person;
-  return insertRosterAndOrder(supabase, production, person, (rosterResult.count || 0) + 1);
+  const result = await supabase.rpc("setup_add_person_to_roster", {
+    p_production_id: production_id,
+    p_person_id: person_id,
+  });
+  throwOperatorDatabaseError(result.error, "Could not add roster member.");
+  const payload = requireSetupResult(result.data, "Could not add roster member.");
+  return {
+    roster: mapRoster(payload.roster),
+    order: mapOrder(payload.order),
+  };
 }
 
 export async function createPersonAndAddToRoster(
@@ -65,42 +47,48 @@ export async function createPersonAndAddToRoster(
   const { supabase } = await requireOperatorContext();
   const production_id = requireId(productionId, "Production ID");
   const normalized = normalizePersonInput(input);
-  const [productionResult, countResult] = await Promise.all([
-    supabase.from("productions").select("*").eq("id", production_id).maybeSingle(),
-    supabase
-      .from("production_roster")
-      .select("id", { count: "exact", head: true })
-      .eq("production_id", production_id),
-  ]);
-  throwOperatorDatabaseError(productionResult.error, "Could not load production.");
-  throwOperatorDatabaseError(countResult.error, "Could not load roster.");
-  if (!productionResult.data) {
-    throw new OperatorDataError("Production not found.", "not_found");
+  const linkToClient = options.linkToClientId != null;
+  if (options.linkToClientId) {
+    const requestedClientId = requireId(options.linkToClientId, "Client ID");
+    const productionResult = await supabase
+      .from("productions")
+      .select("client_id")
+      .eq("id", production_id)
+      .maybeSingle();
+    throwOperatorDatabaseError(
+      productionResult.error,
+      "Could not load production.",
+    );
+    if (!productionResult.data) {
+      throw new OperatorDataError("Production not found.", "not_found");
+    }
+    if (requestedClientId !== productionResult.data.client_id) {
+      throw new OperatorDataError(
+        "Client does not match this production.",
+        "validation",
+      );
+    }
   }
-  const production = mapProduction(productionResult.data);
-  const person = await insertPerson(supabase, { ...normalized, active: true });
-  const { roster, order } = await insertRosterAndOrder(
-    supabase,
-    production,
-    person,
-    (countResult.count || 0) + 1,
-  );
-
-  if (
-    options.linkToClientId &&
-    requireId(options.linkToClientId, "Client ID") === production.client_id &&
-    (person.type === "client_contact" || person.type === "agency")
-  ) {
-    const linkResult = await supabase.from("client_people").insert({
-      client_id: production.client_id,
-      person_id: person.id,
-      relationship_notes: null,
-      active: true,
-    });
-    throwOperatorDatabaseError(linkResult.error, "Could not link person to client.");
-  }
-
-  return { person, roster, order };
+  const result = await supabase.rpc("setup_create_person_and_add_to_roster", {
+    p_production_id: production_id,
+    p_name: normalized.name,
+    p_type: normalized.type,
+    p_role: nullableText(normalized.role, 200),
+    p_department: nullableText(normalized.department, 200),
+    p_company: nullableText(normalized.company, 200),
+    p_photo_url: nullableText(normalized.photo_url, 2048),
+    p_usual_order: nullableText(normalized.usual_order, 500),
+    p_dietary_notes: nullableText(normalized.dietary_notes, 500),
+    p_notes: nullableText(normalized.notes, 2000),
+    p_link_to_client: linkToClient,
+  });
+  throwOperatorDatabaseError(result.error, "Could not quick add person.");
+  const payload = requireSetupResult(result.data, "Could not quick add person.");
+  return {
+    person: mapPerson(payload.person),
+    roster: mapRoster(payload.roster),
+    order: mapOrder(payload.order),
+  };
 }
 
 export async function updateRoster(
@@ -144,37 +132,19 @@ export async function removeRoster(
   return { id };
 }
 
-async function insertRosterAndOrder(
-  supabase: Awaited<ReturnType<typeof requireOperatorContext>>["supabase"],
-  production: ReturnType<typeof mapProduction>,
-  person: Person,
-  sortOrder: number,
-) {
-  const rosterResult = await supabase
-    .from("production_roster")
-    .insert({
-      production_id: production.id,
-      person_id: person.id,
-      group_label: person.department || person.company || "Set",
-      on_set_today: true,
-      sort_order: sortOrder,
-    })
-    .select("*")
-    .single();
-  throwOperatorDatabaseError(rosterResult.error, "Could not add roster member.");
-  const roster = mapRoster(
-    requireOperatorRow(rosterResult.data, "Could not add roster member."),
-  );
-  const orderResult = await supabase
-    .from("orders")
-    .insert(toInitialOrderInsert(production, roster, person))
-    .select("*")
-    .single();
-  throwOperatorDatabaseError(orderResult.error, "Could not create order draft.");
-  return {
-    roster,
-    order: mapOrder(
-      requireOperatorRow(orderResult.data, "Could not create order draft."),
-    ),
-  };
+type SetupResult = {
+  person: Database["public"]["Tables"]["people"]["Row"];
+  roster: Database["public"]["Tables"]["production_roster"]["Row"];
+  order: Database["public"]["Tables"]["orders"]["Row"];
+};
+
+function requireSetupResult(value: unknown, message: string): SetupResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new OperatorDataError(message, "database");
+  }
+  const payload = value as Partial<SetupResult>;
+  if (!payload.person || !payload.roster || !payload.order) {
+    throw new OperatorDataError(message, "database");
+  }
+  return payload as SetupResult;
 }

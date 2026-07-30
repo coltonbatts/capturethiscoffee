@@ -32,6 +32,10 @@
 	<string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H and print coffee cup labels.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and print coffee cup labels.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Capture This uses the camera to add a crew photo that helps invited operators identify roster members.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Capture This uses your photo library when you choose a crew photo for the private person directory.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

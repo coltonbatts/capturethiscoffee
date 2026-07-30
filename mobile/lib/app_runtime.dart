@@ -6,6 +6,7 @@ import 'auth_repository.dart';
 import 'board_controller.dart';
 import 'printer_controller.dart';
 import 'session_controller.dart';
+import 'setup_controller.dart';
 import 'supabase_config.dart';
 import 'workspace_controller.dart';
 
@@ -15,16 +16,19 @@ class AppRuntime extends ChangeNotifier {
   AppRuntime({
     required this.configuration,
     required this.session,
+    required this.setup,
     required this.workspace,
     required this.printer,
   }) {
     session.addListener(_handleSessionChanged);
+    setup.addListener(_handleChildChanged);
     workspace.addListener(_handleChildChanged);
     printer.addListener(_handleChildChanged);
   }
 
   final SupabaseConfiguration configuration;
   final SessionController session;
+  final SetupController setup;
   final WorkspaceController workspace;
   final PrinterController printer;
 
@@ -76,6 +80,7 @@ class AppRuntime extends ChangeNotifier {
     _showLegacy = false;
     _activatedUserId = null;
     workspace.deactivateUser();
+    setup.clear();
     _emit();
     return true;
   }
@@ -123,6 +128,7 @@ class AppRuntime extends ChangeNotifier {
     } else if (_activatedUserId != null) {
       _activatedUserId = null;
       workspace.deactivateUser();
+      setup.clear();
     }
     _emit();
   }
@@ -137,10 +143,12 @@ class AppRuntime extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     session.removeListener(_handleSessionChanged);
+    setup.removeListener(_handleChildChanged);
     workspace.removeListener(_handleChildChanged);
     printer.removeListener(_handleChildChanged);
     printer.dispose();
     workspace.dispose();
+    setup.dispose();
     session.dispose();
     super.dispose();
   }

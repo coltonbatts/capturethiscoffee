@@ -89,21 +89,8 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
   @override
   Future<List<DaySummary>> fetchDays() async {
     try {
-      final productions = _rows(await _client
-          .from('productions')
-          .select(_productionColumns)
-          .order('shoot_date', ascending: false));
-      final clients =
-          _rows(await _client.from('clients').select(_clientColumns));
-      final roster =
-          _rows(await _client.from('production_roster').select(_rosterColumns));
-      final orders = _rows(await _client.from('orders').select(_orderColumns));
-      return ProductionBoardRowAdapter.daysFromRows(
-        productions: productions,
-        clients: clients,
-        roster: roster,
-        orders: orders,
-      );
+      final result = await _client.rpc('fetch_day_summaries');
+      return daySummariesFromRpc(result);
     } on PostgrestException {
       throw const WorkspaceRepositoryException(
         'Could not load days from the workspace.',

@@ -9,6 +9,8 @@ import 'auth_repository.dart';
 import 'board_cache.dart';
 import 'print_recovery.dart';
 import 'printer_controller.dart';
+import 'setup_controller.dart';
+import 'setup_repository.dart';
 import 'screens/about_screen.dart';
 import 'screens/configuration_screen.dart';
 import 'screens/collect_screen.dart';
@@ -16,6 +18,7 @@ import 'screens/days_screen.dart';
 import 'screens/help_sheet.dart';
 import 'screens/home_screen.dart';
 import 'screens/link_screen.dart';
+import 'screens/people_screen.dart';
 import 'screens/print_screen.dart';
 import 'screens/recovery_screen.dart';
 import 'screens/roster_screen.dart';
@@ -36,6 +39,7 @@ class PrinterApp extends StatefulWidget {
     this.configuration,
     this.authRepository,
     this.workspaceRepository,
+    this.setupRepository,
     this.authenticatedBoardCacheRepository,
     this.selectedDayRepository,
     this.sessionRepository,
@@ -50,6 +54,7 @@ class PrinterApp extends StatefulWidget {
   final SupabaseConfiguration? configuration;
   final AuthRepository? authRepository;
   final WorkspaceRepository? workspaceRepository;
+  final SetupRepository? setupRepository;
   final AuthenticatedBoardCacheRepository? authenticatedBoardCacheRepository;
   final SelectedDayRepository? selectedDayRepository;
 
@@ -81,6 +86,9 @@ class _PrinterAppState extends State<PrinterApp> {
         MemoryAuthRepository();
     final workspaceRepository =
         widget.workspaceRepository ?? production?.workspaceRepository;
+    final setupRepository = widget.setupRepository ??
+        production?.setupRepository ??
+        MemorySetupRepository();
     final legacyTestMode = widget.legacyTestMode ??
         (widget.sessionRepository != null ||
             widget.boardCacheRepository != null ||
@@ -111,6 +119,7 @@ class _PrinterAppState extends State<PrinterApp> {
     _runtime = AppRuntime(
       configuration: configuration,
       session: SessionController(authRepository),
+      setup: SetupController(setupRepository),
       workspace: workspace,
       printer: printer,
     );
@@ -134,6 +143,7 @@ class _PrinterAppState extends State<PrinterApp> {
         home: const RootScreen(),
         routes: {
           DaysScreen.route: (_) => const DaysScreen(popAfterSelection: true),
+          PeopleScreen.route: (_) => const PeopleScreen(),
           CollectScreen.route: (_) => const CollectScreen(),
           PrintScreen.route: (_) => const PrintScreen(),
           RosterScreen.route: (_) => const RosterScreen(),
