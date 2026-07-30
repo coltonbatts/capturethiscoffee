@@ -14,7 +14,7 @@ implementation, production migration, web deployment, signed artifact, and
 internal assignment are recorded in
 [`build-12-native-setup-2026-07-29.md`](build-12-native-setup-2026-07-29.md).
 
-Build 13 is the next release candidate. It preserves invited-account access,
+Build 13 is the current uploaded release candidate. It preserves invited-account access,
 offline Collect/Print, conditional replay, conflict handling, monotonic printed
 facts, uncertain-print recovery, one-label-at-a-time M2_H output, and the
 authenticated `/labels` fallback. It adds:
@@ -35,16 +35,18 @@ authenticated `/labels` fallback. It adds:
 
 The detailed Build 13 ledger is
 [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
-PR [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25) is ready
-with all required checks green. The reviewed Build 13 migration is applied to
-verified production project `lehwhehssjfudyrtljus`, and postflight passed
-without changing existing operational row counts. Until the remaining ledger
-rows contain actual successful evidence:
+PR [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25) was
+squash-merged as `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c` with all
+required checks green. The reviewed Build 13 migration is applied to verified
+production project `lehwhehssjfudyrtljus`, and postflight passed without
+changing existing operational row counts. The exact merged web source is live
+at `https://coffee.capturethis.com`. A distribution-signed `1.0.0 (13)` IPA
+was validated and uploaded. At 13:04 CDT Apple emailed that Build 13 is
+available to the existing internal tester. Until the remaining ledger rows
+contain actual successful evidence:
 
-- the implementation is not represented as merged;
-- the Build 13 web source is not represented as deployed;
-- no Build 13 signed binary, upload, processing, internal assignment, or
-  installation is represented as complete;
+- Build 13's authoritative App Store Connect build ID and device installation
+  are not represented as complete;
 - no Build 13 physical test is represented as passed;
 - App Review and unlisted distribution are represented as pending; and
 - no public searchable App Store or public TestFlight release is authorized.
@@ -68,8 +70,9 @@ resolved.
 - Complete the
   [Build 13 physical worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md)
   on the exact final binary, phone, printer, firmware, ribbon, and stock.
-- Supply/verify the private persistent fictional reviewer account and review
-  fixture without committing credentials.
+- The persistent fictional reviewer account and Planning/Active fixture are
+  verified. Retain them through review; the password remains only in the local
+  macOS Keychain and is not committed.
 - Have the authorized owner complete App Privacy/provider attestations,
   content rights, legal entity/copyright, reviewer contact, Digital Services
   Act trader status, agreements, and any tax/banking requirements.

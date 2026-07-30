@@ -11,21 +11,23 @@ Build 12, `1.0.0 (12)`, is processed and assigned only to the existing
 internal `Main` group. App Store Connect reported its one existing internal
 tester installed it.
 
-Build 13, `1.0.0 (13)`, is the current release candidate. After the reviewed
-source is merged and its signed artifact is validated:
+Build 13, `1.0.0 (13)`, is the current release candidate. Its reviewed source
+is merged, its distribution-signed artifact is validated, and the upload
+succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that the
+build is available to the existing internal tester:
 
-1. Upload the unique Build 13 binary and wait for processing to complete.
-2. Confirm the actual binary's export-compliance answer and record its App
+1. Confirm the actual binary's export-compliance answer and record its App
    Store Connect build ID.
-3. Assign only the exact processed build to the existing internal `Main` group
+2. Confirm the exact processed build remains assigned only to the existing
+   internal `Main` group
    (`44678fa3-60ec-4971-9c1a-73b768e8a198`).
-4. Install that build on the designated physical-test iPhone and confirm
+3. Install that build on the designated physical-test iPhone and confirm
    `1.0.0 (13)` in About.
-5. Complete the
+4. Complete the
    [Build 13 physical acceptance worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md).
-6. Do not create a public TestFlight link. Use a small named external group
+5. Do not create a public TestFlight link. Use a small named external group
    only when it materially resolves a physical or App Review issue.
-7. TestFlight success does not authorize release or establish physical
+6. TestFlight success does not authorize release or establish physical
    acceptance. The durable path remains ordinary App Review followed by
    approved unlisted distribution and manual release.
 
@@ -36,6 +38,10 @@ source is merged and its signed artifact is validated:
 | Step | Status |
 |---|---|
 | Bundle ID `com.capturethis.ctcprinter` and App Store record | Verified by build-4 upload history |
+| Build 13 source/web/backend | PR #25 squash-merged as `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c`; production migration/postflight and exact Vercel deployment passed |
+| Build 13 signed App Store IPA | `1.0.0 (13)`, 23,630,395 bytes, SHA-256 `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b`; Apple Distribution signed, store provisioned, `get-task-allow = false`, public `anon` key only |
+| Build 13 upload/processing | Upload succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that the build is available to the existing internal tester. Authoritative build ID, exact group confirmation, and installation remain pending private App Store Connect/device evidence |
+| Build 13 fictional review access | Persistent invited review account and scoped Planning/Active fixture verified against production; credentials are not committed |
 | Build `0.1.0 (4)` uploaded, processed, installed internally | Verified by prior audit/user evidence |
 | TestFlight pilot version `1.0.0+5` | Uploaded/processed per account-owner confirmation on 2026-07-24 |
 | Signed App Store IPA for `1.0.0 (5)` | Built and inspected locally; preserved as build-5 evidence |
@@ -43,7 +49,7 @@ source is merged and its signed artifact is validated:
 | Next handoff source `1.0.0+6` | Implemented with in-app operating guide and Active-production print guard |
 | Signed App Store IPA for `1.0.0 (6)` | Exact recorded artifact uploaded through Xcode Organizer on 2026-07-24; SHA-256 recorded in release evidence |
 | Production `/privacy` and `/support` | Live; both returned 200 again at 17:22 CDT on 2026-07-27 and visibly identified Capture This plus `info@capturethis.com`; owner wording approval remains open |
-| Stable fictional review production | Pending private operator access |
+| Stable fictional review production | Build 13 persistent fictional Planning/Active fixture and invited review login verified on 2026-07-30; credentials are not committed |
 | Build 6 uploaded/processed | Upload completed at 12:57 PM CDT; App Store Connect reports processing `Complete`, binary `Validated`, and TestFlight status `Ready to Submit` |
 | Build 6 internal availability | Assigned to internal group `Main`; installed on the owner's iPhone. The first confirmed reprint on newly loaded holographic stock printed on the first attempt through direct Bluetooth LE, with no laptop, USB, print station, official NIIMBOT app, or other printing bridge. Photo-backed milestone recorded on 2026-07-24 |
 | Signed App Store IPA for `1.0.0 (7)` | Built from clean `main` at `88f97dc`; version/build, bundle ID, distribution signing, and artifact hash verified locally |

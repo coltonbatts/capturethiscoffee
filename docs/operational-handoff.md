@@ -21,8 +21,11 @@ point and definition of done are in [the handoff hub](HANDOFF.md).
   printing. Its exact source, verification, promotion, physical, and Apple
   state belong in
   [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
-- Until that launch record says otherwise, Build 13 is not merged, deployed,
-  uploaded, physically accepted, approved, or released.
+- Build 13 is merged, its migration and web deployment are live, and its
+  distribution-signed binary is uploaded and available to the existing
+  internal tester. It is not represented as installed, physically accepted,
+  approved, or released until those remaining gates are directly evidenced in
+  the launch record.
 - Release tag: create `capture-this-v1.0.0` only after the physical and external
   pilot gates pass; record the exact commit in `release-evidence-1.0.0.md`.
 - Never commit `.env.local`, share URLs/tokens, Apple credentials, temporary

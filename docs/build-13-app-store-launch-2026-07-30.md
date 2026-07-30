@@ -7,7 +7,9 @@ Starting commit: `6481f46f841cfbf0a8c67b0523b4d2e9508799f6`
 Target identity: `1.0.0 (13)`
 Distribution target: free, manually released, unlisted App Store
 Status: implementation, integrated verification, PR checks, and production
-database migration complete; merge and production web promotion in progress
+database migration complete; merged and deployed; signed Build 13 uploaded and
+available to the existing internal tester; physical and private Apple release
+gates remain open
 
 ## Objective
 
@@ -83,8 +85,9 @@ The final catalog seed bytes match the canonical JSON exactly. A disposable
 Supabase `2.109.1` replay through every historical migration plus Build 13
 passed, warning-level schema lint reported no errors, and both the Build 12
 compatibility verifier and Build 13 authenticated lifecycle/closeout verifier
-passed. The static database contracts passed 3/3. No production write has
-occurred at this stage.
+passed. The static database contracts passed 3/3. The exact migration was then
+transaction-probed, applied atomically to the verified production project, and
+postflight-verified without changing pre-existing operational row counts.
 
 ### Web administration
 
@@ -130,13 +133,14 @@ downgrade, so no dependency change was made.
 |---|---|
 | Implementation commits | `50584845dde372b898d8286c26e0bdc1b4377c49` |
 | Release/documentation commits | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus the release-evidence correction |
-| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), ready, all checks green |
-| Merge commit | Pending |
+| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), squash-merged, all checks green |
+| Merge commit | `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c` |
 | Production migration | `20260730120000_build13_label_templates_and_closeout.sql` applied to verified project `lehwhehssjfudyrtljus`; postflight passed |
-| Production deployment | Pending |
-| Signed IPA | Pending |
-| App Store Connect build | Pending |
-| Internal TestFlight | Pending |
+| Production deployment | READY at `https://coffee.capturethis.com` from the exact merge; public and authenticated route checks passed |
+| Signed IPA | Apple Distribution signed `1.0.0 (13)`, 23,630,395 bytes, SHA-256 `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b`; `get-task-allow = false`; public `anon` key only |
+| App Store Connect build | Upload succeeded at 13:02 CDT on 2026-07-30; Apple emailed at 13:04 CDT that `1.0.0 (13)` is available to test; private build ID pending |
+| Internal TestFlight | Available to the existing internal tester per Apple's email; installation not verified |
+| Review account/fixture | Persistent fictional invited account plus verified Planning/Active examples; password stored only in the local macOS Keychain |
 | Physical acceptance | Incomplete until directly observed |
 | App Review | Pending |
 | Unlisted request | Pending |

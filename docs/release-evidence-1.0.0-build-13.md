@@ -16,10 +16,10 @@ review evidence cannot substitute for physical printer acceptance.
 | Item | Actual result |
 |---|---|
 | Implementation commit(s) | `50584845dde372b898d8286c26e0bdc1b4377c49` |
-| Release/documentation commit(s) | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus this evidence correction |
-| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), ready for review |
+| Release/documentation commit(s) | `75c413b93f14665f22cfe6b35d9811f86b0cb15f`, `31d1b90e7de2690120dfc5a21db92c6bc829b738`, and `431eaa33e66e527b0454a041b037847de0bb7dcc` |
+| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), squash-merged |
 | Required checks | Passed: Web, Mobile, Mobile screenshots, GitGuardian, Vercel, and Vercel Preview Comments |
-| Merge commit | Pending |
+| Merge commit | `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c` |
 | Force push | None authorized or performed |
 
 ## Automated release gate
@@ -41,7 +41,7 @@ review evidence cannot substitute for physical printer acceptance.
 | Flutter formatting | Passed for all 28 changed/new Dart files: 0 changes required |
 | iOS simulator build | Passed; `Runner.app` built without codesigning; existing CocoaPods-to-SPM notice left unchanged |
 | Release identity and screenshots | Passed in the 203-test suite; `1.0.0 (13)` and nine 1320×2868 RGB/no-alpha images verified |
-| Signed archive/IPA validation | Pending |
+| Signed archive/IPA validation | Passed from the exact merge commit: App Store export, Apple Distribution signature, store provisioning, bundle/version/build, designated requirement, privacy manifests, `get-task-allow = false`, and public `anon` JWT role only |
 | `git diff --check` | Passed |
 
 ## Production
@@ -52,25 +52,26 @@ review evidence cannot substitute for physical printer acceptance.
 | Build 13 migration | `20260730120000_build13_label_templates_and_closeout.sql` applied atomically and recorded as `build13_label_templates_and_closeout` |
 | Production preflight | Remote ledger matched every local migration through Build 12; Build 13 was the only local-only migration. Exact 78,293-byte SQL passed a production transaction/rollback probe before apply |
 | Production postflight | Eight published versions, Grid 01 default, RLS, invoker/fixed search paths, anonymous denial, authenticated grants, legacy fallback, strict assignment/locking, immutability, closeout, and Build 12 Active-day compatibility passed |
-| Existing row counts | Before/after unchanged: clients 6, people 4, productions 1, roster 2, orders 2, auth users 4; the existing Active production remains a legacy null snapshot resolved deterministically to Grid 01 |
+| Existing row counts at migration | Before/after unchanged: clients 6, people 4, productions 1, roster 2, orders 2, auth users 4; the existing Active production remains a legacy null snapshot resolved deterministically to Grid 01 |
 | Production data repair/deletion | None authorized or performed |
 | Vercel project/domain | `capturethiscoffee` / `https://coffee.capturethis.com` |
-| Production deployment | Pending |
-| Public privacy/support health | Pending post-deploy |
-| Protected/admin/fallback route health | Pending post-deploy |
+| Production deployment | READY: `dpl_FuoQMcfPjnzMU1Cxa7cm5PV9Jshx`, exact source `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c`, aliased to `https://coffee.capturethis.com` |
+| Public privacy/support health | Passed: `/`, `/login`, `/privacy`, `/support`, and `/manifest.webmanifest` returned 200 with current Capture This privacy, closeout, support, NIIMBOT, and recovery copy |
+| Protected/admin/fallback route health | Passed: anonymous requests redirect to sign-in; the persistent fictional review account authenticated and loaded Days, People, Labels, and all eight published versions in Label templates |
+| Fictional review fixture | Persistent invited account plus one Planning day, one Active day, four clearly fictional people, and eight scoped roster/order rows. Credentials are not committed and the password is held only in the local macOS Keychain |
 
 ## Signed binary and Apple
 
 | Item | Actual result |
 |---|---|
-| Archive source | Pending exact merge commit |
-| Marketing version/build | `1.0.0 (13)` source candidate; archive pending |
-| Signing/bundle | `YW8K4837YB` / `com.capturethis.ctcprinter`; archive validation pending |
-| IPA path, size, SHA-256 | Pending |
-| App Store Connect build ID/state | Pending |
+| Archive source | Exact squash merge `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c` in a detached clean worktree |
+| Marketing version/build | `1.0.0 (13)` |
+| Signing/bundle | Apple Distribution / `YW8K4837YB` / `com.capturethis.ctcprinter`; store profile; `get-task-allow = false` |
+| IPA path, size, SHA-256 | Local release artifact `ctc_printer.ipa`; 23,630,395 bytes; `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b` |
+| App Store Connect build ID/state | Command-line upload succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that `Capture This Printer 1.0.0 (13)` is available to test. The authoritative App Store Connect build ID remains pending private account access |
 | Existing internal group | `Main` (`44678fa3-60ec-4971-9c1a-73b768e8a198`) |
-| Internal assignment/installation | Pending |
-| App metadata/privacy/reviewer fixture | Draft/private factual verification pending |
+| Internal assignment/installation | Apple emailed the existing internal tester that Build 13 is available to test; device installation is not represented as complete |
+| App metadata/privacy/reviewer fixture | Current packet and screenshots are committed; persistent fictional account/fixture verified in production. Private owner attestations and reviewer contact entry remain pending |
 | App Review submission/result | Pending |
 | Unlisted request/result | Pending |
 | Manual release/direct link | Pending |
