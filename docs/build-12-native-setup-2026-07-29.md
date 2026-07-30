@@ -5,10 +5,60 @@ Lane: `codex/build-12-native-setup`
 Release identity: `1.0.0+12`
 
 The implementation and automated evidence below were completed before release.
-Deployment, production-migration, App Store Connect, and TestFlight statements
-are release evidence and will be recorded only after those actions actually
-finish. Selecting Build 12's unique source-controlled identity does not change
-or satisfy Build 11's physical/external-pilot acceptance gate.
+The release outcome is recorded separately so upload or automation evidence is
+not confused with physical-printer acceptance. Selecting and distributing
+Build 12 does not change or satisfy Build 11's physical/external-pilot
+acceptance gate.
+
+## Release outcome — 2026-07-29
+
+| Item | Actual result |
+|---|---|
+| Implementation branch | `codex/build-12-native-setup` |
+| Implementation commits | `36a4674`, `e1b00ee`, `2a58d98` |
+| Release-identity commit | `0ce06c7e13ba5f3b80ba367e595fbfcabceb6ee9` |
+| Review | [PR #23](https://github.com/coltonbatts/capturethiscoffee/pull/23), ready PR with Web, Mobile, Mobile screenshots, Vercel, and GitGuardian green |
+| Merge | Squash-merged normally to `main` as `88dcf1f346525cd7eed5dfb32be1499fe66855e1` |
+| Production database | Project ref `lehwhehssjfudyrtljus`; migration `20260729120000_build12_native_setup.sql` applied and verified |
+| Frozen web fallback | Vercel deployment `dpl_FxzFQcJ3VZt73fcYezsyAjh53puF` reached READY from the merge SHA; `https://coffee.capturethis.com` public pages returned 200, protected pages redirected to sign-in, and no new runtime errors were present |
+| Signed iOS artifact | Built from the merge SHA; `1.0.0 (12)`, bundle `com.capturethis.ctcprinter`, team `YW8K4837YB`, Apple Distribution/App Store profile, 23,577,290-byte IPA, SHA-256 `c190ba71f9e0110de1d9e55df3e0a0e77dc79303006686e387ec659831f42c76` |
+| App Store Connect | Upload succeeded; processing completed; binary state Validated; non-exempt encryption No |
+| Internal TestFlight | Assigned only to the existing `Main` internal group (`44678fa3-60ec-4971-9c1a-73b768e8a198`), with one existing tester; App Store Connect subsequently reported that tester installed `1.0.0 (12)` |
+
+The production preflight found zero normalized-name duplicate groups, zero
+duplicate roster memberships, zero roster rows without exactly one matching
+order, and zero inconsistent order/roster relationships. It also exposed a
+historical migration-ledger mismatch: production had one noncanonical bootstrap
+entry even though the audited schema matched local migration effects through
+`20260706120000`, and the additive
+`20260725120000_preserve_printed_order_facts.sql` trigger was genuinely absent.
+With explicit release authorization, the ledger was reconciled to the 14
+verified pre-Build-12 files and that one missing additive trigger migration was
+applied. No production record was repaired or deleted. A second plan check then
+showed only `20260729120000` pending and no unexpected remote version.
+
+Build 12 was applied from the exact checked-in SQL file in one transaction.
+Postflight found all 14 expected functions, `security invoker` on every setup
+function, fixed empty search paths, no `public` or `anon` execute grants,
+intended `authenticated` grants, the validated composite foreign key, and both
+deferred integrity triggers. An authenticated read returned the bounded day
+summary and all pre-Build-12 table reads with unchanged production counts:
+6 clients, 4 people, 1 production, 2 roster rows, and 2 orders.
+
+The final local release gate passed:
+
+- `npm run lint`;
+- `npm run test` — 108 passing;
+- `npm run build`;
+- `npm run verify:niimbot-export`;
+- `flutter analyze`;
+- `flutter test` — 182 passing;
+- `flutter build ios --simulator --no-codesign`;
+- release identity plus App Store screenshots — 9 passing;
+- signed archive/export validation for version, build, bundle, team,
+  provisioning, camera/photo/Bluetooth declarations, privacy manifests,
+  release entitlements, the production Supabase URL, and the public `anon`
+  credential.
 
 ## Product result
 
@@ -133,15 +183,16 @@ npm run verify:build12-setup
 The script refuses any URL whose host is not `127.0.0.1`, `localhost`, or
 `::1`. It creates only fictional records and removes them when complete.
 
-## Release-evidence boundary
+## Release boundaries and warnings
 
-- The Build 12 production migration, merge, web deployment, signed upload,
-  processing, and internal-group assignment are not implementation evidence.
-  Their actual outcomes must be appended after release rather than inferred
-  from the checks above.
-- The source-controlled release identity is `1.0.0+12`; App Store Connect
-  processing and tester availability must be verified separately.
+- Nothing was assigned to the existing external group, no tester was invited,
+  and no public TestFlight link was created.
+- The build was not submitted for external beta review, App Store review, or
+  release to App Store customers.
+- Flutter continues to emit its non-blocking CocoaPods-to-SPM migration notice;
+  the checked-in dependency setup was not changed for this release.
 - No printer dependency, firmware assumption, label geometry, density, print
   flow, or recovery behavior was changed.
-- No physical printer acceptance is claimed by this milestone.
+- No physical printer acceptance is claimed from automation, upload,
+  processing, assignment, or installation.
 - Build 11's physical/external-pilot gate remains open and unchanged.

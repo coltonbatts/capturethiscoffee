@@ -2,8 +2,8 @@
 
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. The `1.0.0 (12)`
-release-candidate source signs an owner-provisioned operator into Supabase,
+(`lib/label_painter.dart`) so printing never needs a signal. The internal
+TestFlight `1.0.0 (12)` source signs an owner-provisioned operator into Supabase,
 loads an existing day, collects and edits orders from its complete roster, and
 durably queues order and physical print facts while offline. The Build 8
 share-token path remains under **Legacy link** as the maintained fallback.
@@ -357,9 +357,10 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 - Build 11 `1.0.0+11` was uploaded and assigned to the existing internal
   TestFlight group on 2026-07-28. Its shipping deck exposes only individual
   printing; physical acceptance remains open.
-- Build 12 `1.0.0+12` is the native-setup release candidate. Upload,
-  processing, and internal assignment are recorded only after they occur.
-- Bump the build suffix for every later upload (`1.0.0+12`, …).
+- Build 12 `1.0.0+12` was uploaded, processed, and assigned only to the existing
+  `Main` internal TestFlight group on 2026-07-29. No external TestFlight or App
+  Store submission occurred, and physical acceptance remains open.
+- Bump the build suffix for every later upload (`1.0.0+13`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.
