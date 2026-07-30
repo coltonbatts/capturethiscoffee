@@ -37,10 +37,14 @@ PNG/CSV fallback.
   internal `Main` group, and reported installed by its one existing tester.
   Full evidence is in
   [`build-12-native-setup-2026-07-29.md`](build-12-native-setup-2026-07-29.md).
-- Build 13 is the operator-ready/unlisted-App-Store release candidate. Until
-  the Build 13 launch record says otherwise, it must be treated as not merged,
-  not deployed, not uploaded, not physically accepted, and not approved by
-  Apple.
+- Build 13 is the operator-ready/unlisted-App-Store release candidate. It was
+  squash-merged as `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c`, its
+  migration and exact production web deployment are live, and its
+  distribution-signed `1.0.0 (13)` binary was uploaded at 13:02 CDT on
+  2026-07-30. At 13:04 CDT Apple emailed that it is available to the existing
+  internal tester. It is not represented as installed, physically accepted,
+  reviewed, or approved for unlisted distribution until direct evidence
+  closes those gates.
 - Build 9 Gate 3 failed twice. Unattended batch printing is not supported and
   must never be reported as a pass. The supported operating mode is one label
   at a time.
