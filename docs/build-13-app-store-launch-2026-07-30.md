@@ -6,10 +6,11 @@ Worktree: `/Users/coltonbatts/Desktop/CaptureThisCoffee-build13`
 Starting commit: `6481f46f841cfbf0a8c67b0523b4d2e9508799f6`
 Target identity: `1.0.0 (13)`
 Distribution target: free, manually released, unlisted App Store
-Status: implementation, integrated verification, PR checks, and production
-database migration complete; merged and deployed; signed Build 13 uploaded and
-available to the existing internal tester; physical and private Apple release
-gates remain open
+Status: implementation, integrated verification, PR checks, production
+database migration, deployment, signed upload, TestFlight assignment, and
+factual App Store metadata preparation complete; owner copyright, Admin
+privacy publication, physical acceptance, App Review, unlisted approval, and
+manual release remain open
 
 ## Objective
 
@@ -138,11 +139,13 @@ downgrade, so no dependency change was made.
 | Production migration | `20260730120000_build13_label_templates_and_closeout.sql` applied to verified project `lehwhehssjfudyrtljus`; postflight passed |
 | Production deployment | READY at `https://coffee.capturethis.com` from the exact merge; public and authenticated route checks passed |
 | Signed IPA | Apple Distribution signed `1.0.0 (13)`, 23,630,395 bytes, SHA-256 `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b`; `get-task-allow = false`; public `anon` key only |
-| App Store Connect build | Upload succeeded at 13:02 CDT on 2026-07-30; Apple emailed at 13:04 CDT that `1.0.0 (13)` is available to test; private build ID pending |
-| Internal TestFlight | Available to the existing internal tester per Apple's email; installation not verified |
+| App Store Connect build | `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47`; upload processing Complete, binary Validated, `1.0.0 (13)`, non-exempt encryption No |
+| Internal TestFlight | Assigned only to internal `Main` with one tester; Build 13 What to Test saved; installation not verified |
 | Review account/fixture | Persistent fictional invited account plus verified Planning/Active examples; password stored only in the local macOS Keychain |
+| App Store metadata | Storefront name `Capture This Coffee`; subtitle/categories/copy/URLs/review notes saved; nine 6.9-inch screenshots; 4+; free; United States only; manual release; Mac/Vision availability disabled |
+| App Privacy | Seven conservative data types fully drafted as linked, App Functionality only, and not tracking; not published pending Admin owner/provider review |
 | Physical acceptance | Incomplete until directly observed |
-| App Review | Pending |
+| App Review | Not submitted. Live validation requires copyright and Admin-published App Privacy; owner/legal fields remain open |
 | Unlisted request | Pending |
 | Manual release | Pending |
 
@@ -154,3 +157,5 @@ assertion, private reviewer identity, or physical observation that cannot be
 truthfully established from connected accounts and direct evidence.
 
 No public TestFlight link or public searchable App Store release is authorized.
+The authenticated App Store record is detailed in
+[`build-13-app-store-connect-evidence-2026-07-30.md`](build-13-app-store-connect-evidence-2026-07-30.md).

@@ -42,9 +42,14 @@ PNG/CSV fallback.
   migration and exact production web deployment are live, and its
   distribution-signed `1.0.0 (13)` binary was uploaded at 13:02 CDT on
   2026-07-30. At 13:04 CDT Apple emailed that it is available to the existing
-  internal tester. It is not represented as installed, physically accepted,
-  reviewed, or approved for unlisted distribution until direct evidence
-  closes those gates.
+  internal tester. App Store Connect now records Build ID
+  `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47`, Complete/Validated processing,
+  assignment only to the one-tester internal `Main` group, free U.S.-only
+  availability, manual release, nine screenshots, a calculated 4+ rating, and
+  an unpublished conservative App Privacy draft. App Review validation is
+  blocked on owner copyright text and Admin-published App Privacy. It is not
+  represented as installed, physically accepted, reviewed, approved for
+  unlisted distribution, or released until direct evidence closes those gates.
 - Build 9 Gate 3 failed twice. Unattended batch printing is not supported and
   must never be reported as a pass. The supported operating mode is one label
   at a time.
@@ -55,6 +60,8 @@ PNG/CSV fallback.
 - Build 13's metadata, review notes, questionnaire positions, screenshot plan,
   and unlisted sequence are in
   [`build-13-app-review-unlisted-packet-2026-07-30.md`](build-13-app-review-unlisted-packet-2026-07-30.md).
+- The authenticated App Store and TestFlight record is in
+  [`build-13-app-store-connect-evidence-2026-07-30.md`](build-13-app-store-connect-evidence-2026-07-30.md).
 - TestFlight is temporary. The durable distribution target is an
   Apple-approved unlisted App Store link.
 - The handoff is not complete until the named day-of operator passes the
