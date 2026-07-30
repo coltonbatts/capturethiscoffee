@@ -35,10 +35,13 @@ authenticated `/labels` fallback. It adds:
 
 The detailed Build 13 ledger is
 [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
-Until that record contains actual successful evidence:
+PR [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25) is ready
+with all required checks green. The reviewed Build 13 migration is applied to
+verified production project `lehwhehssjfudyrtljus`, and postflight passed
+without changing existing operational row counts. Until the remaining ledger
+rows contain actual successful evidence:
 
 - the implementation is not represented as merged;
-- the Build 13 migration is not represented as applied to production;
 - the Build 13 web source is not represented as deployed;
 - no Build 13 signed binary, upload, processing, internal assignment, or
   installation is represented as complete;

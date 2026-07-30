@@ -17,8 +17,8 @@ review evidence cannot substitute for physical printer acceptance.
 |---|---|
 | Implementation commit(s) | `50584845dde372b898d8286c26e0bdc1b4377c49` |
 | Release/documentation commit(s) | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus this evidence correction |
-| Pull request | Pending |
-| Required checks | Pending |
+| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), ready for review |
+| Required checks | Passed: Web, Mobile, Mobile screenshots, GitGuardian, Vercel, and Vercel Preview Comments |
 | Merge commit | Pending |
 | Force push | None authorized or performed |
 
@@ -48,8 +48,11 @@ review evidence cannot substitute for physical printer acceptance.
 
 | Item | Actual result |
 |---|---|
-| Verified Supabase project ref | `lehwhehssjfudyrtljus` (`coffee.capturethis`, `ACTIVE_HEALTHY`, PostgreSQL 17) — final live migration-ledger preflight pending |
-| Build 13 migration | `20260730120000_build13_label_templates_and_closeout.sql` — production pending |
+| Verified Supabase project ref | `lehwhehssjfudyrtljus` (`coffee.capturethis`, `ACTIVE_HEALTHY`, PostgreSQL 17.6, `us-west-2`) |
+| Build 13 migration | `20260730120000_build13_label_templates_and_closeout.sql` applied atomically and recorded as `build13_label_templates_and_closeout` |
+| Production preflight | Remote ledger matched every local migration through Build 12; Build 13 was the only local-only migration. Exact 78,293-byte SQL passed a production transaction/rollback probe before apply |
+| Production postflight | Eight published versions, Grid 01 default, RLS, invoker/fixed search paths, anonymous denial, authenticated grants, legacy fallback, strict assignment/locking, immutability, closeout, and Build 12 Active-day compatibility passed |
+| Existing row counts | Before/after unchanged: clients 6, people 4, productions 1, roster 2, orders 2, auth users 4; the existing Active production remains a legacy null snapshot resolved deterministically to Grid 01 |
 | Production data repair/deletion | None authorized or performed |
 | Vercel project/domain | `capturethiscoffee` / `https://coffee.capturethis.com` |
 | Production deployment | Pending |

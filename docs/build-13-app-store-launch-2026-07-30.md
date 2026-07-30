@@ -6,8 +6,8 @@ Worktree: `/Users/coltonbatts/Desktop/CaptureThisCoffee-build13`
 Starting commit: `6481f46f841cfbf0a8c67b0523b4d2e9508799f6`
 Target identity: `1.0.0 (13)`
 Distribution target: free, manually released, unlisted App Store
-Status: implementation complete; integrated release verification and promotion
-in progress
+Status: implementation, integrated verification, PR checks, and production
+database migration complete; merge and production web promotion in progress
 
 ## Objective
 
@@ -130,9 +130,9 @@ downgrade, so no dependency change was made.
 |---|---|
 | Implementation commits | `50584845dde372b898d8286c26e0bdc1b4377c49` |
 | Release/documentation commits | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus the release-evidence correction |
-| Pull request | Pending |
+| Pull request | [#25](https://github.com/coltonbatts/capturethiscoffee/pull/25), ready, all checks green |
 | Merge commit | Pending |
-| Production migration | Pending |
+| Production migration | `20260730120000_build13_label_templates_and_closeout.sql` applied to verified project `lehwhehssjfudyrtljus`; postflight passed |
 | Production deployment | Pending |
 | Signed IPA | Pending |
 | App Store Connect build | Pending |
