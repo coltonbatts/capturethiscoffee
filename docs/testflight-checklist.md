@@ -16,11 +16,11 @@ is merged, its distribution-signed artifact is validated, and the upload
 succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that the
 build is available to the existing internal tester:
 
-1. Confirm the actual binary's export-compliance answer and record its App
-   Store Connect build ID.
-2. Confirm the exact processed build remains assigned only to the existing
-   internal `Main` group
-   (`44678fa3-60ec-4971-9c1a-73b768e8a198`).
+1. Build ID `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47` is processed Complete,
+   binary Validated, and reports non-exempt encryption No.
+2. Build 13 is assigned only to the existing internal `Main` group
+   (`44678fa3-60ec-4971-9c1a-73b768e8a198`) with one tester. Build 13 tester
+   guidance is saved and no public TestFlight link was created.
 3. Install that build on the designated physical-test iPhone and confirm
    `1.0.0 (13)` in About.
 4. Complete the
@@ -40,7 +40,7 @@ build is available to the existing internal tester:
 | Bundle ID `com.capturethis.ctcprinter` and App Store record | Verified by build-4 upload history |
 | Build 13 source/web/backend | PR #25 squash-merged as `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c`; production migration/postflight and exact Vercel deployment passed |
 | Build 13 signed App Store IPA | `1.0.0 (13)`, 23,630,395 bytes, SHA-256 `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b`; Apple Distribution signed, store provisioned, `get-task-allow = false`, public `anon` key only |
-| Build 13 upload/processing | Upload succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that the build is available to the existing internal tester. Authoritative build ID, exact group confirmation, and installation remain pending private App Store Connect/device evidence |
+| Build 13 upload/processing | Build ID `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47`; processing Complete, binary Validated, non-exempt encryption No; assigned only to internal `Main` with one tester. Installation remains pending device evidence |
 | Build 13 fictional review access | Persistent invited review account and scoped Planning/Active fixture verified against production; credentials are not committed |
 | Build `0.1.0 (4)` uploaded, processed, installed internally | Verified by prior audit/user evidence |
 | TestFlight pilot version `1.0.0+5` | Uploaded/processed per account-owner confirmation on 2026-07-24 |

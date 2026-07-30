@@ -1,7 +1,8 @@
 # Build 13 App Review and unlisted-distribution packet
 
-Status: draft pending final binary, live metadata, fictional fixture, physical
-acceptance, factual private fields, and Apple review.
+Status: final binary and factual live metadata prepared; fictional fixture
+verified; pending owner copyright, Admin-reviewed App Privacy publication,
+other factual private/legal fields, physical acceptance, and Apple review.
 
 ## Product
 
@@ -35,17 +36,18 @@ uncertain printer acknowledgement as proof that paper emerged.
 Credentials, user UUIDs, production UUIDs, share tokens, and private contact
 values must never be committed here. Record only:
 
-- Persistent fictional review account verified: pending
-- Fictional Planning day verified: pending
-- Fictional Active day verified: pending
-- Short/long/minimal/maximum label rows verified: pending
+- Persistent fictional review account verified: 2026-07-30
+- Fictional Planning day verified: 2026-07-30
+- Fictional Active day verified: 2026-07-30
+- Short/long/minimal/maximum label rows verified: 2026-07-30
 - Cleanup/retention owner: pending
 
 ## Metadata draft
 
-- Name: Capture This
+- Name: Capture This Coffee (the exact storefront name Capture This was
+  unavailable; the installed product remains Capture This)
 - Subtitle: Production coffee, organized
-- Primary category: Business (verify against live record)
+- Primary category: Business
 - Secondary category: Productivity
 - Price: Free
 - Availability: United States initially
@@ -54,9 +56,10 @@ values must never be committed here. Record only:
 - Support: `https://coffee.capturethis.com/support`
 - Distribution: Unlisted request required before release
 
-Final description, keywords, promotional text, age rating, content rights,
-export compliance, reviewer contact, copyright, and legal attestations must be
-verified against the live record and factual owner inputs.
+Description, keywords, promotional text, the calculated 4+ age rating, and
+non-exempt-encryption answer are verified against the live record and Build 13.
+Content rights, reviewer contact, copyright, App Privacy publication, and legal
+attestations still require factual owner input.
 
 ### Promotional text
 

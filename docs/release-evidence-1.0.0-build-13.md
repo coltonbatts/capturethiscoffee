@@ -68,14 +68,14 @@ review evidence cannot substitute for physical printer acceptance.
 | Marketing version/build | `1.0.0 (13)` |
 | Signing/bundle | Apple Distribution / `YW8K4837YB` / `com.capturethis.ctcprinter`; store profile; `get-task-allow = false` |
 | IPA path, size, SHA-256 | Local release artifact `ctc_printer.ipa`; 23,630,395 bytes; `569aff753fe9851ccb600dcb21a7c4f1a3d9cb125fe233d16dc7bfe46c08e65b` |
-| App Store Connect build ID/state | Command-line upload succeeded at 13:02 CDT on 2026-07-30. At 13:04 CDT Apple emailed that `Capture This Printer 1.0.0 (13)` is available to test. The authoritative App Store Connect build ID remains pending private account access |
+| App Store Connect build ID/state | `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47`; upload processing Complete, binary Validated, `1.0.0 (13)`, non-exempt encryption No |
 | Existing internal group | `Main` (`44678fa3-60ec-4971-9c1a-73b768e8a198`) |
-| Internal assignment/installation | Apple emailed the existing internal tester that Build 13 is available to test; device installation is not represented as complete |
-| App metadata/privacy/reviewer fixture | Current packet and screenshots are committed; persistent fictional account/fixture verified in production. Private owner attestations and reviewer contact entry remain pending |
-| App Review submission/result | Pending |
+| Internal assignment/installation | Build 13 is assigned only to internal `Main` with one tester; tester guidance is saved; installation is not represented as complete |
+| App metadata/privacy/reviewer fixture | Storefront record `Capture This Coffee` (App ID `6786807268`); free; United States only; manual release; 4+; nine screenshots; metadata, secure review access, and notes saved. Seven conservative privacy data types are fully configured in an unpublished draft. Copyright, Admin privacy publication, reviewer contact, content rights, and legal attestations remain owner-controlled |
+| App Review submission/result | Not submitted. App Store validation requires copyright information and Admin-published App Privacy |
 | Unlisted request/result | Pending |
 | Manual release/direct link | Pending |
-| Public TestFlight/searchable release | Not authorized; none represented |
+| Public TestFlight/searchable release | Not authorized; Build 13 is not assigned to the existing external group, no public link was created, and no App Store release occurred |
 
 ## Physical and operator evidence
 
@@ -101,3 +101,5 @@ run on the recorded iPhone/iOS and the designated M2_H, firmware, ribbon,
 
 The fuller implementation and promotion narrative is
 [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
+The authenticated Apple record is
+[`build-13-app-store-connect-evidence-2026-07-30.md`](build-13-app-store-connect-evidence-2026-07-30.md).
