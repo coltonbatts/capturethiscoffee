@@ -3,22 +3,25 @@
 Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
 over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
 (`lib/label_painter.dart`) so printing never needs a signal. The internal
-TestFlight `1.0.0 (12)` source signs an owner-provisioned operator into Supabase,
+release-candidate `1.0.0 (13)` source signs an owner-provisioned operator into Supabase,
 loads an existing day, collects and edits orders from its complete roster, and
 durably queues order and physical print facts while offline. The Build 8
 share-token path remains under **Legacy link** as the maintained fallback.
-Build 12 adds online-only native pre-production setup:
+Build 12 added online-only native pre-production setup:
 day creation/editing, People, private photos, roster building/reordering, and
-reviewed atomic bulk import.
+reviewed atomic bulk import. Build 13 adds validated, versioned label-template
+snapshots plus an operator Summary/share surface and guarded,
+server-authoritative day completion.
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
 [`docs/HANDOFF.md`](../docs/HANDOFF.md).
 
-As of 2026-07-25 this app is the product's primary surface and the web is
-frozen. See
-[`docs/current-state-2026-07-25.md`](../docs/current-state-2026-07-25.md) and
-[`docs/app-first-direction-2026-07-25.md`](../docs/app-first-direction-2026-07-25.md).
+The app is the primary on-set surface. The web remains the authenticated
+operator/admin and fallback surface, including template drafting, publishing,
+default selection, Planning-day assignment, links, the zero-install runner, and
+PNG/CSV export. See the
+[Build 13 launch record](../docs/build-13-app-store-launch-2026-07-30.md).
 
 ## Primary on-set workflow
 
@@ -26,6 +29,8 @@ frozen. See
    There is no public signup.
 2. Choose an existing Active day on **Days**. Planning and Complete days remain
    visible, but physical printing is paused unless the selected day is Active.
+   The day uses its validated, immutable template snapshot; a legacy day
+   without one uses bundled Grid 01.
 3. Open **Collect**. Accept a usual, take or edit an order, mark no-drink, and
    optionally save the result as that person's usual. Local edits appear in
    Collect and Print immediately and survive an offline relaunch.
@@ -36,12 +41,19 @@ frozen. See
    its recovery or synchronization state before starting the next one.
 6. To print someone out of order, find them in the **roster** below the deck and
    tap the print icon on their row.
+7. Open **Summary & closeout** to reconcile grouped drink quantities and every
+   on-set person's Waiting, Captured waiting to print, Printed, or No drink
+   state. Share the summary if needed.
+8. Complete the day only online and only after all waiting,
+   captured-but-unprinted, pending-sync, conflict, and uncertain-print states
+   are resolved. The server validates and permanently closes the day; the app
+   does not optimistically mark a rejected closeout complete.
 
 If account access is unavailable during migration, choose **Legacy link** from
 Sign in, Days, or the setup screen and paste the runner share URL. That path is
 the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
 
-## Native setup workflow (Build 12)
+## Native setup workflow (Build 12+)
 
 1. From **Days**, create a Planning day or open the setup control on an existing
    day. Setup changes require a live authenticated connection.
@@ -76,6 +88,7 @@ by separate session, workspace, and printer controllers.
 | **Deck** (`lib/screens/print_screen.dart`) | `/print` | Production name, sync age, labels-left, the next label, and one action. |
 | **Roster** (`lib/screens/roster_screen.dart`) | `/roster` | Search, To print / Printed / All with counts, dense rows that expand in place. |
 | **Unresolved** (`lib/screens/recovery_screen.dart`) | `/recovery` | The only place a print outcome can be resolved. |
+| **Summary & closeout** (`lib/screens/summary_screen.dart`) | `/summary` | Grouped shop quantities, per-person state, native iOS sharing, closeout blockers, and server-confirmed permanent completion. |
 | **About** (`lib/screens/about_screen.dart`) | `/about` | Version, privacy, support, licenses. |
 | **Legacy link** (`lib/screens/link_screen.dart`) | root state | Secondary Build 8 fallback. Paste a share link; validation answers under the field. |
 
@@ -126,6 +139,12 @@ and `SetupRepository` own online setup state separately from `BoardController`;
 multi-row setup changes use the `setup_*` Postgres functions and only update UI
 state after the server returns success.
 
+`WorkspaceRepository.completeDay()` calls the authenticated
+`complete_production_day` function. The server locks the Active production,
+rechecks its entire on-set order/print state, stamps completion metadata, and
+returns authoritative counts in one transaction. The client refreshes after
+success and never treats a local tap as proof of completion.
+
 `BoardController` owns the authenticated server board plus its optimistic
 outbox projection. Collect, Print, Home progress, cache, polling, and
 Realtime-triggered refreshes all use that one projected board. Ordinary order
@@ -169,6 +188,11 @@ and are overlaid on the cached board at cold start. Ordinary fields stop on a
 visible conflict. Confirmed `label_printed` facts replay independently and are
 not retired merely because the optimistic board displays them.
 
+The selected production's validated label-template snapshot is cached with its
+authenticated board. A compatible remote snapshot becomes the last-known-good
+template; a malformed or incompatible response never replaces it. Legacy
+productions with no snapshot use the bundled Grid 01 definition.
+
 The Legacy link cache remains in `lib/board_cache.dart`, scoped to `apiBase` +
 `productionId`, and is cleared when that production is unlinked.
 
@@ -198,16 +222,20 @@ under "a production the server refuses".
 
 ## Label rendering
 
-`lib/label_painter.dart` renders `grid-01` at 591x354 (50x30mm @ 300 DPI), a
-direct port of `drawGrid01` in `src/lib/niimbot-m2-draw.ts`. Coordinates are
-copied verbatim; if the web design moves, this must move with it. Only
-`grid-01` is ported — the other seven designs are a web-side playground.
+`lib/label_painter.dart` renders the production's declarative template at
+591x354 (50x30mm @ 300 DPI). The canonical catalog lives in
+`assets/label_templates/label-templates-v1.json` and is shared semantically
+with the web renderer. It contains eight version-1 designs, including the
+accepted legacy Grid 01. The schema is deliberately small: bounded flat
+text/line/shape/mark elements, approved bindings and fonts, no URLs, code, or
+executable content.
 
 Arial is bundled from `assets/fonts/` rather than taken from iOS so that
 `flutter test` on a host machine and the device produce identical metrics.
 
 The two renderers will never be byte-identical — `@napi-rs/canvas` and Flutter's
-`TextPainter` shape text differently. What must match is composition. Check it:
+`TextPainter` shape text differently. What must match is validated template
+semantics and composition. Check it:
 
 ```bash
 flutter test test/label_golden_test.dart --update-goldens
@@ -319,7 +347,7 @@ it.
 ## Known quirks / troubleshooting
 
 - **Flutter suggests removing CocoaPods during archive** → this is currently a
-  non-blocking migration notice. The signed Build 11 IPA succeeds with the
+  non-blocking migration notice. The signed Build 12 IPA succeeds with the
   checked-in Podfile/lockfile and xcconfig includes. Do not remove CocoaPods or
   rewrite the iOS dependency setup during a release without a clean diff,
   archive comparison, and physical M2_H regression test.
@@ -346,7 +374,7 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 ```
 
 - Bundle ID: `com.capturethis.ctcprinter`
-- Builds 5 through 10 are uploaded and **consumed**; none may be reused.
+- Builds 5 through 12 are uploaded and **consumed**; none may be reused.
 - Build 9 source is committed at `47c4405`. It adds signed-in day selection and
   direct Supabase data access. What the physical print baseline exists to test
   is in
@@ -360,11 +388,15 @@ open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store
 - Build 12 `1.0.0+12` was uploaded, processed, and assigned only to the existing
   `Main` internal TestFlight group on 2026-07-29. No external TestFlight or App
   Store submission occurred, and physical acceptance remains open.
-- Bump the build suffix for every later upload (`1.0.0+13`, …).
+- Build 13 `1.0.0+13` is the current source candidate. Its archive, upload,
+  processing, internal assignment, installation, and physical acceptance must
+  be recorded in
+  [Build 13 release evidence](../docs/release-evidence-1.0.0-build-13.md).
+- Bump the build suffix for every later replacement upload (`1.0.0+14`, …).
 - The checked-in export options keep Xcode from silently changing the IPA build
   number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
   Connect agree before uploading.
 - A Legacy-link tester needs an **HTTPS** production share URL (not LAN
-  `http://`); normal Build 11 operation uses invited-account sign-in.
+  `http://`); normal Build 13 operation uses invited-account sign-in.
 - Internal testers: no review. External testers: beta review + privacy policy URL.
 - Builds expire after **90 days** — rebuild quarterly.

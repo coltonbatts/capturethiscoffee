@@ -52,20 +52,20 @@ shoots**. One person (the runner) takes 15–25 crew drink orders and works each
 a status pipeline during the shoot day: `not_asked → confirmed → ordered → picked_up →
 delivered` (plus `no_order`). It also prints a physical label per cup.
 
-Primary user: **Luke** (admin/runner), plus on-set **PAs** (production assistants) who need
+Primary user: **the intended operator** (admin/runner), plus on-set **PAs** (production assistants) who need
 the simplest possible printing step. The whole thing is built to be operated one-handed on a
 phone, on set, on flaky venue Wi-Fi.
 
 Core flow: `Sign in → open production → confirm drinks → mark ordered → print label →
 mark delivered → summary`.
 
-### The label is the brand moment (decided with Luke, latest meeting)
+### The label is the brand moment (decided with the intended operator, latest meeting)
 The physical label is **not** just an ops sticker — it is the point. Two explicit goals:
 1. **Make the client feel special** — a custom, personalized coffee handed to them.
 2. **A branding moment for Capture This** — the label is a tiny piece of brand collateral.
 
 Concrete decisions from the latest meeting:
-- **Printer stays the NIIMBOT.** Luke tried Brother printers and dislikes the paper labels.
+- **Printer stays the NIIMBOT.** the intended operator tried Brother printers and dislikes the paper labels.
   The earlier "switch to Brother QL-820NWB / AirPrint" plan is **cancelled.**
 - **Labels go on the cup lid** (not the side), as a finishing/branding touch.
 - Because the label is a branding object, **design quality matters** — typography, layout,
@@ -144,18 +144,18 @@ printing.**
 
 The sticking point that drove this: the NIIMBOT **cannot be driven over Bluetooth from a
 phone** by a third-party app — direct printing requires a **laptop tethered with a USB-C
-cord** (that's what the whole `labels/station` + USB-serial subsystem does). Luke wants the
+cord** (that's what the whole `labels/station` + USB-serial subsystem does). the intended operator wants the
 on-set printing step to be dead simple for a PA, and **a laptop on set is too much.**
 
 The idea we landed on:
 - **CTC generates a perfect, print-ready label image** (correctly sized for the NIIMBOT lid
   label, on-brand, personalized per crew member).
 - The PA **saves that image to their phone's camera roll** straight from CTC.
-- The PA opens the **NIIMBOT first-party app** (which Luke already likes), **uploads the
+- The PA opens the **NIIMBOT first-party app** (which the intended operator already likes), **uploads the
   image, and prints** over the NIIMBOT app's own Bluetooth connection.
 - **No laptop, no USB cord, no CTC print-station server, no custom Bluetooth code.**
 
-This keeps the printer Luke loves, removes the laptop, and turns printing into "save image →
+This keeps the printer the intended operator loves, removes the laptop, and turns printing into "save image →
 open NIIMBOT app → print." CTC's job shrinks to the thing it's good at: **making a beautiful,
 correct label asset.**
 
@@ -309,7 +309,7 @@ delete localStorage write paths or hide them behind one repository interface. Ha
 roster logic, RLS. Add error reporting.
 
 **Phase 5 — UI cleanup (P2-A).** Split `components.tsx`; trim the runner view to just the
-flow Luke uses.
+flow the intended operator uses.
 
 Do Phase 0 and Phase 1 first — they remove the most risk and the most code.
 
@@ -320,11 +320,11 @@ Do Phase 0 and Phase 1 first — they remove the most risk and the most code.
 1. **Access model:** is a per-production share link acceptable, or should runners log in?
    (Drives Phase 0 design.)
 2. **NIIMBOT lid-label spec (blocks Phase 1):** exact media (round vs rectangular), mm
-   dimensions, and DPI of the lid label Luke is using — and the image format/resolution the
+   dimensions, and DPI of the lid label the intended operator is using — and the image format/resolution the
    NIIMBOT app imports without cropping or blurring. Verify with the physical printer + a test
    import before locking export dimensions.
 3. **Export UX on iPhone:** is "Save to Photos" then manually opening the NIIMBOT app
-   acceptable, or does Luke want it as smooth as possible (e.g. iOS share sheet straight into
+   acceptable, or does the intended operator want it as smooth as possible (e.g. iOS share sheet straight into
    the NIIMBOT app, if NIIMBOT registers as a share target)? Worth a quick test on-device.
 4. **Demo mode:** is the localStorage no-network demo still needed, or can it be dropped to
    simplify `data.ts`? (Drives Phase 2.)

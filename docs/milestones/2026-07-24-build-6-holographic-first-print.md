@@ -48,6 +48,6 @@ without a computer or secondary printing app.
 This milestone proves one confirmed physical reprint on holographic stock. It
 does not by itself complete the full physical release gate. Exact stock
 measurements, queue-to-web synchronization, a 10-label batch, interruption
-recovery, reconnect/resume behavior, cold-cup adhesion, and Luke's independent
+recovery, reconnect/resume behavior, cold-cup adhesion, and the intended operator's independent
 operator run still need to be recorded in
 [`../physical-release-test.md`](../physical-release-test.md).

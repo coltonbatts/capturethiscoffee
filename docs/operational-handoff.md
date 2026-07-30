@@ -1,26 +1,28 @@
 # Capture This release and operations handoff
 
-Last updated: 2026-07-27
+Last updated: 2026-07-30
 
 This handoff grants roles, not shared passwords. Fill the ownership and renewal
-register with the account holders before the printer moves. Luke's one-page
-operating guide is [Luke Quick Start](luke-quick-start.md). The role-based entry
+register with the account holders before the printer moves. The intended operator's one-page
+operating guide is [Operator Quick Start](operator-quick-start.md). The role-based entry
 point and definition of done are in [the handoff hub](HANDOFF.md).
 
 ## Source and release
 
 - GitHub: `https://github.com/coltonbatts/capturethiscoffee`
 - Production branch: `main`
-- Current internal TestFlight build: Build 10, `1.0.0 (10)`, application
-  source `fea2fc3`, clean archive source `ab5edb8`, internally available in
-  TestFlight. External review, physical acceptance, and buddy installation are
-  still open.
-- Next local release candidate: Build 11, `1.0.0 (11)`. Its shipping UI exposes
-  only individual printing. It is not committed, uploaded, physically
-  accepted, or externally approved.
-- Release work branch: `codex/release-1.0.0` was merged through PR #9 on
-  2026-07-20. The current release-candidate commit and pull request are recorded
-  in `release-evidence-1.0.0.md`.
+- Current internal TestFlight build: Build 12, `1.0.0 (12)`, uploaded,
+  processed, assigned only to the existing internal `Main` group, and reported
+  installed by its one existing tester. See
+  [`build-12-native-setup-2026-07-29.md`](build-12-native-setup-2026-07-29.md).
+- Current release candidate: Build 13, `1.0.0 (13)`. It adds versioned label
+  templates, immutable per-day template snapshots, an operator summary/share
+  surface, and server-authoritative closeout while preserving one-label-at-a-time
+  printing. Its exact source, verification, promotion, physical, and Apple
+  state belong in
+  [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
+- Until that launch record says otherwise, Build 13 is not merged, deployed,
+  uploaded, physically accepted, approved, or released.
 - Release tag: create `capture-this-v1.0.0` only after the physical and external
   pilot gates pass; record the exact commit in `release-evidence-1.0.0.md`.
 - Never commit `.env.local`, share URLs/tokens, Apple credentials, temporary
@@ -44,6 +46,7 @@ cd mobile
 flutter pub get
 flutter analyze
 flutter test
+flutter build ios --simulator --no-codesign
 flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 ```
 
@@ -70,12 +73,20 @@ build number.
 - Rollback: promote the last known-good Vercel deployment. If schema changed,
   use the database recovery plan rather than assuming a web rollback reverses
   data migrations.
+- Template authoring/publishing is an authenticated operator function. A draft
+  does not affect production. Publish only after exact geometry/export preview,
+  semantic validation, and operator review. Keep Grid 01 as the production
+  default until non-Grid physical acceptance is complete.
 
 ## Supabase operations
 
 - Project owner/organization: **OWNER REGISTER**
 - Apply `supabase/schema.sql` for a fresh project and all files in
   `supabase/migrations/` in filename order. Record each applied migration.
+- Build 13's additive migration and recovery boundary are documented in
+  [`build-13-database-migration-and-rollback.md`](build-13-database-migration-and-rollback.md).
+  Never apply it to a shared environment before its disposable full-history
+  replay, static contract tests, and target-project plan are clean.
 - Confirm `orders` is present in the `supabase_realtime` publication.
 - Keep public email sign-ups disabled. Invite operators deliberately; current
   signed-in operators share full workspace access. Public settings reported
@@ -97,10 +108,11 @@ build number.
 
 ## Day-of production
 
-1. A signed-in website operator creates the client/production, roster, and
-   fallback runner link, then marks the day Active. Build 11 can collect and
-   edit orders after the existing day is loaded.
-2. Confirm the production is active and test the link in a private browser.
+1. A signed-in web or native operator creates the Planning day and roster. A
+   web operator selects a published label template before activation when the
+   default is not intended; activation snapshots that immutable version.
+2. Confirm the production is Active and test any fallback link in a private
+   browser.
 3. The printer operator installs Capture This, signs in with the individual
    owner-provisioned account, selects the existing Active day, force-quits the
    official NIIMBOT app, and powers off other nearby NIIMBOT printers.
@@ -109,8 +121,16 @@ build number.
 5. If a print succeeds but sync fails, do not tap Print again. Use **Sync only**.
    If the outcome is uncertain, inspect the printer/physical label and choose
    **Label printed — sync only** or **Nothing printed — retry**.
-6. Keep the authenticated `/labels` PNG/CSV flow as the fallback.
-7. Follow [Luke Quick Start](luke-quick-start.md) for the exact day-of sequence.
+6. Open **Summary & closeout**, reconcile grouped quantities and every
+   per-person state, and share the fictional/sanitized summary if required.
+   Closeout is online-only and must remain blocked while any order is waiting,
+   captured but unprinted, pending sync, conflicted, or awaiting physical-print
+   recovery.
+7. Complete the day through the guarded server action; a completed day is
+   immutable and cannot be reopened.
+8. Keep the authenticated `/labels` PNG/CSV flow as the fallback.
+9. Follow [Operator Quick Start](operator-quick-start.md) for the exact
+   day-of sequence.
 
 ## Apple operations
 
@@ -120,13 +140,24 @@ build number.
 - Minimum roles: give a release operator only the App Manager or Developer role
   needed for their work; the Account Holder retains agreements, membership,
   transfers, and legal authority.
-- Invite internal users under Users and Access. Invite the buddy by email to a
-  named external TestFlight group after Beta App Review approval.
+- Invite internal users under Users and Access. Do not invite testers, create a
+  public TestFlight link, or submit external beta review unless a separate
+  authorized pilot requires it.
 - Upload each unique build through Xcode/Transporter. Record processing status,
   export-compliance response, group, feedback, fixes, and replacement build.
 - For an update: bump build/version, run all checks, repeat affected physical
   tests, upload, pilot externally, update metadata/privacy answers, submit, and
   preserve manual release control.
+- For Build 13's durable path, use the exact sequence in the
+  [App Review/unlisted packet](build-13-app-review-unlisted-packet-2026-07-30.md):
+  finish legal/privacy/account attestations, upload the validated build, enter
+  metadata and private review access, select manual release and the intended
+  storefront, submit for ordinary App Review, then request unlisted
+  distribution. Do not manually release while distribution is still public.
+- App Privacy answers, content rights, legal entity/copyright, Digital Services
+  Act trader status, agreements, tax/banking, review contact, and review
+  credentials require the authorized owner. Engineering evidence cannot attest
+  for that person.
 - App transfer later: both Account Holders participate; TestFlight must be
   cleaned up and Apple’s current criteria satisfied. The app cannot transfer
   until at least one version has been released on the App Store. Back up the
@@ -136,7 +167,7 @@ build number.
 
 - Support mailbox: `info@capturethis.com` (**OWNER APPROVAL AND NAMED OWNER**)
 - Check Vercel runtime errors and availability before a shoot and during review.
-- No crash-reporting SDK is recorded in Build 11. Record device/iOS/app build,
+- No crash-reporting SDK is recorded in Build 13. Record device/iOS/app build,
   printer firmware, stock, last successful step, and sanitized error copy for
   incidents.
 - Never log or screenshot a production token. Revoke it if exposed.
@@ -145,8 +176,8 @@ build number.
 
 ## Operational ownership and independence
 
-Fill every blank with a person and a backup. "Colton" is not an implied default.
-If Colton is providing support after acceptance, record its scope, hours,
+Fill every blank with a person and a backup. The product builder is not an implied default.
+If the product builder is providing support after acceptance, record its scope, hours,
 duration, response target, and whether it is paid. Otherwise record **none**.
 
 | Responsibility | Primary owner | Backup | Evidence before handoff |
@@ -154,23 +185,26 @@ duration, response target, and whether it is paid. Otherwise record **none**.
 | Printer, charger/cable, asset record | **OWNER INPUT** | **OWNER INPUT** | Inventory signed |
 | Ribbon and replacement ribbon | **OWNER INPUT** | **OWNER INPUT** | Part/reorder source recorded |
 | Label stock and replacement stock | **OWNER INPUT** | **OWNER INPUT** | Dimensions/shape/part/reorder source recorded |
-| Day-of printer operation and recovery | Luke / confirm | **OWNER INPUT** | Luke physical pilot passed |
-| Post-handoff physical regression testing | **OWNER INPUT** | **OWNER INPUT** | Luke test arrangement or second M2_H recorded |
+| Day-of printer operation and recovery | Intended operator / confirm | **OWNER INPUT** | Intended-operator physical pilot passed |
+| Post-handoff physical regression testing | **OWNER INPUT** | **OWNER INPUT** | Intended-operator test arrangement or second M2_H recorded |
 | Issue/reissue runner links | **OWNER INPUT** | **OWNER INPUT** | Individual operator account tested |
 | Revoke runner links | **OWNER INPUT** | **OWNER INPUT** | Dashboard role and denied-old-link test |
+| Draft/publish/default/assign label templates | **OWNER INPUT** | **OWNER INPUT** | Grid 01 baseline plus published-version audit tested |
+| Review and complete production closeout | **OWNER INPUT** | **OWNER INPUT** | Blocked and successful fictional closeout demonstrated |
 | Invite/remove signed-in web operators | **OWNER INPUT** | **OWNER INPUT** | Supabase role tested |
 | Production incident lead | **OWNER INPUT** | **OWNER INPUT** | Contact tree and severity path recorded |
 | Support mailbox response | **OWNER INPUT** | **OWNER INPUT** | Individual mailbox roles tested |
 | Produce and sign a replacement iOS build | **OWNER INPUT** | **OWNER INPUT** | Clean-machine/documented build drill |
 | Upload/manage TestFlight builds and groups | **OWNER INPUT** | **OWNER INPUT** | App Store Connect role tested |
 | Maintain permanent unlisted App Store release | **OWNER INPUT** | **OWNER INPUT** | Direct install link verified |
+| App Privacy, DSA, agreements, and legal attestations | **OWNER INPUT** | **OWNER INPUT** | Authorized App Store Connect submission recorded |
 | Database backups and restore drills | **OWNER INPUT** | **OWNER INPUT** | Policy plus latest restore evidence |
-| Colton post-handoff support | **NONE OR WRITTEN SCOPE** | n/a | Boundary signed below |
+| Product-builder post-handoff support | **NONE OR WRITTEN SCOPE** | n/a | Boundary signed below |
 
-Luke owns routine day-of operation only after his physical acceptance passes.
+The intended operator owns routine day-of operation only after their physical acceptance passes.
 The named account owners retain hosting, database, Apple, billing, backup, and
-security obligations. Do not hand those obligations to Luke merely by giving
-him a shared password.
+security obligations. Do not hand those obligations to the intended operator merely by providing
+a shared password.
 
 ## Accounts, renewals, and recurring costs
 
@@ -208,31 +242,31 @@ distribution plan.
 
 The durable target is an Apple-approved **unlisted App Store** version with a
 verified direct install link. It is not searchable, but an authorized crew
-member can reinstall it on a replacement iPhone without Colton making a local
+member can reinstall it on a replacement iPhone without the product builder making a local
 build. The Apple Account Holder still owns agreements and membership; at least
 two named people should be able to prepare, sign, upload, and release a
 replacement build using individual roles.
 
 Before the permanent link exists, a minimum pilot handoff requires:
 
-- The exact tested TestFlight build installed on Luke's phone.
+- The exact tested TestFlight build installed on the intended operator's phone.
 - Its expiry date and renewal owner recorded.
 - The signed source commit, IPA/archive evidence, and next unused build number
   recorded.
 - A second authorized release operator who can replace the build without
-  Colton, plus a tested fallback `/labels` path.
+  the product builder, plus a tested fallback `/labels` path.
 
 Permanent independence requires the approved unlisted direct link, a clean-phone
 reinstall test, individual Apple roles for primary and backup release operators,
 documented signing/build steps, an accepted support boundary, and continuing
-access to an M2_H for replacement-build regression tests. Record whether Luke
+access to an M2_H for replacement-build regression tests. Record whether the intended operator
 will run those tests by arrangement or an account owner will keep a second
 compatible printer.
 
 ## Handoff acceptance gate
 
-The handoff does not pass because automated tests pass. Luke must personally,
-without Colton operating the phone or dashboard:
+The handoff does not pass because automated tests pass. The intended operator must personally,
+without the product builder operating the phone or dashboard:
 
 - [ ] Install/open the supported app from the documented distribution path.
 - [ ] Sign in with the individual fictional account and select the existing
@@ -240,14 +274,18 @@ without Colton operating the phone or dashboard:
 - [ ] Connect the exact accepted M2_H.
 - [ ] Print short and long labels sequentially, one at a time, and confirm the
       shipping deck exposes only the individual action.
+- [ ] Confirm the assigned/default template preview matches the physical output
+      and Grid 01 remains available as the accepted fallback.
 - [ ] Verify successful `label_printed` synchronization on the hosted web app.
 - [ ] Recover an interrupted/uncertain print without an accidental duplicate.
 - [ ] Power-cycle/reconnect and background/resume successfully.
+- [ ] Reconcile Summary, share a fictional summary, prove premature closeout is
+      rejected, then complete a fully resolved fictional day.
 - [ ] Export and print one `/labels` fallback asset.
 - [ ] Identify whom to contact and provide only sanitized incident evidence.
 
 Complete
-[the Build 11 physical release worksheet](build-11-physical-release-worksheet-2026-07-27.md)
+[the Build 13 physical acceptance worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md)
 during the same session.
 
 ## Final inventory and sign-off
@@ -266,19 +304,21 @@ during the same session.
 | Firmware record | Version only; no update: _____ | _____ |
 | Supported Capture This app | Version/build/install path: _____ | _____ |
 | TestFlight lifecycle | Exact expiration/renewal owner: _____ | _____ |
-| Luke Quick Start | Revision/date: _____ | _____ |
+| Operator Quick Start | Revision/date: _____ | _____ |
 | `/labels` fallback guide | Web account confirmed: _____ | _____ |
 | Account invitations | Services/roles: _____ | _____ |
 | Open limitation | One-label-at-a-time support acknowledged: _____ | _____ |
+| Template baseline | Assigned/default version and Grid 01 fallback: _____ | _____ |
+| Closeout drill | Premature rejection and permanent completion: _____ | _____ |
 | Support boundary | Contact/hours/term/response target/scope: _____ | _____ |
 | Evidence photos | Fictional short/long/cold-cup paths: _____ | _____ |
 | Packing/shipping | Packing accepted/carrier/tracking/recipient: _____ | _____ |
 
-- Luke acceptance — name/signature/date: _____
+- Intended-operator acceptance — name/signature/date: _____
 - Physical asset owner — name/signature/date: _____
 - Platform/account owner — name/signature/date: _____
-- Colton support boundary accepted — name/signature/date: _____
-- **Printer may leave Colton's possession: yes/no** _____
+- Product-builder support boundary accepted — name/signature/date: _____
+- **Printer may leave the product builder's possession: yes/no** _____
 
 ## Post-test token, access, and data cleanup
 

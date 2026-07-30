@@ -48,7 +48,7 @@ The decision now is less "which one for crew vs. hero" and more "does Path A's s
 - **Polish the custom label** (`coffee-label-renderer.tsx`) — if Path A's save-then-batch flow holds up at 20+ cups, this becomes the design surface for the *whole* crew run, not just hero cups.
 - Defer everything else (the access-control and dual-mode-data cleanup in the engineering brief) until printing actually works end to end. Don't let it block you.
 
-## Open questions for you (not Luke)
+## Open questions for you (not the intended operator)
 
 - What roll is in the M2 right now? (Blocks the preset lock.)
 - Once you've timed the save-as-template step: is it fast enough to do fully custom labels for the whole crew, or does that still need a CSV/hero-cup split?

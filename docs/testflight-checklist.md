@@ -1,9 +1,35 @@
 # TestFlight pilot checklist — Capture This
 
-Last updated: 2026-07-28
+Last updated: 2026-07-30
 
-External TestFlight is the final pilot, not the permanent distribution. The
-permanent target is an approved unlisted App Store link.
+TestFlight is a pre-release verification channel, not the permanent
+distribution. The permanent target is an approved unlisted App Store link.
+
+## Build 13 current lane
+
+Build 12, `1.0.0 (12)`, is processed and assigned only to the existing
+internal `Main` group. App Store Connect reported its one existing internal
+tester installed it.
+
+Build 13, `1.0.0 (13)`, is the current release candidate. After the reviewed
+source is merged and its signed artifact is validated:
+
+1. Upload the unique Build 13 binary and wait for processing to complete.
+2. Confirm the actual binary's export-compliance answer and record its App
+   Store Connect build ID.
+3. Assign only the exact processed build to the existing internal `Main` group
+   (`44678fa3-60ec-4971-9c1a-73b768e8a198`).
+4. Install that build on the designated physical-test iPhone and confirm
+   `1.0.0 (13)` in About.
+5. Complete the
+   [Build 13 physical acceptance worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md).
+6. Do not create a public TestFlight link. Use a small named external group
+   only when it materially resolves a physical or App Review issue.
+7. TestFlight success does not authorize release or establish physical
+   acceptance. The durable path remains ordinary App Review followed by
+   approved unlisted distribution and manual release.
+
+## Historical evidence and pilot ledger
 
 ## Evidence and status
 
@@ -34,20 +60,19 @@ permanent target is an approved unlisted App Store link.
 | TestFlight beta metadata | Owner approved the exact Build 10 beta description, What to Test, review notes, demo instructions, hardware explanation, and export-compliance draft at 18:42 CDT on 2026-07-27. Feedback email, review contact, separate privacy/support approval, secure production fixture, and submission approval remain open |
 | Build 11 local release candidate | `1.0.0 (11)` removes the unsupported shipping batch action, corrects the application privacy manifest, and adds current screenshots/review worksheets. It is not committed, uploaded, processed, or physically accepted |
 | External group | `Capture This crew pilot` created with 0 testers and 0 builds; build selection is unavailable until required beta contact metadata is complete |
-| First external Beta App Review | Not submitted; review contact is Kait Batts and the phone/email were supplied privately for App Store Connect only. Owner declined `info@capturethis.com` for tester feedback. Blocked on a replacement feedback email, separate privacy/support approval, and the private fictional review fixture |
+| First external Beta App Review | Not submitted; review contact is the private review contact and the phone/email were supplied privately for App Store Connect only. Owner declined `info@capturethis.com` for tester feedback. Blocked on a replacement feedback email, separate privacy/support approval, and the private fictional review fixture |
 | Build 10 expiration | **Pending authoritative App Store Connect value.** Expected around 2026-10-25, but do not use the estimate as the handoff record |
 | Buddy invited by email | Pending owner-supplied email / approved build |
 | Buddy install, sign-in, day selection, M2_H print, and sync pilot | Pending physical hardware |
-| In-house independent tester | Owner plans to use his wife's phone because she is available locally. Her run can close the independent-operator gate only if Colton does not operate her phone, printer controls, or dashboard; it does not automatically replace the post-shipping buddy pilot |
+| In-house independent tester | Owner plans to use a locally available tester's phone. That run can close the independent-operator gate only if the product builder does not operate the tester's phone, printer controls, or dashboard; it does not automatically replace the post-shipping buddy pilot |
 
 Build 4 is not a release candidate: it predates Keychain session storage,
 network bounds, printer validation, interruption recovery, iPhone-only targeting,
 the application privacy manifest, and the 1.0 product version.
 
-Build 10 remains the current internal TestFlight build. Build 11 is the next
-local release candidate and is required before any external pilot because the
-Build 10 UI still exposes the unsupported batch action and its privacy manifest
-is incomplete. Build 6's first-try
+The following paragraph describes the 2026-07-27 Build 10/11 boundary and is
+not the current release instruction. At that time, Build 10 was the current
+internal build and Build 11 the local candidate. Build 6's first-try
 holographic reprint and Build 9's signed-in direct-Supabase reprint
 prove the intended direct-Bluetooth path. Both remain smoke tests, not Build
 10 physical acceptance. Build 9 checks 1, 2, 5, 6, and 9 physically passed;
@@ -76,11 +101,10 @@ seven-step acceptance in `docs/build-10-implementation-2026-07-25.md`; the
 exact ten-row audit and combined operator worksheet are in
 `docs/build-10-release-validation-2026-07-25.md`.
 
-## Build 11 external-TestFlight preflight
+## Historical Build 11 external-TestFlight preflight
 
-Build 10 is internal evidence only and must not be advanced to external review.
-Build 11 is not uploaded. Do not upload or modify App Store Connect until the
-owner explicitly authorizes the exact action.
+This section preserves the earlier Build 11 gate. It is not the Build 13
+release procedure.
 
 1. Complete automated, source-review, archive, privacy-manifest, and screenshot
    verification for Build 11.
@@ -105,7 +129,7 @@ owner explicitly authorizes the exact action.
 9. Record Apple's authoritative expiration and review status. Do not invite the
    buddy until Apple approves Build 11 for external testing.
 
-## Build 11 — exact TestFlight device acceptance
+## Historical Build 11 — exact TestFlight device acceptance
 
 Use the numbered physical worksheet in
 `docs/build-11-physical-release-worksheet-2026-07-27.md`. It covers the exact TestFlight
@@ -180,12 +204,13 @@ Output: `mobile/build/ios/ipa/ctc_printer.ipa`
 Upload with Xcode Organizer or Transporter while signed into the authorized
 Apple account. Apple associates it using bundle ID, version, and build number.
 Wait until processing finishes and record the status in
-`docs/release-evidence-1.0.0.md`.
+`docs/release-evidence-1.0.0-build-13.md`.
 
-Do not reuse build numbers 9 or 10. Build 11 remains available only because it
-has not been uploaded. Rebuild it from the reviewed committed source before
-upload. After any Build 11 upload, a replacement binary must use a new build
-number; stop and document why before changing `mobile/pubspec.yaml`.
+Do not reuse any uploaded build number. Build 13 uses the next expected unique
+number, 13, only after confirming it is unused in the live record. Rebuild from
+the exact reviewed merge commit before upload. Any replacement binary after a
+Build 13 upload must use a new number and record the reason before
+`mobile/pubspec.yaml` changes.
 
 The checked-in export options set `manageAppVersionAndBuildNumber` to false.
 This is intentional: Xcode must not silently rewrite the exported IPA to a
@@ -193,20 +218,22 @@ different build number than the archive and `pubspec.yaml`. The 2026-07-23
 verification reproduced that rewrite with the default export and then verified
 archive/IPA agreement when the checked-in export options were used.
 
-## App Store Connect beta setup
+## App Store Connect internal verification
 
 1. Open **Capture This → TestFlight** and select the processed build.
 2. Confirm export compliance from actual build behavior; the binary declares no
    non-exempt encryption. The account owner makes the final attestation.
-3. Add the beta description, **What to Test**, feedback email, contact, privacy
-   URL, support URL, review notes, and secure demo instructions from
-   `docs/build-11-external-review-packet-2026-07-27.md`.
-4. Use the existing external group `Capture This crew pilot`.
-5. Add Build 11 and submit it for TestFlight App Review only after the owner
-   explicitly approves the final packet and submission.
-6. After approval, invite the buddy by email rather than a broadly shareable
-   public link. Do not include the production share token in the invitation.
-7. Send the fictional review URL privately and keep the fixture active.
+3. Assign Build 13 only to the existing internal `Main` group for pre-release
+   verification.
+4. Install it on the physical-test iPhone and complete the exact Build 13
+   worksheet. Do not infer installation from assignment alone.
+5. If a named external group becomes materially necessary, use the metadata and
+   secure fictional path from the
+   [Build 13 review packet](build-13-app-review-unlisted-packet-2026-07-30.md),
+   obtain any required Beta App Review approval, and invite by individual email.
+6. Never include production links or credentials in invitations, screenshots,
+   source, or documentation.
+7. Never create a public TestFlight link.
 
 The first external build requires Apple’s beta review. Internal-only builds
 cannot be promoted to external groups; use the normal App Store/TestFlight

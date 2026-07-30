@@ -95,7 +95,7 @@ locked app analyzes and tests cleanly.
 
 ## Recommended client ask
 
-Ask Luke to pick the next priority after the physical print validation:
+Ask the intended operator to pick the next priority after the physical print validation:
 
 - **Live sync:** multiple phones see board and label-status changes without
   manual refresh.

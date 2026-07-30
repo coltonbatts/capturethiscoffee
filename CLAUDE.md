@@ -547,7 +547,7 @@ Use with caution:
 
 Local/private:
 
-- `docs/luke-handoff.local.md` exists and appears intentionally local. Do not commit secrets or credentials.
+- `docs/operator-handoff.local.md` may exist and is intentionally local. Do not commit secrets or credentials.
 
 ## Suggested first Claude prompt
 

@@ -87,7 +87,7 @@ Capture This Coffee (CTC) is a **Next.js 16.2.6** / **Supabase** app for live co
 - Updated root `README.md` (label printing section, API table, verification commands).
 - Updated `CLAUDE.md` (spike passed, Phase 2 active).
 - Added `docs/phone-printing-investigation.md` (strategy history).
-- Pushed to `main` on GitHub (`e05ad01`). **Not committed:** `docs/luke-update-2026-07.*`, `docs/presentation-prep-checklist.md` (local prep).
+- Pushed to `main` on GitHub (`e05ad01`). **Not committed:** `docs/operator-update-2026-07.*`, `docs/presentation-prep-checklist.md` (local prep).
 
 ---
 
@@ -192,7 +192,7 @@ The spike `main.dart` was written against docs; actual package types differ:
 
 - QR scan for share link (currently paste-only).
 - Label previews in Flutter queue before print.
-- TestFlight build for Luke's phone (internal testing, 90-day rebuild cycle).
+- TestFlight build for the intended operator's phone (internal testing, 90-day rebuild cycle).
 - `pod deintegrate` / SPM-only iOS deps (Flutter warns about mixed CocoaPods + SPM).
 
 ### P1 — Web app (unchanged backlog from CLAUDE.md)

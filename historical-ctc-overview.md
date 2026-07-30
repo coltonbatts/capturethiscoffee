@@ -5,7 +5,7 @@
 > path is direct printing to the NIIMBOT M2_H. Start with
 > [`docs/HANDOFF.md`](docs/HANDOFF.md) and the current operator quick start.
 
-Hey Luke,
+Hello intended operator,
 
 Here's a quick overview of where Capture This Coffee stands and where I think we should take the printing setup.
 
@@ -56,4 +56,4 @@ This is the move. ~$150 on Amazon, and it solves everything:
 
 Happy to walk through it whenever. Let me know.
 
-— Colton
+— Product builder

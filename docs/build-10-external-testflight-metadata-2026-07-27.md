@@ -150,7 +150,7 @@ written in the Codex task at 18:42 CDT on 2026-07-27. This approval does not
 supply or approve any separate field below and does not authorize production
 fixture writes, Beta App Review submission, or a tester invitation.
 
-- Review contact first name: `Kait`
+- Review contact first name: supply privately in App Store Connect
 - Review contact last name: `Batts`
 - Review phone: **SUPPLIED PRIVATELY 2026-07-27 — APP STORE CONNECT ONLY**
 - Review email: **SUPPLIED PRIVATELY 2026-07-27 — APP STORE CONNECT ONLY**

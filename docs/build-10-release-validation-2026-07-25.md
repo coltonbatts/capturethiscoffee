@@ -182,9 +182,9 @@ migration, commit, push, or packaging occurred.
 - The supplied photo is **not** accepted or copied into release evidence
   because the label visible in it is not from the disposable fixture and may
   contain real personal data. Firmware, ribbon details, stock
-  brand/lot/measurements, tester identity, and Luke's presence still require a
+  brand/lot/measurements, tester identity, and the intended operator's presence still require a
   direct record.
-- The owner identified the tester as Colton, the developer/builder. Luke is not
+- The owner identified the tester as Colton, the developer/builder. the intended operator is not
   present, so the independent-operator gate remains open and cannot be inferred
   from Colton's run.
 - The owner reports the loaded stock is 50×30 mm and that the unchanged ribbon,
@@ -300,7 +300,7 @@ and prerequisite smoke observations are not promoted to physical passes.
 | 7 | Planning/complete-day print refusal | Widget/controller refusal tests pass | **Open.** No physical-device refusal for both statuses; Build 10 pending-write replay refusal also remains to be observed |
 | 8 | Haptics and Reduce Motion | Reduce Motion widget tests pass; simulator cannot prove haptics. At 15:44 CDT an uncertain print fired the double-beat path, but Colton was not holding the phone and **did not observe it**. Recorded as not observed — neither a pass nor a fail | **Open.** Success and uncertain haptics are still not physically distinguished, and Reduce Motion has not been inspected on the iPhone |
 | 9 | Cold-cup adhesion and readability | Fictional Operator 12's 50×30 mm holographic label was applied to a cold cup from 13:08 through at least 13:16 CDT | **Passed.** Colton directly inspected it and reported no lift, smear, fade, contrast, or readability issue. A fictional-only evidence photo has been requested |
-| 10 | Independent operator run | No evidence | **Open.** Luke has not completed the prescribed flow without Colton touching the phone or dashboard |
+| 10 | Independent operator run | No evidence | **Open.** the intended operator has not completed the prescribed flow without Colton touching the phone or dashboard |
 
 This table was the pre-upload gate. The owner later explicitly authorized the
 Build 10 archive and internal-TestFlight upload with rows 4, 7, 8, and 10 still
@@ -713,10 +713,10 @@ install until every Build 9 row passes.
 
 ### Phase B — independent Build 9 operator pass
 
-Luke performs sign in → select Active day → connect M2_H → print → hosted sync
+the intended operator performs sign in → select Active day → connect M2_H → print → hosted sync
 → airplane-mode authenticated restore → interrupted-print inspection and
 recovery → Legacy fallback. Colton does not touch the phone, printer controls,
-or dashboard from the first sign-in until Luke declares the run complete.
+or dashboard from the first sign-in until the intended operator declares the run complete.
 Record any spoken prompt or rescue as assistance; the check remains open if
 builder intervention was required.
 
