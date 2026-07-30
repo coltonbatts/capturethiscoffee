@@ -157,6 +157,11 @@ void main() {
 
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(find.text('Direct Supabase Day'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(rosterEntryKey),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(rosterEntryKey), findsOneWidget);
     expect(selected.values['user-a'], 'day-a');
     expect(cache.records.single.userId, 'user-a');

@@ -1,4 +1,6 @@
-/// The four strings a label actually shows, plus its order number.
+import 'label_template.dart';
+
+/// The strings a label can show, plus its immutable template snapshot.
 ///
 /// This is the Dart port of the `CoffeeLabel` fields that `drawGrid01` reads in
 /// `src/lib/niimbot-m2-draw.ts`. The web type carries extra layout fields
@@ -17,6 +19,9 @@ class LabelContent {
     required this.group,
     required this.productionClient,
     required this.orderNumber,
+    this.productionName = '',
+    this.clientName = '',
+    this.template,
   });
 
   /// Builds label content from printer-queue fields.
@@ -32,9 +37,11 @@ class LabelContent {
     required String group,
     required String productionName,
     required String clientName,
+    LabelTemplateVersion? template,
   }) {
-    final productionClient =
-        [productionName, clientName].where((part) => part.isNotEmpty).join(' / ');
+    final productionClient = [productionName, clientName]
+        .where((part) => part.isNotEmpty)
+        .join(' / ');
     return LabelContent(
       personName: personName.trim(),
       drink: drink.trim(),
@@ -45,6 +52,9 @@ class LabelContent {
       group: group.trim().isEmpty ? 'Set' : group.trim(),
       productionClient: productionClient.trim(),
       orderNumber: shortOrderNumber(orderId),
+      productionName: productionName.trim(),
+      clientName: clientName.trim(),
+      template: template,
     );
   }
 
@@ -53,6 +63,9 @@ class LabelContent {
   final String group;
   final String productionClient;
   final String orderNumber;
+  final String productionName;
+  final String clientName;
+  final LabelTemplateVersion? template;
 
   /// `labelName` in the web renderer.
   String get displayName => personName.trim();

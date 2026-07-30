@@ -162,7 +162,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     final syncedAt = lastSyncedAt;
     if (syncedAt == null) return 'Not synced yet';
     if (servingCachedBoard) return 'Offline · synced ${_ageLabel(syncedAt)}';
-    return 'Synced ${_timeLabel(syncedAt)}';
+    return 'Synced ${_ageLabel(syncedAt)}';
   }
 
   String? get productionStatusLabel {
@@ -561,13 +561,6 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     return text.startsWith('Exception: ')
         ? text.substring('Exception: '.length)
         : text;
-  }
-
-  String _timeLabel(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    final second = value.second.toString().padLeft(2, '0');
-    return '$hour:$minute:$second';
   }
 
   String _ageLabel(DateTime value) {

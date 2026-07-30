@@ -19,7 +19,7 @@ export function PublicInfoPage({
             <CaptureMark className="size-10 rounded-full" priority />
             <span className="grid">
               <span className="text-sm font-semibold leading-none tracking-[-0.02em]">
-                Capture This Coffee
+                Capture This
               </span>
               <span className="mt-1 text-[11px] font-medium text-zinc-500">Production-day coffee</span>
             </span>
@@ -42,7 +42,7 @@ export function PublicInfoPage({
             Support
           </Link>
           <Link href="/" className="inline-flex min-h-11 items-center underline underline-offset-4">
-            Capture This Coffee
+            Capture This
           </Link>
         </footer>
       </article>

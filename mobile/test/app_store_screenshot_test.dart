@@ -4,14 +4,17 @@ import 'package:ctc_printer/auth_repository.dart';
 import 'package:ctc_printer/authenticated_workspace_cache.dart';
 import 'package:ctc_printer/board_cache.dart';
 import 'package:ctc_printer/main.dart';
+import 'package:ctc_printer/label_template.dart';
 import 'package:ctc_printer/print_recovery.dart';
 import 'package:ctc_printer/production_board.dart';
 import 'package:ctc_printer/screens/about_screen.dart';
 import 'package:ctc_printer/screens/home_screen.dart';
+import 'package:ctc_printer/screens/summary_screen.dart';
 import 'package:ctc_printer/session_store.dart';
 import 'package:ctc_printer/supabase_config.dart';
 import 'package:ctc_printer/workspace_models.dart';
 import 'package:ctc_printer/workspace_repository.dart';
+import 'package:ctc_printer/widgets/label_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -192,6 +195,40 @@ final _board = boardFixture(
   ],
 );
 
+final _summaryBoard = boardFixture(
+  productionId: _productionId,
+  name: 'Fictional Studio Launch',
+  status: 'active',
+  clientName: 'Northstar Picture House',
+  roster: [
+    boardEntry(
+      orderId: 'summary-avery',
+      personName: 'Avery Stone',
+      drink: 'Iced oat latte',
+      group: 'Camera',
+      labelPrinted: true,
+    ),
+    boardEntry(
+      orderId: 'summary-morgan',
+      personName: 'Morgan Reed',
+      drink: 'Iced oat latte',
+      group: 'Art',
+      labelPrinted: true,
+      sortOrder: 1,
+    ),
+    boardEntry(
+      orderId: 'summary-riley',
+      personName: 'Riley North',
+      drink: '',
+      group: 'Set',
+      status: 'no_order',
+      sortOrder: 2,
+    ),
+  ],
+);
+
+late ProductionBoard _templateBoard;
+
 final _conflictedOrder = _board.orderById('order-cameron')!;
 
 OrderMutationRecord _conflictRecord() => OrderMutationRecord(
@@ -252,10 +289,12 @@ PrinterApp _authenticatedApp({
   bool selected = true,
   bool offline = false,
   List<OrderMutationRecord> mutations = const [],
+  ProductionBoard? board,
 }) {
+  final selectedBoard = board ?? _board;
   final repository = MemoryWorkspaceRepository(
     days: _days,
-    boards: {_productionId: _board},
+    boards: {_productionId: selectedBoard},
     fetchDaysFailure: offline
         ? const WorkspaceRepositoryException(
             'Could not reach the workspace.',
@@ -276,7 +315,7 @@ PrinterApp _authenticatedApp({
               userId: _user.userId,
               productionId: _productionId,
               syncedAt: DateTime.now().subtract(const Duration(minutes: 42)),
-              board: _board,
+              board: selectedBoard,
             ),
           ]
         : const [],
@@ -331,7 +370,35 @@ Future<void> _capture(
 }
 
 Future<void> _openHomeRoute(WidgetTester tester, Key key) async {
-  await tester.tap(find.byKey(key));
+  final target = find.byKey(key);
+  await tester.scrollUntilVisible(
+    target,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+}
+
+Future<void> _openPrintDeck(WidgetTester tester) async {
+  await _openHomeRoute(tester, printEntryKey);
+  final previewImage = find.descendant(
+    of: find.byType(LabelPreview),
+    matching: find.byType(RawImage),
+  );
+  for (var attempt = 0;
+      attempt < 50 && previewImage.evaluate().isEmpty;
+      attempt += 1) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+  expect(
+    previewImage,
+    findsOneWidget,
+    reason: 'The App Store print screenshot must show the rendered label.',
+  );
 }
 
 Future<void> _openAbout(WidgetTester tester) async {
@@ -339,11 +406,28 @@ Future<void> _openAbout(WidgetTester tester) async {
   navigator.pushNamed(AboutScreen.route);
 }
 
+Future<void> _openSummary(WidgetTester tester) async {
+  final navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
+  navigator.pushNamed(SummaryScreen.route);
+}
+
+Future<void> _showTemplateControls(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byKey(templateEntryKey),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late GoldenFileComparator previousGoldenFileComparator;
   setUpAll(() async {
     await _loadScreenshotFonts();
+    _templateBoard = _board.withLabelTemplate(
+      (await BundledLabelTemplates.defaultVersion())
+          .withResolution(LabelTemplateResolution.current),
+    );
     previousGoldenFileComparator = goldenFileComparator;
     goldenFileComparator = _AppStoreGoldenComparator(
       Uri.parse('test/app_store_screenshot_test.dart'),
@@ -391,7 +475,7 @@ void main() {
       tester,
       app: _authenticatedApp(offline: true),
       golden: '04-individual-print-deck.png',
-      navigate: (tester) => _openHomeRoute(tester, printEntryKey),
+      navigate: _openPrintDeck,
     ),
     tags: 'golden',
   );
@@ -431,6 +515,28 @@ void main() {
       app: _authenticatedApp(),
       golden: '07-about-release.png',
       navigate: _openAbout,
+    ),
+    tags: 'golden',
+  );
+
+  testWidgets(
+    'App Store screenshot — grouped summary and guarded closeout',
+    (tester) => _capture(
+      tester,
+      app: _authenticatedApp(board: _summaryBoard),
+      golden: '08-summary-closeout.png',
+      navigate: _openSummary,
+    ),
+    tags: 'golden',
+  );
+
+  testWidgets(
+    'App Store screenshot — published template and safe test label',
+    (tester) => _capture(
+      tester,
+      app: _authenticatedApp(board: _templateBoard),
+      golden: '09-template-test-label.png',
+      navigate: _showTemplateControls,
     ),
     tags: 'golden',
   );

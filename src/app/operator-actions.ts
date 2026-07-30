@@ -39,6 +39,15 @@ import {
   updateProduction,
 } from "@/server/operator/productions";
 import {
+  assignLabelTemplateToProduction,
+  createLabelTemplateDraft,
+  duplicateLabelTemplateDraft,
+  publishLabelTemplateVersion,
+  setDefaultLabelTemplateVersion,
+  updateLabelTemplateDraft,
+  type LabelTemplateDraftInput,
+} from "@/server/operator/label-templates";
+import {
   addRosterPerson,
   createPersonAndAddToRoster,
   removeRoster,
@@ -251,4 +260,79 @@ export async function mintProductionShareTokenAction(
     () => mintProductionShareToken(productionId, label),
     "Could not create share link.",
   );
+}
+
+export async function createLabelTemplateDraftAction(
+  input: LabelTemplateDraftInput,
+): Promise<OperatorActionResult<{ id: string }>> {
+  return actionResult(async () => {
+    const result = await createLabelTemplateDraft(input);
+    revalidatePath("/labels");
+    revalidatePath("/labels/templates");
+    return result;
+  }, "Could not create template draft.");
+}
+
+export async function duplicateLabelTemplateDraftAction(
+  versionId: string,
+): Promise<OperatorActionResult<{ id: string }>> {
+  return actionResult(async () => {
+    const result = await duplicateLabelTemplateDraft(versionId);
+    revalidatePath("/labels/templates");
+    return result;
+  }, "Could not duplicate template.");
+}
+
+export async function updateLabelTemplateDraftAction(
+  versionId: string,
+  input: Omit<LabelTemplateDraftInput, "slug">,
+): Promise<OperatorActionResult<{ id: string }>> {
+  return actionResult(async () => {
+    const result = await updateLabelTemplateDraft(versionId, input);
+    revalidatePath("/labels");
+    revalidatePath("/labels/templates");
+    return result;
+  }, "Could not save template draft.");
+}
+
+export async function publishLabelTemplateVersionAction(
+  versionId: string,
+): Promise<OperatorActionResult<{ id: string }>> {
+  return actionResult(async () => {
+    const result = await publishLabelTemplateVersion(versionId);
+    revalidatePath("/labels");
+    revalidatePath("/labels/templates");
+    return result;
+  }, "Could not publish template.");
+}
+
+export async function setDefaultLabelTemplateVersionAction(
+  versionId: string,
+): Promise<OperatorActionResult<{ id: string }>> {
+  return actionResult(async () => {
+    const result = await setDefaultLabelTemplateVersion(versionId);
+    revalidatePath("/labels");
+    revalidatePath("/labels/templates");
+    revalidatePath("/productions");
+    return result;
+  }, "Could not set the default template.");
+}
+
+export async function assignLabelTemplateToProductionAction(
+  productionId: string,
+  versionId: string,
+): Promise<
+  OperatorActionResult<{ productionId: string; versionId: string }>
+> {
+  return actionResult(async () => {
+    const result = await assignLabelTemplateToProduction(
+      productionId,
+      versionId,
+    );
+    revalidatePath("/labels");
+    revalidatePath("/labels/templates");
+    revalidatePath("/productions");
+    revalidatePath(`/productions/${productionId}`);
+    return result;
+  }, "Could not assign the production template.");
 }

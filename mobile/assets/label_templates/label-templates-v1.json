@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "pixelWidth": 591,
+  "pixelHeight": 354,
+  "templates": [
+    {
+      "id": "grid-01",
+      "name": "Grid 01",
+      "summary": "Asymmetric Swiss hierarchy with a strict baseline.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "rect", "x": 0, "y": 0, "width": 34, "height": 354, "fill": "#000000" },
+          { "type": "text", "x": 8, "y": 306, "width": 18, "height": 28, "segments": [{ "literal": "01" }], "fontFamily": "Arial", "fontSize": 18, "minFontSize": 12, "fontWeight": "bold", "color": "#ffffff", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 19, "rotation": -90 },
+          { "type": "text", "x": 62, "y": 27, "width": 340, "height": 18, "segments": [{ "literal": "CAPTURE THIS COFFEE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 27, "width": 143, "height": 18, "segments": [{ "literal": "NO. " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "line", "x1": 62, "y1": 57, "x2": 563, "y2": 57, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 62, "y": 76, "width": 80, "height": 20, "segments": [{ "literal": "FOR" }], "fontFamily": "Arial", "fontSize": 16, "minFontSize": 10, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 17 },
+          { "type": "text", "x": 62, "y": 98, "width": 501, "height": 110, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 92, "minFontSize": 29, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 92 },
+          { "type": "text", "x": 62, "y": 223, "width": 501, "height": 62, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 28, "minFontSize": 18, "fontWeight": "bold", "color": "#000000", "align": "left", "maxLines": 2, "lineHeight": 29 },
+          { "type": "line", "x1": 62, "y1": 293, "x2": 563, "y2": 293, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 62, "y": 313, "width": 340, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 313, "width": 143, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "grid-02",
+      "name": "Grid 02",
+      "summary": "A quieter modular composition with more air.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "rect", "x": 0, "y": 0, "width": 104, "height": 354, "fill": "#000000" },
+          { "type": "text", "x": 19, "y": 253, "width": 70, "height": 72, "segments": [{ "literal": "02" }], "fontFamily": "Arial", "fontSize": 72, "minFontSize": 42, "fontWeight": "bold", "color": "#ffffff", "align": "left", "maxLines": 1, "lineHeight": 72 },
+          { "type": "text", "x": 62, "y": 37, "width": 220, "height": 18, "segments": [{ "literal": "COFFEE SERVICE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 9, "fontWeight": "bold", "color": "#ffffff", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15, "rotation": 90 },
+          { "type": "text", "x": 132, "y": 27, "width": 250, "height": 18, "segments": [{ "literal": "CTC / GRID" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 400, "y": 27, "width": 162, "height": 18, "segments": [{ "literal": "ORDER " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "line", "x1": 132, "y1": 57, "x2": 562, "y2": 57, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 132, "y": 87, "width": 430, "height": 110, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 82, "minFontSize": 27, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 82 },
+          { "type": "text", "x": 132, "y": 216, "width": 430, "height": 62, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 27, "minFontSize": 17, "fontWeight": "bold", "color": "#000000", "align": "left", "maxLines": 2, "lineHeight": 29 },
+          { "type": "line", "x1": 132, "y1": 292, "x2": 562, "y2": 292, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 132, "y": 312, "width": 280, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 312, "width": 142, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "instrument",
+      "name": "Instrument",
+      "summary": "German industrial labeling, reduced to essentials.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "text", "x": 29, "y": 26, "width": 350, "height": 18, "segments": [{ "literal": "CTC / COFFEE SERVICE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 26, "width": 142, "height": 18, "segments": [{ "literal": "SYSTEM 03" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "line", "x1": 29, "y1": 56, "x2": 562, "y2": 56, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 29, "y": 76, "width": 180, "height": 18, "segments": [{ "literal": "01 / PERSON" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 29, "y": 100, "width": 384, "height": 70, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 58, "minFontSize": 27, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 58 },
+          { "type": "text", "x": 29, "y": 183, "width": 180, "height": 18, "segments": [{ "literal": "02 / ORDER" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 29, "y": 207, "width": 384, "height": 60, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 27, "minFontSize": 17, "fontWeight": "bold", "color": "#000000", "align": "left", "maxLines": 2, "lineHeight": 29 },
+          { "type": "circle", "cx": 499, "cy": 164, "radius": 58, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 499, "y1": 90, "x2": 499, "y2": 106, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 452, "y": 138, "width": 94, "height": 18, "segments": [{ "literal": "03" }], "fontFamily": "Arial", "fontSize": 13, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "center", "maxLines": 1, "lineHeight": 14 },
+          { "type": "text", "x": 452, "y": 157, "width": 94, "height": 40, "segments": [{ "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 34, "minFontSize": 16, "fontWeight": "bold", "color": "#000000", "align": "center", "maxLines": 1, "lineHeight": 35 },
+          { "type": "line", "x1": 29, "y1": 293, "x2": 562, "y2": 293, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 29, "y": 313, "width": 360, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 313, "width": 142, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "contact",
+      "name": "Contact",
+      "summary": "Fashion contact-sheet language with frame metadata.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "line", "x1": 19, "y1": 19, "x2": 39, "y2": 19, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 19, "y1": 19, "x2": 19, "y2": 39, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 572, "y1": 19, "x2": 552, "y2": 19, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 572, "y1": 19, "x2": 572, "y2": 39, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 19, "y1": 335, "x2": 39, "y2": 335, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 19, "y1": 335, "x2": 19, "y2": 315, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 572, "y1": 335, "x2": 552, "y2": 335, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "line", "x1": 572, "y1": 335, "x2": 572, "y2": 315, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "text", "x": 45, "y": 32, "width": 280, "height": 18, "segments": [{ "literal": "FRAME " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 400, "y": 32, "width": 148, "height": 18, "segments": [{ "literal": "CTC / 50X30" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "line", "x1": 45, "y1": 62, "x2": 548, "y2": 62, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 45, "y": 90, "width": 445, "height": 112, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 86, "minFontSize": 27, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 86 },
+          { "type": "text", "x": 45, "y": 218, "width": 445, "height": 62, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 27, "minFontSize": 17, "fontWeight": "bold", "color": "#000000", "align": "left", "maxLines": 2, "lineHeight": 29 },
+          { "type": "text", "x": 45, "y": 303, "width": 330, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 402, "y": 303, "width": 146, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 510, "y": 168, "width": 74, "height": 18, "segments": [{ "literal": "CONTACT" }], "fontFamily": "Arial", "fontSize": 13, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "center", "uppercase": true, "maxLines": 1, "lineHeight": 14, "rotation": -90 }
+        ]
+      }
+    },
+    {
+      "id": "caption",
+      "name": "Caption",
+      "summary": "Editorial restraint with gallery-label precision.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "text", "x": 34, "y": 28, "width": 350, "height": 18, "segments": [{ "literal": "CAPTURE THIS COFFEE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 28, "width": 137, "height": 18, "segments": [{ "literal": "NO. " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 34, "y": 102, "width": 150, "height": 18, "segments": [{ "literal": "COFFEE FOR" }], "fontFamily": "Arial", "fontSize": 15, "minFontSize": 9, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 16 },
+          { "type": "text", "x": 34, "y": 132, "width": 523, "height": 105, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 78, "minFontSize": 26, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 78 },
+          { "type": "text", "x": 34, "y": 222, "width": 523, "height": 62, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 27, "minFontSize": 17, "fontWeight": "bold", "color": "#000000", "align": "left", "maxLines": 2, "lineHeight": 29 },
+          { "type": "line", "x1": 34, "y1": 294, "x2": 557, "y2": 294, "stroke": "#000000", "strokeWidth": 2 },
+          { "type": "text", "x": 34, "y": 313, "width": 350, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 313, "width": 137, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "block",
+      "name": "Block",
+      "summary": "A severe brutalist field built for instant recognition.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "text", "x": 27, "y": 26, "width": 350, "height": 18, "segments": [{ "literal": "CTC / SERVICE LABEL" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 26, "width": 144, "height": 18, "segments": [{ "literal": "NO. " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "rect", "x": 0, "y": 62, "width": 591, "height": 190, "fill": "#000000" },
+          { "type": "text", "x": 27, "y": 87, "width": 537, "height": 145, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 86, "minFontSize": 28, "fontWeight": "bold", "color": "#ffffff", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 86 },
+          { "type": "text", "x": 27, "y": 270, "width": 537, "height": 38, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 30, "minFontSize": 18, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 31 },
+          { "type": "text", "x": 27, "y": 321, "width": 350, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 321, "width": 144, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "halo",
+      "name": "Halo",
+      "summary": "Holographic reveal: a bold name on bare metallic with the drink in a shimmer bar.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "text", "x": 40, "y": 35, "width": 330, "height": 18, "segments": [{ "literal": "CAPTURE THIS COFFEE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 35, "width": 131, "height": 18, "segments": [{ "literal": "NO. " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 40, "y": 86, "width": 511, "height": 130, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 104, "minFontSize": 30, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 104 },
+          { "type": "rect", "x": 24, "y": 244, "width": 543, "height": 62, "fill": "#000000" },
+          { "type": "text", "x": 48, "y": 258, "width": 495, "height": 38, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 30, "minFontSize": 18, "fontWeight": "bold", "color": "#ffffff", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 31 },
+          { "type": "text", "x": 40, "y": 322, "width": 330, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 322, "width": 131, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    },
+    {
+      "id": "orbit",
+      "name": "Orbit",
+      "summary": "Y2K worldwide: a chrome wireframe globe, sparkle marks, and a drink pill.",
+      "version": 1,
+      "definition": {
+        "schemaVersion": 1,
+        "pixelWidth": 591,
+        "pixelHeight": 354,
+        "background": "#ffffff",
+        "elements": [
+          { "type": "mark", "mark": "orbitGlobe", "x": 462, "y": 36, "width": 92, "height": 92, "stroke": "#000000", "strokeWidth": 3 },
+          { "type": "mark", "mark": "sparkle4", "x": 438, "y": 35, "width": 18, "height": 18, "fill": "#000000" },
+          { "type": "mark", "mark": "sparkle4", "x": 543, "y": 126, "width": 12, "height": 12, "fill": "#000000" },
+          { "type": "text", "x": 40, "y": 37, "width": 340, "height": 18, "segments": [{ "literal": "CAPTURE THIS COFFEE" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 40, "y": 59, "width": 340, "height": 18, "segments": [{ "literal": "WORLDWIDE COFFEE SERVICE · NO. " }, { "binding": "orderNumber" }], "fontFamily": "Arial", "fontSize": 12, "minFontSize": 7, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 13 },
+          { "type": "text", "x": 40, "y": 96, "width": 511, "height": 130, "segments": [{ "binding": "personName" }], "fontFamily": "Arial", "fontSize": 96, "minFontSize": 30, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 2, "lineHeight": 96 },
+          { "type": "roundedRect", "x": 24, "y": 250, "width": 543, "height": 62, "radius": 31, "fill": "#000000" },
+          { "type": "text", "x": 58, "y": 264, "width": 475, "height": 38, "segments": [{ "binding": "drink" }], "fontFamily": "Arial", "fontSize": 30, "minFontSize": 18, "fontWeight": "bold", "color": "#ffffff", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 31 },
+          { "type": "text", "x": 40, "y": 326, "width": 330, "height": 18, "segments": [{ "binding": "productionClient" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "left", "uppercase": true, "maxLines": 1, "lineHeight": 15 },
+          { "type": "text", "x": 420, "y": 326, "width": 131, "height": 18, "segments": [{ "binding": "group" }], "fontFamily": "Arial", "fontSize": 14, "minFontSize": 8, "fontWeight": "bold", "color": "#000000", "align": "right", "uppercase": true, "maxLines": 1, "lineHeight": 15 }
+        ]
+      }
+    }
+  ]
+}

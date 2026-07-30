@@ -89,7 +89,7 @@ export function RunnerBoard({
           <CaptureMark className="size-9 rounded-full" priority />
           <div className="grid min-w-0">
             <span className="truncate text-[11px] font-medium text-zinc-500">
-              Capture This Coffee
+              Capture This
             </span>
             <span className="truncate text-sm font-semibold text-black">
               {production.name}

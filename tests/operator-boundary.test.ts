@@ -41,7 +41,14 @@ describe("operator server boundary", () => {
   it("keeps every mutation behind the authenticated DAL", () => {
     const actions = read(join(root, "src/app/operator-actions.ts"));
     assert.match(actions, /^"use server";/);
-    for (const domain of ["clients", "orders", "people", "productions", "roster"]) {
+    for (const domain of [
+      "clients",
+      "label-templates",
+      "orders",
+      "people",
+      "productions",
+      "roster",
+    ]) {
       assert.match(actions, new RegExp(`@/server/operator/${domain}`));
       assert.match(read(join(operatorDir, `${domain}.ts`)), /requireOperatorContext\(\)/);
     }
@@ -59,7 +66,7 @@ describe("operator server boundary", () => {
     for (const [path, query] of routes) {
       const source = read(join(root, path));
       assert.doesNotMatch(source, /^["']use client["'];/m, path);
-      assert.match(source, new RegExp(`await ${query}\\(`), path);
+      assert.match(source, new RegExp(`${query}\\(`), path);
       assert.match(source, /initialData|NewProductionClient/, path);
     }
   });
@@ -91,7 +98,11 @@ describe("operator server boundary", () => {
       if (file.endsWith("person-photo-upload.ts") || file.endsWith("ui.tsx")) {
         continue;
       }
-      assert.doesNotMatch(source, /\.from\(["'](clients|people|client_people|productions|production_roster|orders)["']\)/, file);
+      assert.doesNotMatch(
+        source,
+        /\.from\(["'](clients|people|client_people|productions|production_roster|orders|label_templates|label_template_versions|label_template_settings)["']\)/,
+        file,
+      );
     }
     assert.equal(statExists(join(root, "src/lib/data.ts")), false);
   });

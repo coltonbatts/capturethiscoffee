@@ -132,6 +132,9 @@ export type Database = {
           runner_name: string | null;
           notes: string | null;
           status: ProductionStatus;
+          label_template_version_id: string | null;
+          completed_at: string | null;
+          completed_by: string | null;
           created_at: string;
         };
         Insert: {
@@ -143,6 +146,9 @@ export type Database = {
           runner_name?: string | null;
           notes?: string | null;
           status?: ProductionStatus;
+          label_template_version_id?: string | null;
+          completed_at?: string | null;
+          completed_by?: string | null;
           created_at?: string;
         };
         Update: {
@@ -154,6 +160,9 @@ export type Database = {
           runner_name?: string | null;
           notes?: string | null;
           status?: ProductionStatus;
+          label_template_version_id?: string | null;
+          completed_at?: string | null;
+          completed_by?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -165,6 +174,108 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      label_templates: {
+        Row: {
+          id: string;
+          slug: string;
+          display_name: string;
+          description: string | null;
+          created_at: string;
+          created_by: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          display_name: string;
+          description?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          display_name?: string;
+          description?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      label_template_versions: {
+        Row: {
+          id: string;
+          template_id: string;
+          version: number;
+          status: "draft" | "published";
+          definition: Json;
+          definition_checksum: string;
+          changelog: string | null;
+          created_at: string;
+          created_by: string | null;
+          updated_at: string;
+          updated_by: string | null;
+          published_at: string | null;
+          published_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          version: number;
+          status?: "draft" | "published";
+          definition: Json;
+          definition_checksum: string;
+          changelog?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          published_at?: string | null;
+          published_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          version?: number;
+          status?: "draft" | "published";
+          definition?: Json;
+          definition_checksum?: string;
+          changelog?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          published_at?: string | null;
+          published_by?: string | null;
+        };
+        Relationships: [];
+      };
+      label_template_settings: {
+        Row: {
+          id: number;
+          default_version_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: number;
+          default_version_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: number;
+          default_version_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
       };
       production_share_tokens: {
         Row: {
@@ -338,6 +449,43 @@ export type Database = {
           p_label?: string | null;
         };
         Returns: string;
+      };
+      create_label_template_draft: {
+        Args: {
+          p_template_id?: string | null;
+          p_slug?: string | null;
+          p_display_name?: string | null;
+          p_description?: string | null;
+          p_definition?: Json | null;
+          p_changelog?: string | null;
+        };
+        Returns: Json;
+      };
+      update_label_template_draft: {
+        Args: {
+          p_version_id: string;
+          p_definition: Json;
+          p_display_name?: string | null;
+          p_description?: string | null;
+          p_changelog?: string | null;
+        };
+        Returns: Json;
+      };
+      publish_label_template_version: {
+        Args: { p_version_id: string };
+        Returns: Json;
+      };
+      set_default_label_template_version: {
+        Args: { p_version_id: string };
+        Returns: Json;
+      };
+      assign_label_template_to_production: {
+        Args: { p_production_id: string; p_version_id: string };
+        Returns: Json;
+      };
+      resolve_label_template_for_production: {
+        Args: { p_production_id: string };
+        Returns: Json;
       };
       fetch_day_summaries: {
         Args: Record<string, never>;

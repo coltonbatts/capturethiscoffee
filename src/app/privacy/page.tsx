@@ -5,37 +5,42 @@ import {
 } from "@/components/public-info-page";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Capture This Coffee",
+  title: "Privacy Policy | Capture This",
   description:
-    "How the Capture This Coffee web and iOS app handle accounts, production data, offline board caching, and Bluetooth printing.",
+    "How the Capture This web and iOS app handle accounts, production data, private photos and notes, offline caching, and Bluetooth printing.",
 };
 
 export default function PrivacyPage() {
   return (
     <PublicInfoPage
       title="Privacy policy"
-      summary="This policy describes the Capture This Coffee iOS app, its frozen web fallback, and the shared production service."
+      summary="This policy describes the Capture This iOS app, its authenticated web tools, and the shared production service."
     >
       <p className="text-sm font-bold text-zinc-600">
-        Effective date: July 27, 2026
+        Effective date: July 30, 2026
       </p>
 
       <PublicInfoSection title="What the service handles">
         <p>
           Invited Capture This operators sign in to access production details,
-          crew names, groups or roles, usual drinks, day-specific drink orders,
-          and label status. Every invited account in the current workspace has
-          the same operator access. Public account signup is disabled.
+          production and client details; crew names, roles, departments,
+          companies, private photos, usual drinks, dietary and general notes;
+          rosters and day-specific drink orders; label templates; printed
+          status; and closeout status. Every invited account in the current
+          workspace has the same operator access. Public account signup is
+          disabled.
         </p>
         <p>
           The current iOS app requests the existing days and the selected
-          day&apos;s production, client name, on-set roster, crew names, roles,
-          departments, usual drinks, drink orders, and printed status directly
-          from the shared service. An operator can collect or edit day-specific
-          drink details, mark no-drink, and optionally update a usual drink.
-          Those changes are sent to the shared service under the signed-in
-          account. The current iOS day board does not request private person
-          notes or dietary notes.
+          day&apos;s production, client, on-set roster, crew names, roles,
+          departments, private photo references, usual drinks, drink orders,
+          printed status, and assigned label-template definition directly from
+          the shared service. Its online preparation tools can also view or
+          edit company, private photo, dietary-note, and general-note fields.
+          An operator can collect or edit day-specific drink details, mark
+          no-drink, optionally update a usual drink, prepare people and rosters,
+          and complete an eligible Active day. Those changes are sent to the
+          shared service under the signed-in account.
         </p>
         <p>
           A fallback production share link contains a secret token that grants
@@ -48,9 +53,11 @@ export default function PrivacyPage() {
         <p>
           Production information is used only to operate the coffee-order and
           label-printing workflow: loading a day, collecting or editing its
-          orders, rendering a label, printing one label at a time, resolving
-          conflicts, replaying offline work, and synchronizing successful print
-          status back to the hosted service.
+          orders, preparing people and rosters, synchronizing a published label
+          template, rendering and printing one label at a time, resolving
+          conflicts, replaying offline work, building a shareable day summary,
+          completing an eligible day, and synchronizing successful print status
+          back to the hosted service.
         </p>
         <p>
           The iOS app communicates directly with Supabase over HTTPS for
@@ -69,8 +76,9 @@ export default function PrivacyPage() {
           without a signal, it stores the selected-day pointer and a limited
           number of recent production boards in app-sandboxed local
           preferences, separated by account and production. Those cached boards
-          can include production details, crew names, roles, usual drinks,
-          day-specific drink orders, and printed status.
+          can include production details, crew names, roles, private photo
+          references, usual drinks, day-specific drink orders, printed status,
+          and the validated published template assigned to that day.
         </p>
         <p>
           Signing out removes the active board from the app interface and
@@ -86,8 +94,10 @@ export default function PrivacyPage() {
         <p>
           Production, account, and order records remain in the hosted service
           for operational and production-record purposes until an authorized
-          Capture This operator deletes them or a deletion request is handled.
-          Share tokens may expire or be revoked without deleting the
+          Capture This operator deletes eligible records or a deletion request
+          is handled. Complete production history and immutable published
+          template versions may be retained when needed for operational
+          integrity. Share tokens may expire or be revoked without deleting the
           underlying production record.
         </p>
       </PublicInfoSection>
@@ -95,10 +105,9 @@ export default function PrivacyPage() {
       <PublicInfoSection title="Service providers">
         <p>
           Capture This uses Supabase for hosted authentication, database, and
-          storage services, and Vercel to host and deliver the frozen web app
-          and fallback API.
-          These providers process information only as needed to provide their
-          infrastructure services to Capture This.
+          storage services, and Vercel to host and deliver the authenticated web
+          app and fallback API. These providers process information as part of
+          delivering and securing those hosted services.
         </p>
       </PublicInfoSection>
 

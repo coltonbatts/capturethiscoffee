@@ -1,352 +1,335 @@
 import m2Preset from "@/lib/niimbot-m2-preset.json";
 import type { CoffeeLabel } from "@/lib/label-copy";
-import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
+import {
+  defaultLabelDesignId,
+  resolveLabelTemplateDefinition,
+} from "@/lib/label-template-catalog";
+import type {
+  LabelBinding,
+  LabelMarkElement,
+  LabelTemplateDefinition,
+  LabelTemplateElement,
+  LabelTextElement,
+} from "@/lib/label-template-schema";
+import type { LabelDesignId } from "@/lib/label-designs";
 
 export const niimbotM2ExportPreset = m2Preset;
 
 type CanvasContext = CanvasRenderingContext2D;
+export type LabelTemplateSelection =
+  | LabelDesignId
+  | LabelTemplateDefinition;
 
-/** Six typographic compositions for 50x30mm, 300 DPI, 1-bit thermal output. */
+/** Draws both screen proofs and print PNGs through the same declarative interpreter. */
 export function drawNiimbotM2Label(
   ctx: CanvasContext,
   label: CoffeeLabel,
-  designId: LabelDesignId = defaultLabelDesignId,
+  selection: LabelTemplateSelection = defaultLabelDesignId,
 ) {
-  switch (designId) {
-    case "grid-02":
-      drawGrid02(ctx, label);
-      return;
-    case "instrument":
-      drawInstrument(ctx, label);
-      return;
-    case "contact":
-      drawContact(ctx, label);
-      return;
-    case "caption":
-      drawCaption(ctx, label);
-      return;
-    case "block":
-      drawBlock(ctx, label);
-      return;
-    case "halo":
-      drawHalo(ctx, label);
-      return;
-    case "orbit":
-      drawOrbit(ctx, label);
-      return;
-    default:
-      drawGrid01(ctx, label);
+  drawLabelTemplate(
+    ctx,
+    resolveLabelTemplateDefinition(selection),
+    labelBindingsFromCoffeeLabel(label),
+  );
+}
+
+export function drawLabelTemplate(
+  ctx: CanvasContext,
+  definition: LabelTemplateDefinition,
+  bindings: Partial<Record<LabelBinding, string>>,
+) {
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, definition.pixelWidth, definition.pixelHeight);
+  ctx.fillStyle = definition.background;
+  ctx.fillRect(0, 0, definition.pixelWidth, definition.pixelHeight);
+  ctx.setLineDash([]);
+
+  for (const element of definition.elements) {
+    drawElement(ctx, element, bindings);
   }
 }
 
-/** Swiss grid: asymmetric index rail and a strong left-aligned hierarchy. */
-function drawGrid01(ctx: CanvasContext, label: CoffeeLabel) {
-  const { pixelHeight } = niimbotM2ExportPreset;
-  const left = 62;
-  const right = 563;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, 34, pixelHeight);
-  drawRotatedRailText(ctx, "01", 23, pixelHeight - 24, "#ffffff");
-
-  drawMetaRow(ctx, "CAPTURE THIS COFFEE", `NO. ${orderNumber(label)}`, left, right, 40);
-  ctx.fillRect(left, 57, width, 2);
-
-  ctx.font = "700 16px Arial, Helvetica, sans-serif";
-  ctx.fillText("FOR", left, 94);
-  drawResponsiveName(ctx, labelName(label), left, 151, width, {
-    shortSize: 92,
-    longSize: 62,
-    longY: 139,
-    lineHeight: 57,
-    minSize: 29,
-  });
-
-  ctx.font = "700 28px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label), left, 263, width, 29, 2, 18);
-  ctx.fillRect(left, 293, width, 2);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 327);
+export function labelBindingsFromCoffeeLabel(
+  label: CoffeeLabel,
+): Record<LabelBinding, string> {
+  const productionClient =
+    label.productionClient.trim() || "Capture This Coffee";
+  return {
+    personName: (label.personName || label.title).trim(),
+    drink: (label.drink || label.bodyLines.join(" / ")).trim(),
+    productionName: productionClient,
+    clientName: "",
+    productionClient,
+    group: label.group.trim() || "On set",
+    orderNumber: label.orderId.trim().replace(/^#/, "") || "—",
+  };
 }
 
-/** Swiss grid: a wide index column and more negative space. */
-function drawGrid02(ctx: CanvasContext, label: CoffeeLabel) {
-  const { pixelHeight } = niimbotM2ExportPreset;
-  const railWidth = 104;
-  const left = 132;
-  const right = 562;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, railWidth, pixelHeight);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 72px Arial, Helvetica, sans-serif";
-  ctx.fillText("02", 19, 323);
-  ctx.font = "700 14px Arial, Helvetica, sans-serif";
-  drawRotatedRailText(ctx, "COFFEE SERVICE", 72, 35, "#ffffff", Math.PI / 2);
-
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, "CTC / GRID", `ORDER ${orderNumber(label)}`, left, right, 40);
-  ctx.fillRect(left, 57, width, 2);
-  drawResponsiveName(ctx, labelName(label), left, 157, width, {
-    shortSize: 82,
-    longSize: 56,
-    longY: 132,
-    lineHeight: 53,
-    minSize: 27,
-  });
-  ctx.font = "700 27px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label), left, 255, width, 29, 2, 17);
-  ctx.fillRect(left, 292, width, 2);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 326);
-}
-
-/** German industrial information design: numbered functions and a control dial. */
-function drawInstrument(ctx: CanvasContext, label: CoffeeLabel) {
-  const left = 29;
-  const right = 562;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, "CTC / COFFEE SERVICE", "SYSTEM 03", left, right, 39);
-  ctx.fillRect(left, 56, right - left, 2);
-
-  drawIndexLabel(ctx, "01 / PERSON", left, 91);
-  ctx.font = "900 58px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelName(label).toUpperCase(), left, 151, 384, 55, 1, 27);
-
-  drawIndexLabel(ctx, "02 / ORDER", left, 199);
-  ctx.font = "700 27px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label), left, 238, 384, 29, 2, 17);
-
-  const dialX = 499;
-  const dialY = 164;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(dialX, dialY, 58, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillRect(dialX - 1, 90, 2, 16);
-  ctx.font = "700 13px Arial, Helvetica, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("03", dialX, dialY - 12);
-  ctx.font = "900 34px Arial, Helvetica, sans-serif";
-  drawEllipsisText(ctx, orderNumber(label), dialX, dialY + 25, 94);
-  ctx.textAlign = "start";
-
-  ctx.fillRect(left, 293, right - left, 2);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 327);
-}
-
-/** Fashion contact sheet: crop marks, frame data, and an editorial name block. */
-function drawContact(ctx: CanvasContext, label: CoffeeLabel) {
-  const left = 45;
-  const right = 548;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 3;
-  drawCropMarks(ctx, 19, 19, 553, 316);
-  drawMetaRow(ctx, `FRAME ${orderNumber(label)}`, "CTC / 50X30", left, right, 45);
-  ctx.fillRect(left, 62, width, 2);
-
-  drawResponsiveName(ctx, labelName(label), left, 162, 445, {
-    shortSize: 86,
-    longSize: 59,
-    longY: 135,
-    lineHeight: 55,
-    minSize: 27,
-  });
-  ctx.font = "700 27px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label), left, 260, 445, 29, 2, 17);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 316);
-
+function drawElement(
+  ctx: CanvasContext,
+  element: LabelTemplateElement,
+  bindings: Partial<Record<LabelBinding, string>>,
+) {
   ctx.save();
-  ctx.translate(566, 177);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = "center";
-  ctx.font = "700 13px Arial, Helvetica, sans-serif";
-  ctx.fillText("CONTACT", 0, 0);
+  applyRotation(ctx, element);
+  switch (element.type) {
+    case "text":
+      drawText(ctx, element, bindings);
+      break;
+    case "line":
+      ctx.beginPath();
+      ctx.strokeStyle = element.stroke;
+      ctx.lineWidth = element.strokeWidth;
+      ctx.moveTo(element.x1, element.y1);
+      ctx.lineTo(element.x2, element.y2);
+      ctx.stroke();
+      break;
+    case "rect":
+      drawPaintedPath(
+        ctx,
+        element,
+        () => ctx.rect(element.x, element.y, element.width, element.height),
+      );
+      break;
+    case "roundedRect":
+      drawPaintedPath(ctx, element, () => {
+        roundedRectPath(
+          ctx,
+          element.x,
+          element.y,
+          element.width,
+          element.height,
+          element.radius || 0,
+        );
+      });
+      break;
+    case "circle":
+      drawPaintedPath(ctx, element, () => {
+        ctx.arc(element.cx, element.cy, element.radius, 0, Math.PI * 2);
+      });
+      break;
+    case "ellipse":
+      drawPaintedPath(ctx, element, () => {
+        ctx.ellipse(
+          element.cx,
+          element.cy,
+          element.radiusX,
+          element.radiusY,
+          0,
+          0,
+          Math.PI * 2,
+        );
+      });
+      break;
+    case "mark":
+      drawMark(ctx, element);
+      break;
+  }
   ctx.restore();
 }
 
-/** Editorial caption: generous white space and gallery-label precision. */
-function drawCaption(ctx: CanvasContext, label: CoffeeLabel) {
-  const left = 34;
-  const right = 557;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, "CAPTURE THIS COFFEE", `NO. ${orderNumber(label)}`, left, right, 41);
-
-  ctx.font = "700 15px Arial, Helvetica, sans-serif";
-  ctx.fillText("COFFEE FOR", left, 118);
-  drawResponsiveName(ctx, labelName(label), left, 199, width, {
-    shortSize: 78,
-    longSize: 54,
-    longY: 177,
-    lineHeight: 50,
-    minSize: 26,
-  });
-  ctx.font = "700 27px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label), left, 263, width, 29, 2, 17);
-  ctx.fillRect(left, 294, width, 2);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 327);
-}
-
-/** Brutalist field: raw scale, hard contrast, no decoration. */
-function drawBlock(ctx: CanvasContext, label: CoffeeLabel) {
-  const { pixelWidth } = niimbotM2ExportPreset;
-  const left = 27;
-  const right = pixelWidth - 27;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, "CTC / SERVICE LABEL", `NO. ${orderNumber(label)}`, left, right, 39);
-  ctx.fillRect(0, 62, pixelWidth, 190);
-
-  ctx.fillStyle = "#ffffff";
-  const name = labelName(label).toUpperCase();
-  const longName = name.length > 18;
-  ctx.font = `900 ${longName ? 58 : 86}px Arial, Helvetica, sans-serif`;
-  drawFittedWrappedText(ctx, name, left, longName ? 145 : 176, width, longName ? 55 : 86, longName ? 2 : 1, 28);
-
-  ctx.fillStyle = "#000000";
-  ctx.font = "900 30px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), left, 301, width, 31, 1, 18);
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 335);
-}
-
-/**
- * Holographic reveal: tuned for metallic/holo thermal stock, where the printer
- * lays down black and every unprinted pixel shows the shine. Ink is kept to a
- * bold black name on bare stock plus a single matte-black drink bar with
- * shimmering knockout text — the one hard-contrast anchor on the label.
- */
-function drawHalo(ctx: CanvasContext, label: CoffeeLabel) {
-  const { pixelWidth } = niimbotM2ExportPreset;
-  const left = 40;
-  const right = pixelWidth - 40;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-
-  // Minimal top meta so the metallic reads as the field, not a printed panel.
-  drawMetaRow(ctx, "CAPTURE THIS COFFEE", `NO. ${orderNumber(label)}`, left, right, 48);
-
-  // Hero name: crisp black letters floating on bare holographic stock.
-  drawResponsiveName(ctx, labelName(label), left, 192, width, {
-    shortSize: 104,
-    longSize: 66,
-    longY: 164,
-    lineHeight: 60,
-    minSize: 30,
-  });
-
-  // Drink: the single contrast anchor — matte black bar, shimmering knockout.
-  const barTop = 244;
-  const barHeight = 62;
-  ctx.fillRect(24, barTop, pixelWidth - 48, barHeight);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 30px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), 48, barTop + 42, width - 16, 31, 1, 18);
-
-  // Bottom meta on bare stock.
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 336);
-}
-
-/**
- * Y2K "worldwide" moment: same holo-forward restraint as Halo, plus a chrome
- * wireframe globe, sparkle marks, and a lozenge/pill drink bar. On metallic
- * stock the thin globe lines read as chrome with the shine coming through.
- */
-function drawOrbit(ctx: CanvasContext, label: CoffeeLabel) {
-  const { pixelWidth } = niimbotM2ExportPreset;
-  const left = 40;
-  const right = pixelWidth - 40;
-  const width = right - left;
-
-  resetCanvas(ctx);
-  ctx.fillStyle = "#000000";
-
-  // Chrome wireframe globe, top-right, with a couple of sparkle marks.
-  drawWireframeGlobe(ctx, 508, 82, 46, 3);
-  drawSparkle(ctx, 447, 44, 9);
-  drawSparkle(ctx, 549, 132, 6);
-
-  // Top label + worldwide kicker carrying the order number.
-  ctx.font = "700 14px Arial, Helvetica, sans-serif";
-  ctx.textAlign = "start";
-  ctx.fillText("CAPTURE THIS COFFEE", left, 50);
-  ctx.font = "700 12px Arial, Helvetica, sans-serif";
-  drawEllipsisText(
-    ctx,
-    `WORLDWIDE COFFEE SERVICE  ·  NO. ${orderNumber(label)}`,
-    left,
-    72,
-    340,
-  );
-
-  // Hero name on bare stock.
-  drawResponsiveName(ctx, labelName(label), left, 202, width, {
-    shortSize: 96,
-    longSize: 62,
-    longY: 180,
-    lineHeight: 56,
-    minSize: 30,
-  });
-
-  // Drink in a Y2K pill — matte black, shimmering knockout text.
-  const barTop = 250;
-  const barHeight = 62;
-  drawRoundedRect(ctx, 24, barTop, pixelWidth - 48, barHeight, barHeight / 2);
-  ctx.fill();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 30px Arial, Helvetica, sans-serif";
-  drawFittedWrappedText(ctx, labelDrink(label).toUpperCase(), 58, barTop + 42, width - 44, 31, 1, 18);
-
-  ctx.fillStyle = "#000000";
-  drawMetaRow(ctx, labelProduction(label), label.group || "ON SET", left, right, 340);
-}
-
-/** Line-art globe (outline, curved meridians, latitude lines) for 1-bit output. */
-function drawWireframeGlobe(
+function drawText(
   ctx: CanvasContext,
-  cx: number,
-  cy: number,
-  r: number,
-  lineWidth: number,
+  element: LabelTextElement,
+  bindings: Partial<Record<LabelBinding, string>>,
 ) {
-  ctx.save();
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = lineWidth;
+  const rawValue = element.segments
+    .map((segment) =>
+      "literal" in segment ? segment.literal : bindings[segment.binding] || "",
+    )
+    .join("");
+  const value = element.uppercase ? rawValue.toUpperCase() : rawValue;
+  if (!value) return;
 
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
+  const layout = fitLabelTemplateText(ctx, element, value);
+  const { fontSize, lineHeight, lines } = layout;
+  setFont(ctx, element, fontSize);
+  ctx.fillStyle = element.color;
+  ctx.textAlign =
+    element.align === "left"
+      ? "start"
+      : element.align === "right"
+        ? "end"
+        : "center";
+  ctx.textBaseline = "top";
+  const textX =
+    element.align === "left"
+      ? element.x
+      : element.align === "right"
+        ? element.x + element.width
+        : element.x + element.width / 2;
+  lines.forEach((line, index) => {
+    ctx.fillText(line, textX, element.y + index * lineHeight);
+  });
+}
 
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - r);
-  ctx.lineTo(cx, cy + r);
-  ctx.stroke();
-
-  for (const rx of [r * 0.34, r * 0.7]) {
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, r, 0, 0, Math.PI * 2);
-    ctx.stroke();
+export function fitLabelTemplateText(
+  ctx: CanvasContext,
+  element: LabelTextElement,
+  value: string,
+) {
+  let fontSize = element.fontSize;
+  let lines: string[] = [];
+  let lineHeight = element.lineHeight;
+  const oneLineFloor = Math.max(
+    element.minFontSize,
+    Math.ceil(element.fontSize * 0.6),
+  );
+  let oneLineSize = element.fontSize;
+  while (oneLineSize >= oneLineFloor) {
+    setFont(ctx, element, oneLineSize);
+    if (
+      oneLineSize <= element.height &&
+      ctx.measureText(value).width <= element.width
+    ) {
+      fontSize = oneLineSize;
+      lineHeight = element.lineHeight * (fontSize / element.fontSize);
+      lines = [value];
+      break;
+    }
+    oneLineSize -= 1;
   }
 
-  for (const f of [0, 0.45, 0.8]) {
-    const dy = r * f;
-    const halfWidth = Math.sqrt(Math.max(r * r - dy * dy, 0));
-    for (const sign of f === 0 ? [1] : [-1, 1]) {
+  if (!lines.length) {
+    while (fontSize >= element.minFontSize) {
+      setFont(ctx, element, fontSize);
+      lineHeight = element.lineHeight * (fontSize / element.fontSize);
+      lines = wrapText(ctx, value, element.width);
+      const paintedHeight =
+        fontSize + Math.max(lines.length - 1, 0) * lineHeight;
+      const fits =
+        lines.length <= element.maxLines &&
+        paintedHeight <= element.height &&
+        lines.every((line) => ctx.measureText(line).width <= element.width);
+      if (fits || fontSize === element.minFontSize) break;
+      fontSize = Math.max(element.minFontSize, fontSize - 1);
+    }
+  }
+
+  const visible = lines.slice(0, element.maxLines);
+  if (lines.length > element.maxLines && visible.length) {
+    visible[visible.length - 1] = ellipsizeToWidth(
+      ctx,
+      visible[visible.length - 1],
+      element.width,
+    );
+  } else {
+    for (let index = 0; index < visible.length; index += 1) {
+      visible[index] = ellipsizeToWidth(ctx, visible[index], element.width);
+    }
+  }
+
+  return { fontSize, lineHeight, lines: visible };
+}
+
+function setFont(
+  ctx: CanvasContext,
+  element: LabelTextElement,
+  fontSize: number,
+) {
+  const weight = element.fontWeight === "bold" ? 700 : 400;
+  ctx.font = `${weight} ${fontSize}px Arial, Helvetica, sans-serif`;
+}
+
+function wrapText(ctx: CanvasContext, value: string, width: number) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (!line || ctx.measureText(next).width <= width) {
+      line = next;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function ellipsizeToWidth(ctx: CanvasContext, value: string, width: number) {
+  if (!value || ctx.measureText(value).width <= width) return value;
+  if (ctx.measureText("…").width > width) return "";
+  let low = 0;
+  let high = value.length;
+  let best = "";
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const candidate = `${value.slice(0, middle).trimEnd()}…`;
+    if (ctx.measureText(candidate).width <= width) {
+      best = candidate;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+  return best;
+}
+
+function drawPaintedPath(
+  ctx: CanvasContext,
+  paint: {
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+  },
+  path: () => void,
+) {
+  ctx.beginPath();
+  path();
+  if (paint.fill) {
+    ctx.fillStyle = paint.fill;
+    ctx.fill();
+  }
+  if (paint.stroke) {
+    ctx.strokeStyle = paint.stroke;
+    ctx.lineWidth = paint.strokeWidth || 1;
+    ctx.stroke();
+  }
+}
+
+function drawMark(ctx: CanvasContext, mark: LabelMarkElement) {
+  if (mark.mark === "sparkle4") {
+    const cx = mark.x + mark.width / 2;
+    const cy = mark.y + mark.height / 2;
+    const halfWidth = mark.width / 2;
+    const halfHeight = mark.height / 2;
+    const innerX = halfWidth * 0.16;
+    const innerY = halfHeight * 0.16;
+    drawPaintedPath(ctx, mark, () => {
+      ctx.moveTo(cx, cy - halfHeight);
+      ctx.lineTo(cx + innerX, cy - innerY);
+      ctx.lineTo(cx + halfWidth, cy);
+      ctx.lineTo(cx + innerX, cy + innerY);
+      ctx.lineTo(cx, cy + halfHeight);
+      ctx.lineTo(cx - innerX, cy + innerY);
+      ctx.lineTo(cx - halfWidth, cy);
+      ctx.lineTo(cx - innerX, cy - innerY);
+      ctx.closePath();
+    });
+    return;
+  }
+
+  const cx = mark.x + mark.width / 2;
+  const cy = mark.y + mark.height / 2;
+  const rx = mark.width / 2;
+  const ry = mark.height / 2;
+  ctx.strokeStyle = mark.stroke || "#000000";
+  ctx.lineWidth = mark.strokeWidth || 1;
+  const strokeEllipse = (ellipseRx: number, ellipseRy: number) => {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, ellipseRx, ellipseRy, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  };
+  strokeEllipse(rx, ry);
+  strokeEllipse(rx * 0.34, ry);
+  strokeEllipse(rx * 0.7, ry);
+  for (const fraction of [0, 0.45, 0.8]) {
+    const dy = ry * fraction;
+    const halfWidth = rx * Math.sqrt(Math.max(1 - fraction * fraction, 0));
+    for (const sign of fraction === 0 ? [1] : [-1, 1]) {
       const y = cy + sign * dy;
       ctx.beginPath();
       ctx.moveTo(cx - halfWidth, y);
@@ -354,266 +337,65 @@ function drawWireframeGlobe(
       ctx.stroke();
     }
   }
-
-  ctx.restore();
 }
 
-/** Four-point Y2K sparkle. */
-function drawSparkle(ctx: CanvasContext, x: number, y: number, size: number) {
-  const inner = size * 0.16;
-  ctx.beginPath();
-  ctx.moveTo(x, y - size);
-  ctx.lineTo(x + inner, y - inner);
-  ctx.lineTo(x + size, y);
-  ctx.lineTo(x + inner, y + inner);
-  ctx.lineTo(x, y + size);
-  ctx.lineTo(x - inner, y + inner);
-  ctx.lineTo(x - size, y);
-  ctx.lineTo(x - inner, y - inner);
-  ctx.closePath();
-  ctx.fill();
+function applyRotation(ctx: CanvasContext, element: LabelTemplateElement) {
+  if (!("rotation" in element) || !element.rotation) return;
+  const bounds = rotationBounds(element);
+  if (!bounds) return;
+  const centerX = bounds.x + bounds.width / 2;
+  const centerY = bounds.y + bounds.height / 2;
+  ctx.translate(centerX, centerY);
+  ctx.rotate((element.rotation * Math.PI) / 180);
+  ctx.translate(-centerX, -centerY);
 }
 
-function drawRoundedRect(
+function rotationBounds(element: LabelTemplateElement) {
+  switch (element.type) {
+    case "text":
+    case "rect":
+    case "roundedRect":
+    case "mark":
+      return {
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+      };
+    case "circle":
+      return {
+        x: element.cx - element.radius,
+        y: element.cy - element.radius,
+        width: element.radius * 2,
+        height: element.radius * 2,
+      };
+    case "ellipse":
+      return {
+        x: element.cx - element.radiusX,
+        y: element.cy - element.radiusY,
+        width: element.radiusX * 2,
+        height: element.radiusY * 2,
+      };
+    case "line":
+      return null;
+  }
+}
+
+function roundedRectPath(
   ctx: CanvasContext,
   x: number,
   y: number,
-  w: number,
-  h: number,
-  radius: number,
-) {
-  const r = Math.min(radius, h / 2, w / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-function resetCanvas(ctx: CanvasContext) {
-  const { pixelWidth, pixelHeight } = niimbotM2ExportPreset;
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, pixelWidth, pixelHeight);
-  ctx.fillStyle = "#000000";
-  ctx.strokeStyle = "#000000";
-  ctx.textAlign = "start";
-  ctx.textBaseline = "alphabetic";
-  ctx.setLineDash([]);
-}
-
-function drawResponsiveName(
-  ctx: CanvasContext,
-  value: string,
-  x: number,
-  shortY: number,
-  maxWidth: number,
-  profile: {
-    shortSize: number;
-    longSize: number;
-    longY: number;
-    lineHeight: number;
-    minSize: number;
-  },
-) {
-  const name = value.toUpperCase();
-  const isLong = name.length > 18;
-  ctx.font = `900 ${isLong ? profile.longSize : profile.shortSize}px Arial, Helvetica, sans-serif`;
-  drawFittedWrappedText(
-    ctx,
-    name,
-    x,
-    isLong ? profile.longY : shortY,
-    maxWidth,
-    isLong ? profile.lineHeight : profile.shortSize,
-    isLong ? 2 : 1,
-    profile.minSize,
-  );
-}
-
-function drawIndexLabel(ctx: CanvasContext, value: string, x: number, y: number) {
-  ctx.font = "700 14px Arial, Helvetica, sans-serif";
-  ctx.fillText(value, x, y);
-}
-
-function drawMetaRow(
-  ctx: CanvasContext,
-  leftText: string,
-  rightText: string,
-  left: number,
-  right: number,
-  y: number,
-) {
-  const width = right - left;
-  ctx.font = "700 14px Arial, Helvetica, sans-serif";
-  ctx.textAlign = "start";
-  drawEllipsisText(ctx, leftText.toUpperCase(), left, y, width * 0.68);
-  ctx.textAlign = "right";
-  drawEllipsisText(ctx, rightText.toUpperCase(), right, y, width * 0.28);
-  ctx.textAlign = "start";
-}
-
-function drawRotatedRailText(
-  ctx: CanvasContext,
-  value: string,
-  x: number,
-  y: number,
-  color: string,
-  rotation = -Math.PI / 2,
-) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(rotation);
-  ctx.fillStyle = color;
-  ctx.font = "900 18px Arial, Helvetica, sans-serif";
-  ctx.fillText(value, 0, 0);
-  ctx.restore();
-}
-
-function drawCropMarks(
-  ctx: CanvasContext,
-  left: number,
-  top: number,
   width: number,
   height: number,
+  radius: number,
 ) {
-  const length = 20;
-  drawLine(ctx, left, top, left + length, top);
-  drawLine(ctx, left, top, left, top + length);
-  drawLine(ctx, left + width, top, left + width - length, top);
-  drawLine(ctx, left + width, top, left + width, top + length);
-  drawLine(ctx, left, top + height, left + length, top + height);
-  drawLine(ctx, left, top + height, left, top + height - length);
-  drawLine(ctx, left + width, top + height, left + width - length, top + height);
-  drawLine(ctx, left + width, top + height, left + width, top + height - length);
-}
-
-function drawLine(
-  ctx: CanvasContext,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
-}
-
-function drawFittedWrappedText(
-  ctx: CanvasContext,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  maxLines: number,
-  minFontSize: number,
-) {
-  const originalFont = ctx.font;
-  const fontSize = Number(originalFont.match(/(\d+(?:\.\d+)?)px/)?.[1] || 16);
-  let nextFontSize = fontSize;
-  let nextLineHeight = lineHeight;
-  let lines = wrappedLines(ctx, text, maxWidth, maxLines);
-
-  const overflowing = () =>
-    lines.some((line) => ctx.measureText(line).width > maxWidth) ||
-    wrappedLines(ctx, text, maxWidth, maxLines + 1).length > maxLines;
-
-  while (nextFontSize > minFontSize && overflowing()) {
-    nextFontSize -= 1;
-    nextLineHeight = Math.max(nextLineHeight - 0.8, minFontSize * 0.9);
-    ctx.font = originalFont.replace(/(\d+(?:\.\d+)?)px/, `${nextFontSize}px`);
-    lines = wrappedLines(ctx, text, maxWidth, maxLines);
-  }
-
-  const truncated = wrappedLines(ctx, text, maxWidth, maxLines + 1).length > maxLines;
-  lines.slice(0, maxLines).forEach((line, index) => {
-    const isLast = index === Math.min(lines.length, maxLines) - 1;
-    drawEllipsisText(
-      ctx,
-      truncated && isLast ? `${line}...` : line,
-      x,
-      y + index * nextLineHeight,
-      maxWidth,
-    );
-  });
-  ctx.font = originalFont;
-}
-
-function wrappedLines(
-  ctx: CanvasContext,
-  text: string,
-  maxWidth: number,
-  maxLines: number,
-) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
-
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (ctx.measureText(next).width <= maxWidth || !line) {
-      line = next;
-      continue;
-    }
-    lines.push(line);
-    line = word;
-    if (lines.length === maxLines) break;
-  }
-  if (line && lines.length < maxLines) lines.push(line);
-  return lines.slice(0, maxLines);
-}
-
-function drawEllipsisText(
-  ctx: CanvasContext,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-) {
-  const value = ellipsizeToWidth(ctx, text, maxWidth);
-  if (value) ctx.fillText(value, x, y);
-}
-
-function ellipsizeToWidth(ctx: CanvasContext, text: string, maxWidth: number) {
-  if (!text) return "";
-  if (ctx.measureText(text).width <= maxWidth) return text;
-  if (ctx.measureText("...").width > maxWidth) return "";
-
-  let low = 0;
-  let high = text.length;
-  let best = "";
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const candidate = `${text.slice(0, mid).trimEnd()}...`;
-    if (ctx.measureText(candidate).width <= maxWidth) {
-      best = candidate;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-  return best;
-}
-
-function labelName(label: CoffeeLabel) {
-  return (label.personName || label.title).trim();
-}
-
-function labelDrink(label: CoffeeLabel) {
-  return (label.drink || label.bodyLines.join(" / ")).trim();
-}
-
-function labelProduction(label: CoffeeLabel) {
-  return (label.productionClient || "Capture This Coffee").trim();
-}
-
-function orderNumber(label: CoffeeLabel) {
-  return label.orderId.trim().replace(/^#/, "") || "—";
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
 }
 
 export function safeFilePart(value: string) {

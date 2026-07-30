@@ -41,9 +41,9 @@ export async function createProduction(
     p_location: nullableText(normalized.location, 500),
     p_runner_name: nullableText(normalized.runner_name, 200),
     p_notes: nullableText(normalized.notes, 2000),
-    // Preserve the frozen fallback's existing create behavior. Native Build 12
-    // passes planning/false instead.
-    p_status: "active",
+    // Build 13 days begin in Planning so a published label template can be
+    // reviewed/assigned before activation freezes the physical output.
+    p_status: "planning",
     p_seed_default_roster: true,
   });
   throwOperatorDatabaseError(

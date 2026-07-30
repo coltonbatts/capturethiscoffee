@@ -13,6 +13,7 @@ library;
 import 'dart:convert';
 
 import 'drink_format.dart';
+import 'label_template.dart';
 
 const _maximumRosterEntries = 1000;
 const orderTextLimit = 500;
@@ -399,6 +400,7 @@ class BoardProduction {
     required this.runnerName,
     required this.status,
     required this.clientName,
+    this.labelTemplate,
   });
 
   final String id;
@@ -408,18 +410,39 @@ class BoardProduction {
   final String runnerName;
   final String status;
   final String clientName;
+  final LabelTemplateVersion? labelTemplate;
 
   bool get isActive => status == 'active';
 
-  factory BoardProduction.fromJson(Map<String, dynamic> json) =>
+  factory BoardProduction.fromJson(Map<String, dynamic> json) {
+    final template = json['label_template'];
+    return BoardProduction(
+      id: _requiredString(json, 'id'),
+      name: _optionalString(json, 'name', fallback: 'Production'),
+      shootDate: _optionalString(json, 'shoot_date'),
+      location: _optionalString(json, 'location'),
+      runnerName: _optionalString(json, 'runner_name'),
+      status: _requiredString(json, 'status'),
+      clientName: _optionalString(json, 'client_name'),
+      labelTemplate: template == null
+          ? null
+          : LabelTemplateVersion.fromCacheJson(template),
+    );
+  }
+
+  BoardProduction copyWith({
+    String? status,
+    LabelTemplateVersion? labelTemplate,
+  }) =>
       BoardProduction(
-        id: _requiredString(json, 'id'),
-        name: _optionalString(json, 'name', fallback: 'Production'),
-        shootDate: _optionalString(json, 'shoot_date'),
-        location: _optionalString(json, 'location'),
-        runnerName: _optionalString(json, 'runner_name'),
-        status: _requiredString(json, 'status'),
-        clientName: _optionalString(json, 'client_name'),
+        id: id,
+        name: name,
+        shootDate: shootDate,
+        location: location,
+        runnerName: runnerName,
+        status: status ?? this.status,
+        clientName: clientName,
+        labelTemplate: labelTemplate ?? this.labelTemplate,
       );
 
   Map<String, Object?> toJson() => {
@@ -430,6 +453,7 @@ class BoardProduction {
         'runner_name': runnerName,
         'status': status,
         'client_name': clientName,
+        'label_template': labelTemplate?.toCacheJson(),
       };
 }
 
@@ -462,6 +486,12 @@ class ProductionBoard {
             else
               entry,
         ]),
+      );
+
+  ProductionBoard withLabelTemplate(LabelTemplateVersion template) =>
+      ProductionBoard(
+        production: production.copyWith(labelTemplate: template),
+        roster: roster,
       );
 
   ProductionBoard replacePersonUsual(String personId, String usualOrder) =>
@@ -636,12 +666,14 @@ class PrinterQueue {
     required this.productionStatus,
     required this.clientName,
     required this.labels,
+    this.labelTemplate,
   });
 
   final String productionName;
   final String productionStatus;
   final String clientName;
   final List<QueueLabel> labels;
+  final LabelTemplateVersion? labelTemplate;
 
   bool get isProductionActive => productionStatus == 'active';
 
@@ -667,6 +699,7 @@ class PrinterQueue {
       productionStatus: board.production.status,
       clientName: board.production.clientName,
       labels: List.unmodifiable(labels),
+      labelTemplate: board.production.labelTemplate,
     );
   }
 }

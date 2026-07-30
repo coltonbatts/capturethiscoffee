@@ -249,6 +249,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('How to use Capture This'), findsOneWidget);
     expect(find.text('Link an active production'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Print one label and verify'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Print one label and verify'), findsOneWidget);
     expect(find.textContaining('Print all'), findsNothing);
   });

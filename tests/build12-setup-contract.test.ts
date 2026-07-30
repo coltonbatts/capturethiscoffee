@@ -90,6 +90,11 @@ test("Days and frozen web setup use the bounded/atomic contracts", async () => {
   assert.match(fetchDays, /rpc\('fetch_day_summaries'\)/);
   assert.doesNotMatch(fetchDays, /from\('(production_roster|orders)'\)/);
   assert.match(productions, /rpc\("setup_create_day"/);
+  assert.match(
+    productions,
+    /p_status:\s*"planning"/,
+    "Build 13 web creation must leave room for template assignment before activation",
+  );
   assert.match(people, /rpc\("setup_create_person"/);
   assert.match(people, /rpc\("setup_update_person"/);
   assert.match(roster, /rpc\("setup_add_person_to_roster"/);

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/painting.dart';
 
 import 'label_content.dart';
+import 'label_template.dart';
 
 /// 50x30mm at 300 DPI, matching `src/lib/niimbot-m2-preset.json`.
 ///
@@ -97,7 +98,8 @@ class _LabelCanvas {
   /// `resetCanvas` in the web renderer.
   void reset() {
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, labelPixelWidth.toDouble(), labelPixelHeight.toDouble()),
+      Rect.fromLTWH(
+          0, 0, labelPixelWidth.toDouble(), labelPixelHeight.toDouble()),
       Paint()..color = const Color(0xFFFFFFFF),
     );
     fillColor = const Color(0xFF000000);
@@ -308,20 +310,497 @@ class _LabelCanvas {
 
 enum _TextAlign { start, right, center }
 
+/// Paints a previously validated declarative label template.
+///
+/// There are intentionally no callbacks, scripts, URLs, asset references, or
+/// arbitrary paths in this interpreter. A published version can only select
+/// bounded text, line, shape, and built-in mark primitives.
+List<TextPainter> paintLabelTemplate(
+  Canvas canvas,
+  LabelContent label,
+  LabelTemplateDefinition definition,
+) {
+  final retainedPainters = <TextPainter>[];
+  canvas.drawRect(
+    Rect.fromLTWH(
+      0,
+      0,
+      definition.pixelWidth.toDouble(),
+      definition.pixelHeight.toDouble(),
+    ),
+    Paint()
+      ..color = _templateColor(definition.background)
+      ..isAntiAlias = false,
+  );
+
+  for (final element in definition.elements) {
+    switch (element['type']) {
+      case 'text':
+        _paintTemplateText(canvas, label, element, retainedPainters);
+      case 'line':
+        canvas.drawLine(
+          Offset(_value(element, 'x1'), _value(element, 'y1')),
+          Offset(_value(element, 'x2'), _value(element, 'y2')),
+          _strokePaint(element),
+        );
+      case 'rect':
+        _paintShape(
+          canvas,
+          element,
+          Rect.fromLTWH(
+            _value(element, 'x'),
+            _value(element, 'y'),
+            _value(element, 'width'),
+            _value(element, 'height'),
+          ),
+        );
+      case 'roundedRect':
+        _paintRoundedRect(canvas, element);
+      case 'circle':
+        _paintCircle(canvas, element);
+      case 'ellipse':
+        _paintEllipse(canvas, element);
+      case 'mark':
+        _paintMark(canvas, element);
+    }
+  }
+  return retainedPainters;
+}
+
+void _paintTemplateText(
+  Canvas canvas,
+  LabelContent content,
+  Map<String, Object?> element,
+  List<TextPainter> retainedPainters,
+) {
+  final rawSegments = element['segments']! as List;
+  final buffer = StringBuffer();
+  for (final rawSegment in rawSegments) {
+    final segment = rawSegment as Map;
+    final literal = segment['literal'];
+    if (literal is String) {
+      buffer.write(literal);
+    } else {
+      buffer.write(_bindingValue(content, segment['binding']! as String));
+    }
+  }
+  var value = buffer.toString();
+  if (element['uppercase'] == true) value = value.toUpperCase();
+  if (value.isEmpty) return;
+
+  final x = _value(element, 'x');
+  final y = _value(element, 'y');
+  final width = _value(element, 'width');
+  final height = _value(element, 'height');
+  final maximumSize = _value(element, 'fontSize');
+  final minimumSize = _value(element, 'minFontSize');
+  final declaredLineHeight = _value(element, 'lineHeight');
+  final maximumLines = (element['maxLines']! as num).toInt();
+  final weight =
+      element['fontWeight'] == 'bold' ? FontWeight.w700 : FontWeight.w400;
+  final align = switch (element['align']) {
+    'center' => TextAlign.center,
+    'right' => TextAlign.right,
+    _ => TextAlign.left,
+  };
+
+  var fontSize = maximumSize;
+  var lineHeight = declaredLineHeight;
+  var style = _templateTextStyle(element, fontSize, weight);
+  var lines = <String>[];
+  final oneLineMinimum =
+      math.max(minimumSize, (maximumSize * 0.6).ceilToDouble());
+  while (fontSize >= oneLineMinimum) {
+    style = _templateTextStyle(element, fontSize, weight);
+    if (_measureTemplateText(value, style) <= width && fontSize <= height) {
+      lines = [value];
+      break;
+    }
+    if (fontSize == oneLineMinimum) break;
+    fontSize = math.max(oneLineMinimum, fontSize - 1);
+  }
+
+  if (lines.isEmpty) {
+    fontSize = maximumSize;
+    style = _templateTextStyle(element, fontSize, weight);
+    while (fontSize >= minimumSize) {
+      style = _templateTextStyle(element, fontSize, weight);
+      lineHeight = declaredLineHeight * (fontSize / maximumSize);
+      lines = _wrapTemplateText(value, width, style);
+      final paintedHeight =
+          fontSize + math.max(0, lines.length - 1) * lineHeight;
+      final fits = lines.length <= maximumLines &&
+          paintedHeight <= height &&
+          lines.every(
+            (line) => _measureTemplateText(line, style) <= width,
+          );
+      if (fits || fontSize == minimumSize) break;
+      fontSize = math.max(minimumSize, fontSize - 1);
+    }
+  }
+
+  final visible = lines.take(maximumLines).toList();
+  for (var index = 0; index < visible.length; index += 1) {
+    final dropped = lines.length > maximumLines && index == visible.length - 1;
+    visible[index] = _ellipsizeTemplateText(
+      dropped ? '${visible[index]}…' : visible[index],
+      width,
+      style,
+    );
+  }
+
+  canvas.save();
+  _rotateAroundBoxCenter(canvas, element, x, y, width, height);
+  for (var index = 0; index < visible.length; index += 1) {
+    final painter = TextPainter(
+      text: TextSpan(text: visible[index], style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final dx = switch (align) {
+      TextAlign.center => x + (width - painter.width) / 2,
+      TextAlign.right => x + width - painter.width,
+      _ => x,
+    };
+    painter.paint(canvas, Offset(dx, y + index * lineHeight));
+    // The recorded picture retains the paragraph until rasterization. Dispose
+    // only after `Picture.toImage`.
+    retainedPainters.add(painter);
+  }
+  canvas.restore();
+}
+
+TextStyle _templateTextStyle(
+  Map<String, Object?> element,
+  double fontSize,
+  FontWeight weight,
+) =>
+    TextStyle(
+      fontFamily: labelFontFamily,
+      fontSize: fontSize,
+      fontWeight: weight,
+      color: _templateColor(element['color']! as String),
+    );
+
+double _measureTemplateText(String value, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: value, style: style),
+    textDirection: TextDirection.ltr,
+    maxLines: 1,
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width;
+}
+
+List<String> _wrapTemplateText(
+  String value,
+  double width,
+  TextStyle style,
+) {
+  final words =
+      value.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty);
+  final lines = <String>[];
+  var line = '';
+  for (final word in words) {
+    final next = line.isEmpty ? word : '$line $word';
+    if (line.isEmpty || _measureTemplateText(next, style) <= width) {
+      line = next;
+    } else {
+      lines.add(line);
+      line = word;
+    }
+  }
+  if (line.isNotEmpty) lines.add(line);
+  return lines;
+}
+
+String _ellipsizeTemplateText(
+  String value,
+  double width,
+  TextStyle style,
+) {
+  if (value.isEmpty || _measureTemplateText(value, style) <= width) {
+    return value;
+  }
+  if (_measureTemplateText('…', style) > width) return '';
+  var low = 0;
+  var high = value.length;
+  var best = '';
+  while (low <= high) {
+    final middle = (low + high) ~/ 2;
+    final candidate = '${value.substring(0, middle).trimRight()}…';
+    if (_measureTemplateText(candidate, style) <= width) {
+      best = candidate;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+  return best;
+}
+
+String _bindingValue(LabelContent content, String binding) => switch (binding) {
+      'personName' => content.displayName,
+      'drink' => content.displayDrink,
+      'productionName' => content.productionName,
+      'clientName' => content.clientName,
+      'productionClient' => content.displayProduction,
+      'group' => content.displayGroup,
+      'orderNumber' => content.displayOrderNumber,
+      _ => '',
+    };
+
+void _paintShape(
+  Canvas canvas,
+  Map<String, Object?> element,
+  Rect rect,
+) {
+  canvas.save();
+  _rotateAroundBoxCenter(
+    canvas,
+    element,
+    rect.left,
+    rect.top,
+    rect.width,
+    rect.height,
+  );
+  final fill = _fillPaint(element);
+  if (fill != null) canvas.drawRect(rect, fill);
+  final stroke = _optionalStrokePaint(element);
+  if (stroke != null) canvas.drawRect(rect, stroke);
+  canvas.restore();
+}
+
+void _paintRoundedRect(Canvas canvas, Map<String, Object?> element) {
+  final rect = Rect.fromLTWH(
+    _value(element, 'x'),
+    _value(element, 'y'),
+    _value(element, 'width'),
+    _value(element, 'height'),
+  );
+  final shape = RRect.fromRectAndRadius(
+    rect,
+    Radius.circular(_value(element, 'radius')),
+  );
+  canvas.save();
+  _rotateAroundBoxCenter(
+    canvas,
+    element,
+    rect.left,
+    rect.top,
+    rect.width,
+    rect.height,
+  );
+  final fill = _fillPaint(element);
+  if (fill != null) canvas.drawRRect(shape, fill);
+  final stroke = _optionalStrokePaint(element);
+  if (stroke != null) canvas.drawRRect(shape, stroke);
+  canvas.restore();
+}
+
+void _paintCircle(Canvas canvas, Map<String, Object?> element) {
+  final center = Offset(_value(element, 'cx'), _value(element, 'cy'));
+  final radius = _value(element, 'radius');
+  final fill = _fillPaint(element);
+  if (fill != null) canvas.drawCircle(center, radius, fill);
+  final stroke = _optionalStrokePaint(element);
+  if (stroke != null) canvas.drawCircle(center, radius, stroke);
+}
+
+void _paintEllipse(Canvas canvas, Map<String, Object?> element) {
+  final cx = _value(element, 'cx');
+  final cy = _value(element, 'cy');
+  final radiusX = _value(element, 'radiusX');
+  final radiusY = _value(element, 'radiusY');
+  final rect = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: radiusX * 2,
+    height: radiusY * 2,
+  );
+  canvas.save();
+  _rotateAroundBoxCenter(
+    canvas,
+    element,
+    rect.left,
+    rect.top,
+    rect.width,
+    rect.height,
+  );
+  final fill = _fillPaint(element);
+  if (fill != null) canvas.drawOval(rect, fill);
+  final stroke = _optionalStrokePaint(element);
+  if (stroke != null) canvas.drawOval(rect, stroke);
+  canvas.restore();
+}
+
+void _paintMark(Canvas canvas, Map<String, Object?> element) {
+  final x = _value(element, 'x');
+  final y = _value(element, 'y');
+  final width = _value(element, 'width');
+  final height = _value(element, 'height');
+  canvas.save();
+  _rotateAroundBoxCenter(canvas, element, x, y, width, height);
+  switch (element['mark']) {
+    case 'orbitGlobe':
+      _paintOrbitGlobe(canvas, element, x, y, width, height);
+    case 'sparkle4':
+      _paintSparkle(canvas, element, x, y, width, height);
+  }
+  canvas.restore();
+}
+
+void _paintOrbitGlobe(
+  Canvas canvas,
+  Map<String, Object?> element,
+  double x,
+  double y,
+  double width,
+  double height,
+) {
+  final paint = _optionalStrokePaint(element) ??
+      (Paint()
+        ..color = _templateColor(element['fill']! as String)
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.square
+        ..isAntiAlias = false);
+  final cx = x + width / 2;
+  final cy = y + height / 2;
+  final radiusX = width / 2;
+  final radiusY = height / 2;
+  final outer = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: width,
+    height: height,
+  );
+  canvas.drawOval(outer, paint);
+  canvas.drawLine(Offset(cx, y), Offset(cx, y + height), paint);
+  for (final factor in const [0.34, 0.7]) {
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(cx, cy),
+        width: radiusX * factor * 2,
+        height: height,
+      ),
+      paint,
+    );
+  }
+  for (final factor in const [0.0, 0.45, 0.8]) {
+    final dy = radiusY * factor;
+    final normalized = radiusY == 0 ? 0 : dy / radiusY;
+    final halfWidth =
+        radiusX * math.sqrt(math.max(1 - normalized * normalized, 0));
+    final signs = factor == 0 ? const [0] : const [-1, 1];
+    for (final sign in signs) {
+      final lineY = cy + sign * dy;
+      canvas.drawLine(
+        Offset(cx - halfWidth, lineY),
+        Offset(cx + halfWidth, lineY),
+        paint,
+      );
+    }
+  }
+}
+
+void _paintSparkle(
+  Canvas canvas,
+  Map<String, Object?> element,
+  double x,
+  double y,
+  double width,
+  double height,
+) {
+  final cx = x + width / 2;
+  final cy = y + height / 2;
+  final halfWidth = width / 2;
+  final halfHeight = height / 2;
+  final innerX = halfWidth * 0.16;
+  final innerY = halfHeight * 0.16;
+  final path = Path()
+    ..moveTo(cx, y)
+    ..lineTo(cx + innerX, cy - innerY)
+    ..lineTo(x + width, cy)
+    ..lineTo(cx + innerX, cy + innerY)
+    ..lineTo(cx, y + height)
+    ..lineTo(cx - innerX, cy + innerY)
+    ..lineTo(x, cy)
+    ..lineTo(cx - innerX, cy - innerY)
+    ..close();
+  final fill = _fillPaint(element);
+  if (fill != null) canvas.drawPath(path, fill);
+  final stroke = _optionalStrokePaint(element);
+  if (stroke != null) canvas.drawPath(path, stroke);
+}
+
+void _rotateAroundBoxCenter(
+  Canvas canvas,
+  Map<String, Object?> element,
+  double x,
+  double y,
+  double width,
+  double height,
+) {
+  final rotation = element['rotation'];
+  if (rotation is! num || rotation == 0) return;
+  final cx = x + width / 2;
+  final cy = y + height / 2;
+  canvas
+    ..translate(cx, cy)
+    ..rotate(rotation.toDouble() * math.pi / 180)
+    ..translate(-cx, -cy);
+}
+
+Paint? _fillPaint(Map<String, Object?> element) {
+  final fill = element['fill'];
+  if (fill is! String) return null;
+  return Paint()
+    ..color = _templateColor(fill)
+    ..style = PaintingStyle.fill
+    ..isAntiAlias = false;
+}
+
+Paint _strokePaint(Map<String, Object?> element) => Paint()
+  ..color = _templateColor(element['stroke']! as String)
+  ..strokeWidth = _value(element, 'strokeWidth')
+  ..style = PaintingStyle.stroke
+  ..strokeCap = StrokeCap.square
+  ..isAntiAlias = false;
+
+Paint? _optionalStrokePaint(Map<String, Object?> element) =>
+    element['stroke'] is String ? _strokePaint(element) : null;
+
+Color _templateColor(String value) =>
+    value == '#ffffff' ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+
+double _value(Map<String, Object?> element, String key) =>
+    (element[key]! as num).toDouble();
+
 /// Rasterises a label at the preset size. The caller owns the returned image.
-Future<ui.Image> renderLabelImage(LabelContent label) async {
+Future<ui.Image> renderLabelImage(
+  LabelContent label, {
+  LabelTemplateVersion? template,
+}) async {
+  final selected = template ??
+      label.template ??
+      await BundledLabelTemplates.defaultVersion();
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(
     recorder,
-    Rect.fromLTWH(0, 0, labelPixelWidth.toDouble(), labelPixelHeight.toDouble()),
+    Rect.fromLTWH(
+        0, 0, labelPixelWidth.toDouble(), labelPixelHeight.toDouble()),
   );
-  paintGrid01Label(canvas, label);
+  final retainedPainters =
+      paintLabelTemplate(canvas, label, selected.definition);
 
   final picture = recorder.endRecording();
   try {
     return await picture.toImage(labelPixelWidth, labelPixelHeight);
   } finally {
     picture.dispose();
+    for (final painter in retainedPainters) {
+      painter.dispose();
+    }
   }
 }
 
@@ -331,8 +810,11 @@ Future<ui.Image> renderLabelImage(LabelContent label) async {
 /// buffer the app previously downloaded from
 /// `GET /api/public/orders/[id]/label`. Nothing downstream of this function
 /// changed, which is deliberate: the BLE print path is proven on hardware.
-Future<Uint8List> renderLabelPng(LabelContent label) async {
-  final image = await renderLabelImage(label);
+Future<Uint8List> renderLabelPng(
+  LabelContent label, {
+  LabelTemplateVersion? template,
+}) async {
+  final image = await renderLabelImage(label, template: template);
   try {
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     if (data == null) {

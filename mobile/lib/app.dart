@@ -23,6 +23,7 @@ import 'screens/print_screen.dart';
 import 'screens/recovery_screen.dart';
 import 'screens/roster_screen.dart';
 import 'screens/sign_in_screen.dart';
+import 'screens/summary_screen.dart';
 import 'session_controller.dart';
 import 'session_store.dart';
 import 'supabase_bootstrap.dart';
@@ -137,7 +138,7 @@ class _PrinterAppState extends State<PrinterApp> {
     return PrinterScope(
       runtime: _runtime,
       child: MaterialApp(
-        title: 'Capture This Coffee',
+        title: 'Capture This',
         debugShowCheckedModeBanner: false,
         theme: buildCaptureTheme(),
         home: const RootScreen(),
@@ -148,6 +149,7 @@ class _PrinterAppState extends State<PrinterApp> {
           PrintScreen.route: (_) => const PrintScreen(),
           RosterScreen.route: (_) => const RosterScreen(),
           RecoveryScreen.route: (_) => const RecoveryScreen(),
+          SummaryScreen.route: (_) => const SummaryScreen(),
           AboutScreen.route: (_) => const AboutScreen(),
         },
       ),

@@ -5,9 +5,9 @@ import {
 } from "@/components/public-info-page";
 
 export const metadata: Metadata = {
-  title: "Support | Capture This Coffee",
+  title: "Support | Capture This",
   description:
-    "Sign-in, day selection, offline printing, synchronization recovery, and NIIMBOT M2_H help for Capture This.",
+    "Sign-in, day selection, templates, offline printing, recovery, summaries, and NIIMBOT M2_H help for Capture This.",
 };
 
 export default function SupportPage() {
@@ -32,6 +32,7 @@ export default function SupportPage() {
       <PublicInfoSection title="Sign in and print">
         <ol className="list-decimal space-y-1 pl-5">
           <li>Open Capture This, sign in, and choose the Active day.</li>
+          <li>Refresh and verify the assigned label preview.</li>
           <li>Force-quit the official NIIMBOT app.</li>
           <li>Wake the M2_H and tap Connect printer.</li>
           <li>Review the person and drink, then print exactly one label.</li>
@@ -42,10 +43,36 @@ export default function SupportPage() {
         </ol>
         <p>
           Print and physically verify one label at a time before continuing.
+          Batch printing is not supported.
         </p>
         <p>
           Use <strong>Advanced · Legacy link</strong> only when the coordinator
           asks you to test the fallback production URL.
+        </p>
+      </PublicInfoSection>
+
+      <PublicInfoSection title="Summary and closeout">
+        <p>
+          Open <strong>Summary &amp; closeout</strong> for the grouped coffee-shop
+          order, by-person captured/printed/waiting state, and the iOS share
+          sheet. Review the summary before sending it because it contains
+          production and crew order information.
+        </p>
+        <p>
+          Completing a day requires a current network connection, every on-set
+          person decided, every captured label printed, and no pending order,
+          conflict, or uncertain-print record. Confirmation is permanent.
+          Collect and Print remain available until that confirmation succeeds.
+        </p>
+      </PublicInfoSection>
+
+      <PublicInfoSection title="Template problems">
+        <p>
+          An Active day keeps the published template version assigned before it
+          was activated. Refresh while online to synchronize it. A previously
+          validated template is cached with the day for offline printing; if a
+          new or incompatible definition cannot be validated, the app retains
+          its last-known-good version or uses the bundled Grid 01 fallback.
         </p>
       </PublicInfoSection>
 

@@ -28,6 +28,7 @@ import 'board_cache.dart';
 import 'ctc_api.dart';
 import 'label_content.dart';
 import 'label_painter.dart';
+import 'label_template.dart';
 import 'print_recovery.dart';
 import 'printer_validation.dart';
 import 'production_board.dart';
@@ -186,6 +187,51 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   String get rosterQuery => _rosterQuery;
   bool get isPrinting => _printerStatus == PrinterStatus.printing;
 
+  LabelTemplateVersion? get selectedLabelTemplate => queue?.labelTemplate;
+
+  String get labelTemplateIdentity {
+    final template = selectedLabelTemplate;
+    return template == null
+        ? 'Grid 01 · v1'
+        : '${template.name} · v${template.version}';
+  }
+
+  String get labelTemplateStatus {
+    if (servingCachedBoard) return 'Cached last-known-good version';
+    return switch (selectedLabelTemplate?.resolution) {
+      LabelTemplateResolution.current => 'Current published version',
+      LabelTemplateResolution.historicalFallback =>
+        'Bundled historical fallback',
+      LabelTemplateResolution.cachedFallback =>
+        'Cached last-known-good version',
+      LabelTemplateResolution.unavailableFallback =>
+        'Template service unavailable · using safe fallback',
+      LabelTemplateResolution.incompatibleFallback =>
+        'Incompatible remote version · using safe fallback',
+      null => 'Bundled Grid 01 fallback',
+    };
+  }
+
+  LabelContent get fictionalTestLabelContent {
+    final currentQueue = queue;
+    return LabelContent.fromQueue(
+      orderId: 'manual',
+      personName: 'Fictional Test',
+      drink: 'Iced oat latte',
+      group: 'Setup',
+      productionName: currentQueue?.productionName ?? 'Printer setup',
+      clientName: currentQueue?.clientName ?? 'Capture This',
+      template: currentQueue?.labelTemplate,
+    );
+  }
+
+  /// Produces the exact bitmap used by the no-facts test-label action.
+  ///
+  /// Public for deterministic release tests. Rendering never touches the
+  /// recovery ledger, outbox, order rows, or `label_printed`.
+  Future<Uint8List> renderFictionalTestLabel() =>
+      renderLabelPng(fictionalTestLabelContent);
+
   int get printedCount =>
       queue?.labels.where((label) => label.labelPrinted).length ?? 0;
 
@@ -311,6 +357,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       group: item.group,
       productionName: currentQueue.productionName,
       clientName: currentQueue.clientName,
+      template: currentQueue.labelTemplate,
     );
   }
 
@@ -606,6 +653,56 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
         affectsPrinter: true,
       );
 
+  Future<bool> printFictionalTestLabel() => _run(
+        'Print fictional test label',
+        _printFictionalTestLabel,
+        affectsPrinter: true,
+      );
+
+  Future<void> _printFictionalTestLabel() async {
+    if (!_connected) {
+      throw Exception('Printer not connected. Connect the M2_H first.');
+    }
+    _printerStatus = PrinterStatus.printing;
+    _emit();
+
+    final bytes = await renderFictionalTestLabel();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw Exception('Could not decode the fictional test label.');
+    }
+    final printSize = _printSizeFor(decoded);
+    final page = PrintPage(printSize.width, printSize.height);
+    page.addImageFromBuffer(ImageFromBufferOptions(
+      buffer: bytes,
+      x: printSize.width ~/ 2,
+      y: printSize.height ~/ 2,
+      width: printSize.width,
+      height: printSize.height,
+      align: HAlignment.center,
+      vAlign: VAlignment.middle,
+      threshold: 128,
+    ));
+
+    try {
+      await _printPage(page);
+    } catch (error) {
+      await _disconnectAfterAmbiguousPrint();
+      throw Exception(
+        'The fictional test-label outcome is uncertain. Inspect the printer '
+        'and reconnect before trying another label. ${_errorText(error)}',
+      );
+    }
+
+    unawaited(HapticFeedback.heavyImpact());
+    _printerStatus = PrinterStatus.connected;
+    _emit();
+    _logLine(
+      'Fictional test label printed with $labelTemplateIdentity. '
+      'No order or printed fact changed.',
+    );
+  }
+
   Future<void> _printOneLabel(QueueLabel item) async {
     // Checked before the cached status, which cannot be trusted once the server
     // has refused the production: a day marked complete still reads `active` in
@@ -657,6 +754,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
           group: item.group,
           productionName: currentQueue.productionName,
           clientName: currentQueue.clientName,
+          template: currentQueue.labelTemplate,
         ),
       );
     } catch (error) {

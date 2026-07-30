@@ -1,7 +1,7 @@
 name: ctc_printer
-description: Capture This Coffee - NIIMBOT M2_H BLE label printing for on-set crews
+description: Capture This - NIIMBOT M2_H BLE label printing for on-set crews
 publish_to: "none"
-version: 1.0.0+12
+version: 1.0.0+13
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -30,6 +30,7 @@ flutter:
   assets:
     - assets/capture-this-smiley.png
     - assets/test_label.png
+    - assets/label_templates/label-templates-v1.json
   fonts:
     # INTERFACE type. Geist is the web app's typeface (src/app/layout.tsx loads
     # it via next/font/google); bundling it is what makes the app read as the

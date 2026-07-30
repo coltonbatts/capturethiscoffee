@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Capture This Coffee",
+  title: "Capture This",
   description: "Runner-first coffee order workflow for production shoots.",
-  applicationName: "Capture This Coffee",
+  applicationName: "Capture This",
   appleWebApp: {
     capable: true,
-    title: "Capture This Coffee",
+    title: "Capture This",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {

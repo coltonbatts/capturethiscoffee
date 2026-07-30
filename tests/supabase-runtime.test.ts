@@ -83,13 +83,10 @@ describe("runtime source boundaries", () => {
       localStorageFiles
         .map((file) => file.replace(`${process.cwd()}/`, ""))
         .sort(),
-      [
-        "src/app/labels/labels-client.tsx",
-        "src/app/productions/productions-client.tsx",
-      ],
+      ["src/app/productions/productions-client.tsx"],
     );
     assert.match(combinedSource, /capture-this-coffee-production-order/);
-    assert.match(combinedSource, /ctc-label-design/);
+    assert.doesNotMatch(combinedSource, /ctc-label-design/);
   });
 
   it("keeps runner and service-role code out of the operator client boundary", () => {

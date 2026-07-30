@@ -53,7 +53,7 @@ Future<void> showQuickStart(BuildContext context) async {
               number: '3',
               title: 'Connect and review',
               body:
-                  'Tap Connect printer, refresh the queue, and double-check the person and drink before printing.',
+                  'Tap Connect printer, refresh the queue, and double-check the person, drink, and assigned label preview. A valid synchronized template is cached with the day for offline use.',
             ),
             _HelpStep(
               number: '4',
@@ -68,6 +68,13 @@ Future<void> showQuickStart(BuildContext context) async {
               body:
                   'If a usable label came out, choose “Label printed — sync only.” If nothing printed, choose “Nothing printed — retry.” If you cannot tell, stop and ask the coordinator.',
             ),
+            if (!legacy)
+              const _HelpStep(
+                number: '6',
+                title: 'Review and close the day',
+                body:
+                    'Open Summary & closeout for the grouped shop order, by-person status, and iOS share sheet. Completion requires a current connection, every on-set order decided, every captured label printed, and no pending conflict or recovery.',
+              ),
             const SizedBox(height: 8),
             Card(
               child: Padding(

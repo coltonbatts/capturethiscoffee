@@ -68,7 +68,7 @@ export function AppShell({
             <CaptureMark className="size-9 rounded-full" priority />
             <span className="hidden min-w-0 sm:grid">
               <span className="truncate text-sm font-semibold leading-none tracking-[-0.02em] text-black">
-                Capture This Coffee
+                Capture This
               </span>
               <span className="mt-1 truncate text-[11px] font-medium leading-none text-zinc-500">
                 {title}

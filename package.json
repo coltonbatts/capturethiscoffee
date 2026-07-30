@@ -10,6 +10,7 @@
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "verify:niimbot-export": "node scripts/verify-niimbot-m2-export.mjs",
     "verify:build12-setup": "node scripts/verify-build12-native-setup.mjs",
+    "verify:build13-database": "node scripts/verify-build13-database.mjs",
     "create-demo-user": "node scripts/create-demo-user.mjs"
   },
   "dependencies": {

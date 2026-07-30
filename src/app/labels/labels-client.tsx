@@ -55,12 +55,11 @@ import {
 } from "@/lib/niimbot-m2-export";
 import {
   defaultLabelDesignId,
-  isLabelDesignId,
-  labelDesigns,
-  type LabelDesignId,
-} from "@/lib/label-designs";
+  getBundledLabelTemplate,
+} from "@/lib/label-template-catalog";
 import type { CoffeeData } from "@/lib/types";
 import type { CoffeeLabel } from "@/lib/label-copy";
+import type { ProductionLabelTemplateSelection } from "@/lib/label-template-schema";
 
 type ShareNavigator = Navigator & {
   canShare?: (data: { files?: File[] }) => boolean;
@@ -76,11 +75,16 @@ const customSecondaryBtn = secondaryButtonClass;
 
 export function LabelsClient({
   initialData,
+  initialProductionTemplates,
   initialError = "",
   requestedProductionId = "",
   requestedOrderId = "",
 }: {
   initialData: CoffeeData | null;
+  initialProductionTemplates: Record<
+    string,
+    ProductionLabelTemplateSelection
+  >;
   initialError?: string;
   requestedProductionId?: string;
   requestedOrderId?: string;
@@ -113,25 +117,6 @@ export function LabelsClient({
     getWebShareSnapshot,
     getServerWebShareSnapshot,
   );
-  const storedDesignId = useSyncExternalStore(
-    subscribeToLabelDesign,
-    getStoredLabelDesignSnapshot,
-    getServerLabelDesignSnapshot,
-  );
-  const [sessionDesignId, setSessionDesignId] =
-    useState<LabelDesignId | null>(null);
-  const designId = sessionDesignId || storedDesignId;
-
-  function chooseDesign(nextDesignId: LabelDesignId) {
-    setSessionDesignId(nextDesignId);
-    setStatus("");
-    try {
-      window.localStorage.setItem(labelDesignStorageKey, nextDesignId);
-    } catch {
-      // Design preference persistence is best-effort only.
-    }
-  }
-
   const loadData = useCallback(() => {
     router.refresh();
   }, [router]);
@@ -182,6 +167,14 @@ export function LabelsClient({
   );
   const labels = selection?.labels || [];
   const selectedProduction = selection?.production;
+  const assignedTemplateVersion = selectedProduction
+    ? initialProductionTemplates[selectedProduction.id]
+    : undefined;
+  const designSelection =
+    assignedTemplateVersion?.definition ||
+    getBundledLabelTemplate(defaultLabelDesignId).definition;
+  const designLabel =
+    assignedTemplateVersion?.label || "Grid 01 / v1 legacy fallback";
   const testLabel = useMemo(
     () =>
       selection
@@ -192,7 +185,6 @@ export function LabelsClient({
     [selection],
   );
   const previewLabel = labels[0];
-  const designPreviewLabel = previewLabel || testLabel;
   const selectedCount = labels.length;
 
   function chooseProduction(nextProductionId: string) {
@@ -206,7 +198,7 @@ export function LabelsClient({
 
   async function copyPrinterLink() {
     if (!productionId) {
-      setError("Choose a production before linking CTC Printer.");
+      setError("Choose a production before creating a Capture This link.");
       return;
     }
     setPrinterLinkState("working");
@@ -226,7 +218,7 @@ export function LabelsClient({
       try {
         await writeClipboardText(url);
         setPrinterLinkState("copied");
-        setStatus("CTC Printer link copied to clipboard.");
+        setStatus("Capture This link copied to clipboard.");
       } catch {
         setPrinterLinkState("idle");
         setStatus("Printer link created. Select and copy it below.");
@@ -234,7 +226,7 @@ export function LabelsClient({
     } catch (err) {
       setPrinterLinkState("idle");
       setError(
-        describeDataError(err, "Could not create the CTC Printer link."),
+        describeDataError(err, "Could not create the Capture This link."),
       );
     }
   }
@@ -243,10 +235,10 @@ export function LabelsClient({
     try {
       await writeClipboardText(url);
       setPrinterLinkState("copied");
-      setStatus("CTC Printer link copied.");
+      setStatus("Capture This link copied.");
       setError("");
     } catch (err) {
-      setError(describeDataError(err, "Could not copy the CTC Printer link."));
+      setError(describeDataError(err, "Could not copy the Capture This link."));
     }
   }
 
@@ -316,7 +308,7 @@ export function LabelsClient({
 
     try {
       for (const label of labels) {
-        const blob = await renderNiimbotM2LabelPngBlob(label, designId);
+        const blob = await renderNiimbotM2LabelPngBlob(label, designSelection);
         downloadBlob(blob, niimbotM2ExportFileName(label));
       }
       setStatus(
@@ -343,7 +335,10 @@ export function LabelsClient({
     setStatus("");
 
     try {
-      const blob = await renderNiimbotM2LabelPngBlob(testLabel, designId);
+      const blob = await renderNiimbotM2LabelPngBlob(
+        testLabel,
+        designSelection,
+      );
       downloadBlob(blob, niimbotM2ExportFileName(testLabel));
       setStatus(`${testLabel.title} test label PNG downloaded.`);
     } catch (err) {
@@ -372,7 +367,10 @@ export function LabelsClient({
     try {
       const files = await Promise.all(
         labels.map(async (label) => {
-          const blob = await renderNiimbotM2LabelPngBlob(label, designId);
+          const blob = await renderNiimbotM2LabelPngBlob(
+            label,
+            designSelection,
+          );
           return new File([blob], niimbotM2ExportFileName(label), {
             type: "image/png",
           });
@@ -391,7 +389,7 @@ export function LabelsClient({
 
       await shareNavigator.share({
         files,
-        title: "Capture This Coffee labels",
+        title: "Capture This labels",
         text: "Print-ready label PNGs.",
       });
       setStatus("Shared label files.");
@@ -469,7 +467,7 @@ export function LabelsClient({
             <div className="flex items-center gap-2">
               <Printer size={22} className="text-black" />
               <h2 className="text-lg font-semibold tracking-[-0.025em] text-black">
-                CTC Printer connection
+                Capture This legacy link
               </h2>
             </div>
             <p className="text-sm font-semibold text-zinc-600">
@@ -523,7 +521,7 @@ export function LabelsClient({
                   htmlFor="ctc-printer-link"
                   className="text-xs font-semibold text-zinc-500"
                 >
-                  Link URL (Paste into CTC Printer iPhone App)
+                  Link URL (paste into Capture This · Advanced · Legacy link)
                 </label>
                 <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                   <input
@@ -597,65 +595,25 @@ export function LabelsClient({
 
           <div className="flex flex-col gap-6">
             <section className="flex flex-col gap-4 rounded-xl border border-black/15 bg-[#fffdf8] p-5">
-              <div>
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="text-lg font-semibold tracking-[-0.025em] text-black">
-                    Design library
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-black/15 pb-3">
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                    Frozen production version
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-black">
+                    {designLabel}
                   </h2>
-                  <span className="text-xs font-medium text-zinc-500">
-                    {labelDesigns.length} options
-                  </span>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-zinc-600">
+                    Screen proof and PNG export use this exact immutable
+                    definition.
+                  </p>
                 </div>
-                <p className="mt-1 text-sm font-semibold leading-snug text-zinc-600">
-                  Every option is live, print-sized, and uses the selected order.
-                </p>
-              </div>
-
-              <div
-                className="grid grid-cols-2 gap-2.5"
-                role="group"
-                aria-label="Label design"
-              >
-                {labelDesigns.map((design) => (
-                  <button
-                    key={design.id}
-                    type="button"
-                    onClick={() => chooseDesign(design.id)}
-                    aria-pressed={designId === design.id}
-                    className={`overflow-hidden rounded-lg border text-left transition-[border-color,background-color,color,transform] active:translate-y-px ${
-                      designId === design.id
-                        ? "border-black bg-black text-white"
-                        : "border-black/15 bg-transparent text-black hover:border-black hover:bg-white"
-                    }`}
-                  >
-                    {designPreviewLabel ? (
-                      <span className="label-design-thumb block aspect-[5/3] overflow-hidden border-b border-black/20 bg-zinc-200">
-                        <ScreenLabel label={designPreviewLabel} design={design.id} />
-                      </span>
-                    ) : null}
-                    <span className="block px-2.5 py-2">
-                      <span className="block text-xs font-semibold">
-                        {design.name}
-                      </span>
-                      <span
-                        className={`mt-0.5 block text-[10px] font-semibold leading-tight ${
-                          designId === design.id ? "text-zinc-300" : "text-zinc-500"
-                        }`}
-                      >
-                        {design.summary}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between gap-3 border-t border-black/15 pt-3">
-                <span className="text-xs font-medium text-zinc-500">
-                  Selected
-                </span>
-                <span className="text-sm font-semibold text-black">
-                  {labelDesigns.find((design) => design.id === designId)?.name}
-                </span>
+                <Link
+                  href="/labels/templates"
+                  className={`${customSecondaryBtn} min-h-10 px-3 py-0 text-xs`}
+                >
+                  Manage templates
+                </Link>
               </div>
 
               <div
@@ -663,7 +621,10 @@ export function LabelsClient({
               >
                 {previewLabel ? (
                   <div className="flex w-full min-w-0 justify-center">
-                    <ScreenLabel label={previewLabel} design={designId} />
+                    <ScreenLabel
+                      label={previewLabel}
+                      design={designSelection}
+                    />
                   </div>
                 ) : (
                   <p className="text-center text-xs font-medium text-zinc-500">
@@ -832,8 +793,6 @@ function LabelChoice({
   );
 }
 
-const labelDesignStorageKey = "ctc-label-design";
-
 function subscribeToBrowserCapability() {
   return () => {};
 }
@@ -844,26 +803,6 @@ function getWebShareSnapshot() {
 
 function getServerWebShareSnapshot() {
   return false;
-}
-
-function subscribeToLabelDesign(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-  };
-}
-
-function getStoredLabelDesignSnapshot(): LabelDesignId {
-  try {
-    const stored = window.localStorage.getItem(labelDesignStorageKey) || "";
-    return isLabelDesignId(stored) ? stored : defaultLabelDesignId;
-  } catch {
-    return defaultLabelDesignId;
-  }
-}
-
-function getServerLabelDesignSnapshot(): LabelDesignId {
-  return defaultLabelDesignId;
 }
 
 function downloadBlob(blob: Blob, fileName: string) {

@@ -33,6 +33,7 @@ import 'print_screen.dart';
 import 'recovery_screen.dart';
 import 'roster_screen.dart';
 import 'setup_roster_screen.dart';
+import 'summary_screen.dart';
 
 /// Where the print entry goes, given what is blocking it.
 ///
@@ -58,6 +59,9 @@ const collectEntryKey = Key('home-collect-entry');
 const recoveryEntryKey = Key('home-recovery-entry');
 const printEntryKey = Key('home-print-entry');
 const printerEntryKey = Key('home-printer-entry');
+const summaryEntryKey = Key('home-summary-entry');
+const templateEntryKey = Key('home-template-entry');
+const testLabelActionKey = Key('home-test-label-action');
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -176,6 +180,11 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                     CascadeIn(
                       delay: CascadeIn.step(step++),
+                      child: _TemplateEntry(controller: controller),
+                    ),
+                    const SizedBox(height: 10),
+                    CascadeIn(
+                      delay: CascadeIn.step(step++),
                       child: _PrintEntry(controller: controller),
                     ),
                     const SizedBox(height: 10),
@@ -190,6 +199,21 @@ class HomeScreen extends StatelessWidget {
                             Navigator.of(context).pushNamed(RosterScreen.route),
                       ),
                     ),
+                    if (runtime.workspace.mode ==
+                        WorkspaceMode.authenticated) ...[
+                      const SizedBox(height: 10),
+                      CascadeIn(
+                        delay: CascadeIn.step(step++),
+                        child: _MenuCard(
+                          key: summaryEntryKey,
+                          icon: Icons.summarize_outlined,
+                          title: 'Summary & closeout',
+                          detail: _summaryDetail(progress),
+                          onTap: () => Navigator.of(context)
+                              .pushNamed(SummaryScreen.route),
+                        ),
+                      ),
+                    ],
                     if (recoveries.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       CascadeIn(
@@ -245,6 +269,17 @@ class HomeScreen extends StatelessWidget {
     final base =
         '${progress.decided} of ${progress.total} decided · ${progress.needsOrder} need orders';
     return pending == 0 ? base : '$base · $pending pending';
+  }
+
+  String _summaryDetail(BoardProgress progress) {
+    final unprinted = progress.captured - progress.printed;
+    if (progress.needsOrder > 0) {
+      return '${progress.needsOrder} still waiting for a decision';
+    }
+    if (unprinted > 0) {
+      return '$unprinted captured ${unprinted == 1 ? 'label' : 'labels'} not printed';
+    }
+    return 'Grouped order, by person, and guarded closeout';
   }
 }
 
@@ -483,6 +518,74 @@ class _PrinterEntry extends StatelessWidget {
           : () => connected
               ? controller.disconnectPrinter()
               : controller.connectPrinter(),
+    );
+  }
+}
+
+class _TemplateEntry extends StatelessWidget {
+  const _TemplateEntry({required this.controller});
+
+  final PrinterController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final canTest = controller.connected &&
+        !controller.busy &&
+        controller.printerStatus != PrinterStatus.printing;
+
+    return Container(
+      key: templateEntryKey,
+      decoration: BoxDecoration(
+        color: CaptureColors.surface,
+        border: Border.all(color: CaptureColors.ruleSoft),
+        borderRadius: CaptureRadii.cardBorder,
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.label_outline, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  controller.labelTemplateIdentity,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            controller.labelTemplateStatus,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: testLabelActionKey,
+              onPressed:
+                  canTest ? () => controller.printFictionalTestLabel() : null,
+              icon: const Icon(Icons.print_outlined, size: 18),
+              label: Text(
+                canTest
+                    ? 'Print fictional test label'
+                    : 'Connect printer to print a test label',
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Uses this exact template and changes no order or printed facts.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: CaptureColors.muted,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

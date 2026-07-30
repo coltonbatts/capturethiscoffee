@@ -50,6 +50,9 @@ export type Production = {
   runner_name?: string;
   notes?: string;
   status: ProductionStatus;
+  label_template_version_id?: string;
+  completed_at?: string;
+  completed_by?: string;
   created_at: string;
 };
 
