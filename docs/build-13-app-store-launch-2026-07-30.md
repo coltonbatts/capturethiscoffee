@@ -128,7 +128,8 @@ downgrade, so no dependency change was made.
 
 | Item | Actual result |
 |---|---|
-| Implementation commits | `5058484cf18c265b0a6a25dcbe134f2fb6dfcf4e` |
+| Implementation commits | `50584845dde372b898d8286c26e0bdc1b4377c49` |
+| Release/documentation commits | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus the release-evidence correction |
 | Pull request | Pending |
 | Merge commit | Pending |
 | Production migration | Pending |

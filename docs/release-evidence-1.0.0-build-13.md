@@ -15,8 +15,8 @@ review evidence cannot substitute for physical printer acceptance.
 
 | Item | Actual result |
 |---|---|
-| Implementation commit(s) | `5058484cf18c265b0a6a25dcbe134f2fb6dfcf4e` |
-| Release/documentation commit(s) | Pending |
+| Implementation commit(s) | `50584845dde372b898d8286c26e0bdc1b4377c49` |
+| Release/documentation commit(s) | `75c413b93f14665f22cfe6b35d9811f86b0cb15f` plus this evidence correction |
 | Pull request | Pending |
 | Required checks | Pending |
 | Merge commit | Pending |
