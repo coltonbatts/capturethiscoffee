@@ -40,6 +40,12 @@ const _fixtures =
     group: 'Second Unit',
     client: 'Capture This',
   ),
+  'grid-01-regression-long-name': (
+    name: 'Cameron Ellington-Smythe',
+    drink: 'Iced oat latte',
+    group: 'Camera',
+    client: 'Capture This',
+  ),
   'grid-01-long-drink': (
     name: 'Sam Okafor',
     drink:
@@ -61,9 +67,9 @@ void main() {
   setUpAll(_loadLabelFonts);
 
   _fixtures.forEach((golden, fixture) {
-    testWidgets(
+    test(
       'renders $golden',
-      (tester) async {
+      () async {
         final image = await renderLabelImage(LabelContent.fromQueue(
           orderId: 'order-a1b2c3d4',
           personName: fixture.name,

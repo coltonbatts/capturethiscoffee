@@ -48,6 +48,9 @@ docs/milestones/evidence/
 # vercel
 .vercel
 
+# linked Supabase CLI cache
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

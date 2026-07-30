@@ -1,6 +1,6 @@
 # App Store screenshot assets
 
-The seven English (U.S.) PNGs in `iphone-6.9/` are truthful Build 11
+The nine English (U.S.) PNGs in `iphone-6.9/` are truthful Build 13
 release-candidate screens generated from the shipping Flutter UI at an
 Apple-accepted 6.9-inch portrait size of 1320×2868 pixels.
 
@@ -12,7 +12,9 @@ Apple-accepted 6.9-inch portrait size of 1320×2868 pixels.
 | `04-individual-print-deck.png` | Cached individual-print deck and real local label preview; printer visibly disconnected |
 | `05-offline-conflict.png` | Offline pending mutation and visible conflict protection |
 | `06-duplicate-safe-recovery.png` | Uncertain single-label recovery choices that prevent duplicate printing |
-| `07-about-release.png` | About, privacy/support links, and `1.0.0 (12)` identity |
+| `07-about-release.png` | About, privacy/support links, and `1.0.0 (13)` identity |
+| `08-summary-closeout.png` | Grouped shop order, by-person Printed/No drink states, native share control, and guarded closeout |
+| `09-template-test-label.png` | Current published template name/version/status and the fictional no-facts test-label action |
 
 Every name, company, day, order, user ID, and email domain in the fixture is
 fictional. The fixture performs no network request. The assets show no password,
@@ -49,7 +51,7 @@ sips -g pixelWidth -g pixelHeight -g hasAlpha \
   ../docs/app-store-assets/iphone-6.9/*.png
 ```
 
-The final seven files were visually inspected on 2026-07-27 after generation.
+The final nine files were visually inspected on 2026-07-30 after generation.
 Each is 1320×2868, 8-bit RGB, non-interlaced, with no alpha channel.
 
 Immediately before App Store Connect upload, rerun the harness, visually inspect

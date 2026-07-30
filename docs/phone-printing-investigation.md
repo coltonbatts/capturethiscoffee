@@ -13,7 +13,7 @@ Constraint honored throughout: iPhone on set, Safari has no Web Bluetooth, lapto
 
 Do both, in this order:
 
-1. **This week — Path A (smarter bridge, ~1–2 days of code + 1 hour of physical testing).** Add a "Export for NIIMBOT (.xlsx)" button to CTC that produces a file matching Luke's saved NIIMBOT template, shared straight from Safari's share sheet. This kills the "manually rebuild the template" step immediately. The NIIMBOT app keeps doing what it's good at (pairing, printing).
+1. **This week — Path A (smarter bridge, ~1–2 days of code + 1 hour of physical testing).** Add a "Export for NIIMBOT (.xlsx)" button to CTC that produces a file matching the intended operator's saved NIIMBOT template, shared straight from Safari's share sheet. This kills the "manually rebuild the template" step immediately. The NIIMBOT app keeps doing what it's good at (pairing, printing).
 2. **Next month — Path B (thin native app, ~2–5 weeks to trustworthy).** A tiny iOS app whose only job is: pull pending labels from CTC → send bitmaps to the M2_H over Bluetooth LE → done. The protocol is proven on this exact printer model by the community. This removes the NIIMBOT app from the loop entirely.
 3. **Today, free — email NIIMBOT developer support** (liqingsong@niimbot.com or the form at niimbot.com/us/developer_work_order). They have an official iOS/Flutter SDK program for integrators. If they hand over the SDK, Path B gets dramatically safer. Costs nothing to ask; 1–2 business day response claimed.
 
@@ -30,7 +30,7 @@ What the official app **does** support (confirmed via NIIMBOT's own tutorial):
 
 Two practical findings that matter:
 
-- The file picker flow means a file that lands in the iOS **Files app** (which Safari downloads go to) should be selectable without any cable or computer. *Unverified assumption: I could not confirm from documentation that the in-app picker uses the standard iOS document picker with Files access — this needs a 10-minute test on Luke's phone. High confidence, but test it.*
+- The file picker flow means a file that lands in the iOS **Files app** (which Safari downloads go to) should be selectable without any cable or computer. *Unverified assumption: I could not confirm from documentation that the in-app picker uses the standard iOS document picker with Files access — this needs a 10-minute test on the intended operator's phone. High confidence, but test it.*
 - The import format is **brittle and undocumented**. A user comment on NIIMBOT's own blog (May 2025) reports "file can not parse" errors after an app update, with no published spec or template to check against. So: generate a real `.xlsx` (not a renamed CSV), keep a single simple header row, and expect to iterate once against the actual app.
 
 ## 2. Path A — smarter bridge (low effort, keeps NIIMBOT app)
@@ -39,20 +39,20 @@ Two practical findings that matter:
 
 We already have `niimbotBatchCsv()` in `src/lib/label-export.ts` (header row + `"crew name","drink"` rows). The upgrade:
 
-- Generate a genuine **`.xlsx`** client-side with SheetJS (~50 lines; SheetJS is already in Claude's/our toolbox and runs fine in the browser). Column headers must exactly match the data fields in Luke's saved NIIMBOT template.
+- Generate a genuine **`.xlsx`** client-side with SheetJS (~50 lines; SheetJS is already in Claude's/our toolbox and runs fine in the browser). Column headers must exactly match the data fields in the intended operator's saved NIIMBOT template.
 - Trigger the **Web Share API** (`navigator.share({ files: [...] })`) on the export button. On iOS Safari this opens the share sheet, so it's: tap Export → tap "Save to Files" (or possibly straight into NIIMBOT — see tests below).
 - Keep the existing PNG export path for hero/client cups — that already works and stays.
 
 ### On-set flow after this ships
 
-One-time setup (once, ever): Luke builds the label template in the NIIMBOT app with data-source fields, saves it.
+One-time setup (once, ever): the intended operator builds the label template in the NIIMBOT app with data-source fields, saves it.
 
 Per shoot: CTC → Export button → share sheet → Save to Files → open NIIMBOT app → open template → Link data source → pick the file → batch print. Roughly **6–8 taps, zero typing, zero template rebuilding.**
 
 ### Effort
 
 - Code: 1–2 days including a test for the xlsx content (mirroring `tests/label-export.test.ts`).
-- Physical validation: ~1 hour with the printer and Luke's iPhone.
+- Physical validation: ~1 hour with the printer and the intended operator's iPhone.
 
 ### What's confirmed vs. not
 
@@ -98,15 +98,15 @@ The native app never draws a label — it downloads finished PNGs and shovels pi
 
 - **Week 1:** proof of life. Flutter project + `niim_blue_flutter` (or Swift cribbing from libreniim), hardcoded PNG, get one label out of the M2_H from an iPhone. This is the go/no-go gate — everything else is normal app work.
 - **Weeks 2–3:** Supabase/API integration (reuse the share-token routes — no new auth system), queue UI, `label_printed` sync, error handling for the flaky realities (printer asleep, out of ribbon, BLE drop mid-batch).
-- **Weeks 4–5:** on-set hardening, TestFlight distribution, Luke feedback loop.
+- **Weeks 4–5:** on-set hardening, TestFlight distribution, the intended operator feedback loop.
 
 Call it **2–5 weeks of part-time vibe-coding**, front-loaded so you know by end of week 1 whether it works.
 
 ### Distribution — plainly
 
-You do **not** need App Store review to put this on Luke's phone. Options:
+You do **not** need App Store review to put this on the intended operator's phone. Options:
 
-- **TestFlight internal testing** (recommended): needs an Apple Developer account ($99/yr). Add Luke as an internal tester; internal builds don't go through App Store review. Builds expire after 90 days, so you rebuild quarterly — fine.
+- **TestFlight internal testing** (recommended): needs an Apple Developer account ($99/yr). Add the intended operator as an internal tester; internal builds don't go through App Store review. Builds expire after 90 days, so you rebuild quarterly — fine.
 - Public App Store later, only if you ever want to. Apps driving BLE printers are common; review risk is low but nonzero and irrelevant for now.
 - No developer account at all (free provisioning) makes builds expire every 7 days — not workable for a production tool.
 
@@ -135,7 +135,7 @@ They're not competing: A is the tourniquet, B is the cure, and A remains the fal
 ## 5. What I need from you
 
 1. **10-minute phone test (unblocks Path A):** on the iPhone with the NIIMBOT app — (a) save any .xlsx from Safari to Files, (b) open a template → Data source → Link data source, and see if you can pick that file; (c) note whether the app shows up as a share-sheet target; (d) import twice and note whether column mapping persists. Report back and I'll build the export to match.
-2. **The exact fields Luke's template uses** (name + drink only, or more?), so the xlsx columns match 1:1.
+2. **The exact fields the intended operator's template uses** (name + drink only, or more?), so the xlsx columns match 1:1.
 3. **Decision for Path B:** Flutter (`niim_blue_flutter`, fastest start) vs Swift (libreniim as reference, more native, more code). My lean: start Flutter for the week-1 spike since the library already implements the print task; switch only if it fails.
 4. **Apple Developer account** ($99/yr) — only needed when Path B's spike succeeds.
 5. **Physical access to the M2_H + iPhone** for the week-1 spike.

@@ -1,8 +1,12 @@
 import { join } from "node:path";
 import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import type { CoffeeLabel } from "@/lib/label-copy";
-import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
-import { drawNiimbotM2Label, niimbotM2ExportPreset } from "@/lib/niimbot-m2-draw";
+import { defaultLabelDesignId } from "@/lib/label-designs";
+import {
+  drawNiimbotM2Label,
+  niimbotM2ExportPreset,
+  type LabelTemplateSelection,
+} from "@/lib/niimbot-m2-draw";
 
 let fontsRegistered = false;
 function ensureFontsRegistered() {
@@ -20,7 +24,7 @@ function ensureFontsRegistered() {
 
 export async function renderNiimbotM2LabelPngBuffer(
   label: CoffeeLabel,
-  designId: LabelDesignId = defaultLabelDesignId,
+  designId: LabelTemplateSelection = defaultLabelDesignId,
 ) {
   ensureFontsRegistered();
   const canvas = createCanvas(

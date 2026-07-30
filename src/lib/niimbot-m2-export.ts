@@ -1,9 +1,10 @@
 import type { CoffeeLabel } from "@/lib/label-copy";
-import { defaultLabelDesignId, type LabelDesignId } from "@/lib/label-designs";
+import { defaultLabelDesignId } from "@/lib/label-designs";
 import {
   drawNiimbotM2Label,
   niimbotM2ExportPreset,
   safeFilePart,
+  type LabelTemplateSelection,
 } from "@/lib/niimbot-m2-draw";
 
 export { niimbotM2ExportPreset };
@@ -22,7 +23,7 @@ export function niimbotM2ExportFileName(
 
 export async function renderNiimbotM2LabelPngBlob(
   label: CoffeeLabel,
-  designId: LabelDesignId = defaultLabelDesignId,
+  designId: LabelTemplateSelection = defaultLabelDesignId,
 ) {
   const canvas = document.createElement("canvas");
   canvas.width = niimbotM2ExportPreset.pixelWidth;

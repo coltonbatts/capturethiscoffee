@@ -83,7 +83,7 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 ## Record first
 
 - Date/tester: _____
-- Luke present as accepting operator: yes/no _____
+- the intended operator present as accepting operator: yes/no _____
 - Capture This version/build: _____
 - iPhone model / iOS: _____
 - Printer model shown on label/device: _____
@@ -138,7 +138,7 @@ can read the fixture. Preserve it until the physical evidence queries finish.
     exposing a production token or real personal data.
 18. Have the receiving operator repeat sign in → select day → connect → short
     and long labels one at a time → hosted sync → airplane-mode restore →
-    interrupted single-label recovery → fallback, without Colton touching the
+    interrupted single-label recovery → fallback, without the product builder touching the
     phone or dashboard.
 
 ## Result
@@ -177,9 +177,9 @@ can read the fixture. Preserve it until the physical evidence queries finish.
 - Disposable production link revoked after evidence capture: yes/no _____
 - Evidence contains no real client data or visible token: yes/no _____
 - Open limitations accepted: _____
-- Luke accepts day-of operation: name/signature/date _____
+- the intended operator accepts day-of operation: name/signature/date _____
 - Account/release owner accepts platform obligations: name/signature/date _____
-- Printer may leave Colton's possession: yes/no _____
+- Printer may leave the product builder's possession: yes/no _____
 
 The gate passes only when the tester reports the exact record above, all label
 types are usable one at a time, successful prints synchronize, interruption

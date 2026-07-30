@@ -1,13 +1,14 @@
 # Capture This standard operating procedure
 
-Last updated: 2026-07-27
+Last updated: 2026-07-30
 
-**Build 11 release-candidate boundary:** the iOS app signs in, selects an
-existing day, collects and edits drinks, works offline, resolves conflicts,
-prints one label at a time, and recovers conservatively. Day/people/roster
-setup, summary, and closeout remain on the frozen web. The current build
-boundary is in
-[current-state-2026-07-25.md](current-state-2026-07-25.md).
+**Build 13 release-candidate boundary:** the iOS app signs in, prepares or
+selects a day, manages people/roster, collects and edits drinks, works offline,
+resolves conflicts, previews and prints the day's snapshotted template one
+label at a time, summarizes/shares, and performs guarded closeout. The web
+remains the advanced label-template administration and fallback surface. The
+current boundary is in
+[current-state-2026-07-30.md](current-state-2026-07-30.md).
 
 ## Purpose
 
@@ -23,15 +24,15 @@ Use this SOP for:
 
 - Setting up a production before shoot day.
 - Running the coffee workflow on set.
-- Printing cup labels through CTC Printer, with `/labels` as fallback export.
+- Printing cup labels through Capture This, with `/labels` as fallback export.
 - Recovering from common issues without stopping the order flow.
 - Closing out the production after the run.
 
 Related docs:
 
 - [Handoff hub](HANDOFF.md)
-- [Luke Quick Start](luke-quick-start.md)
-- [Build 11 physical release worksheet](build-11-physical-release-worksheet-2026-07-27.md)
+- [Operator quick start](operator-quick-start.md)
+- [Build 13 physical acceptance worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md)
 - [Operational ownership and handoff](operational-handoff.md)
 - [Label image export](label-image-export.md)
 - [App experience map](app-experience-map.md)
@@ -39,7 +40,7 @@ Related docs:
 
 ## Systems
 
-### Shared backend and frozen website
+### Shared backend and operator website
 
 Use `https://coffee.capturethis.com` for shared production data.
 
@@ -51,21 +52,25 @@ Supabase is the source of truth for:
 - Rosters.
 - Coffee orders.
 - Printed label status.
+- Immutable published label-template versions and per-day snapshots.
+- Permanent day completion metadata.
 
-Build 11 reads the same data directly after sign-in. Use the frozen website for
-setup, runner/order capture, summaries, and fallback label export until those
-capabilities move to iOS.
+Build 13 reads the same data directly after sign-in. Use the website for
+template drafting, validation, publishing, default selection, Planning-day
+assignment, runner links, the zero-install runner, and fallback label export.
 
 ### Capture This iPhone app
 
-The native iPhone **Capture This** app is the primary on-set print path. Build
-11 uses an owner-provisioned Supabase account, lists existing days, collects and
-edits orders, reads the selected board directly through authenticated RLS,
-prints one label at a time to the NIIMBOT M2_H over Bluetooth LE, and marks
-each order `label_printed` directly. It keeps the condensed operating and
-recovery guide inside the app, caches the selected board for offline operation,
-and pauses new physical prints unless the day is Active. The production-share
-URL remains under **Advanced · Legacy link**.
+The native iPhone **Capture This** app is the primary on-set path. Build 13 uses
+an owner-provisioned Supabase account, prepares/lists days and rosters, collects
+and edits orders, reads the selected board directly through authenticated RLS,
+validates and caches its label-template snapshot, prints one label at a time to
+the NIIMBOT M2_H over Bluetooth LE, and marks each order `label_printed`
+directly. It summarizes and shares the day, then requests server-authoritative
+completion only after every closeout guard is clear. It keeps the condensed
+operating and recovery guide inside the app and pauses new physical prints
+unless the day is Active. The production-share URL remains under
+**Advanced · Legacy link**.
 
 ### `/labels` fallback
 
@@ -94,7 +99,10 @@ Responsibilities:
 - Add people and photos.
 - Create productions.
 - Build or update the production roster.
-- Confirm the CTC Printer workflow on the phone before shoot day.
+- Draft/duplicate and validate label templates; publish immutable versions;
+  choose the future-day default; assign a published version while a day is
+  Planning.
+- Confirm the Capture This printer workflow on the phone before shoot day.
 - Keep credentials, Supabase settings, and environment variables private.
 
 ### Runner
@@ -111,11 +119,11 @@ Responsibilities:
 
 ### PA / Label Operator
 
-The label operator uses CTC Printer on the iPhone.
+The label operator uses Capture This on the iPhone.
 
 Responsibilities:
 
-- Open CTC Printer.
+- Open Capture This.
 - Sign in and select the Active day.
 - Connect the NIIMBOT M2_H.
 - Print pending labels one at a time.
@@ -139,7 +147,7 @@ production share link. The link token scopes reads and order edits to one
 production. Anonymous direct Supabase table reads and order updates are not
 allowed.
 
-The signed-in iOS operator does not use that token. Normal Build 11 operation
+The signed-in iOS operator does not use that token. Normal Build 13 operation
 uses the invited user's authenticated Supabase session; the token path is a
 fallback.
 
@@ -170,10 +178,12 @@ In Supabase, confirm:
 - RLS is enabled on app tables.
 - The `person-photos` storage bucket exists.
 - Person photo uploads work after refresh.
+- Build 13 template tables/settings, functions, lifecycle triggers, and
+  closeout function are present with authenticated-only grants and RLS.
 - Obsolete print-station tables are absent: `printer_devices`,
   `label_print_jobs`, and `label_print_attempts`.
 
-### 3. Create Production Records
+### 3. Create production records and choose the template
 
 In the app:
 
@@ -183,8 +193,12 @@ In the app:
 4. Open `/productions/new`.
 5. Enter the production name, date, location, client, and runner details.
 6. Add the known roster.
-7. Save the production.
-8. Open the production page and confirm the runner board loads.
+7. Save the production while it is Planning.
+8. Open **Labels → Templates**. Confirm the intended published version is
+   compatible, then assign it to the Planning day. If no special choice is
+   needed, confirm the intended default for future days.
+9. Mark the day Active. Its exact published version is now frozen.
+10. Open the production page and confirm the runner board loads.
 
 ### 4. Verify Day-Of Flow
 
@@ -198,19 +212,24 @@ On the device the runner will use:
 6. Confirm the header shows the captured count and the **Print labels**
    fallback-export entry.
 
-### 5. Verify CTC Printer
+### 5. Verify Capture This printing
 
 On the phone the PA will use:
 
 1. Open Capture This, sign in, and select the Active day.
 2. Connect the NIIMBOT M2_H.
-3. Print one physical test label from the queue.
-4. Confirm Capture This and the web runner board show the label as printed.
-5. Record any scaling, cropping, readability, or `label_printed` issue.
+3. Confirm the app displays the expected template name/version and current
+   synchronization state.
+4. Print the fictional test label without changing any production order or
+   printed fact.
+5. Print one physical production label from the queue.
+6. Confirm Capture This and the web runner board show the production label as
+   printed.
+7. Record any scaling, cropping, readability, or `label_printed` issue.
 
 Use **Advanced · Legacy link** only for the explicit fallback drill.
 
-If CTC Printer is unavailable, run the fallback `/labels` PNG or CSV export
+If Capture This is unavailable, run the fallback `/labels` PNG or CSV export
 flow in [label-image-export.md](label-image-export.md).
 
 ## Shoot-Day Startup
@@ -235,10 +254,10 @@ flow in [label-image-export.md](label-image-export.md).
 ### Label Operator
 
 - Confirm the NIIMBOT is powered on.
-- Force-quit the official NIIMBOT app before connecting CTC Printer.
-- Open CTC Printer on the phone.
-- Refresh the queue and print one test label if this has not already been done
-  that day.
+- Force-quit the official NIIMBOT app before connecting Capture This.
+- Open Capture This on the phone.
+- Refresh the queue/template and print the fictional test label if this has not
+  already been done that day.
 
 ## Standard Day-Of Workflow
 
@@ -285,7 +304,8 @@ starting another. `/labels` remains a separate manual PNG/CSV fallback.
 
 From Capture This:
 
-1. Confirm the production is active.
+1. Confirm the production is Active and shows the intended template
+   name/version.
 2. Sign in and select the correct day.
 3. Refresh the queue.
 4. Print each pending label individually, inspecting the result before the next.
@@ -347,16 +367,26 @@ confirms it.
 5. Test one label and inspect it before printing another.
 6. Record the final import settings in [label-image-export.md](label-image-export.md).
 
-## Post-Shoot Closeout
+## Post-shoot summary and closeout
 
 After the last drink run:
 
 1. Confirm everyone on the roster is captured or marked no drink.
-2. Export any label assets still needed.
-3. Note any duplicate people, missing photos, bad drink names, label media
+2. Confirm every captured order's label is physically printed and synchronized.
+3. Resolve every conflict, pending mutation, printed-but-unsynced fact, and
+   uncertain physical outcome.
+4. Open **Summary & closeout**. Reconcile the grouped shop quantities and each
+   person's Waiting, Captured waiting to print, Printed, or No drink state.
+5. Share the native summary if required.
+6. With a current connection, confirm permanent closeout. If the server refuses
+   it, follow the shown blocker and keep using Collect/Print until resolved.
+7. Refresh and confirm the day is Complete; it cannot be reopened or printed.
+8. Export any remaining fallback assets only if operational evidence requires
+   them.
+9. Note any duplicate people, missing photos, bad drink names, label media
    issues, or workflow gaps.
-4. Power down the NIIMBOT.
-5. Save any operator notes for the next production.
+10. Power down the NIIMBOT.
+11. Save any operator notes for the next production.
 
 ## Data Hygiene
 
@@ -388,9 +418,14 @@ After the last drink run:
 - [ ] Client, people, roster, date, location, and runner details are correct.
 - [ ] Runner can search, quick-add, take orders, and mark no-drink on the actual device.
 - [ ] Capture This signs in, selects the Active day, and restores it after relaunch.
+- [ ] The expected published template name/version loads, its fictional test
+      label prints, and the validated cached copy renders offline.
 - [ ] Advanced · Legacy link opens the same disposable runner share URL.
-- [ ] Capture This prints one physical test label and marks `label_printed`.
+- [ ] Capture This prints one physical production label and marks
+      `label_printed`; the fictional test label does not change an order.
 - [ ] Interrupted printing is resolved without an accidental duplicate.
+- [ ] Summary grouping/share is correct; premature closeout is rejected; a
+      fully resolved fictional day completes and cannot reopen.
 - [ ] `/labels` fallback loads on the phone.
 - [ ] At least one fallback PNG or CSV exports successfully.
-- [ ] Remaining physical unknowns are recorded before client use.
+- [ ] Remaining physical unknowns are recorded before intended-operator use.

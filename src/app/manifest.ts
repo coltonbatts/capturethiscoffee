@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Capture This Coffee",
-    short_name: "CTC Coffee",
+    name: "Capture This",
+    short_name: "Capture This",
     description: "On-set coffee orders, runners, and label printing.",
     start_url: "/",
     display: "standalone",

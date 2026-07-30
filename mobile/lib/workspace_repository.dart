@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'label_template.dart';
 import 'production_board.dart';
 import 'workspace_models.dart';
 
@@ -26,7 +27,12 @@ class WorkspaceRepositoryException implements Exception {
 abstract interface class WorkspaceRepository {
   Future<List<DaySummary>> fetchDays();
 
-  Future<ProductionBoard> fetchBoard(String productionId);
+  Future<ProductionBoard> fetchBoard(
+    String productionId, {
+    LabelTemplateVersion? lastKnownGoodTemplate,
+  });
+
+  Future<void> completeDay({required String productionId});
 
   Future<ConditionalOrderWrite> updateOrderConditionally({
     required String productionId,
@@ -112,7 +118,10 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
   }
 
   @override
-  Future<ProductionBoard> fetchBoard(String productionId) async {
+  Future<ProductionBoard> fetchBoard(
+    String productionId, {
+    LabelTemplateVersion? lastKnownGoodTemplate,
+  }) async {
     try {
       final productionValue = await _client
           .from('productions')
@@ -157,13 +166,33 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
               .select(_personColumns)
               .inFilter('id', personIds));
 
-      return ProductionBoardRowAdapter.fromRows(
+      final board = ProductionBoardRowAdapter.fromRows(
         production: production,
         client: clientValue == null ? null : _row(clientValue),
         roster: roster,
         people: people,
         orders: orders,
       );
+      late final LabelTemplateVersion template;
+      try {
+        final templateValue = await _client.rpc(
+          'resolve_label_template_for_production',
+          params: {'p_production_id': productionId},
+        );
+        template = LabelTemplateVersion.fromResolvedJson(templateValue);
+      } on FormatException {
+        // A remotely authored definition is never allowed to take the board
+        // down or replace a known-good snapshot. Old caches and first launch
+        // both retain a deterministic, on-device renderer.
+        template = (lastKnownGoodTemplate ??
+                await BundledLabelTemplates.defaultVersion())
+            .withResolution(LabelTemplateResolution.incompatibleFallback);
+      } catch (_) {
+        template = (lastKnownGoodTemplate ??
+                await BundledLabelTemplates.defaultVersion())
+            .withResolution(LabelTemplateResolution.unavailableFallback);
+      }
+      return board.withLabelTemplate(template);
     } on WorkspaceRepositoryException {
       rethrow;
     } on PostgrestException {
@@ -179,6 +208,45 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
     } catch (_) {
       throw const WorkspaceRepositoryException(
         'Could not reach the workspace. The cached day is still available.',
+        kind: WorkspaceFailureKind.unreachable,
+      );
+    }
+  }
+
+  @override
+  Future<void> completeDay({required String productionId}) async {
+    try {
+      final value = await _client.rpc(
+        'complete_production_day',
+        params: {'p_production_id': productionId},
+      );
+      final result = _row(value);
+      final productionValue = result['production'];
+      final production =
+          productionValue == null ? result : _row(productionValue);
+      if (production['id']?.toString() != productionId ||
+          production['status'] != 'complete' ||
+          result['not_asked'] is! num ||
+          result['captured_unprinted'] is! num ||
+          (result['not_asked']! as num).toInt() != 0 ||
+          (result['captured_unprinted']! as num).toInt() != 0) {
+        throw const FormatException('Invalid completed production response.');
+      }
+    } on PostgrestException {
+      throw const WorkspaceRepositoryException(
+        'The workspace refused to complete this day.',
+        kind: WorkspaceFailureKind.unauthorized,
+      );
+    } on FormatException {
+      throw const WorkspaceRepositoryException(
+        'The workspace returned invalid closeout data.',
+        kind: WorkspaceFailureKind.invalidData,
+      );
+    } on WorkspaceRepositoryException {
+      rethrow;
+    } catch (_) {
+      throw const WorkspaceRepositoryException(
+        'Could not complete this day. Refresh and try again.',
         kind: WorkspaceFailureKind.unreachable,
       );
     }
@@ -399,9 +467,11 @@ class MemoryWorkspaceRepository implements WorkspaceRepository {
     Map<String, ProductionBoard> boards = const {},
     this.fetchDaysFailure,
     this.fetchBoardFailure,
+    this.fetchTemplateFailure,
     this.markPrintedFailure,
     this.updateOrderFailure,
     this.updateUsualFailure,
+    this.completeDayFailure,
   })  : days = List.of(days),
         boards = Map.of(boards);
 
@@ -409,14 +479,17 @@ class MemoryWorkspaceRepository implements WorkspaceRepository {
   Map<String, ProductionBoard> boards;
   WorkspaceRepositoryException? fetchDaysFailure;
   WorkspaceRepositoryException? fetchBoardFailure;
+  Object? fetchTemplateFailure;
   WorkspaceRepositoryException? markPrintedFailure;
   WorkspaceRepositoryException? updateOrderFailure;
   WorkspaceRepositoryException? updateUsualFailure;
+  WorkspaceRepositoryException? completeDayFailure;
   int fetchDaysCalls = 0;
   int fetchBoardCalls = 0;
   int markPrintedCalls = 0;
   int conditionalOrderCalls = 0;
   int usualOrderCalls = 0;
+  int completeDayCalls = 0;
   final List<String> loadedProductionIds = [];
   final StreamController<void> _orderSignals =
       StreamController<void>.broadcast();
@@ -431,7 +504,10 @@ class MemoryWorkspaceRepository implements WorkspaceRepository {
   }
 
   @override
-  Future<ProductionBoard> fetchBoard(String productionId) async {
+  Future<ProductionBoard> fetchBoard(
+    String productionId, {
+    LabelTemplateVersion? lastKnownGoodTemplate,
+  }) async {
     fetchBoardCalls += 1;
     loadedProductionIds.add(productionId);
     final failure = fetchBoardFailure;
@@ -443,7 +519,34 @@ class MemoryWorkspaceRepository implements WorkspaceRepository {
         kind: WorkspaceFailureKind.notFound,
       );
     }
+    if (fetchTemplateFailure != null) {
+      final fallback =
+          lastKnownGoodTemplate ?? await BundledLabelTemplates.defaultVersion();
+      return board.withLabelTemplate(fallback.withResolution(
+        fetchTemplateFailure is FormatException
+            ? LabelTemplateResolution.incompatibleFallback
+            : LabelTemplateResolution.unavailableFallback,
+      ));
+    }
     return board;
+  }
+
+  @override
+  Future<void> completeDay({required String productionId}) async {
+    completeDayCalls += 1;
+    final failure = completeDayFailure;
+    if (failure != null) throw failure;
+    final board = boards[productionId];
+    if (board == null) {
+      throw const WorkspaceRepositoryException(
+        'Day not found.',
+        kind: WorkspaceFailureKind.notFound,
+      );
+    }
+    boards[productionId] = ProductionBoard(
+      production: board.production.copyWith(status: 'complete'),
+      roster: board.roster,
+    );
   }
 
   @override

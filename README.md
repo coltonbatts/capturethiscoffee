@@ -1,8 +1,8 @@
-# Capture This Coffee
+# Capture This
 
 [![Quality checks](https://github.com/coltonbatts/capturethiscoffee/actions/workflows/quality.yml/badge.svg)](https://github.com/coltonbatts/capturethiscoffee/actions/workflows/quality.yml)
 
-Capture This Coffee is a shoot-day coffee operations system for production
+Capture This is a shoot-day coffee operations system for production
 crews. It keeps the day roster, drink collection, cup-label printing, and
 printed status in one workflow.
 

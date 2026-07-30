@@ -9,7 +9,7 @@ import '../external_links.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
 
-const String kAppVersion = '1.0.0 (12)';
+const String kAppVersion = '1.0.0 (13)';
 
 final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
@@ -45,8 +45,9 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Coffee-label companion for Capture This production crews. '
-              'Sign in, choose a day, and print directly from the workspace.',
+              'Production coffee, organized for production crews. '
+              'Prepare a day, collect orders, print one label at a time, '
+              'share the summary, and close out from the workspace.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

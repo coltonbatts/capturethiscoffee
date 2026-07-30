@@ -45,6 +45,9 @@ export function mapProduction(
     location: present(row.location),
     runner_name: present(row.runner_name),
     notes: present(row.notes),
+    label_template_version_id: present(row.label_template_version_id),
+    completed_at: present(row.completed_at),
+    completed_by: present(row.completed_by),
   };
 }
 

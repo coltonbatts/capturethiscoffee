@@ -1,6 +1,6 @@
 # Capture This Coffee — Where We're At
 
-**July 2026 update for Luke**
+**July 2026 update for the intended operator**
 
 ---
 
@@ -37,4 +37,4 @@ The shoot-day drink board is bolder and faster to read at a glance — built for
 
 ---
 
-*Questions? Grab me anytime. — Colton*
+*Questions? Contact the product owner.*

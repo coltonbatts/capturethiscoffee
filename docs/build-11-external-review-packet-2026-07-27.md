@@ -129,7 +129,7 @@ Owner/legal approval and App Store Connect entry remain required.
 | Required value or decision | Current status |
 |---|---|
 | Tester feedback email | Missing; `info@capturethis.com` was declined for Build 10 |
-| Review contact name | Kait Batts documented; reapprove for Build 11 |
+| Review contact name | Supplied privately; reapprove for Build 11 |
 | Review contact phone/email | Previously supplied privately; reverify in App Store Connect, never commit |
 | Privacy-policy wording/effective date/contact | Owner/legal approval missing; source edit not deployed |
 | Support wording/contact/response owner | Owner approval and named mailbox owners missing; source edit not deployed |

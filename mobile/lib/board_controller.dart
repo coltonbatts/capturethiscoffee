@@ -153,7 +153,10 @@ class BoardController extends ChangeNotifier {
       // Status is refreshed before replay. Authenticated RLS permits writes to
       // complete days, so the product guard must be based on an authoritative
       // production snapshot rather than the cached active status.
-      var incoming = await repository.fetchBoard(productionId);
+      var incoming = await repository.fetchBoard(
+        productionId,
+        lastKnownGoodTemplate: _serverBoard?.production.labelTemplate,
+      );
       if (!_isCurrent(generation, userId, productionId)) return;
       _applyServerBoard(incoming);
       _error = null;
@@ -163,7 +166,10 @@ class BoardController extends ChangeNotifier {
         final replayed = await _replayActiveBoard(repository);
         if (!_isCurrent(generation, userId, productionId)) return;
         if (replayed) {
-          incoming = await repository.fetchBoard(productionId);
+          incoming = await repository.fetchBoard(
+            productionId,
+            lastKnownGoodTemplate: _serverBoard?.production.labelTemplate,
+          );
           if (!_isCurrent(generation, userId, productionId)) return;
           _applyServerBoard(incoming);
         }

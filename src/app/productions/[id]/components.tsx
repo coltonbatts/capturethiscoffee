@@ -655,7 +655,7 @@ export function RunnerLinkSheet({
       }
     >
       <p className="text-sm font-semibold leading-relaxed text-zinc-600">
-        Anyone with this link can take drink orders for today. Paste this link into CTC Printer to sync the printing queue.
+        Anyone with this link can take drink orders for today. Paste this link into Capture This under Advanced · Legacy link when that fallback is required.
       </p>
       <input
         readOnly

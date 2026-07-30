@@ -110,20 +110,25 @@ class _DayEditorScreenState extends State<DayEditorScreen> {
                     DropdownButtonFormField<String>(
                       key: const Key('day-status'),
                       initialValue: _status,
-                      decoration: const InputDecoration(labelText: 'Status'),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'planning',
-                          child: Text('Planning'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'active',
-                          child: Text('Active'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'complete',
-                          child: Text('Complete'),
-                        ),
+                      decoration: InputDecoration(
+                        labelText: 'Status',
+                        helperText: switch (widget.day?.status) {
+                          'active' =>
+                            'Complete an Active day from Summary & closeout.',
+                          'complete' => 'A Complete day cannot be reopened.',
+                          _ => 'A Planning day may move forward to Active.',
+                        },
+                      ),
+                      items: [
+                        for (final status in _allowedStatuses)
+                          DropdownMenuItem(
+                            value: status,
+                            child: Text(switch (status) {
+                              'planning' => 'Planning',
+                              'active' => 'Active',
+                              _ => 'Complete',
+                            }),
+                          ),
                       ],
                       onChanged: controller.busy
                           ? null
@@ -188,6 +193,13 @@ class _DayEditorScreenState extends State<DayEditorScreen> {
         ),
       ),
     );
+  }
+
+  List<String> get _allowedStatuses {
+    final original = widget.day?.status;
+    if (original == null) return const ['planning'];
+    if (original == 'planning') return const ['planning', 'active'];
+    return [original];
   }
 
   Future<void> _chooseDate() async {

@@ -3,7 +3,7 @@
  * Requires SUPABASE_SERVICE_ROLE_KEY in env.
  *
  * Usage:
- *   DEMO_USER_EMAIL=luke@capturethis.com DEMO_USER_PASSWORD='...' node scripts/create-demo-user.mjs
+ *   DEMO_USER_EMAIL=review.operator@example.com DEMO_USER_PASSWORD='...' node scripts/create-demo-user.mjs
  *
  * Loads .env.local when present (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).
  */

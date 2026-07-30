@@ -188,9 +188,14 @@ void main() {
     await _pumpFrames(tester);
 
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.byKey(collectEntryKey), findsOneWidget);
-    expect(find.byKey(printEntryKey), findsOneWidget);
     expect(find.text('Fictional Shoot Day'), findsWidgets);
+    expect(find.byKey(collectEntryKey), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(printEntryKey),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(printEntryKey), findsOneWidget);
   });
 }
 
