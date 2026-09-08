@@ -32,6 +32,21 @@ const longNameLabel: CoffeeLabel = {
   lines: [],
 };
 
+// Fitting multiplies lineHeight by a font-size ratio. Equal design metrics
+// can differ by one floating-point rounding step after that multiplication.
+// Keep the renderer unchanged and tolerate only machine-precision arithmetic.
+function assertNonOverlappingLines(
+  layout: { lineHeight: number; fontSize: number },
+  templateId: string,
+) {
+  const roundoff = Number.EPSILON * Math.max(1, layout.fontSize, layout.lineHeight);
+  assert.ok(
+    layout.lineHeight >= layout.fontSize ||
+      layout.fontSize - layout.lineHeight <= roundoff,
+    `${templateId} lines cannot overlap: fontSize=${layout.fontSize}, lineHeight=${layout.lineHeight}`,
+  );
+}
+
 test("canonical catalog contains eight strict 591x354 declarative templates", () => {
   const result = validateLabelTemplateCatalog(bundledLabelTemplateCatalog);
   assert.equal(result.ok, true);
@@ -90,10 +105,7 @@ test("long names fit without overlapping lines in every bundled renderer", () =>
       layout.lines.length <= nameElement.maxLines,
       `${template.id} respects maxLines`,
     );
-    assert.ok(
-      layout.lineHeight >= layout.fontSize,
-      `${template.id} lines cannot overlap`,
-    );
+    assertNonOverlappingLines(layout, template.id);
     assert.ok(
       layout.fontSize +
         (layout.lines.length - 1) * layout.lineHeight <=
@@ -125,4 +137,35 @@ test("template administration confirms irreversible publish and default changes"
     (source.match(/window\.confirm\(/g) || []).length >= 2,
     "publish and default changes both require confirmation",
   );
+});
+
+
+test("caption fit roundoff is distinguished from actual line overlap", () => {
+  const caption = bundledLabelTemplates.find((template) => template.id === "caption")!;
+  const element = caption.definition.elements.find(
+    (item): item is LabelTextElement => item.type === "text" &&
+      item.segments.some((segment) => "binding" in segment && segment.binding === "personName"),
+  )!;
+  // Exercise both the single-line search and the fallback fit search without
+  // depending on the host's installed Arial substitute or its glyph metrics.
+  for (const target of [62, 45]) {
+    const context = {
+      font: "",
+      measureText(value: string) {
+        const fontSize = Number(this.font.match(/ ([\d.]+)px /)![1]);
+        return { width: fontSize <= target ? value.length : element.width + 1 };
+      },
+    };
+    const layout = fitLabelTemplateText(
+      context as unknown as CanvasRenderingContext2D,
+      element,
+      longNameLabel.personName.toUpperCase(),
+    );
+    assert.equal(layout.fontSize, target);
+    assert.ok(layout.lineHeight < layout.fontSize, "reproduces strict comparison failure");
+    assertNonOverlappingLines(layout, "caption");
+    assert.throws(() => assertNonOverlappingLines({
+      fontSize: target, lineHeight: target - 0.000001,
+    }, "caption"), /lines cannot overlap/);
+  }
 });
