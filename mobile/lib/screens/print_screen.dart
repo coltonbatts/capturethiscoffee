@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../widgets/day_navigation.dart';
 import '../app_scope.dart';
 import '../widgets/print_deck.dart';
 import '../widgets/status_banners.dart';
@@ -21,6 +22,7 @@ class PrintScreen extends StatelessWidget {
     final pending = controller.pendingLabels;
 
     return Scaffold(
+      bottomNavigationBar: const DayNavigation(route: '/print'),
       appBar: AppBar(
         title: const Text('Print'),
         actions: [
@@ -43,6 +45,14 @@ class PrintScreen extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(12),
                   children: [
+                    if (controller.currentRecoveryRecords.isNotEmpty)
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/recovery'),
+                        icon: const Icon(Icons.report_problem_outlined),
+                        label: Text(
+                            'Review ${controller.currentRecoveryRecords.length} unresolved labels'),
+                      ),
                     PrintDeck(
                       productionName: controller.queue?.productionName ??
                           'Production loading',

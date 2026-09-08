@@ -1,0 +1,47 @@
+00:00 +0: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "renders grid-01-short-name"
+    the test "renders grid-01-long-name"
+    the test "renders grid-01-regression-long-name"
+    the test "renders grid-01-long-drink"
+    the test "renders grid-01-minimal"
+
+00:00 +0: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: (setUpAll)
+00:00 +0: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: renders grid-01-short-name
+00:00 +0: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "App Store screenshot — invited account sign in"
+    the test "App Store screenshot — existing day selection"
+    the test "App Store screenshot — collect orders"
+    the test "App Store screenshot — individual print deck and preview"
+    the test "App Store screenshot — offline conflict protection"
+    the test "App Store screenshot — duplicate-safe print recovery"
+    the test "App Store screenshot — About and release identity"
+    the test "App Store screenshot — grouped summary and guarded closeout"
+    the test "App Store screenshot — published template and safe test label"
+
+00:00 +0: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: renders grid-01-short-name
+00:00 +1: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:00 +2: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:00 +3: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:00 +4: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:00 +5: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:00 +6: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — existing day selection
+00:00 +7: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — collect orders
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +8: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — individual print deck and preview
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +9: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — offline conflict protection
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +10: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:02 +11: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:02 +12: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — grouped summary and guarded closeout
+[printer] Queue: 2 labels, 0 to print for Fictional Studio Launch (cached).
+00:02 +13: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — published template and safe test label
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:02 +14: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: (tearDownAll)
+00:02 +14: All tests passed!

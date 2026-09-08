@@ -1,0 +1,302 @@
+00:00 +0: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "App Store screenshot — invited account sign in"
+    the test "App Store screenshot — existing day selection"
+    the test "App Store screenshot — collect orders"
+    the test "App Store screenshot — individual print deck and preview"
+    the test "App Store screenshot — offline conflict protection"
+    the test "App Store screenshot — duplicate-safe print recovery"
+    the test "App Store screenshot — About and release identity"
+    the test "App Store screenshot — grouped summary and guarded closeout"
+    the test "App Store screenshot — published template and safe test label"
+
+00:00 +0: (setUpAll)
+00:00 +0: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +1: small phone forms remain scrollable above keyboard
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +2: App Store screenshot — invited account sign in
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/01-invited-account-sign-in.png": Pixel test failed, 0.86%, 32679px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +2 -1: App Store screenshot — invited account sign in [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — invited account sign in
+
+00:02 +2 -1: App Store screenshot — existing day selection
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/02-existing-days.png": Pixel test failed, 0.20%, 7659px diff detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +2 -2: App Store screenshot — existing day selection [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — existing day selection
+
+00:03 +2 -2: App Store screenshot — collect orders
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/03-collect-orders.png": Pixel test failed, 44.82%, 1696861px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +2 -3: App Store screenshot — collect orders [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — collect orders
+
+00:04 +2 -3: App Store screenshot — individual print deck and preview
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/04-individual-print-deck.png": Pixel test failed, 32.88%, 1244649px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:05 +2 -4: App Store screenshot — individual print deck and preview [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — individual print deck and preview
+
+00:05 +2 -4: App Store screenshot — offline conflict protection
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/05-offline-conflict.png": Pixel test failed, 46.83%, 1772785px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:06 +2 -5: App Store screenshot — offline conflict protection [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — offline conflict protection
+
+00:06 +2 -5: App Store screenshot — duplicate-safe print recovery
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/06-duplicate-safe-recovery.png": Pixel test failed, 19.67%, 744649px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:07 +2 -6: App Store screenshot — duplicate-safe print recovery [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — duplicate-safe print recovery
+
+00:07 +2 -6: App Store screenshot — About and release identity
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:07 +3 -6: App Store screenshot — grouped summary and guarded closeout
+[printer] Queue: 2 labels, 0 to print for Fictional Studio Launch (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/08-summary-closeout.png": Pixel test failed, 6.30%, 238673px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:08 +3 -7: App Store screenshot — grouped summary and guarded closeout [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — grouped summary and guarded closeout
+
+00:08 +3 -7: App Store screenshot — published template and safe test label
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown while running async test code:
+Golden "goldens/app-store/09-template-test-label.png": Pixel test failed, 20.95%, 793091px diff
+detected.
+Failure feedback can be found at test/failures
+
+When the exception was thrown, this was the stack:
+#0      _AppStoreGoldenComparator.compare (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:68:5)
+<asynchronous suspension>
+#1      MatchesGoldenFile.matchAsync.<anonymous closure> (package:flutter_test/src/_matchers_io.dart:124:32)
+<asynchronous suspension>
+<asynchronous suspension>
+#3      _expect.<anonymous closure> (package:matcher/src/expect/expect.dart:153:17)
+<asynchronous suspension>
+<asynchronous suspension>
+#5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
+<asynchronous suspension>
+#6      _capture (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart:367:3)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1952:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 3 frames from dart:async and package:stack_trace)
+
+The exception was caught asynchronously.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:08 +3 -8: App Store screenshot — published template and safe test label [E]
+  Test failed. See exception logs above.
+  The test description was: App Store screenshot — published template and safe test label
+
+00:08 +3 -8: (tearDownAll)
+00:08 +3 -8: Some tests failed.
+
+Failing tests:
+  /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — collect orders
+  /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+  /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — existing day selection
+  /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — grouped summary and guarded closeout
+  ... and 4 more

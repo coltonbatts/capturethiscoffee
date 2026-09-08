@@ -70,7 +70,8 @@ Future<void> _openAndConfirm(WidgetTester tester) async {
   navigator.pushNamed(SummaryScreen.route);
   await tester.pumpAndSettle();
   expect(find.byType(SummaryScreen), findsOneWidget);
-  await tester.ensureVisible(find.byKey(summaryCloseoutButtonKey));
+  await tester.scrollUntilVisible(find.byKey(summaryCloseoutButtonKey), 250,
+      scrollable: find.byType(Scrollable).first);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(summaryCloseoutButtonKey));
   await tester.pumpAndSettle();

@@ -6,8 +6,17 @@
 
 import 'package:flutter/material.dart';
 
+import '../app_scope.dart';
 import '../printer_controller.dart';
 import '../theme.dart';
+
+// Only these connectivity explanations are replaced by the offline notice.
+// Unknown errors (including storage and print failures) must remain visible.
+bool isWorkspaceConnectivityMessage(String message) => const {
+      'Could not reach the workspace.',
+      'Could not reach the workspace. Cached work remains available.',
+      'Could not reach the workspace. The cached day is still available.',
+    }.contains(message);
 
 /// Every failure in the app funnels through here.
 ///
@@ -23,6 +32,14 @@ class OperatorErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = controller.operatorError;
     if (message == null) return const SizedBox.shrink();
+    // Suppress only the same workspace error already explained by a notice.
+    // A distinct Bluetooth or persistence failure remains visible.
+    final workspace = PrinterScope.workspaceOf(context);
+    if (message == workspace.error &&
+        isWorkspaceConnectivityMessage(message) &&
+        controller.boardIsStale) {
+      return const SizedBox.shrink();
+    }
 
     return Material(
       color: Theme.of(context).colorScheme.errorContainer,
@@ -73,8 +90,8 @@ class StaleBoardNotice extends StatelessWidget {
       title: 'Working offline',
       body: age == null
           ? 'This roster has not been synced.'
-          : 'This roster is from $age. Orders captured since then are not '
-              'shown. Printing still works.',
+          : 'Last synced $age. Changes from other phones may be missing. '
+              'Your saved orders stay here; reconnect and refresh to sync.',
       theme: theme,
     );
   }

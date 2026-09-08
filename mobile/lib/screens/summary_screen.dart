@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../widgets/day_navigation.dart';
 import 'package:flutter/services.dart';
 
 import '../app_scope.dart';
@@ -49,6 +51,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
 
     return Scaffold(
+      bottomNavigationBar: const DayNavigation(route: '/summary'),
       appBar: AppBar(
         title: const Text('Summary'),
         actions: [
@@ -105,6 +108,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   const SizedBox(height: 8),
                 ],
               const SizedBox(height: 20),
+              if (runtime.printer.currentRecoveryRecords.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pushNamed('/recovery'),
+                  icon: const Icon(Icons.report_problem_outlined),
+                  label: const Text('Review unresolved labels'),
+                ),
               _CloseoutCard(
                 status: summary.production.status,
                 blockReason: closeoutBlock,
@@ -247,36 +256,55 @@ class _ProgressStrip extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        child: Row(
-          children: [
-            for (var index = 0; index < items.length; index++) ...[
-              if (index > 0)
-                Container(
-                  width: 1,
-                  height: 38,
-                  color: CaptureColors.paper.withValues(alpha: 0.18),
-                ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      '${items[index].$2}',
-                      style: CaptureType.pageTitle.copyWith(
-                        color: CaptureColors.paper,
+        child: MediaQuery.textScalerOf(context).scale(14) > 20
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final item in items)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text('${item.$2} ${item.$1}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(color: CaptureColors.paper)),
+                    ),
+                ],
+              )
+            : Row(
+                children: [
+                  for (var index = 0; index < items.length; index++) ...[
+                    if (index > 0)
+                      Container(
+                        width: 1,
+                        height: 38,
+                        color: CaptureColors.paper.withValues(alpha: 0.18),
+                      ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '${items[index].$2}',
+                            style: CaptureType.pageTitle.copyWith(
+                              color: CaptureColors.paper,
+                            ),
+                          ),
+                          Text(
+                            items[index].$1,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: CaptureColors.paper
+                                      .withValues(alpha: 0.72),
+                                ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      items[index].$1,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: CaptureColors.paper.withValues(alpha: 0.72),
-                          ),
-                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ],
-        ),
       ),
     );
   }
@@ -316,7 +344,7 @@ class _CoffeeShopLine extends StatelessWidget {
                 width: 34,
                 height: 34,
                 alignment: Alignment.center,
-                color: CaptureColors.yellow,
+                color: CaptureColors.surfaceMuted,
                 child: Text(
                   '${line.count}',
                   style: Theme.of(context).textTheme.titleMedium,

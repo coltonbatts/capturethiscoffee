@@ -120,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                   children: [
                     _Hero(controller: controller, finished: finished),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 18),
                     if (controller.operatorError != null) ...[
                       OperatorErrorBanner(controller: controller),
                       const SizedBox(height: 12),
@@ -131,26 +131,6 @@ class HomeScreen extends StatelessWidget {
                     ] else if (controller.boardIsStale) ...[
                       StaleBoardNotice(controller: controller),
                       const SizedBox(height: 12),
-                    ],
-                    if (runtime.workspace.mode == WorkspaceMode.authenticated &&
-                        runtime.workspace.selectedDayId != null) ...[
-                      CascadeIn(
-                        delay: CascadeIn.step(step++),
-                        child: _MenuCard(
-                          key: setupEntryKey,
-                          icon: Icons.tune,
-                          title: 'Prepare day',
-                          detail: 'People, groups, order, and day details',
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => SetupRosterScreen(
-                                productionId: runtime.workspace.selectedDayId!,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
                     ],
                     CascadeIn(
                       delay: CascadeIn.step(step++),
@@ -178,11 +158,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                     if (runtime.workspace.mode == WorkspaceMode.authenticated)
                       const SizedBox(height: 10),
-                    CascadeIn(
-                      delay: CascadeIn.step(step++),
-                      child: _TemplateEntry(controller: controller),
-                    ),
-                    const SizedBox(height: 10),
                     CascadeIn(
                       delay: CascadeIn.step(step++),
                       child: _PrintEntry(controller: controller),
@@ -234,6 +209,32 @@ class HomeScreen extends StatelessWidget {
                       delay: CascadeIn.step(step++),
                       child: _PrinterEntry(controller: controller),
                     ),
+                    const SizedBox(height: 10),
+                    if (runtime.workspace.mode == WorkspaceMode.authenticated &&
+                        runtime.workspace.selectedDayId != null) ...[
+                      CascadeIn(
+                        delay: CascadeIn.step(step++),
+                        child: _MenuCard(
+                          key: setupEntryKey,
+                          icon: Icons.tune,
+                          title: 'Prepare day',
+                          detail: 'People, groups, order, and day details',
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => SetupRosterScreen(
+                                productionId: runtime.workspace.selectedDayId!,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    CascadeIn(
+                      delay: CascadeIn.step(step++),
+                      child: _TemplateEntry(controller: controller),
+                    ),
+                    const SizedBox(height: 10),
                     const SizedBox(height: 20),
                     CascadeIn(
                       delay: CascadeIn.step(step++),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/day_navigation.dart';
+import '../widgets/status_banners.dart';
 import '../app_scope.dart';
 import '../board_controller.dart';
 import '../drink_format.dart';
@@ -22,6 +24,7 @@ class CollectScreen extends StatefulWidget {
 
 class _CollectScreenState extends State<CollectScreen> {
   String _query = '';
+  String? _expandedRosterId;
   bool _needsOnly = false;
 
   @override
@@ -48,6 +51,7 @@ class _CollectScreenState extends State<CollectScreen> {
     }).toList(growable: false);
 
     return Scaffold(
+      bottomNavigationBar: const DayNavigation(route: '/collect'),
       appBar: AppBar(
         title: const BrandAppBarTitle(detail: 'Collect'),
         actions: [
@@ -67,96 +71,128 @@ class _CollectScreenState extends State<CollectScreen> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: boardController.refresh,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 40),
-                  children: [
-                    Text('Collect drinks', style: CaptureType.pageTitle),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${progress.decided} of ${progress.total} decided · '
-                      '${progress.needsOrder} need ${progress.needsOrder == 1 ? 'an order' : 'orders'}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    _Progress(
-                      progress: progress,
-                      pending: boardController.pendingMutationCount,
-                      conflicts: boardController.conflictCount,
-                    ),
-                    if (boardController.syncBlockedReason != null) ...[
-                      const SizedBox(height: 12),
-                      _Notice(
-                        icon: Icons.lock_clock_outlined,
-                        message: boardController.syncBlockedReason!,
-                      ),
-                    ],
-                    if (boardController.error != null) ...[
-                      const SizedBox(height: 12),
-                      _Notice(
-                        icon: Icons.cloud_off_outlined,
-                        message:
-                            '${boardController.error} Local changes remain on this phone.',
-                      ),
-                    ],
-                    if (!editable) ...[
-                      const SizedBox(height: 12),
-                      const _Notice(
-                        icon: Icons.pause_circle_outline,
-                        message:
-                            'Order collection is paused until this day is Active and available.',
-                      ),
-                    ],
-                    const SizedBox(height: 18),
-                    TextField(
-                      key: collectSearchKey,
-                      onChanged: (value) => setState(() => _query = value),
-                      decoration: const InputDecoration(
-                        labelText: 'Search people',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SegmentedButton<bool>(
-                      segments: [
-                        ButtonSegment(
-                          value: false,
-                          label: Text('Everyone (${progress.total})'),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          label: Text('Needs order (${progress.needsOrder})'),
-                        ),
-                      ],
-                      selected: {_needsOnly},
-                      onSelectionChanged: (value) =>
-                          setState(() => _needsOnly = value.single),
-                    ),
-                    const SizedBox(height: 18),
-                    if (entries.isEmpty)
-                      const _EmptyCollect()
-                    else
-                      for (final entry in entries) ...[
-                        _CollectCard(
+                child: ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                  itemCount: entries.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index > 0) {
+                      final entry = entries[index - 1];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _CollectCard(
                           entry: entry,
+                          expanded: _expandedRosterId == entry.rosterId,
+                          onToggle: () => setState(() => _expandedRosterId =
+                              _expandedRosterId == entry.rosterId
+                                  ? null
+                                  : entry.rosterId),
                           mutation: entry.order == null
                               ? null
                               : boardController.mutationFor(entry.order!.id),
                           editable: editable,
-                          onAcceptUsual: () =>
-                              _run(() => boardController.acceptUsual(
-                                    entry.order!.id,
-                                  )),
+                          onAcceptUsual: () => _run(() =>
+                              boardController.acceptUsual(entry.order!.id)),
                           onEdit: () => _edit(entry),
-                          onNoDrink: () =>
-                              _run(() => boardController.markNoDrink(
-                                    entry.order!.id,
-                                  )),
+                          onNoDrink: () => _run(() =>
+                              boardController.markNoDrink(entry.order!.id)),
                           onReviewConflict: () =>
                               _reviewConflict(entry, boardController),
                         ),
-                        const SizedBox(height: 12),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Collect drinks', style: CaptureType.pageTitle),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${progress.decided} of ${progress.total} decided · ${progress.captured} captured · ${progress.noDrink} no drink',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        if (boardController.hasPendingMutations)
+                          _Progress(
+                              progress: progress,
+                              pending: boardController.pendingMutationCount,
+                              conflicts: boardController.conflictCount),
+                        if (boardController.syncBlockedReason != null) ...[
+                          const SizedBox(height: 12),
+                          _Notice(
+                            icon: Icons.lock_clock_outlined,
+                            message: boardController.syncBlockedReason!,
+                          ),
+                        ],
+                        if (boardController.error != null &&
+                            boardController.error !=
+                                boardController.syncBlockedReason) ...[
+                          const SizedBox(height: 12),
+                          _Notice(
+                            icon: Icons.cloud_off_outlined,
+                            message: boardController.servingCachedBoard &&
+                                    editable &&
+                                    isWorkspaceConnectivityMessage(
+                                        boardController.error!)
+                                ? 'Working offline. Saved orders remain on this phone. Changes from other phones may be missing; reconnect and sync.'
+                                : boardController.error!,
+                          ),
+                        ],
+                        if (!editable) ...[
+                          const SizedBox(height: 12),
+                          const _Notice(
+                            icon: Icons.pause_circle_outline,
+                            message:
+                                'Order collection is paused until this day is Active and available.',
+                          ),
+                        ],
+                        const SizedBox(height: 18),
+                        TextField(
+                          key: collectSearchKey,
+                          onChanged: (value) => setState(() => _query = value),
+                          decoration: const InputDecoration(
+                            labelText: 'Search people',
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SegmentedButton<bool>(
+                          direction:
+                              MediaQuery.textScalerOf(context).scale(14) > 20
+                                  ? Axis.vertical
+                                  : Axis.horizontal,
+                          showSelectedIcon: false,
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              label: Text('Everyone (${progress.total})'),
+                            ),
+                            ButtonSegment(
+                              value: true,
+                              label:
+                                  Text('Needs order (${progress.needsOrder})'),
+                            ),
+                          ],
+                          selected: {_needsOnly},
+                          onSelectionChanged: (value) =>
+                              setState(() => _needsOnly = value.single),
+                        ),
+                        const SizedBox(height: 18),
+                        if (entries.isEmpty)
+                          Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 32),
+                              child: Text(
+                                  boardController.busy
+                                      ? 'Loading people…'
+                                      : needle.isNotEmpty
+                                          ? 'No matches. Try another name or clear your search.'
+                                          : _needsOnly
+                                              ? 'Everyone has an order or is marked no drink.'
+                                              : 'No one is on set yet. Add people in Prepare day.',
+                                  textAlign: TextAlign.center)),
                       ],
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -219,6 +255,7 @@ class _CollectScreenState extends State<CollectScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('Review ${entry.person.name}'),
+        scrollable: true,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -294,12 +331,6 @@ class _Progress extends StatelessWidget {
       spacing: 7,
       runSpacing: 7,
       children: [
-        _Pill(
-          label: '${progress.needsOrder} needs order',
-          color: CaptureColors.amber,
-        ),
-        _Pill(label: '${progress.captured} captured'),
-        _Pill(label: '${progress.noDrink} no drink'),
         if (pending > 0)
           _Pill(
             label: '$pending pending sync',
@@ -388,29 +419,29 @@ class _Notice extends StatelessWidget {
 }
 
 class _CollectCard extends StatelessWidget {
-  const _CollectCard({
-    required this.entry,
-    required this.mutation,
-    required this.editable,
-    required this.onAcceptUsual,
-    required this.onEdit,
-    required this.onNoDrink,
-    required this.onReviewConflict,
-  });
-
+  const _CollectCard(
+      {required this.entry,
+      required this.mutation,
+      required this.editable,
+      required this.expanded,
+      required this.onToggle,
+      required this.onAcceptUsual,
+      required this.onEdit,
+      required this.onNoDrink,
+      required this.onReviewConflict});
   final BoardRosterEntry entry;
   final OrderMutationRecord? mutation;
-  final bool editable;
-  final VoidCallback onAcceptUsual;
-  final VoidCallback onEdit;
-  final VoidCallback onNoDrink;
-  final VoidCallback onReviewConflict;
+  final bool editable, expanded;
+  final VoidCallback onToggle,
+      onAcceptUsual,
+      onEdit,
+      onNoDrink,
+      onReviewConflict;
 
   @override
   Widget build(BuildContext context) {
     final order = entry.order;
     final conflict = mutation?.conflict != null;
-    final pending = mutation != null && !conflict;
     final state = order == null
         ? _CollectState.missing
         : order.isNoDrink
@@ -418,156 +449,101 @@ class _CollectCard extends StatelessWidget {
             : order.isCaptured
                 ? _CollectState.captured
                 : _CollectState.needsOrder;
-    final rail = conflict
-        ? CaptureColors.danger
-        : switch (state) {
-            _CollectState.needsOrder => CaptureColors.amber,
-            _CollectState.captured => CaptureColors.ink,
-            _CollectState.noDrink => CaptureColors.zinc400,
-            _CollectState.missing => CaptureColors.danger,
-          };
-    final role = [
-      entry.person.role.trim(),
-      entry.group,
-    ].where((value) => value.isNotEmpty).join(' · ');
-
-    return Container(
+    final description = switch (state) {
+      _CollectState.captured => formatDrink(order!),
+      _CollectState.noDrink => 'No drink today',
+      _CollectState.needsOrder => entry.person.usualOrder.trim().isEmpty
+          ? 'No usual saved'
+          : 'Usual: ${entry.person.usualOrder}',
+      _CollectState.missing => 'Connect and repair this entry in Prepare day.',
+    };
+    return Material(
       key: Key('collect-${entry.rosterId}'),
+      color: CaptureColors.surface,
+      shape: RoundedRectangleBorder(
+          borderRadius: CaptureRadii.cardBorder,
+          side: BorderSide(
+              color: conflict ? CaptureColors.danger : CaptureColors.ruleSoft,
+              width: conflict ? 2 : 1)),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: CaptureColors.surface,
-        borderRadius: CaptureRadii.cardBorder,
-        border: Border.all(
-          color: conflict ? CaptureColors.danger : CaptureColors.ruleSoft,
-          width: conflict ? 2 : 1,
-        ),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 6, color: rail),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Semantics(
+          expanded: expanded,
+          button: true,
+          child: InkWell(
+            key: Key('expand-${entry.rosterId}'),
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.person.name,
-                                style: CaptureType.rowName,
-                              ),
-                              if (role.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  role,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        _StatePill(
-                          state: state,
-                          pending: pending,
-                          conflict: conflict,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 13),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: CaptureColors.surfaceMuted,
-                        borderRadius: CaptureRadii.controlBorder,
-                      ),
-                      child: Text(
-                        switch (state) {
-                          _CollectState.captured => formatDrink(order!),
-                          _CollectState.noDrink =>
-                            'Doesn’t want a drink today.',
-                          _CollectState.needsOrder =>
-                            entry.person.usualOrder.trim().isEmpty
-                                ? 'No usual order saved.'
-                                : 'Usual: ${entry.person.usualOrder}',
-                          _CollectState.missing =>
-                            'No order record. Connect and repair this roster entry during setup.',
-                        },
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ),
-                    const SizedBox(height: 13),
-                    if (conflict)
-                      FilledButton.icon(
-                        onPressed: onReviewConflict,
-                        icon: const Icon(Icons.compare_arrows),
-                        label: const Text('Review conflict'),
-                      )
-                    else if (state == _CollectState.missing)
-                      const SizedBox.shrink()
-                    else if (state == _CollectState.needsOrder)
-                      Wrap(
+                    Row(children: [
+                      Expanded(
+                          child: Text(entry.person.name,
+                              style: CaptureType.rowName)),
+                      const SizedBox(width: 8),
+                      Icon(expanded ? Icons.expand_less : Icons.expand_more,
+                          size: 22),
+                    ]),
+                    const SizedBox(height: 6),
+                    Text(description,
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    const SizedBox(height: 8),
+                    Wrap(
                         spacing: 8,
-                        runSpacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          if (entry.person.usualOrder.trim().isNotEmpty)
-                            FilledButton(
-                              key: Key('accept-usual-${order!.id}'),
-                              onPressed: editable ? onAcceptUsual : null,
-                              child: const Text('Accept usual'),
-                            ),
-                          OutlinedButton(
-                            key: Key('take-order-${order!.id}'),
-                            onPressed: editable ? onEdit : null,
-                            child: const Text('Take order'),
-                          ),
-                          OutlinedButton(
-                            key: Key('no-drink-${order.id}'),
-                            onPressed: editable ? onNoDrink : null,
-                            child: const Text('No drink'),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton(
-                              key: Key('edit-order-${order!.id}'),
-                              onPressed: editable ? onEdit : null,
-                              child: Text(state == _CollectState.noDrink
-                                  ? 'Take order'
-                                  : 'Edit order'),
-                            ),
-                          ),
-                          if (state == _CollectState.captured) ...[
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: OutlinedButton(
-                                key: Key('no-drink-${order.id}'),
-                                onPressed: editable ? onNoDrink : null,
-                                child: const Text('No drink'),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+                          if (order?.labelPrinted == true &&
+                              !conflict &&
+                              mutation == null)
+                            const _Pill(label: 'Printed', icon: Icons.check)
+                          else
+                            _StatePill(
+                                state: state,
+                                pending: mutation != null && !conflict,
+                                conflict: conflict),
+                          if (entry.group.isNotEmpty)
+                            Text(entry.group,
+                                style: Theme.of(context).textTheme.bodySmall),
+                        ]),
+                  ]),
             ),
-          ],
+          ),
         ),
-      ),
+        if (conflict)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: OutlinedButton.icon(
+                  onPressed: onReviewConflict,
+                  icon: const Icon(Icons.compare_arrows),
+                  label: const Text('Review conflict')))
+        else if (expanded && order != null)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: Wrap(spacing: 8, runSpacing: 8, children: [
+                if (state == _CollectState.needsOrder &&
+                    entry.person.usualOrder.trim().isNotEmpty)
+                  FilledButton(
+                      key: Key('accept-usual-${order.id}'),
+                      onPressed: editable ? onAcceptUsual : null,
+                      child: const Text('Accept usual')),
+                OutlinedButton(
+                    key: Key(state == _CollectState.needsOrder
+                        ? 'take-order-${order.id}'
+                        : 'edit-order-${order.id}'),
+                    onPressed: editable ? onEdit : null,
+                    child: Text(state == _CollectState.captured
+                        ? 'Edit order'
+                        : 'Take order')),
+                if (state != _CollectState.noDrink)
+                  TextButton(
+                      key: Key('no-drink-${order.id}'),
+                      onPressed: editable ? onNoDrink : null,
+                      child: const Text('No drink')),
+              ])),
+      ]),
     );
   }
 }
@@ -609,20 +585,6 @@ class _StatePill extends StatelessWidget {
             : pending
                 ? Icons.cloud_upload_outlined
                 : null,
-      );
-}
-
-class _EmptyCollect extends StatelessWidget {
-  const _EmptyCollect();
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 42),
-        child: Text(
-          'No matching on-set people.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
       );
 }
 
@@ -834,6 +796,7 @@ class _SelectField extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DropdownButtonFormField<String>(
         initialValue: value,
+        isExpanded: true,
         decoration: InputDecoration(labelText: label),
         items: [
           if (allowEmpty)

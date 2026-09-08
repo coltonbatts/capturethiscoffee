@@ -53,10 +53,13 @@ class _PeopleScreenState extends State<PeopleScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            if (controller.busy) const LinearProgressIndicator(),
-            Padding(
+        child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            if (controller.busy)
+              const SliverToBoxAdapter(child: LinearProgressIndicator()),
+            SliverToBoxAdapter(
+                child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -64,7 +67,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   Text('People', style: CaptureType.pageTitle),
                   const SizedBox(height: 6),
                   Text(
-                    '${people.length} shown · search names, roles, departments, companies, or usuals.',
+                    '${people.length} people · names, roles, and usual orders',
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -77,15 +80,13 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _showArchived,
-                        onChanged: (value) =>
-                            setState(() => _showArchived = value ?? false),
-                      ),
-                      const Text('Show archived'),
-                    ],
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: _showArchived,
+                    title: const Text('Show archived'),
+                    onChanged: (value) =>
+                        setState(() => _showArchived = value ?? false),
                   ),
                   SetupFailurePanel(
                     controller: controller,
@@ -93,42 +94,43 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: people.isEmpty && !controller.busy
-                  ? const _EmptyPeople()
-                  : RefreshIndicator(
-                      onRefresh: controller.loadPeople,
-                      child: ListView.separated(
-                        key: const Key('people-list'),
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 100),
-                        itemCount: people.length,
-                        separatorBuilder: (_, __) => const Divider(),
-                        itemBuilder: (context, index) => _PersonRow(
-                          person: people[index],
-                          onTap: () => _edit(people[index]),
-                        ),
-                      ),
-                    ),
-            ),
+            )),
+            if (people.isEmpty && !controller.busy)
+              const SliverFillRemaining(
+                  hasScrollBody: false, child: _EmptyPeople())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 100),
+                sliver: SliverList.separated(
+                  key: const Key('people-list'),
+                  itemCount: people.length,
+                  separatorBuilder: (_, __) => const Divider(),
+                  itemBuilder: (context, index) => _PersonRow(
+                      person: people[index], onTap: () => _edit(people[index])),
+                ),
+              ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('new-person'),
-        heroTag: 'new-person',
-        backgroundColor: CaptureColors.yellow,
-        foregroundColor: CaptureColors.ink,
-        onPressed: controller.busy
-            ? null
-            : () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const PersonEditorScreen(),
-                  ),
-                ),
-        icon: const Icon(Icons.person_add_alt_1_outlined),
-        label: const Text('New person'),
-      ),
+      floatingActionButton: MediaQuery.viewInsetsOf(context).bottom > 0
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('new-person'),
+              heroTag: 'new-person',
+              backgroundColor: controller.busy
+                  ? CaptureColors.disabledFill
+                  : CaptureColors.yellow,
+              foregroundColor: CaptureColors.ink,
+              onPressed: controller.busy
+                  ? null
+                  : () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const PersonEditorScreen(),
+                        ),
+                      ),
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              label: const Text('New person'),
+            ),
     );
   }
 

@@ -2,19 +2,39 @@
 
 This index separates current operating material from dated implementation and
 decision records. Start with the smallest document that answers the question;
-the root [README](../README.md) is the project overview.
+the root [README](../README.md) is the project overview and
+[AGENTS.md](../AGENTS.md) is the shared instruction entry point.
+
+## Status and evidence
+
+The [delivery checklist](delivery-status.md) is the single current status and
+ranked remaining-work list. Dated records below retain their original scope.
+
+- **Durable constraints:** [AGENTS.md](../AGENTS.md) and the task-specific
+  [subsystem rules](subsystem-constraints.md) define product boundaries.
+- **Implementation facts:** inspect relevant source and the working-tree diff.
+  Guides explain the architecture but can lag code.
+- **Release and physical evidence:** dated records establish only the build,
+  environment, event, and outcome they actually document. The newest filename
+  does not prove deployed or installed behavior, Apple approval, or physical
+  acceptance. Verify exact-candidate evidence and report unrecorded gates.
+- **Historical decisions:** explain rationale; they do not create new task
+  authority or override current authorized work and application instructions.
 
 ## Start here
 
 | Document | Use it for |
 | --- | --- |
-| [Current state](current-state-2026-07-30.md) | Active Build 13 candidate, verified capabilities, limitations, release state, and external gates |
+| [Current delivery checklist](delivery-status.md) | Current local baseline, historical evidence, external observations, and ranked release blockers |
+| [Build 13 status snapshot](current-state-2026-07-30.md) | July 30 source/release snapshot and recorded external gates; cross-check against the working tree and exact-candidate evidence |
 | [Mobile app guide](../mobile/README.md) | iOS architecture, local setup, signing, printing, and recovery |
 | [Handoff hub](HANDOFF.md) | Role-based handoff packet and definition of done |
 | [App experience map](app-experience-map.md) | Product surfaces and how they connect |
 
-The dated Build 10 state record remains historical evidence; Build 13 has its
-own current-state record.
+The July 25 status is historical. The later
+[native print-hardening note](native-print-hardening-2026-09-07.md) describes
+September 7 working-tree changes and reported software checks; it does not
+establish a replacement release, installation, or physical pass.
 
 ## Operate and support
 
@@ -30,10 +50,10 @@ own current-state record.
 
 | Document | Use it for |
 | --- | --- |
-| [Build 13 launch](build-13-app-store-launch-2026-07-30.md) | Current implementation, verification, deployment, App Review, unlisted-release, and blocker ledger |
+| [Build 13 launch](build-13-app-store-launch-2026-07-30.md) | Dated implementation, verification, deployment, App Review, unlisted-release, and blocker ledger |
 | [Build 13 physical worksheet](build-13-physical-acceptance-worksheet-2026-07-30.md) | Exact Build 13 device, printer, stock, template, recovery, and independent-operator gate |
-| [Build 13 App Review packet](build-13-app-review-unlisted-packet-2026-07-30.md) | Current metadata, review notes, screenshot set, fictional review path, and unlisted sequence |
-| [Build 13 App Privacy](build-13-app-privacy-2026-07-30.md) | Current source-manifest and App Privacy evidence |
+| [Build 13 App Review packet](build-13-app-review-unlisted-packet-2026-07-30.md) | Build-specific metadata, review notes, screenshot set, fictional review path, and unlisted sequence |
+| [Build 13 App Privacy](build-13-app-privacy-2026-07-30.md) | Build-specific source-manifest and App Privacy evidence |
 | [Build 13 database migration](build-13-database-migration-and-rollback.md) | Additive schema, verification, rollout, and forward-rollback procedure |
 | [Template authoring](label-template-authoring-and-publishing.md) | Declarative schema, publishing, assignment, compatibility, and safety limits |
 | [App Store installation](app-store-installation-and-replacement-builds.md) | Unlisted installation and replacement-build procedure |
@@ -56,9 +76,10 @@ own current-state record.
 
 | Document | Use it for |
 | --- | --- |
-| [App-first direction](app-first-direction-2026-07-25.md) | Current product boundary between iOS and web |
-| [Complete iOS plan](ios-complete-product-plan-2026-07-25.md) | Build sequence for the full operating loop |
-| [Build 10 implementation](build-10-implementation-2026-07-25.md) | Offline collection and sync design |
+| [Subsystem constraints](subsystem-constraints.md) | Task-specific UI, motion, data-access, and offline maintenance rules |
+| [App-first direction](app-first-direction-2026-07-25.md) | Historical rationale for the mobile-primary boundary preserved in AGENTS.md |
+| [Complete iOS plan](ios-complete-product-plan-2026-07-25.md) | Historical planned build sequence; not a pending-work list |
+| [Build 10 implementation](build-10-implementation-2026-07-25.md) | Dated offline collection and sync implementation record |
 | [Phone printing investigation](phone-printing-investigation.md) | Hardware and integration decision record |
 | [Scannable-code spike](spike/README.md) | Experimental QR/Data Matrix work |
 
@@ -79,5 +100,6 @@ They are not the current source of truth:
 - [`milestones/`](milestones/)
 
 Historical files remain in place so links and release evidence do not break.
-When current behavior and a dated record disagree, follow
-[Current state](current-state-2026-07-30.md).
+When source and a dated record disagree, establish the implementation from source
+and external state from applicable evidence. Flag the discrepancy rather than
+treating either a status snapshot or a historical decision as live proof.

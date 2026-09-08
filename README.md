@@ -7,7 +7,7 @@ crews. It keeps the day roster, drink collection, cup-label printing, and
 printed status in one workflow.
 
 [Open the web app](https://coffee.capturethis.com) ·
-[Current status](docs/current-state-2026-07-25.md) ·
+[Delivery status](docs/delivery-status.md) ·
 [Documentation](docs/README.md) ·
 [Support](https://coffee.capturethis.com/support)
 
@@ -15,18 +15,19 @@ printed status in one workflow.
 
 - The Flutter iPhone app in [`mobile/`](mobile/README.md) is the primary on-set
   experience.
-- The Next.js app remains deployed for production setup, the zero-install
+- The Next.js app maintains supported web setup, the zero-install
   runner board, and fallback label export.
 - Supabase is the shared source of truth for accounts, productions, rosters,
   orders, and printed status.
 - Labels are rendered on the phone and printed over Bluetooth LE to the
   supported NIIMBOT M2_H.
-- The current release supports deliberate single-label printing. Unattended
+- Preserve deliberate single-label printing. Unattended
   batch printing is a documented hardware/protocol limitation.
 
 Build and release details change more often than this overview. Use the
-[current-state document](docs/current-state-2026-07-25.md) for the active build,
-verified capabilities, and remaining release gates.
+[delivery checklist](docs/delivery-status.md) for current findings and links to dated
+build and release evidence. Repository state alone does not prove deployment, device
+installation, Apple approval, or physical acceptance.
 
 ## Repository map
 
@@ -47,9 +48,10 @@ Prerequisites:
 - npm
 - A configured Supabase project
 
+On first setup, install dependencies with `npm ci` and copy `.env.example` to
+`.env.local` if no local configuration exists. Reuse a working environment.
+
 ```bash
-npm ci
-cp .env.example .env.local
 npm run dev
 ```
 
@@ -73,14 +75,9 @@ must remain disabled; operators are invited or created by an owner.
 ## Run the iOS app
 
 The complete setup, signing, device, printer, and recovery instructions live in
-the [mobile app guide](mobile/README.md). The short path is:
-
-```bash
-cd mobile
-flutter pub get
-flutter analyze
-flutter test
-```
+the [mobile app guide](mobile/README.md). Reuse the checked-in iOS project and
+a working Flutter environment; supply the reviewed public Supabase configuration
+described there.
 
 A physical iPhone and the accepted NIIMBOT M2_H are required to verify
 Bluetooth printing. Simulator and automated tests do not close the physical
@@ -88,23 +85,15 @@ release gate.
 
 ## Quality checks
 
-Run the same core checks used in GitHub Actions:
-
-```bash
-npm run lint
-npm run test
-npm run build
-npm run verify:niimbot-export
-
-cd mobile
-flutter analyze
-flutter test
-```
+Choose local checks using [Contributing](.github/CONTRIBUTING.md#verification).
+Small documentation edits need link/path and diff checks, not application builds.
+The [quality workflow](.github/workflows/quality.yml) defines CI's broader web,
+mobile, and screenshot checks; release and physical acceptance remain separate.
 
 ## Working on the project
 
-Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) before changing product
-behavior. In particular:
+Start with [AGENTS.md](AGENTS.md) for shared instructions and
+[CONTRIBUTING.md](.github/CONTRIBUTING.md) for verification guidance. In particular:
 
 - treat `mobile/` as the primary product surface;
 - keep the web fallback working and avoid new web-only product features;

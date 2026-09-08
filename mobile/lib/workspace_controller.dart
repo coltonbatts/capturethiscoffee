@@ -350,7 +350,19 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> markLabelPrinted(String orderId) async {
+  Future<void> markLabelPrinted(
+    String orderId, {
+    String? expectedScopeKey,
+    String? expectedProductionId,
+  }) async {
+    if (_disposed ||
+        (expectedScopeKey != null && expectedScopeKey != scopeKey) ||
+        (expectedProductionId != null &&
+            expectedProductionId != productionId)) {
+      throw StateError(
+          'Workspace changed; retain print recovery for its original day.');
+    }
+    final generation = _generation;
     switch (_mode) {
       case WorkspaceMode.authenticated:
         final repository = _repository;
@@ -365,6 +377,9 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
         await api.markLabelPrinted(orderId);
       case WorkspaceMode.none:
         throw StateError('No day is selected.');
+    }
+    if (_disposed || generation != _generation) {
+      throw StateError('Workspace changed during sync; retain print recovery.');
     }
   }
 

@@ -1,3 +1,5 @@
+import 'package:ctc_printer/screens/collect_screen.dart';
+import 'package:ctc_printer/screens/print_screen.dart';
 import 'package:ctc_printer/auth_repository.dart';
 import 'package:ctc_printer/authenticated_workspace_cache.dart';
 import 'package:ctc_printer/board_cache.dart';
@@ -187,15 +189,13 @@ void main() {
     await tester.tap(find.byKey(const Key('continue-to-operations')));
     await _pumpFrames(tester);
 
+    expect(find.byType(CollectScreen), findsOneWidget);
+    await tester.tap(find.byKey(const Key('day-nav-print')));
+    await _pumpFrames(tester);
+    expect(find.byType(PrintScreen), findsOneWidget);
+    await tester.pageBack();
+    await _pumpFrames(tester);
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Fictional Shoot Day'), findsWidgets);
-    expect(find.byKey(collectEntryKey), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(printEntryKey),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.byKey(printEntryKey), findsOneWidget);
   });
 }
 
