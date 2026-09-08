@@ -6,11 +6,26 @@ operable iPhone app installed through the App Store. **Release readiness is not
 yet established.** Existing features are sufficient for an acceptance candidate;
 a rewrite or new feature program is not needed.
 
+## GitHub candidate publication
+
+- [x] Committed the UI polish, preserved printer hardening, documentation, and
+  fictional evidence as [`307a213`](https://github.com/coltonbatts/capturethiscoffee/commit/307a2130d07c7de7f428e0f1d3cc6b647778c527).
+  Pushed to `codex/iphone-polish-print-recovery` on September 8.
+- [x] Opened [PR #34](https://github.com/coltonbatts/capturethiscoffee/pull/34)
+  against `main`. Initial candidate CI: Web and Mobile running; Mobile screenshots
+  queued. The automatic Vercel preview is pending; no preview success or
+  production deployment is established. Follow the PR for the latest results.
+- [ ] Merge after required checks and review. GitHub
+  rejected the direct `main` push because branch protection requires a PR and
+  three passing status checks. This candidate is **not merged or released**.
+  The local 239-test pass does not substitute for candidate CI.
+- [ ] Complete the signed-candidate, physical/operator, and Apple gates below.
+
 ## Implemented and verified locally
 
-Baseline: local `main` at `3ae2eb06decb003693253cc09c3774545feee70f` **plus the
-uncommitted printer hardening**. Source still declares `1.0.0+13`; this working
-tree is not the previously uploaded Build 13 binary.
+Pre-publication verification baseline: local `main` at `3ae2eb06decb003693253cc09c3774545feee70f` **plus the
+uncommitted printer hardening**. Source still declares `1.0.0+13`; the committed candidate is not the
+previously uploaded Build 13 binary.
 
 - [x] Native sign-in, Days, online people/roster setup, offline capture and
   per-user cached boards, revision-conflict handling, single-label printing,
@@ -50,10 +65,10 @@ usable dependencies reused. Local command logs are temporary evidence under
 `/tmp/ctc-takeover-20260908/`; do not treat that directory as a durable release
 artifact. No real client fixtures or credentials were copied into this checklist.
 
-Other incoming changes—agent/contribution guidance, README revisions, the
-instruction audit, subsystem guide, and untracked `output/` PDF—remain intact
-and uncommitted. They are not printer implementation or a validated release
-artifact. Review them separately before staging; do not bulk-add the tree.
+Incoming agent/contribution guidance, README revisions, the instruction audit,
+subsystem guide, and historical `output/` privacy PDF were preserved and included
+in the user-requested candidate commit after a sensitive-content check. They
+are not physical acceptance or current Apple approval evidence.
 
 ## Core journey polish — September 8
 
@@ -138,7 +153,7 @@ Read-only observations made September 8:
 | --- | --- | --- |
 | **1** | **Finish the printer candidate.** Retain/review the hardening as one change, then test the exact signed candidate on the designated iPhone/M2_H/stock. Duplicate labels, unreadable output, or unusable recovery stop day-of work. | Reviewed commit and passing CI; exact build/kit recorded; interrupt init/data/finish, timeout/late completion, background/restart, power-cycle, offline capture, reconnect, and sync-only with **no retransmission**. Inspect actual paper, crop/feed/readability/adhesion and haptics. Use the existing physical worksheet procedure; keep Build 13 history intact and explicitly identify the replacement candidate. |
 | **2** | **Resolve web CI and dependency risk.** Diagnose the caption assertion in the failing Linux environment and narrowly remediate/reassess production advisories using existing PRs. The supported fallback must remain reliable and safe. | Reproduce with measured font/line values; fix the cause without blindly relaxing tests or regenerating goldens. Matching CI web lint/tests/build/export pass; audit fixes or documented reachability/risk disposition. No printer dependency changes. |
-| **3** | **Identify and validate the replacement release.** Hardening has no commit, unique uploaded build, current signing evidence, or physical acceptance. | Choose the next unused build after checking Apple, record source and artifact identity, run candidate checks and disposable full-schema/RLS/closeout verification, then archive/sign through the existing release procedure. Fresh authenticated Supabase/migration/deployment checks are still needed; HTTP health is insufficient. |
+| **3** | **Identify and validate the replacement release.** Source is committed on the review branch; there is no new uploaded build, current signing evidence, or physical acceptance. | Choose the next unused build after checking Apple, record source and artifact identity, run candidate checks and disposable full-schema/RLS/closeout verification, then archive/sign through the existing release procedure. Fresh authenticated Supabase/migration/deployment checks are still needed; HTTP health is insufficient. |
 | **4** | **Complete Apple distribution.** Current App Store Connect state, legal/privacy attestations, review access, approval and permanent install link are unknown. Historical owner inputs are still open until checked. | Owner/Admin resolves copyright/privacy/contact/rights/agreements; validate fictional review credentials and candidate screenshots, ordinary App Review, intended unlisted approval, controlled release and direct-link clean-phone installation. Use the existing [review packet](build-13-app-review-unlisted-packet-2026-07-30.md), revalidated for the candidate. No submission or deployment performed here. |
 | **5** | **Prove buddy independence.** Unassisted setup, collection, recovery and closeout, account recovery, replacement-phone install, consumables and backup support ownership are unverified. | Buddy completes a fictional day without engineering operating the phone: create/activate/roster, collect offline, print/recover/sync, resolve conflict, summary/closeout and fallback drill. Fill the existing [operational ownership/kit register](operational-handoff.md), including support, backups, renewals and replacement-build owner; update the [quick start](operator-quick-start.md) to the actually accepted build. Fix only observed usability blockers. |
 

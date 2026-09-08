@@ -52,7 +52,7 @@ The exception was caught asynchronously.
 00:02 +2 -1: App Store screenshot — invited account sign in [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — invited account sign in
-  
+
 00:02 +2 -1: App Store screenshot — existing day selection
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
@@ -84,7 +84,7 @@ The exception was caught asynchronously.
 00:03 +2 -2: App Store screenshot — existing day selection [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — existing day selection
-  
+
 00:03 +2 -2: App Store screenshot — collect orders
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -118,7 +118,7 @@ The exception was caught asynchronously.
 00:04 +2 -3: App Store screenshot — collect orders [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — collect orders
-  
+
 00:04 +2 -3: App Store screenshot — individual print deck and preview
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -152,7 +152,7 @@ The exception was caught asynchronously.
 00:05 +2 -4: App Store screenshot — individual print deck and preview [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — individual print deck and preview
-  
+
 00:05 +2 -4: App Store screenshot — offline conflict protection
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -186,7 +186,7 @@ The exception was caught asynchronously.
 00:06 +2 -5: App Store screenshot — offline conflict protection [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — offline conflict protection
-  
+
 00:06 +2 -5: App Store screenshot — duplicate-safe print recovery
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -220,7 +220,7 @@ The exception was caught asynchronously.
 00:07 +2 -6: App Store screenshot — duplicate-safe print recovery [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — duplicate-safe print recovery
-  
+
 00:07 +2 -6: App Store screenshot — About and release identity
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 00:07 +3 -6: App Store screenshot — grouped summary and guarded closeout
@@ -256,7 +256,7 @@ The exception was caught asynchronously.
 00:08 +3 -7: App Store screenshot — grouped summary and guarded closeout [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — grouped summary and guarded closeout
-  
+
 00:08 +3 -7: App Store screenshot — published template and safe test label
 [printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -290,7 +290,7 @@ The exception was caught asynchronously.
 00:08 +3 -8: App Store screenshot — published template and safe test label [E]
   Test failed. See exception logs above.
   The test description was: App Store screenshot — published template and safe test label
-  
+
 00:08 +3 -8: (tearDownAll)
 00:08 +3 -8: Some tests failed.
 
