@@ -85,7 +85,8 @@ class _BrandPulseState extends State<BrandPulse>
     super.didChangeDependencies();
     // Honour Reduce Motion, and keep goldens deterministic — an animation that
     // never starts cannot make a screenshot test flaky.
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduceMotion) {
       _controller.stop();
       _controller.value = 1;
@@ -232,29 +233,20 @@ class BrandAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const BrandMark(size: 30, semanticLabel: 'Capture This'),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Capture This',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 1),
-              Text(
-                detail.toUpperCase(),
-                overflow: TextOverflow.ellipsis,
-                style: CaptureType.eyebrow,
-              ),
-            ],
-          ),
-        ),
-      ],
+    return Semantics(
+      header: true,
+      label: 'Capture This, $detail',
+      child: ExcludeSemantics(
+        child: Row(children: [
+          const BrandMark(size: 30),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium)),
+        ]),
+      ),
     );
   }
 }

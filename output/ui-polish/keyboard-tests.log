@@ -1,0 +1,18 @@
+00:00 +0: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "App Store screenshot — invited account sign in"
+    the test "App Store screenshot — existing day selection"
+    the test "App Store screenshot — collect orders"
+    the test "App Store screenshot — individual print deck and preview"
+    the test "App Store screenshot — offline conflict protection"
+    the test "App Store screenshot — duplicate-safe print recovery"
+    the test "App Store screenshot — About and release identity"
+    the test "App Store screenshot — grouped summary and guarded closeout"
+    the test "App Store screenshot — published template and safe test label"
+
+00:00 +0: (setUpAll)
+00:00 +0: small phone forms remain scrollable above keyboard
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:01 +1: (tearDownAll)
+00:01 +1: All tests passed!

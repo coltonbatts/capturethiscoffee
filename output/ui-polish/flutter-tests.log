@@ -1,0 +1,507 @@
+00:00 +0: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_template_test.dart
+00:00 +0: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_template_test.dart: (setUpAll)
+00:00 +0: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: pubspec and in-app release identity cannot drift
+00:00 +1: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: pubspec and in-app release identity cannot drift
+00:00 +2: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: pubspec and in-app release identity cannot drift
+00:00 +3: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_template_test.dart: template validation rejects elements outside the exact print canvas
+00:00 +4: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +5: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +6: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +7: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +8: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +9: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +10: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +11: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +12: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +13: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/release_identity_test.dart: About renders the release identity from the shared constant
+00:00 +14: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+[printer] Queue: 1 labels, 0 to print for Fictional Summary Day.
+00:00 +15: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +15: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: fictional test rendering cannot alter order or printed facts
+[printer] Queue: 1 labels, 1 to print for Fictional Test Day.
+00:00 +16: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +17: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +18: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +19: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +20: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +21: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:00 +22: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:01 +23: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:01 +24: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:01 +25: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:01 +26: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: server rejection never renders optimistic completion
+00:01 +27: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: fresh sign-in opens Days and the selected board drives Build 8
+00:01 +27: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/summary_screen_test.dart: confirmed server closeout refreshes to permanent Complete state
+[printer] Queue: 1 labels, 0 to print for Fictional Summary Day.
+00:01 +28: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: fresh sign-in opens Days and the selected board drives Build 8
+[printer] Queue: 1 labels, 1 to print for Direct Supabase Day.
+00:01 +28: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: home exposes template identity, status, and safe test action
+[printer] Queue: 1 labels, 1 to print for Fictional Test Day.
+00:01 +29: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: fresh sign-in opens Days and the selected board drives Build 8
+00:01 +30: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: home exposes template identity, status, and safe test action
+00:01 +31: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: home exposes template identity, status, and safe test action
+00:01 +31: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: sign-out hides one account cache before another account activates
+[printer] Queue: 1 labels, 1 to print for Direct Supabase Day (cached).
+[printer] Queue: 1 labels, 1 to print for Other Account Day (cached).
+00:01 +32: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: home exposes template identity, status, and safe test action
+00:01 +32: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: signed-in board loading never constructs the public API
+[printer] Queue: 1 labels, 1 to print for Direct Supabase Day.
+00:01 +33: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/test_label_flow_test.dart: home exposes template identity, status, and safe test action
+00:01 +33: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "renders grid-01-short-name"
+    the test "renders grid-01-long-name"
+    the test "renders grid-01-regression-long-name"
+    the test "renders grid-01-long-drink"
+    the test "renders grid-01-minimal"
+
+00:01 +34: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: Legacy link remains a working secondary Build 8 flow
+00:01 +35: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: Legacy link remains a working secondary Build 8 flow
+00:01 +36: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/authenticated_flow_test.dart: Legacy link remains a working secondary Build 8 flow
+00:01 +37: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: renders grid-01-regression-long-name
+00:01 +38: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: renders grid-01-long-drink
+00:01 +39: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: renders grid-01-minimal
+00:01 +40: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/label_golden_test.dart: (tearDownAll)
+00:01 +40: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: coalesces fields while retaining the first observed revision
+00:01 +41: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: serializes rapid whole-ledger writes without dropping either order
+00:01 +42: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: round trip restores ordinary and physical intent together
+00:01 +43: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: confirmed physical evidence can never become uncertain
+00:01 +44: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: a print-only record can later coalesce an ordinary order edit
+00:01 +45: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: scope isolation hides rather than deletes another account record
+00:01 +46: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: does not coalesce the same order across signed-in scopes
+00:01 +47: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/order_mutation_outbox_test.dart: clearing a migrated Build 9 print does not resurrect it
+00:02 +48: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: scoping belongs to the session it was written for
+00:02 +49: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: scoping does not belong to a different production
+00:02 +50: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: scoping does not belong to a different server
+00:02 +51: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: persistence round trips through preferences
+00:02 +52: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: persistence preserves the sync time rather than the read time
+00:02 +53: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: persistence clear removes the roster
+00:02 +54: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: persistence reads null when nothing was ever written
+00:02 +55: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: damaged cache returns null for junk rather than throwing
+00:02 +56: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/board_cache_test.dart: damaged cache returns null for a board an older build could not have written
+00:02 +57: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/supabase_config_test.dart: missing Supabase configuration is sanitized and actionable
+00:02 +58: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/supabase_config_test.dart: valid public configuration is accepted
+00:02 +59: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/supabase_config_test.dart: service-role credentials are rejected without echoing them
+00:02 +60: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +61: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +62: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +63: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +64: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +65: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +66: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +67: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +68: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +69: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +70: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +71: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +72: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +73: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:02 +74: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:02 +75: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +76: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +77: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +78: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +79: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +80: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +81: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +82: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +83: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +84: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +85: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +86: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +87: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +88: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +89: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +90: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +91: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +92: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +93: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +94: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +95: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +96: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +97: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +98: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +99: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +100: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +101: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +102: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +103: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +104: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +105: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +106: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +107: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +108: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +109: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +110: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +111: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search narrows the list to one person
+00:03 +112: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:03 +113: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +114: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +115: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +116: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +117: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +118: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +119: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +120: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +121: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +122: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +123: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +124: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +125: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +126: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +127: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +128: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: roster search matches the drink, not just the name
+00:03 +129: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: the printed filter shows only labels already printed
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:03 +129: loading /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart
+Warning: A tag was used that wasn't specified in dart_test.yaml.
+  golden was used in:
+    the test "App Store screenshot — invited account sign in"
+    the test "App Store screenshot — existing day selection"
+    the test "App Store screenshot — collect orders"
+    the test "App Store screenshot — individual print deck and preview"
+    the test "App Store screenshot — offline conflict protection"
+    the test "App Store screenshot — duplicate-safe print recovery"
+    the test "App Store screenshot — About and release identity"
+    the test "App Store screenshot — grouped summary and guarded closeout"
+    the test "App Store screenshot — published template and safe test label"
+
+00:03 +129: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: the printed filter shows only labels already printed
+00:03 +130: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:03 +130: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: shipping UI offers individual printing and no batch action
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:03 +131: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:03 +132: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:03 +133: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:03 +134: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:03 +135: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +136: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +137: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +138: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +139: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +140: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +141: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +142: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +142: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: a search with no match explains itself
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:04 +142: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:04 +143: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +144: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +145: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +145: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: planning productions visibly pause physical printing
+[printer] Queue: 1 labels, 1 to print for Tomorrow’s Shoot.
+00:04 +146: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +147: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +148: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +149: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +150: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +151: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +152: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +152: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: an unresolved label is resolvable from exactly one screen
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:04 +153: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: offline notice keeps unknown storage failures visible
+00:04 +154: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/setup_navigation_test.dart: operator creates a planning day and reaches native roster setup
+00:04 +154: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:04 +155: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/setup_navigation_test.dart: operator creates a planning day and reaches native roster setup
+00:04 +156: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/setup_navigation_test.dart: operator creates a planning day and reaches native roster setup
+00:04 +156: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: a roster row expands in place, one at a time
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:04 +156: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+[printer] Queue: 1 labels, 1 to print for Collect Day.
+00:05 +156: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:05 +157: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +158: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +158: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: the roster builds rows lazily
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +158: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:05 +159: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +159: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: home celebrates only when the day is actually done
+[printer] Queue: 2 labels, 0 to print for Wrapped Day.
+00:05 +159: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:05 +160: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +160: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: home does not celebrate while labels are outstanding
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +161: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +162: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +163: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +164: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +164: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone and larger text keep core routes usable
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:05 +165: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +166: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +166: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: the home print entry is yellow only when a print would succeed
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +167: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +167: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: the deck count uses tabular figures
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +168: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +168: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: Reduce Motion snaps implicit animations instead of sliding
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +169: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +170: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +170: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: without Reduce Motion those animations still have a duration
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +170: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+[printer] Queue: 2 labels, 2 to print for Collect Day.
+00:05 +171: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +171: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: Reduce Motion resolves the entrance to its END state
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +171: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone forms remain scrollable above keyboard
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:05 +172: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +172: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/widget_test.dart: without Reduce Motion the entrance actually animates
+[printer] Queue: 3 labels, 2 to print for Roster Day.
+00:05 +173: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +174: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +175: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +176: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +177: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +178: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +179: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +180: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +181: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +182: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +183: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +184: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:05 +185: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+[printer] Queue: 2 labels, 2 to print for Collect Day (cached).
+00:06 +186: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/collect_screen_test.dart: Collect shows every state and optimistic changes feed the print queue
+00:06 +187: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: small phone forms remain scrollable above keyboard
+00:06 +188: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — invited account sign in
+00:06 +188: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: workspace switch during printing cannot sync into another day
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+00:06 +189: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: workspace switch during printing cannot sync into another day
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+[printer] Marking label_printed…
+[printer] Print Jamie FAILED: Printed Jamie, but the workspace did not sync. Do not reprint. Tap “Sync only” on this label. Bad state: Workspace changed. Print recovery retained.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:791:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+00:06 +190: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — existing day selection
+00:06 +190: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: restart with an uncertain reprint preserves evidence despite old server printed fact
+[printer] Queue: 1 labels, 0 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Reprint Jamie ---
+[printer] Reprint Jamie FAILED: This label has an unresolved print outcome. Use its recovery action instead of reprinting.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:672:7) | #1      PrinterController.printLabel.<anonymous closure> (package:ctc_printer/printer_controller.dart:581:15) | #2      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19)
+00:06 +191: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — existing day selection
+00:06 +191: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: dispose during rendering sends no printer task
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+00:06 +192: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +192: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — collect orders
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:06 +193: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +193: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed explicit retry cleanup retains uncertainty and sends nothing
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Retry unprinted label ---
+[printer] Retry unprinted label FAILED: Bad state: disk full
+[printer] #0      Storage.writeAll (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart:44:29) | #1      PrintRecoveryLedger._mutate.<anonymous closure> (package:ctc_printer/print_recovery.dart:212:25) | #2      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+00:06 +194: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +195: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +195: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed preflight persistence sends zero print packets
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+[printer] Could not persist print recovery: StateError.
+[printer] Print Jamie FAILED: Bad state: disk full
+[printer] #0      Storage.writeAll (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart:44:29) | #1      PrintRecoveryLedger._mutate.<anonymous closure> (package:ctc_printer/print_recovery.dart:212:25) | #2      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+00:06 +196: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +196: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed write 2 retains durable evidence across restart
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+00:06 +197: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +198: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +199: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +199: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed write 2 retains durable evidence across restart
+[printer] Print Jamie FAILED: Printer completed, but confirmation could not be saved. Do not reprint. Inspect the label and use “Label printed — sync only”. Bad state: disk full
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:773:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Print Jamie FAILED: This label has an unresolved print outcome. Use its recovery action instead of reprinting.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:672:7) | #1      PrinterController.printLabel.<anonymous closure> (package:ctc_printer/printer_controller.dart:581:15) | #2      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19)
+00:06 +200: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +200: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed write 3 retains durable evidence across restart
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+00:06 +201: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +202: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +202: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: failed write 3 retains durable evidence across restart
+[printer] Marking label_printed…
+[printer] Print Jamie FAILED: Bad state: disk full
+[printer] #0      Storage.writeAll (file:///Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart:44:29) | #1      PrintRecoveryLedger._mutate.<anonymous closure> (package:ctc_printer/print_recovery.dart:212:25) | #2      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Print Jamie FAILED: This label has an unresolved print outcome. Use its recovery action instead of reprinting.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:672:7) | #1      PrinterController.printLabel.<anonymous closure> (package:ctc_printer/printer_controller.dart:581:15) | #2      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19)
+00:06 +203: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +203: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: Bluetooth failure remains uncertain and never automatically retries
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+00:06 +204: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +204: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — individual print deck and preview
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:06 +204: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: Bluetooth failure remains uncertain and never automatically retries
+[printer] Print Jamie FAILED: The print outcome for Jamie is uncertain. Check the physical printer, then choose “Label printed — sync only” or “Nothing printed — retry.” Bad state: Bluetooth write failed
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:763:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Print Jamie FAILED: This label has an unresolved print outcome. Use its recovery action instead of reprinting.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:672:7) | #1      PrinterController.printLabel.<anonymous closure> (package:ctc_printer/printer_controller.dart:581:15) | #2      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19)
+00:06 +205: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:06 +205: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: timeout, late completion and double taps cannot sync or retransmit
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+00:06 +205: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +205: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: timeout, late completion and double taps cannot sync or retransmit
+[printer] Print Jamie FAILED: The print outcome for Jamie is uncertain. Check the physical printer, then choose “Label printed — sync only” or “Nothing printed — retry.” TimeoutException after 0:00:00.020000: Future not completed
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:763:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+[printer] --- Connect printer ---
+[printer] Connect printer FAILED: Bad state: Previous printer operation is still stopping. Do not retry.
+[printer] #0      PrinterController.connectPrinter.<anonymous closure> (package:ctc_printer/printer_controller.dart:509:11) | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19) | #2      PrinterController.connectPrinter (package:ctc_printer/printer_controller.dart:507:36)
+00:07 +206: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +206: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: disconnect during transmission retains uncertainty
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+[printer] Print Jamie FAILED: The print outcome for Jamie is uncertain. Check the physical printer, then choose “Label printed — sync only” or “Nothing printed — retry.” Bad state: Print outcome is uncertain.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:763:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+00:07 +207: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +207: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: background/resume during transmission retains uncertainty
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+[printer] Print Jamie FAILED: The print outcome for Jamie is uncertain. Check the physical printer, then choose “Label printed — sync only” or “Nothing printed — retry.” Bad state: Print outcome is uncertain.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:763:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+00:07 +208: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +208: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: server failure and sync-only retry send exactly one physical task
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Print Jamie ---
+[printer] Rendering label for Jamie…
+[printer] PNG 591x354; print 567x340; text-side ink 30304.
+[printer] Marking label_printed…
+[printer] Print Jamie FAILED: Printed Jamie, but the workspace did not sync. Do not reprint. Tap “Sync only” on this label. Bad state: offline
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:791:7) | <asynchronous suspension> | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:7)
+[printer] --- Retry unprinted label ---
+[printer] Retry unprinted label FAILED: Bad state: A confirmed print can only be synced.
+[printer] #0      PrinterController.retryUncertainPrint.<anonymous closure> (package:ctc_printer/printer_controller.dart:906:9) | #1      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19) | #2      PrinterController.retryUncertainPrint (package:ctc_printer/printer_controller.dart:901:11)
+[printer] --- Sync Jamie ---
+[printer] Sync Jamie: OK
+00:07 +209: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +209: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/printer_failure_boundaries_test.dart: physical confirmation after restart is sync-only even disconnected
+[printer] Queue: 1 labels, 1 to print for Day.
+[printer] --- Connect printer ---
+[printer] Connect printer: OK
+[printer] --- Disconnect printer ---
+[printer] Disconnect printer: OK
+[printer] --- Confirm printed label ---
+[printer] Confirm printed label: OK
+00:07 +210: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +211: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +212: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +213: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +214: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +215: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +216: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +217: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +218: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +219: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +220: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +221: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +221: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — offline conflict protection
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:07 +222: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +223: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cold start with no signal shows the cached roster
+00:07 +223: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:07 +224: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+00:07 +224: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a stale cached roster says so loudly
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +225: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+00:07 +225: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a freshly cached roster does not shout
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +226: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+00:07 +227: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — duplicate-safe print recovery
+00:07 +228: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a cache from another production is ignored
+00:07 +228: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:07 +229: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +229: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a successful refresh replaces the cached board and clears the offline state
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +230: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +230: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a production the server refuses is not described as working offline
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +231: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +231: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a production the server refuses still shows the last roster it saw
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +232: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +232: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a production the server refuses refuses to print, even though the cached status says active
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+[printer] --- Print Jamie Example ---
+[printer] Print Jamie Example FAILED: This production is no longer available. This production or label is no longer available. Refresh, and ask the coordinator if it should still be open.
+[printer] #0      PrinterController._printOneLabel (package:ctc_printer/printer_controller.dart:642:7) | #1      PrinterController.printLabel.<anonymous closure> (package:ctc_printer/printer_controller.dart:581:15) | #2      PrinterController._run (package:ctc_printer/printer_controller.dart:1010:19)
+00:07 +233: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +233: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a production the server refuses a lost signal after a refusal does not reopen the day
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +234: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — About and release identity
+00:07 +235: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a production the server refuses a merely unreachable server is still offline, not closed
+[printer] Queue: 2 labels, 2 to print for Review Day (cached).
+00:07 +235: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — grouped summary and guarded closeout
+[printer] Queue: 2 labels, 0 to print for Fictional Studio Launch (cached).
+00:07 +236: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — grouped summary and guarded closeout
+00:07 +236: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/offline_cold_start_test.dart: a successful fetch writes the cache for the next cold start
+[printer] Queue: 2 labels, 2 to print for Review Day.
+00:07 +237: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — grouped summary and guarded closeout
+00:08 +238: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: App Store screenshot — published template and safe test label
+[printer] Queue: 4 labels, 3 to print for Apple Review Coffee Run — Fictional (cached).
+00:08 +239: /Users/coltonbatts/Desktop/CaptureThisCoffee/mobile/test/app_store_screenshot_test.dart: (tearDownAll)
+00:08 +239: All tests passed!

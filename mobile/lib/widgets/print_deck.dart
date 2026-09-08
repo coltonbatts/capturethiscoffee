@@ -175,8 +175,6 @@ class _PrintDeckState extends State<PrintDeck>
             _stage(theme),
             const SizedBox(height: 16),
             _primaryAction(),
-            const SizedBox(height: 10),
-            _secondaryActions(),
           ],
         ),
       ),
@@ -193,32 +191,28 @@ class _PrintDeckState extends State<PrintDeck>
               Text(
                 widget.productionName,
                 style: theme.textTheme.titleMedium,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 1),
               Text(widget.syncLabel, style: theme.textTheme.bodySmall),
             ],
           ),
         ),
-        IconButton(
-          onPressed: widget.busy ? null : widget.onRefresh,
-          icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh board',
-        ),
-        IconButton(
-          onPressed: widget.busy
-              ? null
-              : widget.connected
-                  ? widget.onDisconnect
-                  : widget.onConnect,
-          icon: Icon(
-            widget.connected
-                ? Icons.bluetooth_connected
-                : Icons.bluetooth_disabled,
-            color: widget.connected ? CaptureColors.ink : CaptureColors.faint,
+        if (widget.connected)
+          IconButton(
+            onPressed: widget.busy
+                ? null
+                : widget.connected
+                    ? widget.onDisconnect
+                    : widget.onConnect,
+            icon: Icon(
+              widget.connected
+                  ? Icons.bluetooth_connected
+                  : Icons.bluetooth_disabled,
+              color: widget.connected ? CaptureColors.ink : CaptureColors.faint,
+            ),
+            tooltip:
+                widget.connected ? 'Disconnect printer' : 'Connect printer',
           ),
-          tooltip: widget.connected ? 'Disconnect printer' : 'Connect printer',
-        ),
       ],
     );
   }
@@ -227,9 +221,10 @@ class _PrintDeckState extends State<PrintDeck>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 7,
+          runSpacing: 4,
           children: [
             // Counts down rather than snapping — the number is the operator's
             // sense of how much day is left.
@@ -251,7 +246,7 @@ class _PrintDeckState extends State<PrintDeck>
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: CaptureColors.muted),
             ),
-            const Spacer(),
+
             Text(
               '${widget.printed} of ${widget.total} printed',
               style: theme.textTheme.bodySmall,
@@ -412,13 +407,5 @@ class _PrintDeckState extends State<PrintDeck>
           ),
         );
     }
-  }
-
-  Widget _secondaryActions() {
-    return OutlinedButton.icon(
-      onPressed: widget.busy || !widget.connected ? null : widget.onDisconnect,
-      icon: const Icon(Icons.bluetooth_disabled, size: 18),
-      label: const Text('Disconnect'),
-    );
   }
 }

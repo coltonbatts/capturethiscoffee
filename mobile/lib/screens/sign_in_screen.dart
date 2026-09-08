@@ -26,6 +26,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _submit() async {
     final runtime = PrinterScope.runtimeOf(context);
+    if (runtime.session.busy) return;
+    FocusScope.of(context).unfocus();
     await runtime.signIn(
       _emailController.text,
       _passwordController.text,
@@ -38,7 +40,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final session = runtime.session;
     return Scaffold(
       appBar: AppBar(
-        title: const BrandAppBarTitle(detail: 'Owner sign in'),
+        title: const BrandAppBarTitle(detail: 'Sign in'),
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -60,7 +62,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Text('Open the day.', style: CaptureType.pageTitle),
                           const SizedBox(height: 10),
                           Text(
-                            'Use the email and password provisioned by the owner.',
+                            'Sign in with the account your workspace owner gave you.',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                           const SizedBox(height: 28),

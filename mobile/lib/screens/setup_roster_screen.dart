@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'collect_screen.dart';
 import '../app_scope.dart';
 import '../setup_models.dart';
 import '../theme.dart';
@@ -135,7 +136,7 @@ class _SetupRosterScreenState extends State<SetupRosterScreen> {
           onPressed:
               controller.busy || day == null ? null : _continueToOperations,
           icon: const Icon(Icons.arrow_forward),
-          label: const Text('Continue to Collect & Print'),
+          label: const Text('Continue to Collect'),
         ),
       ),
     );
@@ -175,7 +176,9 @@ class _SetupRosterScreenState extends State<SetupRosterScreen> {
     await workspace.refreshDays();
     final selected = await workspace.selectDay(widget.productionId);
     if (!selected || !mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    final navigator = Navigator.of(context);
+    navigator.popUntil((route) => route.isFirst);
+    navigator.pushNamed(CollectScreen.route);
   }
 }
 

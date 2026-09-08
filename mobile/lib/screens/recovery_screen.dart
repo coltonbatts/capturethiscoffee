@@ -44,6 +44,10 @@ class RecoveryScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
+                  if (controller.boardIsStale) ...[
+                    StaleBoardNotice(controller: controller),
+                    const SizedBox(height: 12),
+                  ],
                   if (controller.operatorError != null) ...[
                     OperatorErrorBanner(controller: controller),
                     const SizedBox(height: 12),

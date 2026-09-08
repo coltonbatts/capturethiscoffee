@@ -155,7 +155,7 @@ void main() {
     expect(find.byType(CollectScreen), findsOneWidget);
     expect(find.text('Needs order'), findsWidgets);
     expect(find.text('Captured'), findsWidgets);
-    expect(find.text('No drink'), findsWidgets);
+
     expect(find.textContaining('Usual: Large, Iced latte'), findsOneWidget);
     final collectScroll = find
         .descendant(
@@ -180,10 +180,13 @@ void main() {
         kind: WorkspaceFailureKind.unreachable,
       );
     await tester.scrollUntilVisible(
-      find.byKey(const Key('accept-usual-order-1')),
+      find.byKey(const Key('expand-roster-1')),
       -250,
       scrollable: collectScroll,
     );
+    await tester.tap(find.byKey(const Key('expand-roster-1')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('accept-usual-order-1')));
     await tester.tap(find.byKey(const Key('accept-usual-order-1')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
@@ -203,10 +206,14 @@ void main() {
     expect(durable.records, hasLength(1));
 
     await tester.scrollUntilVisible(
-      find.byKey(const Key('edit-order-order-2')),
+      find.byKey(const Key('expand-roster-2')),
       200,
       scrollable: collectScroll,
     );
+    await tester.tap(find.byKey(const Key('expand-roster-2')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('accept-usual-order-1')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('edit-order-order-2')));
     await tester.tap(find.byKey(const Key('edit-order-order-2')));
     await tester.pumpAndSettle();
     expect(find.text('Save as usual order'), findsOneWidget);

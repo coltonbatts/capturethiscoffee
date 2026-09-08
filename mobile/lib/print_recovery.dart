@@ -110,30 +110,19 @@ class PreferencesPrintRecoveryRepository implements PrintRecoveryRepository {
   Future<List<PrintRecoveryRecord>> readAll() async {
     final preferences = await SharedPreferences.getInstance();
     final raw = preferences.getString(_printRecoveryPreferencesKey);
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is! List<dynamic>) return [];
-      return decoded
-          .map(PrintRecoveryRecord.tryFromJson)
-          .whereType<PrintRecoveryRecord>()
-          .toList();
-    } catch (_) {
-      return [];
-    }
+    if (raw == null) return [];
+    return _decodeRecovery(
+        raw, PrintRecoveryRecord.tryFromJson, (record) => record.orderId);
   }
 
   @override
   Future<void> writeAll(List<PrintRecoveryRecord> records) async {
     final preferences = await SharedPreferences.getInstance();
-    if (records.isEmpty) {
-      await preferences.remove(_printRecoveryPreferencesKey);
-      return;
-    }
-    await preferences.setString(
+    final persisted = await preferences.setString(
       _printRecoveryPreferencesKey,
       jsonEncode(records.map((record) => record.toJson()).toList()),
     );
+    if (!persisted) throw StateError('Could not persist print recovery.');
   }
 }
 
@@ -159,7 +148,8 @@ class PrintRecoveryLedger {
   ]) : _records = {for (final record in initial) record.orderId: record};
 
   final PrintRecoveryRepository _repository;
-  final Map<String, PrintRecoveryRecord> _records;
+  Map<String, PrintRecoveryRecord> _records;
+  Future<void> _mutationTail = Future<void>.value();
 
   static Future<PrintRecoveryLedger> load(
     PrintRecoveryRepository repository,
@@ -182,37 +172,49 @@ class PrintRecoveryLedger {
               record.apiBase == scopeKey && record.productionId == productionId)
           .toList(growable: false);
 
-  Future<void> record(PrintRecoveryRecord record) async {
-    final existing = _records[record.orderId];
-    if (existing?.state == PrintRecoveryState.printedNeedsSync &&
-        record.state == PrintRecoveryState.uncertain) {
-      throw StateError('Cannot weaken a confirmed print recovery state.');
-    }
-    _records[record.orderId] = record;
-    await _persist();
-  }
+  Future<void> record(PrintRecoveryRecord record) => _mutate((next) {
+        final existing = next[record.orderId];
+        if (existing != null &&
+            (existing.apiBase != record.apiBase ||
+                existing.productionId != record.productionId)) {
+          throw StateError('Recovery belongs to another workspace.');
+        }
+        if (existing?.state == PrintRecoveryState.printedNeedsSync &&
+            record.state == PrintRecoveryState.uncertain) {
+          throw StateError('Cannot weaken a confirmed print recovery state.');
+        }
+        next[record.orderId] = record;
+      });
 
-  Future<void> markPhysicalPrintConfirmed(String orderId) async {
-    final existing = _records[orderId];
-    if (existing == null) throw StateError('Missing print recovery record.');
-    _records[orderId] = existing.withState(PrintRecoveryState.printedNeedsSync);
-    await _persist();
-  }
+  Future<void> markPhysicalPrintConfirmed(String orderId) => _mutate((next) {
+        final existing = next[orderId];
+        if (existing == null) {
+          throw StateError('Missing print recovery record.');
+        }
+        next[orderId] = existing.withState(PrintRecoveryState.printedNeedsSync);
+      });
 
-  Future<void> clear(String orderId) async {
-    _records.remove(orderId);
-    await _persist();
-  }
+  Future<void> clear(String orderId) => _mutate((next) {
+        next.remove(orderId);
+      });
 
-  Future<void> clearServerConfirmed(Iterable<String> orderIds) async {
-    var changed = false;
-    for (final orderId in orderIds) {
-      changed = _records.remove(orderId) != null || changed;
-    }
-    if (changed) await _persist();
-  }
+  Future<void> clearServerConfirmed(Iterable<String> orderIds) =>
+      _mutate((next) {
+        for (final id in orderIds) {
+          next.remove(id);
+        }
+      });
 
-  Future<void> _persist() => _repository.writeAll(_records.values.toList());
+  Future<void> _mutate(void Function(Map<String, PrintRecoveryRecord>) change) {
+    final result = _mutationTail.then((_) async {
+      final next = Map<String, PrintRecoveryRecord>.of(_records);
+      change(next);
+      await _repository.writeAll(next.values.toList());
+      _records = next;
+    });
+    _mutationTail = result.then((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
 }
 
 enum OrderMutationConflictKind {
@@ -472,17 +474,9 @@ class PreferencesOrderMutationOutboxRepository
   Future<List<OrderMutationRecord>> readAll() async {
     final preferences = await SharedPreferences.getInstance();
     final raw = preferences.getString(_orderMutationOutboxPreferencesKey);
-    if (raw != null && raw.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(raw);
-        if (decoded is! List) return const [];
-        return decoded
-            .map(OrderMutationRecord.tryFromJson)
-            .whereType<OrderMutationRecord>()
-            .toList(growable: false);
-      } catch (_) {
-        return const [];
-      }
+    if (raw != null) {
+      return _decodeRecovery(
+          raw, OrderMutationRecord.tryFromJson, (record) => record.orderId);
     }
 
     // Build 9 stored only physical recovery evidence. Read it into the unified
@@ -800,7 +794,9 @@ class OrderMutationOutbox {
   Future<void> _markPhysicalPrintConfirmed(String orderId) async {
     final existing = _require(orderId);
     if (existing.printState == null) {
-      throw StateError('Missing print recovery record.');
+      {
+        throw StateError('Missing print recovery record.');
+      }
     }
     await _put(existing.copyWith(
       printState: PrintRecoveryState.printedNeedsSync,
@@ -928,4 +924,26 @@ class SharedPrintRecoveryLedger extends PrintRecoveryLedger {
         createdAt: record.createdAt,
         state: state,
       );
+}
+
+/// Partial reads are unsafe: one dropped row may represent paper already out.
+List<T> _decodeRecovery<T>(
+    String raw, T? Function(Object?) parse, String Function(T) id) {
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) throw const FormatException();
+    final result = <T>[];
+    final ids = <String>{};
+    for (final value in decoded) {
+      final record = parse(value);
+      if (record == null || !ids.add(id(record))) {
+        throw const FormatException();
+      }
+      result.add(record);
+    }
+    return result;
+  } catch (_) {
+    throw const FormatException(
+        'Recovery storage is corrupt. Printing is blocked; preserve storage and inspect the physical printer.');
+  }
 }

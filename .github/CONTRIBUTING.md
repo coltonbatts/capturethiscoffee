@@ -6,8 +6,8 @@ need.
 
 ## Before making a change
 
-1. Read the root [README](../README.md) and
-   [current-state document](../docs/current-state-2026-07-25.md).
+1. Start with [AGENTS.md](../AGENTS.md); use the
+   [documentation index](../docs/README.md) to select relevant context.
 2. Check existing issues and pull requests before opening duplicate work.
 3. Use a short branch name such as `feature/order-summary` or
    `fix/offline-sync`.
@@ -28,32 +28,38 @@ need.
 
 ## Verification
 
-Run the checks for every surface you touch.
+Local checks should match the affected behavior and risk. Reuse usable dependencies;
+install only when missing or changed. Do not repeat passing checks without a
+relevant edit or unresolved concern.
 
-Web:
+| Change | Local verification |
+| --- | --- |
+| Documentation | Review diff, links, referenced paths, and `git diff --check`; no app build required |
+| Cosmetic/UI | Focused widget or UI checks and affected visual comparisons; preserve physical-label baselines |
+| Authentication, database, offline replay, printing, recovery | Meaningful regression coverage across affected boundaries plus applicable integration checks; a cosmetic check alone is insufficient |
 
-```bash
-npm ci
-npm run lint
-npm run test
-npm run build
-```
+Web tests can be selected from the root with
+`node --import tsx --test tests/production-share.test.ts` (choose the affected
+file). Use `npm run lint`, `npm run test`, and `npm run build` when the change
+warrants broader web verification. For Flutter, run from `mobile/`, for example
+`flutter test --no-pub test/print_recovery_test.dart`; select the related outbox,
+authenticated-flow, offline, and transport tests when those boundaries change.
+Use `flutter analyze --no-pub` and broader suites as warranted.
 
-Mobile:
+Label changes also use `npm run verify:niimbot-export` from the root and the
+[mobile golden/comparison workflow](../mobile/README.md#visual-regression-and-renderer-comparison).
+Compare existing goldens before any update; inspect failures, then update only
+specific intentionally changed baselines. Keep failure diagnostics for review.
 
-```bash
-cd mobile
-flutter pub get
-flutter analyze
-flutter test
-```
-
-Label rendering or printer work may also require:
-
-```bash
-npm run verify:niimbot-export
-node scripts/compare-label-renderers.mjs
-```
+These local choices do not replace [CI](workflows/quality.yml): web lint/tests/
+build/export checks, mobile non-golden tests and analysis, and the macOS App Store
+screenshot check. Physical-label goldens remain an exact local/release check on
+the accepted build machine; host differences are not permission to overwrite them.
+For database and release work, locate the applicable migration procedure and
+exact-candidate evidence through the [index](../docs/README.md#release-and-validation).
+Printer changes retain recovery/offline regressions and the physical acceptance
+gate; software checks cannot establish usable paper, radio behavior, installation,
+or release approval. Report any gate that still requires external action.
 
 ## Pull requests
 

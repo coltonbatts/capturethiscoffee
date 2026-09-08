@@ -1,12 +1,9 @@
 # Production Readiness Checklist
 
-> **Historical web-first/Build 6 checklist.** Preserve it as prior evidence,
-> but use [`current-state-2026-07-25.md`](current-state-2026-07-25.md),
-> [`release-evidence-1.0.0.md`](release-evidence-1.0.0.md), and
-> [`build-11-release-readiness-2026-07-27.md`](build-11-release-readiness-2026-07-27.md)
-> for the active Build 11 source boundary. Use the
-> [`Build 11 physical worksheet`](build-11-physical-release-worksheet-2026-07-27.md)
-> for current hardware acceptance; Build 10 records remain historical evidence.
+> **Historical web-first/Build 6 checklist.** Preserve the dated evidence below.
+> Use [delivery status](delivery-status.md) for the current baseline and remaining
+> release gates. Physical acceptance must identify the actual candidate and kit;
+> no historical worksheet establishes acceptance of the uncommitted hardening.
 
 Last updated: 2026-07-23 (printer handoff audit)
 

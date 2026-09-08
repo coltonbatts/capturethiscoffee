@@ -6,9 +6,9 @@
 // account or navigation state.
 //
 // The split line is confirmation. This class never shows a dialog and never
-// takes a BuildContext: `clearSession` clears and `retryUncertainPrint` retries,
-// unconditionally. Deciding whether the operator meant it belongs to the
-// screen that asked. That keeps every destructive operation testable without
+// takes a BuildContext. The screen obtains explicit retry confirmation; the
+// controller still enforces recovery state, workspace identity and exclusivity.
+// That keeps every destructive operation testable without
 // pumping a widget, and it keeps confirmation copy next to its trigger.
 //
 // Translation notes from the State it replaces:
@@ -30,7 +30,7 @@ import 'label_content.dart';
 import 'label_painter.dart';
 import 'label_template.dart';
 import 'print_recovery.dart';
-import 'printer_validation.dart';
+import 'printer_transport.dart';
 import 'production_board.dart';
 import 'production_session.dart';
 import 'session_store.dart';
@@ -44,7 +44,6 @@ const int kPrintheadWidth = 567;
 const int kDensity = 3;
 const int kLabelType = 1;
 const int kMinimumTextSideInkPixels = 300;
-const _printerScanTimeout = Duration(seconds: 8);
 const _printOperationTimeout = Duration(seconds: 60);
 typedef CtcApiFactory = CtcApi Function(ProductionSession session);
 
@@ -82,7 +81,10 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     CtcApiFactory? apiFactory,
     WorkspaceController? workspaceController,
     OrderMutationOutbox? mutationOutbox,
-  })  : _printRecoveryRepository =
+    PrinterTransport? transport,
+    Duration printOperationTimeout = _printOperationTimeout,
+  })  : _operationTimeout = printOperationTimeout,
+        _printRecoveryRepository =
             printRecoveryRepository ?? PreferencesPrintRecoveryRepository(),
         _mutationOutbox = mutationOutbox,
         _workspace = workspaceController ??
@@ -96,9 +98,12 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
                   boardCacheRepository != null ||
                   apiFactory != null,
             ),
-        _ownsWorkspace = workspaceController == null;
+        _ownsWorkspace = workspaceController == null {
+    _transport = transport ?? NiimbotPrinterTransport(log: _logLine);
+  }
 
-  final NiimbotBluetoothClient _client = NiimbotBluetoothClient();
+  late final PrinterTransport _transport;
+  final Duration _operationTimeout;
   final PrintRecoveryRepository _printRecoveryRepository;
   final OrderMutationOutbox? _mutationOutbox;
   final WorkspaceController _workspace;
@@ -116,6 +121,8 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   String _loggedQueueSignature = '';
   bool _connected = false;
   bool _busy = false;
+  bool _transportPending = false;
+  int _pendingDisconnects = 0;
   PrinterStatus _printerStatus = PrinterStatus.disconnected;
   String? _operatorError;
   String? _connectedDeviceName;
@@ -126,12 +133,17 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _workspace.addListener(_handleWorkspaceChanged);
     final mutationOutbox = _mutationOutbox;
-    if (mutationOutbox == null) {
-      _printRecoveryLedger =
-          await PrintRecoveryLedger.load(_printRecoveryRepository);
-    } else {
-      await mutationOutbox.start();
-      _printRecoveryLedger = SharedPrintRecoveryLedger(mutationOutbox);
+    try {
+      if (mutationOutbox == null) {
+        _printRecoveryLedger =
+            await PrintRecoveryLedger.load(_printRecoveryRepository);
+      } else {
+        await mutationOutbox.start();
+        _printRecoveryLedger = SharedPrintRecoveryLedger(mutationOutbox);
+      }
+    } catch (error) {
+      _operatorError =
+          'Print recovery storage is unavailable. Printing is blocked. $error';
     }
     if (_ownsWorkspace) {
       await _workspace.start();
@@ -146,7 +158,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _workspace.removeListener(_handleWorkspaceChanged);
     if (_ownsWorkspace) _workspace.dispose();
-    _client.disconnect();
+    unawaited(_transport.disconnect().catchError((Object _) {}));
     super.dispose();
   }
 
@@ -160,9 +172,15 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _connected = false;
+      unawaited(_disconnectAfterAmbiguousPrint());
+    }
     if (state == AppLifecycleState.resumed) {
       if (_connected && !_busy) {
-        unawaited(_verifyConnectionAfterResume());
+        unawaited(
+            _run('Verify printer connection', _verifyConnectionAfterResume));
       }
     }
   }
@@ -461,80 +479,47 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _reconcileServerConfirmedRecovery() async {
     final currentQueue = queue;
-    if (_workspace.servingCachedBoard || currentQueue == null) return;
+    if (_busy || _workspace.servingCachedBoard || currentQueue == null) return;
     final serverConfirmed = currentQueue.labels
         .where(
           (label) =>
+              _printRecoveryLedger?[label.orderId]?.state ==
+                  PrintRecoveryState.printedNeedsSync &&
               label.labelPrinted &&
               (_workspace.mode != WorkspaceMode.authenticated ||
                   _workspace.authenticatedBoard
                       .isPrintServerConfirmed(label.orderId)),
         )
-        .map((label) => label.orderId);
-    await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+        .map((label) => label.orderId)
+        .toList();
+    if (serverConfirmed.isEmpty) return;
+    try {
+      await _printRecoveryLedger?.clearServerConfirmed(serverConfirmed);
+    } catch (error) {
+      _operatorError =
+          'Recovery cleanup failed. Stored print evidence retained: $error';
+    }
     _emit();
   }
 
   // ----------------------------------------------------------------- printer
 
   Future<bool> connectPrinter() => _run('Connect printer', () async {
-        _printerStatus = PrinterStatus.connecting;
-        _emit();
-        _logLine('Scanning for the NIIMBOT M2_H…');
-        _logLine('(Force-quit the official NIIMBOT app first!)');
-        final devices = await NiimbotBluetoothClient.listDevices(
-          timeout: _printerScanTimeout,
-        );
-        if (devices.isEmpty) {
-          throw Exception(
-            'No NIIMBOT printer found. Wake the M2_H and force-quit the official NIIMBOT app.',
-          );
+        if (_transportPending || _pendingDisconnects > 0) {
+          throw StateError(
+              'Previous printer operation is still stopping. Do not retry.');
         }
-        if (devices.length > 1) {
-          final names = devices
-              .map((device) => device.platformName)
-              .where((name) => name.isNotEmpty)
-              .join(', ');
-          throw Exception(
-            'Multiple NIIMBOT printers are nearby${names.isEmpty ? '' : ' ($names)'}. '
-            'Power off the others so this app cannot select the wrong printer.',
-          );
-        }
-        final scannedName = devices.single.platformName;
-        if (!looksLikeM2HDeviceName(scannedName)) {
-          throw Exception(
-            'Found ${scannedName.isEmpty ? 'an unnamed NIIMBOT' : scannedName}, not an M2_H. '
-            'This release supports only the NIIMBOT M2_H.',
-          );
-        }
-        try {
-          final connection = await _client.connect();
-          _connectedDeviceName = connection.deviceName ?? scannedName;
-        } catch (error) {
-          _connected = false;
-          _connectedDeviceName = null;
-          _printerStatus = PrinterStatus.error;
-          _emit();
-          throw Exception('Printer not connected. ${_errorText(error)}');
-        }
-        _client.setOnDisconnect(() {
-          _logLine('Printer disconnected.');
-          if (_disposed) return;
+        _transport.onDisconnect = () {
           _connected = false;
           _connectedDeviceName = null;
           _printerStatus = PrinterStatus.disconnected;
           _emit();
-        });
-        try {
-          await _verifyModelDetection();
-        } catch (_) {
-          try {
-            await _client.disconnect();
-          } catch (_) {
-            // Preserve the model-validation error shown to the operator.
-          }
-          _connectedDeviceName = null;
-          rethrow;
+        };
+        _printerStatus = PrinterStatus.connecting;
+        _connectedDeviceName = await _transport.connect();
+        if (_disposed) {
+          await _transport.disconnect();
+          return;
         }
         unawaited(HapticFeedback.mediumImpact());
         _connected = true;
@@ -542,46 +527,8 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
         _emit();
       }, affectsPrinter: true);
 
-  // connect() swallows printer-info failures inside niim_blue_flutter, so a
-  // green connection can still have modelId == null and be unable to print.
-  Future<void> _verifyModelDetection() async {
-    var meta = _client.getModelMetadata();
-    for (var attempt = 1; meta == null && attempt <= 2; attempt += 1) {
-      _logLine('Printer model not detected; retrying info fetch ($attempt)…');
-      try {
-        await _client.fetchPrinterInfo();
-      } catch (error) {
-        _logLine('Info fetch failed: ${_errorText(error)}');
-      }
-      meta = _client.getModelMetadata();
-    }
-    final info = _client.getPrinterInfo();
-    if (meta == null) {
-      if (!looksLikeM2HDeviceName(_connectedDeviceName)) {
-        throw Exception(
-          'Could not verify this printer as an M2_H. Disconnecting for safety.',
-        );
-      }
-      _logLine(
-        'Model ID unavailable, but the only scanned device identifies as '
-        '${_connectedDeviceName ?? 'M2_H'}. Using the M2_H print task.',
-      );
-    } else {
-      if (!isSupportedM2H(
-        modelId: info.modelId,
-        deviceName: _connectedDeviceName,
-      )) {
-        throw Exception(
-          'Detected ${meta.model} (modelId ${info.modelId}), not M2_H. '
-          'This release supports only model $niimbotM2HModelId.',
-        );
-      }
-      _logLine('Detected ${meta.model} (modelId ${info.modelId}).');
-    }
-  }
-
   Future<bool> disconnectPrinter() => _run('Disconnect printer', () async {
-        await _client.disconnect();
+        await _transport.disconnect();
         _connected = false;
         _connectedDeviceName = null;
         _printerStatus = PrinterStatus.disconnected;
@@ -590,8 +537,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _verifyConnectionAfterResume() async {
     try {
-      await _client.fetchPrinterInfo().timeout(const Duration(seconds: 8));
-      await _verifyModelDetection();
+      await _transport.verifyConnection().timeout(const Duration(seconds: 8));
       if (_disposed) return;
       _connected = true;
       _printerStatus = PrinterStatus.connected;
@@ -599,7 +545,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       _logLine('Printer connection verified after app resume.');
     } catch (_) {
       try {
-        await _client.disconnect();
+        await _transport.disconnect();
       } catch (_) {
         // The local UI still needs to return to a safe disconnected state.
       }
@@ -615,31 +561,14 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _printPage(PrintPage page) async {
-    _client.stopHeartbeat();
-    _client.setPacketInterval(15);
-    try {
-      await (() async {
-        final encoded = page.toEncodedImage();
-        final options = PrintOptions(
-          totalPages: 1,
-          density: kDensity,
-          labelType: LabelType.fromValue(kLabelType),
-        );
-        var task = _client.createPrintTask(options);
-        if (task == null) {
-          if (!looksLikeM2HDeviceName(_connectedDeviceName)) {
-            throw Exception('Printer model is not verified as M2_H.');
-          }
-          _logLine('Using the M2_H (B1) print task for the verified device.');
-          task = B1PrintTask(_client.abstraction, options);
-        }
-        await task.printInit();
-        await task.printPage(encoded, 1);
-        await task.waitForFinished();
-      })()
-          .timeout(_printOperationTimeout);
-    } finally {
-      _client.startHeartbeat();
+    if (_disposed || !_connected) throw StateError('Printer disconnected.');
+    _transportPending = true;
+    final operation = _transport.printPage(page).whenComplete(() {
+      _transportPending = false;
+    });
+    await operation.timeout(_operationTimeout);
+    if (_disposed || !_connected) {
+      throw StateError('Print outcome is uncertain.');
     }
   }
 
@@ -703,7 +632,8 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _printOneLabel(QueueLabel item) async {
+  Future<void> _printOneLabel(QueueLabel item,
+      {bool confirmedRetry = false}) async {
     // Checked before the cached status, which cannot be trusted once the server
     // has refused the production: a day marked complete still reads `active` in
     // a cache written while it was running.
@@ -726,6 +656,13 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     if (currentQueue == null || _workspace.productionId == null) {
       throw Exception('Select a day before printing.');
     }
+    final matches =
+        currentQueue.labels.where((label) => label.orderId == item.orderId);
+    if (matches.isEmpty ||
+        (!confirmedRetry && !item.labelPrinted && matches.first.labelPrinted)) {
+      throw StateError(
+          'This label changed. Refresh the selected day before printing.');
+    }
     if (_printRecoveryLedger == null) {
       throw Exception(
         'Print recovery storage is unavailable. Restart the app before printing.',
@@ -735,6 +672,16 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       throw Exception(
         'This label has an unresolved print outcome. Use its recovery action instead of reprinting.',
       );
+    }
+
+    final printScope = _workspace.scopeKey;
+    final printProduction = _workspace.productionId;
+    void checkScope() {
+      if (_disposed ||
+          printScope != _workspace.scopeKey ||
+          printProduction != _workspace.productionId) {
+        throw StateError('Workspace changed. Print recovery retained.');
+      }
     }
 
     _printerStatus = PrinterStatus.printing;
@@ -802,7 +749,9 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     // Persist uncertainty before the first physical packet. If the process is
     // killed mid-task, the operator must inspect the printer rather than being
     // offered a duplicate-safe-looking retry.
+    checkScope();
     await _recordPrintRecovery(item, PrintRecoveryState.uncertain);
+    checkScope();
 
     try {
       await _printPage(page);
@@ -816,7 +765,15 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
 
-    await _printRecoveryLedger?.markPhysicalPrintConfirmed(item.orderId);
+    _printerStatus =
+        _connected ? PrinterStatus.connected : PrinterStatus.disconnected;
+    try {
+      await _printRecoveryLedger!.markPhysicalPrintConfirmed(item.orderId);
+    } catch (error) {
+      throw PrintSyncPendingException(
+          'Printer completed, but confirmation could not be saved. Do not reprint. '
+          'Inspect the label and use “Label printed — sync only”. $error');
+    }
     // Paper is out. The thump lands with the printer's own, so a print is
     // confirmed in the hand as well as on the screen — which matters on a set
     // loud enough that neither is audible.
@@ -827,7 +784,9 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
 
     _logLine('Marking label_printed…');
     try {
-      await _workspace.markLabelPrinted(item.orderId);
+      checkScope();
+      await _workspace.markLabelPrinted(item.orderId,
+          expectedScopeKey: printScope, expectedProductionId: printProduction);
     } catch (error) {
       throw PrintSyncPendingException(
         'Printed ${item.personName}, but the workspace did not sync. Do not reprint. Tap “Sync only” on this label. ${_errorText(error)}',
@@ -847,8 +806,13 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _disconnectAfterAmbiguousPrint() async {
+    _connected = false;
+    _connectedDeviceName = null;
+    _pendingDisconnects++;
     try {
-      await _client.disconnect();
+      await _transport.disconnect().whenComplete(() {
+        _pendingDisconnects--;
+      }).timeout(const Duration(seconds: 8));
     } catch (_) {
       // The UI must require a clean reconnect even if teardown also fails.
     }
@@ -893,6 +857,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
         'Sync ${item.personName}',
         () async {
           final recovery = _printRecoveryLedger?[item.orderId];
+          _requireCurrentRecovery(recovery);
           if (_workspace.productionId == null || recovery == null) {
             throw Exception('No pending printed-status sync for this label.');
           }
@@ -900,7 +865,9 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
             throw Exception(
                 'Confirm whether the physical label printed first.');
           }
-          await _workspace.markLabelPrinted(item.orderId);
+          await _workspace.markLabelPrinted(item.orderId,
+              expectedScopeKey: recovery.apiBase,
+              expectedProductionId: recovery.productionId);
           await _printRecoveryLedger?.clear(item.orderId);
           _emit();
           await refreshBoard(silent: true);
@@ -908,17 +875,41 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       );
 
   Future<void> confirmUncertainLabelPrinted(QueueLabel item) async {
-    await _printRecoveryLedger?.markPhysicalPrintConfirmed(item.orderId);
-    _emit();
-    await syncPrintedLabel(item);
+    await _run('Confirm printed label', () async {
+      final ledger = _printRecoveryLedger;
+      final recovery = ledger?[item.orderId];
+      _requireCurrentRecovery(recovery);
+      await ledger!.markPhysicalPrintConfirmed(item.orderId);
+      await _workspace.markLabelPrinted(item.orderId,
+          expectedScopeKey: recovery!.apiBase,
+          expectedProductionId: recovery.productionId);
+      await ledger.clear(item.orderId);
+      await refreshBoard(silent: true);
+    });
   }
 
-  /// Unconditional — the screen confirms first, and that confirmation is the
-  /// only thing standing between this and a duplicate physical label.
+  void _requireCurrentRecovery(PrintRecoveryRecord? recovery) {
+    if (recovery == null ||
+        recovery.apiBase != _workspace.scopeKey ||
+        recovery.productionId != _workspace.productionId) {
+      throw StateError('No recovery record for the selected workspace.');
+    }
+  }
+
+  /// The screen must first obtain explicit confirmation that nothing printed.
   Future<void> retryUncertainPrint(QueueLabel item) async {
-    await _printRecoveryLedger?.clear(item.orderId);
-    _emit();
-    await printLabel(item);
+    await _run('Retry unprinted label', () async {
+      final ledger = _printRecoveryLedger;
+      final recovery = ledger?[item.orderId];
+      _requireCurrentRecovery(recovery);
+      if (recovery!.state != PrintRecoveryState.uncertain) {
+        throw StateError('A confirmed print can only be synced.');
+      }
+      if (!_connected) throw StateError('Reconnect before retrying.');
+      await ledger!.clear(item.orderId);
+      _requireCurrentRecovery(recovery);
+      await _printOneLabel(item, confirmedRetry: true);
+    }, affectsPrinter: true);
   }
 
   // ------------------------------------------------------------------ imaging
@@ -1006,7 +997,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function() action, {
     bool affectsPrinter = false,
   }) async {
-    if (_busy) return false;
+    if (_busy || _disposed) return false;
     _busy = true;
     _operatorError = null;
     if (_printerStatus == PrinterStatus.error) {

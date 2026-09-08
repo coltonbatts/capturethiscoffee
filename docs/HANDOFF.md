@@ -6,11 +6,9 @@ Start here whenever Capture This changes hands. This page is the index and
 definition of done; the linked documents contain the detailed procedures and
 evidence.
 
-Current Build 13 engineering, release, and blocker status:
-[`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
-Historical release evidence remains available in
-[`current-state-2026-07-25.md`](current-state-2026-07-25.md) and the dated
-Build 10–12 records.
+Current engineering, release blockers, and next work live in the
+[delivery checklist](delivery-status.md). The Build 13 statements below are
+recorded July 30 evidence, not a live installation or release check.
 
 ## Product in one sentence
 
@@ -29,7 +27,7 @@ template drafting/publishing, selecting the default template, assigning a
 published template to a Planning day, links, the zero-install runner, and
 PNG/CSV fallback.
 
-## Current release position
+## Recorded release position — July 30, 2026
 
 - Build 12 source was squash-merged to `main` as
   `88dcf1f346525cd7eed5dfb32be1499fe66855e1`. Its signed
@@ -37,12 +35,12 @@ PNG/CSV fallback.
   internal `Main` group, and reported installed by its one existing tester.
   Full evidence is in
   [`build-12-native-setup-2026-07-29.md`](build-12-native-setup-2026-07-29.md).
-- Build 13 is the operator-ready/unlisted-App-Store release candidate. It was
+- Build 13 was the intended unlisted-App-Store release candidate. It was
   squash-merged as `8dab20e9f737a0d83e3ed21dea2c0417b4b5546c`, its
   migration and exact production web deployment are live, and its
   distribution-signed `1.0.0 (13)` binary was uploaded at 13:02 CDT on
   2026-07-30. At 13:04 CDT Apple emailed that it is available to the existing
-  internal tester. App Store Connect now records Build ID
+  internal tester. The July 30 App Store Connect record lists Build ID
   `79ca63c6-38b1-43d6-af1e-d0f4b2d44e47`, Complete/Validated processing,
   assignment only to the one-tester internal `Main` group, free U.S.-only
   availability, manual release, nine screenshots, a calculated 4+ rating, and

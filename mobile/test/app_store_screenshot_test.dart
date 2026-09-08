@@ -1,3 +1,4 @@
+import 'package:ctc_printer/screens/day_editor_screen.dart';
 import 'dart:io';
 
 import 'package:ctc_printer/auth_repository.dart';
@@ -288,6 +289,7 @@ PrinterApp _signInApp() => PrinterApp(
 PrinterApp _authenticatedApp({
   bool selected = true,
   bool offline = false,
+  String offlineMessage = 'Could not reach the workspace.',
   List<OrderMutationRecord> mutations = const [],
   ProductionBoard? board,
 }) {
@@ -296,14 +298,14 @@ PrinterApp _authenticatedApp({
     days: _days,
     boards: {_productionId: selectedBoard},
     fetchDaysFailure: offline
-        ? const WorkspaceRepositoryException(
-            'Could not reach the workspace.',
+        ? WorkspaceRepositoryException(
+            offlineMessage,
             kind: WorkspaceFailureKind.unreachable,
           )
         : null,
     fetchBoardFailure: offline
-        ? const WorkspaceRepositoryException(
-            'Could not reach the workspace.',
+        ? WorkspaceRepositoryException(
+            offlineMessage,
             kind: WorkspaceFailureKind.unreachable,
           )
         : null,
@@ -350,6 +352,14 @@ Future<void> _capture(
   await tester.pumpWidget(
     RepaintBoundary(key: boundaryKey, child: app),
   );
+  await tester.pumpAndSettle();
+  // Await asset decoding as well as animation; the old first screenshot
+  // could capture empty smiley placeholders even though Simulator showed them.
+  await tester.runAsync(() async {
+    for (final element in find.byType(Image).evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
   await tester.pumpAndSettle();
   if (navigate != null) {
     await navigate(tester);
@@ -436,6 +446,111 @@ void main() {
   });
   tearDownAll(() {
     goldenFileComparator = previousGoldenFileComparator;
+  });
+
+  testWidgets('offline notice keeps unknown storage failures visible',
+      (tester) async {
+    await tester.pumpWidget(_authenticatedApp(
+        offline: true,
+        offlineMessage: 'Could not persist local recovery evidence.'));
+    await tester.pumpAndSettle();
+    tester
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/print');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+        find.text('Could not persist local recovery evidence.'), 200,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('Could not persist local recovery evidence.'),
+        findsOneWidget);
+  });
+
+  testWidgets('small phone and larger text keep core routes usable',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 568);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    for (final route in [
+      '/collect',
+      '/print',
+      '/recovery',
+      '/summary',
+      '/people'
+    ]) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_authenticatedApp(
+          offline: true, mutations: [_uncertainPrintRecord()]));
+      await tester.pumpAndSettle();
+      final navigator =
+          tester.state<NavigatorState>(find.byType(Navigator).first);
+      navigator.pushNamed(route);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: route);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: '$route scrolled');
+    }
+  });
+
+  testWidgets('small phone forms remain scrollable above keyboard',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 568);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearAllTestValues);
+    await tester.pumpWidget(_signInApp());
+    await tester.pumpAndSettle();
+    await tester.showKeyboard(find.byKey(const Key('sign-in-email')));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('sign-in-submit')));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(_authenticatedApp());
+    await tester.pumpAndSettle();
+    var navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
+    navigator.pushNamed('/people');
+    await tester.pumpAndSettle();
+    await tester.showKeyboard(find.byKey(const Key('people-search')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'People keyboard');
+    navigator.pop();
+    navigator
+        .push(MaterialPageRoute<void>(builder: (_) => const DayEditorScreen()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(const Key('day-name')), 120,
+        scrollable: find.byType(Scrollable).first);
+    await tester.showKeyboard(find.byKey(const Key('day-name')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'day setup keyboard');
+    navigator.pop();
+    navigator.pushNamed('/collect');
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+        find.byKey(const Key('expand-roster-order-alex')), 150,
+        scrollable: find.byType(Scrollable).first);
+    await Scrollable.ensureVisible(
+      tester.element(find.byKey(const Key('expand-roster-order-alex'))),
+      alignment: 0,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('expand-roster-order-alex')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('edit-order-order-alex')));
+    await tester.tap(find.byKey(const Key('edit-order-order-alex')));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('order-save')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'order editor keyboard');
   });
 
   testWidgets(

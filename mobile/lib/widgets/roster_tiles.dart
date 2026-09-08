@@ -435,14 +435,21 @@ class AttentionRosterTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
+              Flex(
+                direction: MediaQuery.textScalerOf(context).scale(14) > 20
+                    ? Axis.vertical
+                    : Axis.horizontal,
+                crossAxisAlignment:
+                    MediaQuery.textScalerOf(context).scale(14) > 20
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      item.personName,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  ),
+                  if (MediaQuery.textScalerOf(context).scale(14) > 20)
+                    Text(item.personName, style: theme.textTheme.titleMedium)
+                  else
+                    Expanded(
+                        child: Text(item.personName,
+                            style: theme.textTheme.titleMedium)),
                   Chip(
                     visualDensity: VisualDensity.compact,
                     avatar: Icon(

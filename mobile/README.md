@@ -1,17 +1,16 @@
 # Capture This — NIIMBOT M2_H BLE (iPhone)
 
-Native iOS app that prints Capture This cup labels directly to the NIIMBOT M2_H
-over Bluetooth LE — no NIIMBOT app, no laptop. Labels are rendered **on device**
-(`lib/label_painter.dart`) so printing never needs a signal. The internal
-release-candidate `1.0.0 (13)` source signs an owner-provisioned operator into Supabase,
-loads an existing day, collects and edits orders from its complete roster, and
-durably queues order and physical print facts while offline. The Build 8
-share-token path remains under **Legacy link** as the maintained fallback.
-Build 12 added online-only native pre-production setup:
-day creation/editing, People, private photos, roster building/reordering, and
-reviewed atomic bulk import. Build 13 adds validated, versioned label-template
-snapshots plus an operator Summary/share surface and guarded,
-server-authoritative day completion.
+Native iOS app that renders cup labels on device and prints directly to the
+supported NIIMBOT M2_H over Bluetooth LE. Signed-in operators use Supabase for
+online setup and durable offline capture/print synchronization. **Legacy link**
+retains token-scoped access as a fallback.
+
+Start with [AGENTS.md](../AGENTS.md). This guide describes architecture and
+operating constraints; use the [documentation index](../docs/README.md#status-and-evidence)
+and the [delivery checklist](../docs/delivery-status.md) for current findings.
+Source capabilities do not prove
+that a build is deployed, installed, Apple-approved, or physically accepted.
+For UI work, consult the focused [subsystem rules](../docs/subsystem-constraints.md#mobile-interface-and-labels).
 
 The in-app help screen contains the condensed day-of workflow and duplicate-safe
 recovery rules. The complete role-based handoff packet starts at
@@ -49,11 +48,11 @@ PNG/CSV export. See the
    are resolved. The server validates and permanently closes the day; the app
    does not optimistically mark a rejected closeout complete.
 
-If account access is unavailable during migration, choose **Legacy link** from
+For token-based fallback access, choose **Legacy link** from
 Sign in, Days, or the setup screen and paste the runner share URL. That path is
-the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
+the maintained public Next.js APIs.
 
-## Native setup workflow (Build 12+)
+## Native setup workflow
 
 1. From **Days**, create a Planning day or open the setup control on an existing
    day. Setup changes require a live authenticated connection.
@@ -67,13 +66,31 @@ the unchanged Build 8 behavior and still uses the frozen public Next.js APIs.
    available.
 4. Drag to reorder, edit a group, toggle on-set state, or remove a roster entry.
    Every accepted member has exactly one matching initial order.
-5. Choose **Continue to Collect & Print**. That selection loads the same
+5. Choose **Continue to Collect**. That selection opens Collect directly with the same
    `ProductionBoard` used by Collect, Print, progress, offline cache, conflicts,
    and recovery. Setup has no local mutation outbox.
 
+## Core journey and simulator review
+
+Collect, Print, and Summary have direct sibling navigation; Back returns to the
+day overview. At larger text sizes, a full-width **Go to** selector replaces the
+three narrow destinations. The navigation hides above an open keyboard.
+Collect builds rows lazily and expands one action area at a time; conflict review
+stays visible. Printed, captured, needs-order, and no-drink states remain distinct.
+People search and results scroll together so the keyboard cannot trap the list.
+
+For local fictional review only, run `flutter run --no-pub -t tool/simulator_review.dart`
+on an iOS Simulator. This explicit debug entrypoint uses memory repositories and
+is not imported by the production entrypoint. It binds loopback port 8877; request
+`http://127.0.0.1:8877/collect` (or `sign-in`, `days`, `setup`, `roster-setup`,
+`people`, `people-empty`, `home`, `print`, `recovery`, `conflict`, `summary`) to reset
+and open a scenario. All edits are temporary. Offline/recovery scenarios are
+injected states, not radio or physical-print evidence. Stop the Flutter run when
+finished. The current delivery checklist links the local before/after evidence.
+
 ## Screen structure
 
-Sign in and Days now precede the Build 8 day surfaces. Root state is coordinated
+Sign in and Days precede the selected-day surfaces. Root state is coordinated
 by separate session, workspace, and printer controllers.
 
 | Surface | Route | What it is |
@@ -90,7 +107,7 @@ by separate session, workspace, and printer controllers.
 | **Unresolved** (`lib/screens/recovery_screen.dart`) | `/recovery` | The only place a print outcome can be resolved. |
 | **Summary & closeout** (`lib/screens/summary_screen.dart`) | `/summary` | Grouped shop quantities, per-person state, native iOS sharing, closeout blockers, and server-confirmed permanent completion. |
 | **About** (`lib/screens/about_screen.dart`) | `/about` | Version, privacy, support, licenses. |
-| **Legacy link** (`lib/screens/link_screen.dart`) | root state | Secondary Build 8 fallback. Paste a share link; validation answers under the field. |
+| **Legacy link** (`lib/screens/link_screen.dart`) | root state | Token-based fallback. Paste a share link; validation answers under the field. |
 
 The deck answers "can I print right now?" in its own button rather than making
 the operator assemble that from separate status cards. Blocking reasons are
@@ -129,7 +146,7 @@ sign-out.
 Normal signed-in operation calls Supabase directly with the public URL, public
 anon key, and the user's session. Typed repositories read `productions`,
 `clients`, `production_roster`, `people`, and `orders`, then adapt those rows
-into the same `ProductionBoard` used by the Build 8 roster, print queue, cache,
+into the same `ProductionBoard` used by the roster, print queue, cache,
 preview, and label renderer. It makes no request to `/api/public/*`.
 
 The Days list is the exception to broad board loading: it calls the typed
@@ -161,17 +178,11 @@ fallback:
 | `GET /api/public/productions/{id}?token=…` | Full runner board (production, on-set roster, people, orders) |
 | `PATCH /api/public/orders/{orderId}` | `{ productionId, token, patch: { label_printed: true } }` |
 
-The app calls two routes it used to call and no longer does:
-
-- `GET /api/public/orders/{orderId}/label` — downloading a PNG per label meant
-  no signal, no printing, even for orders captured an hour earlier. That route
-  still serves `/labels` on the web and is the comparison baseline for the
-  on-device renderer.
-- `GET /api/public/productions/{id}/labels` — the printer-queue endpoint only
-  returned *captured* orders. The app reads the board instead and derives the
-  print queue locally in `PrinterQueue.fromBoard`, which mirrors
-  `buildPrinterQueue` in `src/lib/printer-queue.ts`. **Nothing calls the labels
-  endpoint now**; it is still deployed and still tested on the web side.
+The native print path renders locally rather than downloading per-label PNGs.
+Server-side PNG rendering remains available for web label export. The legacy
+printer-queue endpoint is retained in source, but native queue derivation uses
+the board. Consult callers for implementation facts; endpoint source is not
+proof of deployment.
 
 ## Offline behaviour
 
@@ -199,8 +210,9 @@ The Legacy link cache remains in `lib/board_cache.dart`, scoped to `apiBase` +
 Staleness is shown, never hidden: the summary line reads
 `Offline · synced 12 min ago`, and past ten minutes a banner says which orders
 the operator may be missing. Cached data is never treated as server
-confirmation — a print-recovery record is only retired when the server itself
-reports `label_printed`.
+confirmation. Sync cleanup requires a locally confirmed print and acknowledged
+sync or a fresh server-confirmed print fact. An old server printed flag must not
+erase an uncertain reprint; that still requires operator inspection.
 
 A refused production is not the same as an unreachable one, and the app no
 longer conflates them. `CtcApiException` carries a `CtcApiErrorKind`:
@@ -230,20 +242,66 @@ accepted legacy Grid 01. The schema is deliberately small: bounded flat
 text/line/shape/mark elements, approved bindings and fonts, no URLs, code, or
 executable content.
 
-Arial is bundled from `assets/fonts/` rather than taken from iOS so that
-`flutter test` on a host machine and the device produce identical metrics.
+Arial is bundled from `assets/fonts/` rather than taken from iOS to keep font
+selection consistent between host tests and devices. This does not eliminate
+host rasterization differences or establish physical output quality.
 
-The two renderers will never be byte-identical — `@napi-rs/canvas` and Flutter's
-`TextPainter` shape text differently. What must match is validated template
-semantics and composition. Check it:
+### Visual regression and renderer comparison
+
+Ordinary verification compares against existing baselines first. From `mobile/`,
+select the checks relevant to the change:
 
 ```bash
-flutter test test/label_golden_test.dart --update-goldens
-cd .. && node scripts/compare-label-renderers.mjs
+flutter test --no-pub test/label_golden_test.dart
+flutter test --no-pub test/app_store_screenshot_test.dart
 ```
 
-That writes stacked server/app pairs for four fixtures (short name, long name,
-long drink, minimal). Look at them.
+[Label goldens](test/label_golden_test.dart) protect physical-label output in
+[test/goldens/labels/](test/goldens/labels/). Run them on the accepted build
+machine for exact local/release comparison; host rasterization differences need
+investigation, not automatic acceptance. UI-only work must not change these PNGs.
+
+[App Store screenshot tests](test/app_store_screenshot_test.dart) explicitly load
+Geist, GeistMono, Arial, and Material Icons and compare against
+[test/goldens/app-store/](test/goldens/app-store/). They are UI regression tests
+and a source of fictional screenshot assets. Consult the
+[release screenshot packet](../docs/build-13-app-review-unlisted-packet-2026-07-30.md#screenshot-set)
+for asset context, and verify candidate identity before using assets for a release.
+Screenshot tests do not prove device installation or Apple acceptance.
+
+Inspect failures and their actual/expected/diff images before deciding whether a
+change is intended. Keep diagnostic output available for review. Only after that
+inspection, update the specific affected baseline with the test file and exact
+test name selected, then inspect the PNG diff and rerun that comparison without
+update mode. For example, **only for an intentional short-name label change**:
+
+```bash
+flutter test --no-pub test/label_golden_test.dart --plain-name 'renders grid-01-short-name' --update-goldens
+flutter test --no-pub test/label_golden_test.dart --plain-name 'renders grid-01-short-name'
+```
+
+Do not use an unrestricted golden update to clear failures. For an intentional
+UI screenshot change, select its named case in the screenshot test instead.
+
+For cross-renderer composition review, run from the repository root:
+
+```bash
+node scripts/compare-label-renderers.mjs
+```
+
+The script renders server fixtures and reads existing Flutter label PNGs to
+write stacked pairs into `.label-comparison/`. It does not run the Flutter
+renderer or assert a regression pass, and covers only its listed Grid 01
+fixtures. Run the label regression check first so those stored PNGs represent
+the tested implementation. Its source comment about regeneration is fixture
+preparation guidance, not a prerequisite to ordinary verification; regenerate
+only intentionally affected fixtures using the targeted procedure above.
+
+Inspect composition, wrapping, margins, and dimensions in the pairs. Flutter's
+`TextPainter` and server canvas need not be byte-identical. Template changes also
+follow [template authoring](../docs/label-template-authoring-and-publishing.md)
+and require relevant rendering checks beyond this comparison subset. Neither
+fixtures nor software goldens close the physical print gate.
 
 ## Setup (one-time)
 
@@ -261,7 +319,9 @@ flutter run \
 Use the same defines with `flutter build ipa`. Never provide the service-role or
 `sb_secret_…` key; the app rejects it and shows a sanitized setup state.
 
-### 1. Install Flutter (~10 min)
+### 1. Prepare Flutter if needed
+
+Skip installation when the existing Flutter environment is usable. Otherwise:
 
 ```bash
 brew install --cask flutter
@@ -275,61 +335,22 @@ sudo xcodebuild -license accept
 sudo gem install cocoapods   # skip if `pod --version` already works
 ```
 
-### 2. Generate the iOS scaffolding
+### 2. Use the checked-in iOS project
 
-```bash
-cd mobile
-flutter create --project-name ctc_printer --platforms=ios .
-flutter pub get
-```
+Run commands from `mobile/`. Use `flutter pub get` only if dependencies are
+missing or changed. Preserve the exact `niim_blue_flutter: 1.0.1` pin.
+Do not regenerate the release project with `flutter create .` as routine setup:
+iPhone targeting, permissions, privacy manifest, signing configuration, and assets
+are already checked in. Preserve the existing Podfile and lockfile; dependency
+or platform migrations need their own scope and validation.
 
-Do not rerun `flutter create .` over the release project without reviewing its
-diff; the iPhone-only target, privacy manifest, signing settings, and app assets
-are already checked in.
+Open `ios/Runner.xcworkspace` for signing and use the public Supabase defines
+above with `flutter run` on a connected, unlocked, trusted iPhone. Do not change
+the bundle identifier or release signing settings incidentally. Follow the
+[TestFlight checklist](../docs/testflight-checklist.md) for distribution.
 
-### 3. iOS permissions + minimum version
-
-Open `ios/Runner/Info.plist` and add inside the top-level `<dict>`:
-
-```xml
-<key>NSBluetoothAlwaysUsageDescription</key>
-<string>Capture This uses Bluetooth to find and connect to your NIIMBOT M2_H and print coffee cup labels.</string>
-<key>NSBluetoothPeripheralUsageDescription</key>
-<string>Capture This uses Bluetooth to connect to your NIIMBOT M2_H and print coffee cup labels.</string>
-<key>NSCameraUsageDescription</key>
-<string>Capture This uses the camera to add a crew photo that helps invited operators identify fictional and real roster members.</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>Capture This uses your photo library when you choose a crew photo for the private person directory.</string>
-```
-
-Open `ios/Podfile`, uncomment/set the platform line to:
-
-```ruby
-platform :ios, '13.0'
-```
-
-Then:
-
-```bash
-cd ios && pod install && cd ..
-```
-
-### 4. Signing
-
-```bash
-open ios/Runner.xcworkspace
-```
-
-In Xcode: Runner target → Signing & Capabilities → select your team, set a unique bundle ID (e.g. `com.capturethis.ctcprinter`). Since you have a paid developer account, automatic signing should just work.
-
-### 5. Run it — on a REAL iPhone
-
-```bash
-flutter devices        # confirm the iPhone shows up (plugged in, unlocked, trusted)
-flutter run
-```
-
-**The iOS Simulator has no Bluetooth. This only works on a physical device.**
+The iOS Simulator cannot establish Bluetooth printing or physical haptics; use
+the supported real iPhone/M2_H workflow for those checks.
 
 ## Print tuning
 
@@ -347,8 +368,8 @@ it.
 ## Known quirks / troubleshooting
 
 - **Flutter suggests removing CocoaPods during archive** → this is currently a
-  non-blocking migration notice. The signed Build 12 IPA succeeds with the
-  checked-in Podfile/lockfile and xcconfig includes. Do not remove CocoaPods or
+  migration notice to assess in the actual archive output, not a reason to
+  discard the checked-in Podfile/lockfile and xcconfig includes. Do not remove CocoaPods or
   rewrite the iOS dependency setup during a release without a clean diff,
   archive comparison, and physical M2_H regression test.
 - **Connect finds nothing** → NIIMBOT app still running somewhere (also check iPad/other phones), or the printer went to sleep (power-cycle it), or iOS Bluetooth permission was denied (Settings → Capture This).
@@ -357,46 +378,22 @@ it.
 - **A print repeats or hangs** → stop, inspect the paper, and use the
   duplicate-safe recovery choice before attempting another label.
 - **Output too light/dark** → change `kDensity` (1–5).
-- **Do NOT update the printer firmware.** The open protocol is reverse-engineered; current firmware is confirmed working and the M2_H famously refuses downgrades.
+- **Do NOT update the printer firmware.** The supported protocol is reverse-engineered; preserve the accepted firmware baseline. Any firmware experiment requires dedicated hardware-validation scope.
 - **Queue empty** → roster members need `on_set_today` and orders not in `no_order` status.
 - **Mark printed fails** → production must be `active` (not `planning`). If the label physically printed, tap **Sync only** after connectivity returns.
 
-## TestFlight
+## TestFlight and release evidence
 
-Step-by-step checklist: [docs/testflight-checklist.md](../docs/testflight-checklist.md).
+Use the [documentation index](../docs/README.md#release-and-validation) to find
+the applicable [TestFlight checklist](../docs/testflight-checklist.md), release
+ledger, and exact-candidate physical worksheet. Keep build/upload/processing,
+assignment, installation, Apple approval, and physical acceptance as separate
+events with evidence. Do not infer them from the source version or an earlier
+successful print.
 
-Quick path (with the reviewed Dart defines above):
-
-```bash
-cd mobile
-flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-open ios/Runner.xcworkspace   # Product → Archive → Distribute → App Store Connect
-```
-
-- Bundle ID: `com.capturethis.ctcprinter`
-- Builds 5 through 12 are uploaded and **consumed**; none may be reused.
-- Build 9 source is committed at `47c4405`. It adds signed-in day selection and
-  direct Supabase data access. What the physical print baseline exists to test
-  is in
-  [docs/release-evidence-1.0.0.md](../docs/release-evidence-1.0.0.md).
-- Build 10 `1.0.0+10` was uploaded and made available to the internal
-  TestFlight tester on 2026-07-27. Physical acceptance remains open. See
-  [docs/build-10-implementation-2026-07-25.md](../docs/build-10-implementation-2026-07-25.md).
-- Build 11 `1.0.0+11` was uploaded and assigned to the existing internal
-  TestFlight group on 2026-07-28. Its shipping deck exposes only individual
-  printing; physical acceptance remains open.
-- Build 12 `1.0.0+12` was uploaded, processed, and assigned only to the existing
-  `Main` internal TestFlight group on 2026-07-29. No external TestFlight or App
-  Store submission occurred, and physical acceptance remains open.
-- Build 13 `1.0.0+13` is the current source candidate. Its archive, upload,
-  processing, internal assignment, installation, and physical acceptance must
-  be recorded in
-  [Build 13 release evidence](../docs/release-evidence-1.0.0-build-13.md).
-- Bump the build suffix for every later replacement upload (`1.0.0+14`, …).
-- The checked-in export options keep Xcode from silently changing the IPA build
-  number. Confirm `pubspec.yaml`, the archive, the exported IPA, and App Store
-  Connect agree before uploading.
-- A Legacy-link tester needs an **HTTPS** production share URL (not LAN
-  `http://`); normal Build 13 operation uses invited-account sign-in.
-- Internal testers: no review. External testers: beta review + privacy policy URL.
-- Builds expire after **90 days** — rebuild quarterly.
+For a replacement upload, inspect the actual consumed build numbers and choose
+an unused suffix. Confirm `pubspec.yaml`, archive, exported IPA, and App Store
+Connect identity agree; preserve the checked-in export options. Device/archive
+commands require the reviewed public Supabase defines above. Distributed Legacy
+link testing requires an HTTPS share URL, not a LAN/localhost URL. Record unresolved
+external gates without marking them complete.

@@ -7,23 +7,27 @@ register with the account holders before the printer moves. The intended operato
 operating guide is [Operator Quick Start](operator-quick-start.md). The role-based entry
 point and definition of done are in [the handoff hub](HANDOFF.md).
 
-## Source and release
+Current delivery findings and remaining work: [delivery checklist](delivery-status.md).
+The release bullets below preserve July 30 evidence; verify the actual installed
+and available build before following the distribution procedure.
+
+## Source and release — recorded July 30, 2026
 
 - GitHub: `https://github.com/coltonbatts/capturethiscoffee`
 - Production branch: `main`
-- Current internal TestFlight build: Build 12, `1.0.0 (12)`, uploaded,
+- Last recorded installed TestFlight build: Build 12, `1.0.0 (12)`, uploaded,
   processed, assigned only to the existing internal `Main` group, and reported
   installed by its one existing tester. See
   [`build-12-native-setup-2026-07-29.md`](build-12-native-setup-2026-07-29.md).
-- Current release candidate: Build 13, `1.0.0 (13)`. It adds versioned label
+- Recorded release candidate: Build 13, `1.0.0 (13)`. It adds versioned label
   templates, immutable per-day template snapshots, an operator summary/share
   surface, and server-authoritative closeout while preserving one-label-at-a-time
   printing. Its exact source, verification, promotion, physical, and Apple
   state belong in
   [`build-13-app-store-launch-2026-07-30.md`](build-13-app-store-launch-2026-07-30.md).
-- Build 13 is merged, its migration and web deployment are live, and its
-  distribution-signed binary is uploaded and available to the existing
-  internal tester. It is not represented as installed, physically accepted,
+- The July 30 record reports Build 13 merged, its migration and web deployment
+  live, and its distribution-signed binary uploaded and available to the
+  existing internal tester. It is not represented as installed, physically accepted,
   approved, or released until those remaining gates are directly evidenced in
   the launch record.
 - Release tag: create `capture-this-v1.0.0` only after the physical and external
