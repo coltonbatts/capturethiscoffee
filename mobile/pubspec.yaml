@@ -12,7 +12,7 @@ dependencies:
   # Pinned EXACTLY on purpose: the underlying protocol lib is alpha and its
   # author recommends exact-version pinning. Do not use ^.
   niim_blue_flutter: 1.0.1
-  image: ^4.7.1
+  image: ^4.9.2
   image_picker: ^1.2.3
   http: ^1.2.2
   flutter_secure_storage: 10.3.1
