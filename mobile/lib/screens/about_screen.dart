@@ -14,7 +14,7 @@ import '../widgets/brand_mark.dart';
 const templateEntryKey = Key('home-template-entry');
 const testLabelActionKey = Key('home-test-label-action');
 
-const String kAppVersion = '1.0.0 (13)';
+const String kAppVersion = '1.0.0 (14)';
 
 final _privacyUri = Uri.parse('https://coffee.capturethis.com/privacy');
 final _supportUri = Uri.parse('https://coffee.capturethis.com/support');
