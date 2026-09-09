@@ -102,7 +102,7 @@ class DaysScreen extends StatelessWidget {
                     else ...[
                       if (grouped.active.isNotEmpty)
                         _DaySection(
-                          title: 'ACTIVE',
+                          title: 'Today',
                           days: grouped.active,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
@@ -110,7 +110,7 @@ class DaysScreen extends StatelessWidget {
                         ),
                       if (grouped.planning.isNotEmpty)
                         _DaySection(
-                          title: 'UPCOMING / PLANNING',
+                          title: 'Coming up',
                           days: grouped.planning,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
@@ -118,7 +118,7 @@ class DaysScreen extends StatelessWidget {
                         ),
                       if (grouped.complete.isNotEmpty)
                         _DaySection(
-                          title: 'RECENT / COMPLETE',
+                          title: 'Done',
                           days: grouped.complete,
                           selectedDayId: workspace.selectedDayId,
                           onSelected: (id) => _select(context, id),
@@ -130,7 +130,7 @@ class DaysScreen extends StatelessWidget {
                       child: TextButton.icon(
                         onPressed: workspace.busy ? null : runtime.enterLegacy,
                         icon: const Icon(Icons.link, size: 18),
-                        label: const Text('Advanced · Legacy link'),
+                        label: const Text('Advanced link'),
                       ),
                     ),
                   ],

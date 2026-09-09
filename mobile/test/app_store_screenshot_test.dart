@@ -414,6 +414,13 @@ Future<void> _openPrintDeck(WidgetTester tester) async {
 Future<void> _openAbout(WidgetTester tester) async {
   final navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
   navigator.pushNamed(AboutScreen.route);
+  await tester.pumpAndSettle();
+  await tester.runAsync(() async {
+    for (final element in find.byType(Image).evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
+  await tester.pumpAndSettle();
 }
 
 Future<void> _openSummary(WidgetTester tester) async {
@@ -422,6 +429,8 @@ Future<void> _openSummary(WidgetTester tester) async {
 }
 
 Future<void> _showTemplateControls(WidgetTester tester) async {
+  await _openAbout(tester);
+  await tester.pumpAndSettle();
   await tester.scrollUntilVisible(
     find.byKey(templateEntryKey),
     300,

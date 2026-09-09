@@ -6,7 +6,7 @@ import 'package:ctc_printer/print_recovery.dart';
 import 'package:ctc_printer/printer_controller.dart';
 import 'package:ctc_printer/production_board.dart';
 import 'package:ctc_printer/production_session.dart';
-import 'package:ctc_printer/screens/home_screen.dart';
+import 'package:ctc_printer/screens/about_screen.dart';
 import 'package:ctc_printer/session_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -76,7 +76,7 @@ void main() {
     expect(controller.currentRecoveryRecords, isEmpty);
   });
 
-  testWidgets('home exposes template identity, status, and safe test action',
+  testWidgets('About exposes template identity, status, and safe test action',
       (tester) async {
     await tester.pumpWidget(PrinterApp(
       sessionRepository: MemorySessionRepository(_session),
@@ -85,6 +85,12 @@ void main() {
       apiFactory: _TestLabelApi.new,
     ));
     await tester.pumpAndSettle();
+
+    expect(find.byKey(templateEntryKey), findsNothing);
+    await tester.ensureVisible(find.text('About'));
+    await tester.tap(find.text('About'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AboutScreen), findsOneWidget);
 
     expect(find.byKey(templateEntryKey), findsOneWidget);
     expect(find.text('Grid 01 · v1'), findsOneWidget);

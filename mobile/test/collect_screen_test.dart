@@ -154,7 +154,7 @@ void main() {
 
     expect(find.byType(CollectScreen), findsOneWidget);
     expect(find.text('Needs order'), findsWidgets);
-    expect(find.text('Captured'), findsWidgets);
+    expect(find.text('Got it'), findsWidgets);
 
     expect(find.textContaining('Usual: Large, Iced latte'), findsOneWidget);
     final collectScroll = find

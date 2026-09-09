@@ -35,7 +35,7 @@ class PersonSummaryLine {
 
   String get stateLabel => switch (state) {
         PersonSummaryState.waiting => 'Waiting',
-        PersonSummaryState.captured => 'Captured · waiting to print',
+        PersonSummaryState.captured => 'Got it · waiting to print',
         PersonSummaryState.printed => 'Printed',
         PersonSummaryState.noDrink => 'No drink',
       };
@@ -124,7 +124,7 @@ String buildDaySummaryShareText(DayOperatingSummary summary) {
     for (final person in summary.people)
       '${person.name} · ${person.group} · ${person.drink} · ${person.stateLabel}',
     '',
-    'Captured ${progress.captured} · Printed ${progress.printed} · '
+    'Got it ${progress.captured} · Printed ${progress.printed} · '
         'Waiting ${progress.needsOrder} · No drink ${progress.noDrink}',
   ];
   return lines.join('\n');

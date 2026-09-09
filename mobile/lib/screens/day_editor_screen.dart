@@ -114,7 +114,7 @@ class _DayEditorScreenState extends State<DayEditorScreen> {
                         labelText: 'Status',
                         helperText: switch (widget.day?.status) {
                           'active' =>
-                            'Complete an Active day from Summary & closeout.',
+                            'Complete an Active day from Wrap up.',
                           'complete' => 'A Complete day cannot be reopened.',
                           _ => 'A Planning day may move forward to Active.',
                         },

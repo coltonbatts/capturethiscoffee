@@ -35,7 +35,7 @@ class RecoveryScreen extends StatelessWidget {
     final records = controller.currentRecoveryRecords;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Unresolved labels')),
+      appBar: AppBar(title: const Text('Labels that need a check')),
       body: SafeArea(
         child: Column(
           children: [

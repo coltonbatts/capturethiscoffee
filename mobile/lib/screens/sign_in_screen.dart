@@ -136,7 +136,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               onPressed:
                                   session.busy ? null : runtime.enterLegacy,
                               icon: const Icon(Icons.link, size: 18),
-                              label: const Text('Legacy link'),
+                              label: const Text('Advanced link'),
                             ),
                           ),
                           if (session.busy) ...[

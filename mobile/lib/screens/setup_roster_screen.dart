@@ -136,7 +136,7 @@ class _SetupRosterScreenState extends State<SetupRosterScreen> {
           onPressed:
               controller.busy || day == null ? null : _continueToOperations,
           icon: const Icon(Icons.arrow_forward),
-          label: const Text('Continue to Collect'),
+          label: const Text('Continue to Orders'),
         ),
       ),
     );

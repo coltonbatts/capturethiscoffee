@@ -38,7 +38,7 @@ class ConfigurationScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: runtime.enterLegacy,
                       icon: const Icon(Icons.link),
-                      label: const Text('Legacy link'),
+                      label: const Text('Advanced link'),
                     ),
                   ),
                 ],

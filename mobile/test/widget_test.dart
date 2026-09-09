@@ -333,7 +333,7 @@ void main() {
     await tester.tap(find.text('Maya Rodriguez'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Unresolved labels'), findsOneWidget);
+    expect(find.text('Labels that need a check'), findsOneWidget);
     expect(find.text('Label printed — sync only'), findsOneWidget);
     expect(find.text('Nothing printed — retry'), findsOneWidget);
     expect(find.textContaining('Print all'), findsNothing);
