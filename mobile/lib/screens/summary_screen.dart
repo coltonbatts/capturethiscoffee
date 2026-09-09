@@ -35,7 +35,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     final board = runtime.workspace.board;
     if (board == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Summary')),
+        appBar: AppBar(title: const Text('Wrap up')),
         body: const Center(child: Text('Select a day to view its summary.')),
       );
     }
@@ -53,7 +53,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     return Scaffold(
       bottomNavigationBar: const DayNavigation(route: '/summary'),
       appBar: AppBar(
-        title: const Text('Summary'),
+        title: const Text('Wrap up'),
         actions: [
           IconButton(
             key: summaryShareButtonKey,
@@ -87,7 +87,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
               const SizedBox(height: 10),
               if (summary.coffeeShop.isEmpty)
                 const _EmptyCard(
-                  text: 'No captured drinks yet. Collect orders first.',
+                  text:
+                      'No captured drinks yet. Add coffee orders in Orders first.',
                 )
               else
                 for (final line in summary.coffeeShop) ...[
@@ -112,7 +113,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).pushNamed('/recovery'),
                   icon: const Icon(Icons.report_problem_outlined),
-                  label: const Text('Review unresolved labels'),
+                  label: const Text('Labels that need a check'),
                 ),
               _CloseoutCard(
                 status: summary.production.status,
@@ -157,7 +158,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
         content: Text(
           '${summary.progress.total} on-set people are decided and '
           '${summary.progress.printed} captured labels are printed. '
-          'Completion is permanent and Collect and Print will become read-only.',
+          'Completion is permanent and Orders and Print will become read-only.',
         ),
         actions: [
           TextButton(
@@ -213,17 +214,17 @@ String? closeoutBlockReason({
     return 'Only an Active day can be completed.';
   }
   if (servingCachedBoard) {
-    return 'Closeout needs a current online connection. Collect and Print stay available offline.';
+    return 'Connect to the internet to wrap up. Orders and Print stay available offline.';
   }
   if (syncBlockedReason != null) return syncBlockedReason;
   if (conflicts > 0) {
-    return 'Resolve every order conflict before closeout.';
+    return 'Finish these first: review every order conflict.';
   }
   if (pendingMutations > 0) {
-    return 'Sync every pending order change before closeout.';
+    return 'Finish these first: sync every pending order change.';
   }
   if (recoveryCount > 0) {
-    return 'Resolve every uncertain print before closeout.';
+    return 'Finish these first: review Labels that need a check.';
   }
   final progress = productionBoardProgress(board);
   if (progress.needsOrder > 0) {
@@ -245,7 +246,7 @@ class _ProgressStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('Captured', summary.progress.captured),
+      ('Got it', summary.progress.captured),
       ('Printed', summary.progress.printed),
       ('Waiting', summary.progress.needsOrder),
     ];
@@ -469,7 +470,7 @@ class _CloseoutCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('CLOSEOUT', style: CaptureType.eyebrow),
+              Text('Wrap up', style: CaptureType.eyebrow),
               const SizedBox(height: 5),
               Text(
                 status == 'complete' ? 'Day complete' : 'Complete this day',
@@ -478,7 +479,7 @@ class _CloseoutCard extends StatelessWidget {
               const SizedBox(height: 7),
               Text(
                 blockReason ??
-                    'Every on-set person is decided and every captured label is printed. Closeout requires the server and cannot be undone.',
+                    'Every on-set person is decided and every captured label is printed. Completing the day requires an internet connection and cannot be undone.',
               ),
               if (error != null) ...[
                 const SizedBox(height: 8),

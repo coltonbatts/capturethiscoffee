@@ -110,7 +110,7 @@ void main() {
 
     expect(find.byType(ConfigurationScreen), findsOneWidget);
     expect(find.textContaining('SUPABASE_URL'), findsOneWidget);
-    expect(find.text('Legacy link'), findsOneWidget);
+    expect(find.text('Advanced link'), findsOneWidget);
   });
 
   testWidgets('fresh sign-in opens Days and the selected board drives Build 8',
@@ -150,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(DaysScreen), findsOneWidget);
-    expect(find.text('ACTIVE'), findsOneWidget);
+    expect(find.text('Today'), findsOneWidget);
     expect(find.text('1 of 1 decided'), findsOneWidget);
     await tester.tap(find.byKey(const Key('day-day-a')));
     await tester.pumpAndSettle();
@@ -331,7 +331,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Legacy link'));
+    await tester.tap(find.text('Advanced link'));
     await tester.pumpAndSettle();
     expect(find.text('Link production'), findsWidgets);
     await tester.enterText(

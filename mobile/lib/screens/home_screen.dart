@@ -26,6 +26,7 @@ import '../widgets/print_deck.dart';
 import '../widgets/status_banners.dart';
 import '../workspace_controller.dart';
 import 'about_screen.dart';
+
 import 'collect_screen.dart';
 import 'days_screen.dart';
 import 'help_sheet.dart';
@@ -34,6 +35,8 @@ import 'recovery_screen.dart';
 import 'roster_screen.dart';
 import 'setup_roster_screen.dart';
 import 'summary_screen.dart';
+
+export 'about_screen.dart' show templateEntryKey, testLabelActionKey;
 
 /// Where the print entry goes, given what is blocking it.
 ///
@@ -60,8 +63,6 @@ const recoveryEntryKey = Key('home-recovery-entry');
 const printEntryKey = Key('home-print-entry');
 const printerEntryKey = Key('home-printer-entry');
 const summaryEntryKey = Key('home-summary-entry');
-const templateEntryKey = Key('home-template-entry');
-const testLabelActionKey = Key('home-test-label-action');
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -139,7 +140,7 @@ class HomeScreen extends StatelessWidget {
                               ? _MenuCard(
                                   key: collectEntryKey,
                                   icon: Icons.local_cafe_outlined,
-                                  title: 'Collect',
+                                  title: 'Orders',
                                   detail: _collectDetail(
                                     progress,
                                     boardController.pendingMutationCount,
@@ -165,6 +166,12 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     CascadeIn(
                       delay: CascadeIn.step(step++),
+                      child: _PrinterEntry(controller: controller),
+                    ),
+                    const SizedBox(height: 10),
+                    const Divider(height: 32),
+                    CascadeIn(
+                      delay: CascadeIn.step(step++),
                       child: _MenuCard(
                         key: rosterEntryKey,
                         icon: Icons.people_outline,
@@ -182,7 +189,7 @@ class HomeScreen extends StatelessWidget {
                         child: _MenuCard(
                           key: summaryEntryKey,
                           icon: Icons.summarize_outlined,
-                          title: 'Summary & closeout',
+                          title: 'Wrap up',
                           detail: _summaryDetail(progress),
                           onTap: () => Navigator.of(context)
                               .pushNamed(SummaryScreen.route),
@@ -196,7 +203,7 @@ class HomeScreen extends StatelessWidget {
                         child: _MenuCard(
                           key: recoveryEntryKey,
                           icon: Icons.report_problem_outlined,
-                          title: 'Unresolved labels',
+                          title: 'Labels that need a check',
                           detail:
                               '${recoveries.length} ${recoveries.length == 1 ? 'label needs' : 'labels need'} a check',
                           onTap: () => Navigator.of(context)
@@ -205,11 +212,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 10),
-                    CascadeIn(
-                      delay: CascadeIn.step(step++),
-                      child: _PrinterEntry(controller: controller),
-                    ),
-                    const SizedBox(height: 10),
                     if (runtime.workspace.mode == WorkspaceMode.authenticated &&
                         runtime.workspace.selectedDayId != null) ...[
                       CascadeIn(
@@ -217,7 +219,7 @@ class HomeScreen extends StatelessWidget {
                         child: _MenuCard(
                           key: setupEntryKey,
                           icon: Icons.tune,
-                          title: 'Prepare day',
+                          title: 'Set up',
                           detail: 'People, groups, order, and day details',
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -230,11 +232,6 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                     ],
-                    CascadeIn(
-                      delay: CascadeIn.step(step++),
-                      child: _TemplateEntry(controller: controller),
-                    ),
-                    const SizedBox(height: 10),
                     const SizedBox(height: 20),
                     CascadeIn(
                       delay: CascadeIn.step(step++),
@@ -280,7 +277,7 @@ class HomeScreen extends StatelessWidget {
     if (unprinted > 0) {
       return '$unprinted captured ${unprinted == 1 ? 'label' : 'labels'} not printed';
     }
-    return 'Grouped order, by person, and guarded closeout';
+    return 'Grouped order, by person, and wrap up';
   }
 }
 
@@ -409,7 +406,7 @@ class _PrintEntry extends StatelessWidget {
         DeckBlock.disconnected => 'Printer not connected',
         DeckBlock.unavailable => 'This day is closed',
         DeckBlock.productionInactive => 'Production is not active',
-        DeckBlock.recoveryPending => 'Resolve unprinted labels first',
+        DeckBlock.recoveryPending => 'Labels that need a check',
         DeckBlock.none => pending.isEmpty
             ? 'Nothing to print'
             : 'Next: ${pending.first.personName}',
@@ -523,74 +520,6 @@ class _PrinterEntry extends StatelessWidget {
   }
 }
 
-class _TemplateEntry extends StatelessWidget {
-  const _TemplateEntry({required this.controller});
-
-  final PrinterController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final canTest = controller.connected &&
-        !controller.busy &&
-        controller.printerStatus != PrinterStatus.printing;
-
-    return Container(
-      key: templateEntryKey,
-      decoration: BoxDecoration(
-        color: CaptureColors.surface,
-        border: Border.all(color: CaptureColors.ruleSoft),
-        borderRadius: CaptureRadii.cardBorder,
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.label_outline, size: 22),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  controller.labelTemplateIdentity,
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            controller.labelTemplateStatus,
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              key: testLabelActionKey,
-              onPressed:
-                  canTest ? () => controller.printFictionalTestLabel() : null,
-              icon: const Icon(Icons.print_outlined, size: 18),
-              label: Text(
-                canTest
-                    ? 'Print fictional test label'
-                    : 'Connect printer to print a test label',
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Uses this exact template and changes no order or printed facts.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: CaptureColors.muted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _FooterActions extends StatelessWidget {
   const _FooterActions({required this.controller});
 
@@ -604,22 +533,20 @@ class _FooterActions extends StatelessWidget {
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        TextButton(
-          onPressed: controller.busy
-              ? null
-              : () async {
-                  if (authenticated) {
-                    await Navigator.of(context).pushNamed(DaysScreen.route);
-                    return;
-                  }
-                  if (!await confirmChangeProduction(context, controller)) {
-                    return;
-                  }
-                  await controller.clearSession();
-                },
-          child: Text(authenticated ? 'Switch day' : 'Change production'),
-        ),
-        Text('·', style: Theme.of(context).textTheme.bodySmall),
+        if (!authenticated) ...[
+          TextButton(
+            onPressed: controller.busy
+                ? null
+                : () async {
+                    if (!await confirmChangeProduction(context, controller)) {
+                      return;
+                    }
+                    await controller.clearSession();
+                  },
+            child: const Text('Change production'),
+          ),
+          Text('·', style: Theme.of(context).textTheme.bodySmall),
+        ],
         TextButton(
           onPressed: () => Navigator.of(context).pushNamed(AboutScreen.route),
           child: const Text('About'),

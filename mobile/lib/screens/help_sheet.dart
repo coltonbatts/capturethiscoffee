@@ -41,7 +41,7 @@ Future<void> showQuickStart(BuildContext context) async {
                   : 'Sign in and choose an active day',
               body: legacy
                   ? 'Paste the complete private production link from the coordinator. Printing stays paused until the production is Active.'
-                  : 'Use the owner-provisioned account, then select the day. If migration fallback is required, use Advanced · Legacy link and paste the complete private link.',
+                  : 'Use the owner-provisioned account, then select the day. If migration fallback is required, use Advanced link and paste the complete private link.',
             ),
             const _HelpStep(
               number: '2',
@@ -64,16 +64,16 @@ Future<void> showQuickStart(BuildContext context) async {
             ),
             const _HelpStep(
               number: '5',
-              title: 'Recover without duplicates',
+              title: 'Labels that need a check',
               body:
-                  'If a usable label came out, choose “Label printed — sync only.” If nothing printed, choose “Nothing printed — retry.” If you cannot tell, stop and ask the coordinator.',
+                  'Open Labels that need a check. If a usable label came out, choose “Label printed — sync only.” If nothing printed, choose “Nothing printed — retry.” If you cannot tell, stop and ask the coordinator.',
             ),
             if (!legacy)
               const _HelpStep(
                 number: '6',
                 title: 'Review and close the day',
                 body:
-                    'Open Summary & closeout for the grouped shop order, by-person status, and iOS share sheet. Completion requires a current connection, every on-set order decided, every captured label printed, and no pending conflict or recovery.',
+                    'Open Wrap up for the grouped shop order, by-person status, and iOS share sheet. Completion requires a current connection, every on-set order decided, every captured label printed, and no pending conflict or recovery.',
               ),
             const SizedBox(height: 8),
             Card(
@@ -92,7 +92,7 @@ Future<void> showQuickStart(BuildContext context) async {
                     const SizedBox(height: 8),
                     Text(legacy
                         ? '• Never share or screenshot the production link.'
-                        : '• Use Legacy link only for the migration fallback.'),
+                        : '• Use Advanced link only for the migration fallback.'),
                     const Text('• Never update printer firmware on set.'),
                     const Text('• Print one label at a time.'),
                     const Text('• Never reprint when the app says Sync only.'),

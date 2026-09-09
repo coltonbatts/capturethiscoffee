@@ -670,7 +670,7 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     }
     if (_printRecoveryLedger?[item.orderId] != null) {
       throw Exception(
-        'This label has an unresolved print outcome. Use its recovery action instead of reprinting.',
+        'This label has an unresolved print outcome. Open Labels that need a check instead of reprinting.',
       );
     }
 

@@ -26,9 +26,9 @@ class DayNavigation extends StatelessWidget {
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Go to'),
                 items: const [
-                  DropdownMenuItem(value: '/collect', child: Text('Collect')),
+                  DropdownMenuItem(value: '/collect', child: Text('Orders')),
                   DropdownMenuItem(value: '/print', child: Text('Print')),
-                  DropdownMenuItem(value: '/summary', child: Text('Summary')),
+                  DropdownMenuItem(value: '/summary', child: Text('Wrap up')),
                 ],
                 onChanged: (value) {
                   if (value != null && value != route) {
@@ -48,15 +48,15 @@ class DayNavigation extends StatelessWidget {
           child: Row(
             children: [
               for (final destination in const [
-                ('/collect', 'Collect', Icons.local_cafe_outlined),
-                ('/print', 'Print', Icons.print_outlined),
-                ('/summary', 'Summary', Icons.summarize_outlined),
+                ('/collect', 'Orders', Icons.local_cafe_outlined, 'collect'),
+                ('/print', 'Print', Icons.print_outlined, 'print'),
+                ('/summary', 'Wrap up', Icons.summarize_outlined, 'summary'),
               ])
                 Expanded(
                   child: Semantics(
                     selected: route == destination.$1,
                     child: TextButton(
-                      key: Key('day-nav-${destination.$2.toLowerCase()}'),
+                      key: Key('day-nav-${destination.$4}'),
                       style: TextButton.styleFrom(
                         minimumSize: const Size(44, 52),
                         backgroundColor: route == destination.$1

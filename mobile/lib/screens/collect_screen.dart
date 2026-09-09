@@ -53,7 +53,7 @@ class _CollectScreenState extends State<CollectScreen> {
     return Scaffold(
       bottomNavigationBar: const DayNavigation(route: '/collect'),
       appBar: AppBar(
-        title: const BrandAppBarTitle(detail: 'Collect'),
+        title: const BrandAppBarTitle(detail: 'Orders'),
         actions: [
           IconButton(
             key: collectSyncKey,
@@ -105,7 +105,7 @@ class _CollectScreenState extends State<CollectScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Collect drinks', style: CaptureType.pageTitle),
+                        Text('Coffee orders', style: CaptureType.pageTitle),
                         const SizedBox(height: 8),
                         Text(
                           '${progress.decided} of ${progress.total} decided · ${progress.captured} captured · ${progress.noDrink} no drink',
@@ -188,7 +188,7 @@ class _CollectScreenState extends State<CollectScreen> {
                                           ? 'No matches. Try another name or clear your search.'
                                           : _needsOnly
                                               ? 'Everyone has an order or is marked no drink.'
-                                              : 'No one is on set yet. Add people in Prepare day.',
+                                              : 'No one is on set yet. Add people in Set up.',
                                   textAlign: TextAlign.center)),
                       ],
                     );
@@ -455,7 +455,7 @@ class _CollectCard extends StatelessWidget {
       _CollectState.needsOrder => entry.person.usualOrder.trim().isEmpty
           ? 'No usual saved'
           : 'Usual: ${entry.person.usualOrder}',
-      _CollectState.missing => 'Connect and repair this entry in Prepare day.',
+      _CollectState.missing => 'Connect and repair this entry in Set up.',
     };
     return Material(
       key: Key('collect-${entry.rosterId}'),
@@ -574,7 +574,7 @@ class _StatePill extends StatelessWidget {
                 ? 'Pending sync'
                 : switch (state) {
                     _CollectState.needsOrder => 'Needs order',
-                    _CollectState.captured => 'Captured',
+                    _CollectState.captured => 'Got it',
                     _CollectState.noDrink => 'No drink',
                     _CollectState.missing => 'Setup needed',
                   },

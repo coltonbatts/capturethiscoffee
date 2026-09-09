@@ -51,7 +51,7 @@ class PrintScreen extends StatelessWidget {
                             Navigator.of(context).pushNamed('/recovery'),
                         icon: const Icon(Icons.report_problem_outlined),
                         label: Text(
-                            'Review ${controller.currentRecoveryRecords.length} unresolved labels'),
+                            'Labels that need a check (${controller.currentRecoveryRecords.length})'),
                       ),
                     PrintDeck(
                       productionName: controller.queue?.productionName ??

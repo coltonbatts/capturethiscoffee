@@ -395,7 +395,7 @@ class _PrintDeckState extends State<PrintDeck>
           onPressed: null,
           style: CaptureButtons.accent,
           icon: const Icon(Icons.report_problem),
-          label: const Text('Resolve print status first'),
+          label: const Text('Labels that need a check'),
         );
       case DeckBlock.none:
         return FilledButton.icon(

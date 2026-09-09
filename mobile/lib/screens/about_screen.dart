@@ -6,8 +6,13 @@
 import 'package:flutter/material.dart';
 
 import '../external_links.dart';
+import '../app_scope.dart';
+import '../printer_controller.dart';
 import '../theme.dart';
 import '../widgets/brand_mark.dart';
+
+const templateEntryKey = Key('home-template-entry');
+const testLabelActionKey = Key('home-test-label-action');
 
 const String kAppVersion = '1.0.0 (13)';
 
@@ -83,6 +88,8 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            _TemplateEntry(controller: PrinterScope.of(context)),
+            const SizedBox(height: 16),
             Text(
               'Capture This $kAppVersion',
               textAlign: TextAlign.center,
@@ -90,6 +97,74 @@ class AboutScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TemplateEntry extends StatelessWidget {
+  const _TemplateEntry({required this.controller});
+
+  final PrinterController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final canTest = controller.connected &&
+        !controller.busy &&
+        controller.printerStatus != PrinterStatus.printing;
+
+    return Container(
+      key: templateEntryKey,
+      decoration: BoxDecoration(
+        color: CaptureColors.surface,
+        border: Border.all(color: CaptureColors.ruleSoft),
+        borderRadius: CaptureRadii.cardBorder,
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.label_outline, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  controller.labelTemplateIdentity,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            controller.labelTemplateStatus,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: testLabelActionKey,
+              onPressed:
+                  canTest ? () => controller.printFictionalTestLabel() : null,
+              icon: const Icon(Icons.print_outlined, size: 18),
+              label: Text(
+                canTest
+                    ? 'Print fictional test label'
+                    : 'Connect printer to print a test label',
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Uses this exact template and changes no order or printed facts.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: CaptureColors.muted,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -371,6 +371,8 @@ class RecoveryPointerRow extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall,
                             ),
+                            Text('Labels that need a check',
+                                style: theme.textTheme.bodySmall),
                           ],
                         ),
                       ),

@@ -72,10 +72,10 @@ void main() {
     expect(
       text,
       contains(
-        'Morgan Reed · Art · Iced oat latte · Captured · waiting to print',
+        'Morgan Reed · Art · Iced oat latte · Got it · waiting to print',
       ),
     );
-    expect(text, contains('Captured 2 · Printed 1 · Waiting 1 · No drink 1'));
+    expect(text, contains('Got it 2 · Printed 1 · Waiting 1 · No drink 1'));
   });
 
   test('closeout stays guarded until every decision and print is settled', () {
@@ -124,7 +124,7 @@ void main() {
         syncBlockedReason: null,
         recoveryCount: 0,
       ),
-      contains('online'),
+      contains('internet'),
     );
     expect(
       closeoutBlockReason(
@@ -146,7 +146,7 @@ void main() {
         syncBlockedReason: null,
         recoveryCount: 1,
       ),
-      contains('uncertain print'),
+      contains('Labels that need a check'),
     );
   });
 }
