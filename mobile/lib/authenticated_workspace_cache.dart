@@ -15,18 +15,21 @@ class AuthenticatedCachedBoard {
     required this.productionId,
     required this.syncedAt,
     required this.board,
+    this.unavailableReason,
   });
 
   final String userId;
   final String productionId;
   final DateTime syncedAt;
   final ProductionBoard board;
+  final String? unavailableReason;
 
   Map<String, Object?> toJson() => {
         'userId': userId,
         'productionId': productionId,
         'syncedAt': syncedAt.toUtc().toIso8601String(),
         'board': board.toJson(),
+        'unavailableReason': unavailableReason,
       };
 
   static AuthenticatedCachedBoard? tryFromJson(Object? value) {
@@ -49,6 +52,7 @@ class AuthenticatedCachedBoard {
         productionId: productionId,
         syncedAt: syncedAt,
         board: ProductionBoard.fromJson(board),
+        unavailableReason: value['unavailableReason'] as String?,
       );
     } on FormatException {
       return null;

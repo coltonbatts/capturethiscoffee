@@ -17,11 +17,12 @@ type TokenRow = {
   production_id: string;
   expires_at: string | null;
   revoked_at: string | null;
+  last_used_at: string | null;
 };
 
 /**
  * Minimal stand-in for the two query shapes validateProductionShareToken
- * uses: select().eq().eq().maybeSingle() and update().eq().
+ * uses: token lookup and conditional usage bookkeeping.
  */
 function stubSupabase(
   row: TokenRow | null,
@@ -42,7 +43,12 @@ function stubSupabase(
         },
         update(patch: unknown) {
           updates.push(patch);
-          return { eq: async () => ({ data: null, error: null }) };
+          return {
+            eq: () => ({
+              eq: async () => ({ data: null, error: null }),
+              is: async () => ({ data: null, error: null }),
+            }),
+          };
         },
       };
     },
@@ -163,6 +169,7 @@ describe("validateProductionShareToken", () => {
     production_id: "prod-1",
     expires_at: null,
     revoked_at: null,
+    last_used_at: null,
   };
 
   it("rejects a missing or blank token before querying", async () => {
