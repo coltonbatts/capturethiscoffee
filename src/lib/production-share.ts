@@ -104,7 +104,7 @@ export async function validateProductionShareToken(
 
   const { data, error } = await supabase
     .from("production_share_tokens")
-    .select("id, production_id, expires_at, revoked_at")
+    .select("id, production_id, expires_at, revoked_at, last_used_at")
     .eq("production_id", productionId)
     .eq("token_hash", hashProductionShareToken(normalizedToken))
     .maybeSingle();
@@ -116,14 +116,26 @@ export async function validateProductionShareToken(
     throw new ShareTokenError("Invalid production share token.", 403);
   }
 
-  if (data.expires_at && new Date(data.expires_at).getTime() <= Date.now()) {
+  const now = Date.now();
+  if (data.expires_at && new Date(data.expires_at).getTime() <= now) {
     throw new ShareTokenError("Expired production share token.", 403);
   }
 
-  await supabase
-    .from("production_share_tokens")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", data.id);
+  // Usage bookkeeping is approximate, not an authorization cache. Polls must
+  // still validate revocation/expiry on every request, without writing every
+  // ten seconds. Compare-and-set also coalesces concurrent server instances.
+  const lastUsedAt = data.last_used_at;
+  if (lastUsedAt === null || Date.parse(lastUsedAt) <= now - 5 * 60_000) {
+    const update = supabase
+      .from("production_share_tokens")
+      .update({ last_used_at: new Date(now).toISOString() })
+      .eq("id", data.id);
+    if (lastUsedAt === null) {
+      await update.is("last_used_at", null);
+    } else {
+      await update.eq("last_used_at", lastUsedAt);
+    }
+  }
 
   return data;
 }
