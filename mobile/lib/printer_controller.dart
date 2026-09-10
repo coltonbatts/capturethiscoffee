@@ -483,6 +483,10 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     final serverConfirmed = currentQueue.labels
         .where(
           (label) =>
+              _printRecoveryLedger?[label.orderId]?.apiBase ==
+                  _workspace.scopeKey &&
+              _printRecoveryLedger?[label.orderId]?.productionId ==
+                  _workspace.productionId &&
               _printRecoveryLedger?[label.orderId]?.state ==
                   PrintRecoveryState.printedNeedsSync &&
               label.labelPrinted &&
@@ -674,10 +678,12 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
 
+    final workspaceGeneration = _workspace.generation;
     final printScope = _workspace.scopeKey;
     final printProduction = _workspace.productionId;
     void checkScope() {
       if (_disposed ||
+          workspaceGeneration != _workspace.generation ||
           printScope != _workspace.scopeKey ||
           printProduction != _workspace.productionId) {
         throw StateError('Workspace changed. Print recovery retained.');
@@ -749,9 +755,17 @@ class PrinterController extends ChangeNotifier with WidgetsBindingObserver {
     // Persist uncertainty before the first physical packet. If the process is
     // killed mid-task, the operator must inspect the printer rather than being
     // offered a duplicate-safe-looking retry.
-    checkScope();
+    void checkEligibility() {
+      checkScope();
+      if (_workspace.boardUnavailableReason != null ||
+          queue?.isProductionActive != true) {
+        throw StateError('Day is no longer available for printing.');
+      }
+    }
+
+    checkEligibility();
     await _recordPrintRecovery(item, PrintRecoveryState.uncertain);
-    checkScope();
+    checkEligibility();
 
     try {
       await _printPage(page);

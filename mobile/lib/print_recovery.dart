@@ -201,7 +201,9 @@ class PrintRecoveryLedger {
   Future<void> clearServerConfirmed(Iterable<String> orderIds) =>
       _mutate((next) {
         for (final id in orderIds) {
-          next.remove(id);
+          if (next[id]?.state == PrintRecoveryState.printedNeedsSync) {
+            next.remove(id);
+          }
         }
       });
 
@@ -639,18 +641,22 @@ class OrderMutationOutbox {
     await _put(next);
   }
 
-  Future<void> markOrderApplied(String orderId, BoardOrder serverOrder) =>
-      _serialized(() => _markOrderApplied(orderId, serverOrder));
+  Future<void> markOrderApplied(String orderId, BoardOrder serverOrder,
+          {OrderMutationRecord? expected}) =>
+      _serialized(() => _markOrderApplied(orderId, serverOrder, expected));
 
   Future<void> _markOrderApplied(
     String orderId,
     BoardOrder serverOrder,
+    OrderMutationRecord? expected,
   ) async {
     final existing = _require(orderId);
+    // A response acknowledges only the intent sent. Rebase a newer edit onto
+    // that acknowledged revision, but leave it pending for the next replay.
     await _put(existing.copyWith(
       observedUpdatedAt: serverOrder.updatedAt,
       baseValues: OrderPatch.snapshot(serverOrder),
-      orderApplied: true,
+      orderApplied: expected == null || _sameOrdinaryIntent(existing, expected),
       conflict: null,
     ));
   }
@@ -747,12 +753,21 @@ class OrderMutationOutbox {
     }
   }
 
-  Future<void> discardOrdinaryIntent(String orderId) =>
-      _serialized(() => _discardOrdinaryIntent(orderId));
+  Future<void> discardOrdinaryIntent(String orderId,
+          {OrderMutationRecord? expected, String? acknowledgedUsual}) =>
+      _serialized(
+          () => _discardOrdinaryIntent(orderId, expected, acknowledgedUsual));
 
-  Future<void> _discardOrdinaryIntent(String orderId) async {
+  Future<void> _discardOrdinaryIntent(String orderId,
+      OrderMutationRecord? expected, String? acknowledgedUsual) async {
     final existing = _records[orderId];
     if (existing == null) return;
+    if (expected != null && !_sameOrdinaryIntent(existing, expected)) {
+      if (acknowledgedUsual != null) {
+        await _put(existing.copyWith(observedUsualOrder: acknowledgedUsual));
+      }
+      return;
+    }
     await _putOrRemove(existing.copyWith(
       patch: null,
       updateUsualOrder: false,
@@ -815,7 +830,10 @@ class OrderMutationOutbox {
   Future<void> clearServerConfirmedPrints(Iterable<String> orderIds) =>
       _serialized(() async {
         for (final orderId in orderIds) {
-          await _clearPrintIntent(orderId);
+          if (_records[orderId]?.printState ==
+              PrintRecoveryState.printedNeedsSync) {
+            await _clearPrintIntent(orderId);
+          }
         }
       });
 
@@ -833,6 +851,11 @@ class OrderMutationOutbox {
     });
     return completer.future;
   }
+
+  bool _sameOrdinaryIntent(OrderMutationRecord a, OrderMutationRecord b) =>
+      identical(a.patch, b.patch) &&
+      a.updateUsualOrder == b.updateUsualOrder &&
+      a.desiredUsualOrder == b.desiredUsualOrder;
 
   OrderMutationRecord _require(String orderId) {
     final record = _records[orderId];

@@ -180,6 +180,22 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
           params: {'p_production_id': productionId},
         );
         template = LabelTemplateVersion.fromResolvedJson(templateValue);
+      } on PostgrestException catch (error) {
+        // Transport failure may use the frozen template. An explicit access
+        // refusal must reach the board guard, even when earlier reads worked.
+        if (const {
+          'PGRST301',
+          'PGRST302',
+          'PGRST303',
+          '42501',
+          '28000',
+          'P0002'
+        }.contains(error.code)) {
+          rethrow;
+        }
+        template = (lastKnownGoodTemplate ??
+                await BundledLabelTemplates.defaultVersion())
+            .withResolution(LabelTemplateResolution.unavailableFallback);
       } on FormatException {
         // A remotely authored definition is never allowed to take the board
         // down or replace a known-good snapshot. Old caches and first launch
@@ -228,8 +244,8 @@ class SupabaseWorkspaceRepository implements WorkspaceRepository {
           production['status'] != 'complete' ||
           result['not_asked'] is! num ||
           result['captured_unprinted'] is! num ||
-          (result['not_asked']! as num).toInt() != 0 ||
-          (result['captured_unprinted']! as num).toInt() != 0) {
+          result['not_asked'] != 0 ||
+          result['captured_unprinted'] != 0) {
         throw const FormatException('Invalid completed production response.');
       }
     } on PostgrestException {

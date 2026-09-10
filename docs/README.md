@@ -31,6 +31,10 @@ ranked remaining-work list. Dated records below retain their original scope.
 | [Handoff hub](HANDOFF.md) | Role-based handoff packet and definition of done |
 | [App experience map](app-experience-map.md) | Product surfaces and how they connect |
 
+The [September 9 native workflow hardening record](native-workflow-hardening-2026-09-09.md)
+contains the implemented fixes, state/invariant map, regression evidence and
+exact-candidate physical matrix. It does not establish an installed release.
+
 The July 25 status is historical. The later
 [native print-hardening note](native-print-hardening-2026-09-07.md) describes
 September 7 working-tree changes and reported software checks; it does not
