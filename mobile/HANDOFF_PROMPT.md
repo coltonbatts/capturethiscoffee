@@ -1,4 +1,12 @@
-# Cursor handoff prompt
+# Cursor handoff prompt (historical)
+
+> **Historical — do not work from this prompt.** It set up the original BLE
+> printing spike, before any app build shipped. The app has since shipped and
+> Phase 2 is complete, so the spike's "stop here", "work only in `mobile/`",
+> and "never compiled" instructions no longer apply. Start from
+> [AGENTS.md](../AGENTS.md) and [mobile/README.md](README.md). The hardware
+> facts below (pinned `niim_blue_flutter: 1.0.1`, no firmware changes, RFID
+> roll required, heartbeat paused during print) remain accurate.
 
 Copy everything below the line into Cursor (agent mode, repo root open).
 
