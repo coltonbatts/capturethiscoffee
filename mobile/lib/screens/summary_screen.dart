@@ -151,6 +151,9 @@ class _SummaryScreenState extends State<SummaryScreen> {
   }
 
   Future<void> _confirmAndClose(DayOperatingSummary summary) async {
+    final runtime = PrinterScope.runtimeOf(context);
+    final scope = runtime.workspace.scopeKey;
+    final productionId = runtime.workspace.productionId;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -174,20 +177,40 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final runtime = PrinterScope.runtimeOf(context);
-    final repository = runtime.board.repository;
-    final productionId = runtime.workspace.selectedDayId;
-    if (repository == null || productionId == null) return;
+    if (scope != runtime.workspace.scopeKey ||
+        productionId != runtime.workspace.productionId) {
+      return;
+    }
+    final board = runtime.workspace.board;
+    if (board == null) return;
+    final block = closeoutBlockReason(
+      board: board,
+      pendingMutations: runtime.board.pendingMutationCount,
+      conflicts: runtime.board.conflictCount,
+      servingCachedBoard: runtime.board.servingCachedBoard,
+      syncBlockedReason: runtime.workspace.boardUnavailableReason ??
+          runtime.board.syncBlockedReason,
+      recoveryCount: runtime.printer.currentRecoveryRecords.length,
+    );
+    if (block != null || runtime.printer.busy) {
+      setState(() =>
+          _closeoutError = block ?? 'Finish the printer operation first.');
+      return;
+    }
 
     setState(() {
       _closing = true;
       _closeoutError = null;
     });
     try {
-      await repository.completeDay(productionId: productionId);
+      await runtime.board.completeDay();
       await runtime.workspace.refreshBoard();
       await runtime.workspace.refreshDays(silent: true);
-      if (!mounted) return;
+      if (!mounted ||
+          scope != runtime.workspace.scopeKey ||
+          productionId != runtime.workspace.productionId) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Day completed.')),
       );
@@ -195,6 +218,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
       await runtime.workspace.refreshBoard(silent: true);
       if (!mounted) return;
       setState(() => _closeoutError = error.message);
+    } on StateError catch (error) {
+      if (mounted) setState(() => _closeoutError = error.message.toString());
     } finally {
       if (mounted) setState(() => _closing = false);
     }

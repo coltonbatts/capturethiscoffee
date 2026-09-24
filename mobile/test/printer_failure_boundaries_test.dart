@@ -46,6 +46,19 @@ class Storage extends MemoryPrintRecoveryRepository {
   }
 }
 
+class HeldStorage extends Storage {
+  final entered = Completer<void>();
+  final gate = Completer<void>();
+  @override
+  Future<void> writeAll(List<PrintRecoveryRecord> records) async {
+    if (!entered.isCompleted) {
+      entered.complete();
+      await gate.future;
+    }
+    await super.writeAll(records);
+  }
+}
+
 class Transport implements PrinterTransport {
   @override
   void Function()? onDisconnect;
@@ -110,6 +123,23 @@ Future<PrinterController> controller(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('day closure during preflight persistence prevents transmission',
+      () async {
+    final storage = HeldStorage();
+    final transport = Transport();
+    final api = Api();
+    final c = await controller(storage, transport, api);
+    final pending = c.printLabel(c.queue!.labels.first);
+    await storage.entered.future;
+    api.response = ProductionBoard(
+        production: board.production.copyWith(status: 'complete'),
+        roster: board.roster);
+    await c.workspace.refreshBoard();
+    storage.gate.complete();
+    expect(await pending, false);
+    expect(transport.packets, 0);
+    expect(c.recoveryFor('order')?.state, PrintRecoveryState.uncertain);
+  });
   test('workspace switch during printing cannot sync into another day',
       () async {
     final transport = Transport()..completion = Completer<void>();

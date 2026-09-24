@@ -108,6 +108,7 @@ class AppRuntime extends ChangeNotifier {
       await _activationFuture;
       return;
     }
+    if (_activatedUserId != user.userId) setup.clear();
     _activatedUserId = user.userId;
     final activation = workspace.activateUser(user.userId);
     _activationFuture = activation;

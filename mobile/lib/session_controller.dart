@@ -16,6 +16,7 @@ class SessionController extends ChangeNotifier {
   final AuthRepository _repository;
   StreamSubscription<AuthEvent>? _subscription;
   bool _disposed = false;
+  int _generation = 0;
   bool _busy = false;
   SessionStatus _status = SessionStatus.restoring;
   AuthSession? _session;
@@ -68,6 +69,7 @@ class SessionController extends ChangeNotifier {
       return false;
     }
 
+    ++_generation;
     _busy = true;
     _error = null;
     _warning = null;
@@ -100,10 +102,11 @@ class SessionController extends ChangeNotifier {
 
   Future<void> refresh() async {
     final existing = _session;
+    final generation = _generation;
     if (existing == null) return;
     try {
       final refreshed = await _repository.refreshSession();
-      if (_disposed) return;
+      if (_disposed || generation != _generation) return;
       if (refreshed != null) {
         _session = refreshed;
         _status = SessionStatus.signedIn;
@@ -111,8 +114,16 @@ class SessionController extends ChangeNotifier {
         _emit();
       }
     } on AuthRepositoryException catch (error) {
-      if (_disposed) return;
-      // A failed refresh does not erase the locally restored identity. RLS will
+      if (_disposed || generation != _generation) return;
+      if (error.kind == AuthFailureKind.invalidSession) {
+        ++_generation;
+        _session = null;
+        _status = SessionStatus.signedOut;
+        _error = error.message;
+        _emit();
+        return;
+      }
+      // A network refresh failure does not erase the locally restored identity. RLS will
       // reject reads if it is truly invalid; cached day data stays isolated by
       // this user ID and available for offline printing.
       _warning = error.kind == AuthFailureKind.network
@@ -124,6 +135,7 @@ class SessionController extends ChangeNotifier {
 
   Future<bool> signOut() async {
     if (_busy) return false;
+    ++_generation;
     _busy = true;
     _error = null;
     _emit();
@@ -156,6 +168,7 @@ class SessionController extends ChangeNotifier {
   void _handleAuthEvent(AuthEvent event) {
     if (_disposed) return;
     if (event.type == AuthEventType.signedOut) {
+      ++_generation;
       _session = null;
       _status = SessionStatus.signedOut;
       _emit();
@@ -163,6 +176,11 @@ class SessionController extends ChangeNotifier {
     }
     final next = event.session;
     if (next != null) {
+      if (event.type == AuthEventType.tokenRefreshed &&
+          (_session == null || next.userId != _session!.userId)) {
+        return;
+      }
+      if (next.userId != _session?.userId) ++_generation;
       _session = next;
       _status = SessionStatus.signedIn;
       _warning = null;

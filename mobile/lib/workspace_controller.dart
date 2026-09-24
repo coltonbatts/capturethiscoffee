@@ -89,6 +89,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
   int _generation = 0;
 
   WorkspaceMode get mode => _mode;
+  int get generation => _generation;
   BoardController get authenticatedBoard => _boardController;
   String? get userId => _userId;
   List<DaySummary> get days => _days;
@@ -249,6 +250,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     if (_mode != WorkspaceMode.authenticated || userId == null || _busy) {
       return false;
     }
+    final generation = ++_generation;
     _busy = true;
     _error = null;
     _selectedDayId = productionId;
@@ -256,25 +258,28 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     _emit();
     try {
       await _selectedDayRepository.write(userId, productionId);
+      if (!_isCurrent(generation, userId)) return false;
       await _boardController.activate(
         userId: userId,
         productionId: productionId,
       );
-      if (_mode != WorkspaceMode.authenticated ||
-          _userId != userId ||
-          _selectedDayId != productionId) {
+      if (!_isCurrent(generation, userId) || _selectedDayId != productionId) {
         return false;
       }
       return board != null;
     } finally {
-      _busy = false;
-      _emit();
+      if (_isCurrent(generation, userId)) {
+        _busy = false;
+        _emit();
+      }
     }
   }
 
   Future<void> refreshDays({bool silent = false}) async {
     final repository = _repository;
     if (_mode != WorkspaceMode.authenticated || repository == null) return;
+    final generation = _generation;
+    final userId = _userId!;
     if (!silent) {
       _busy = true;
       _error = null;
@@ -282,16 +287,16 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
     }
     try {
       final next = await repository.fetchDays();
-      if (_mode != WorkspaceMode.authenticated) return;
+      if (!_isCurrent(generation, userId)) return;
       _days = List.unmodifiable(next);
       _error = null;
       _emit();
     } on WorkspaceRepositoryException catch (error) {
-      if (_mode != WorkspaceMode.authenticated) return;
+      if (!_isCurrent(generation, userId)) return;
       _error = error.message;
       _emit();
     } finally {
-      if (!silent) {
+      if (!silent && _isCurrent(generation, userId)) {
         _busy = false;
         _emit();
       }
@@ -401,6 +406,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
 
   void leaveLegacy() {
     if (_mode != WorkspaceMode.legacy) return;
+    ++_generation;
     _legacyApi?.close();
     _legacyApi = null;
     _mode = WorkspaceMode.none;
@@ -469,10 +475,14 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _restoreLegacy() async {
+    final generation = _generation;
     try {
       final saved = await _legacySessionRepository.read();
       final cached = await _readLegacyCache();
-      if (_disposed) return;
+      if (_disposed || generation != _generation) {
+        _loadingLegacy = false;
+        return;
+      }
       _legacySession = saved;
       if (saved != null) {
         _mode = WorkspaceMode.legacy;
@@ -492,7 +502,7 @@ class WorkspaceController extends ChangeNotifier with WidgetsBindingObserver {
         await refreshBoard(silent: true);
       }
     } catch (_) {
-      if (_disposed) return;
+      if (_disposed || generation != _generation) return;
       _loadingLegacy = false;
       _error = 'Could not open the saved legacy production securely.';
       _emit();

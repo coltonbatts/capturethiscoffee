@@ -16,6 +16,7 @@ class SetupController extends ChangeNotifier {
   final Map<String, _PhotoDisplayCache> _photoDisplayCache = {};
   bool _busy = false;
   bool _disposed = false;
+  int _generation = 0;
 
   List<SetupClient> get clients => _clients;
   List<SetupPerson> get people => _people;
@@ -54,14 +55,19 @@ class SetupController extends ChangeNotifier {
         rosterPersonIds: _roster.map((member) => member.person.id),
       );
 
-  Future<bool> loadPeople() => _run(() async {
-        _people = List.unmodifiable(await repository.fetchPeople());
+  Future<bool> loadPeople() => _run((checkCurrent) async {
+        final people = await repository.fetchPeople();
+        checkCurrent();
+        _people = List.unmodifiable(people);
       });
 
-  Future<bool> loadRoster(String productionId) => _run(() async {
+  Future<bool> loadRoster(String productionId) => _run((checkCurrent) async {
         final snapshot = await repository.fetchRoster(productionId);
+        checkCurrent();
         final allPeople = await repository.fetchPeople();
+        checkCurrent();
         final allClients = await repository.fetchClients();
+        checkCurrent();
         _day = snapshot.day;
         _roster = List.unmodifiable(snapshot.members);
         _people = List.unmodifiable(allPeople);
@@ -70,20 +76,25 @@ class SetupController extends ChangeNotifier {
 
   Future<SetupDay?> createDay(DayDraft draft) async {
     SetupDay? created;
-    final ok = await _run(() async {
+    final ok = await _run((checkCurrent) async {
       created = await repository.createDay(draft);
+      checkCurrent();
       _day = created;
       _roster = const [];
     });
     return ok ? created : null;
   }
 
-  Future<bool> updateDay(String productionId, DayDraft draft) => _run(() async {
-        _day = await repository.updateDay(productionId, draft);
+  Future<bool> updateDay(String productionId, DayDraft draft) =>
+      _run((checkCurrent) async {
+        final day = await repository.updateDay(productionId, draft);
+        checkCurrent();
+        _day = day;
       });
 
-  Future<bool> deleteDay(String productionId) => _run(() async {
+  Future<bool> deleteDay(String productionId) => _run((checkCurrent) async {
         await repository.deleteDay(productionId);
+        checkCurrent();
         if (_day?.id == productionId) {
           _day = null;
           _roster = const [];
@@ -92,8 +103,9 @@ class SetupController extends ChangeNotifier {
 
   Future<SetupPerson?> createPerson(PersonDraft draft) async {
     SetupPerson? created;
-    final ok = await _run(() async {
+    final ok = await _run((checkCurrent) async {
       created = await repository.createPerson(draft);
+      checkCurrent();
       _people = List.unmodifiable([created!, ..._people]);
     });
     return ok ? created : null;
@@ -104,8 +116,9 @@ class SetupController extends ChangeNotifier {
     PersonDraft draft,
   ) async {
     SetupPerson? updated;
-    final ok = await _run(() async {
+    final ok = await _run((checkCurrent) async {
       updated = await repository.updatePerson(personId, draft);
+      checkCurrent();
       _people = List.unmodifiable([
         for (final person in _people)
           if (person.id == personId) updated! else person,
@@ -123,8 +136,9 @@ class SetupController extends ChangeNotifier {
 
   Future<String?> uploadPhoto(SetupPhotoUpload photo) async {
     String? reference;
-    final ok = await _run(() async {
+    final ok = await _run((checkCurrent) async {
       reference = await repository.uploadPersonPhoto(photo);
+      checkCurrent();
     });
     return ok ? reference : null;
   }
@@ -132,6 +146,7 @@ class SetupController extends ChangeNotifier {
   Future<String?> photoDisplayUrl(String storedReference) {
     final reference = storedReference.trim();
     if (reference.isEmpty) return Future.value();
+    final generation = _generation;
     final now = DateTime.now();
     final cached = _photoDisplayCache[reference];
     if (cached != null && now.isBefore(cached.expiresAt)) {
@@ -141,7 +156,8 @@ class SetupController extends ChangeNotifier {
     late final Future<String?> request;
     request = () async {
       try {
-        return await repository.createPersonPhotoDisplayUrl(reference);
+        final url = await repository.createPersonPhotoDisplayUrl(reference);
+        return !_disposed && generation == _generation ? url : null;
       } catch (_) {
         if (identical(_photoDisplayCache[reference]?.request, request)) {
           _photoDisplayCache.remove(reference);
@@ -159,11 +175,12 @@ class SetupController extends ChangeNotifier {
   }
 
   Future<bool> addExisting(String productionId, String personId) =>
-      _run(() async {
+      _run((checkCurrent) async {
         final member = await repository.addExistingPerson(
           productionId: productionId,
           personId: personId,
         );
+        checkCurrent();
         _roster = _sorted([..._roster, member]);
       });
 
@@ -172,12 +189,13 @@ class SetupController extends ChangeNotifier {
     PersonDraft draft, {
     bool linkToClient = false,
   }) =>
-      _run(() async {
+      _run((checkCurrent) async {
         final member = await repository.createPersonAndAdd(
           productionId: productionId,
           person: draft,
           linkToClient: linkToClient,
         );
+        checkCurrent();
         _people = List.unmodifiable([member.person, ..._people]);
         _roster = _sorted([..._roster, member]);
       });
@@ -186,7 +204,7 @@ class SetupController extends ChangeNotifier {
     String productionId,
     BulkRosterPreview preview,
   ) =>
-      _run(() async {
+      _run((checkCurrent) async {
         if (!preview.canCommit) {
           throw const SetupRepositoryException(
             'Preview at least one valid name before committing.',
@@ -197,6 +215,7 @@ class SetupController extends ChangeNotifier {
           productionId: productionId,
           people: preview.accepted,
         );
+        checkCurrent();
         final peopleById = {for (final person in _people) person.id: person};
         for (final member in added) {
           peopleById[member.person.id] = member.person;
@@ -211,13 +230,14 @@ class SetupController extends ChangeNotifier {
     required String groupLabel,
     required bool onSetToday,
   }) =>
-      _run(() async {
+      _run((checkCurrent) async {
         final row = await repository.updateRosterMember(
           productionId: productionId,
           rosterId: rosterId,
           groupLabel: groupLabel,
           onSetToday: onSetToday,
         );
+        checkCurrent();
         final returnedId = row['id'];
         final returnedGroup = row['group_label'];
         final returnedOnSet = row['on_set_today'];
@@ -245,11 +265,12 @@ class SetupController extends ChangeNotifier {
     required String productionId,
     required String rosterId,
   }) =>
-      _run(() async {
+      _run((checkCurrent) async {
         await repository.removeRosterMember(
           productionId: productionId,
           rosterId: rosterId,
         );
+        checkCurrent();
         _roster = List.unmodifiable(
           _roster.where((member) => member.rosterId != rosterId),
         );
@@ -260,7 +281,7 @@ class SetupController extends ChangeNotifier {
     int oldIndex,
     int newIndex,
   ) =>
-      _run(() async {
+      _run((checkCurrent) async {
         final ids = _roster.map((member) => member.rosterId).toList();
         final moved = ids.removeAt(oldIndex);
         ids.insert(newIndex, moved);
@@ -268,6 +289,7 @@ class SetupController extends ChangeNotifier {
           productionId: productionId,
           rosterIds: ids,
         );
+        checkCurrent();
         final sortById = <String, int>{};
         for (final row in rows) {
           final id = row['id'];
@@ -302,6 +324,7 @@ class SetupController extends ChangeNotifier {
   }
 
   void clear() {
+    ++_generation;
     _clients = const [];
     _people = const [];
     _day = null;
@@ -312,32 +335,44 @@ class SetupController extends ChangeNotifier {
     _emit();
   }
 
-  Future<bool> _run(Future<void> Function() operation) async {
-    if (_busy) return false;
+  Future<bool> _run(Future<void> Function(void Function()) operation) async {
+    if (_busy || _disposed) return false;
+    final generation = _generation;
+    bool isCurrent() => !_disposed && generation == _generation;
+    void checkCurrent() {
+      if (!isCurrent()) throw StateError('Setup workspace changed.');
+    }
+
     _busy = true;
     _failure = null;
     _emit();
     try {
-      await operation();
+      await operation(checkCurrent);
+      checkCurrent();
       return true;
     } on SetupRepositoryException catch (error) {
+      if (!isCurrent()) return false;
       _failure = error;
       return false;
     } on FormatException catch (error) {
+      if (!isCurrent()) return false;
       _failure = SetupRepositoryException(
         error.message,
         kind: SetupFailureKind.invalidData,
       );
       return false;
     } catch (_) {
+      if (!isCurrent()) return false;
       _failure = const SetupRepositoryException(
         'Setup needs a connection. Check Wi-Fi or signal, then retry.',
         kind: SetupFailureKind.onlineRequired,
       );
       return false;
     } finally {
-      _busy = false;
-      _emit();
+      if (isCurrent()) {
+        _busy = false;
+        _emit();
+      }
     }
   }
 

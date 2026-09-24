@@ -1,4 +1,6 @@
 import 'package:ctc_printer/auth_repository.dart';
+import 'package:ctc_printer/app_scope.dart';
+import 'package:ctc_printer/production_board.dart';
 import 'package:ctc_printer/authenticated_workspace_cache.dart';
 import 'package:ctc_printer/board_cache.dart';
 import 'package:ctc_printer/main.dart';
@@ -65,7 +67,8 @@ PrinterApp _app(MemoryWorkspaceRepository repository) => PrinterApp(
       legacyTestMode: false,
     );
 
-Future<void> _openAndConfirm(WidgetTester tester) async {
+Future<void> _openAndConfirm(WidgetTester tester,
+    {Future<void> Function()? whileOpen}) async {
   final navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
   navigator.pushNamed(SummaryScreen.route);
   await tester.pumpAndSettle();
@@ -76,6 +79,7 @@ Future<void> _openAndConfirm(WidgetTester tester) async {
   await tester.tap(find.byKey(summaryCloseoutButtonKey));
   await tester.pumpAndSettle();
   expect(find.text('Complete this day?'), findsOneWidget);
+  await whileOpen?.call();
   await tester.tap(
     find.descendant(
       of: find.byType(AlertDialog),
@@ -86,6 +90,27 @@ Future<void> _openAndConfirm(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+      'pending capture added while confirmation is open blocks closeout',
+      (tester) async {
+    final repository = MemoryWorkspaceRepository(
+        days: [_day], boards: {'summary-day': _readyBoard});
+    await tester.pumpWidget(_app(repository));
+    await tester.pumpAndSettle();
+    await _openAndConfirm(tester, whileOpen: () async {
+      final runtime =
+          PrinterScope.runtimeOf(tester.element(find.byType(SummaryScreen)));
+      await runtime.board.outbox.queueOrderPatch(
+          scopeKey: runtime.workspace.scopeKey!,
+          productionId: 'summary-day',
+          entry: _readyBoard.roster.single,
+          patch: OrderPatch({OrderField.drinkType: 'Tea'}),
+          updateUsualOrder: false,
+          desiredUsualOrder: 'Tea');
+    });
+    expect(repository.completeDayCalls, 0);
+  });
+
   testWidgets('server rejection never renders optimistic completion',
       (tester) async {
     final repository = MemoryWorkspaceRepository(

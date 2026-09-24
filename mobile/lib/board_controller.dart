@@ -35,6 +35,9 @@ class BoardController extends ChangeNotifier {
   DateTime? _lastSyncedAt;
   bool _servingCachedBoard = false;
   bool _busy = false;
+  bool _closing = false;
+  bool _storageReady = false;
+  int _pendingLocalWrites = 0;
   bool _disposed = false;
   String? _error;
   String? _boardUnavailableReason;
@@ -53,7 +56,8 @@ class BoardController extends ChangeNotifier {
   bool get servingCachedBoard => _servingCachedBoard;
   bool get busy => _busy;
   String? get error => _error;
-  String? get boardUnavailableReason => _boardUnavailableReason;
+  String? get boardUnavailableReason =>
+      _closing ? 'Day closeout is in progress.' : _boardUnavailableReason;
   String? get syncBlockedReason => _syncBlockedReason;
   bool get hasBoard => _board != null && _queue != null;
 
@@ -79,7 +83,10 @@ class BoardController extends ChangeNotifier {
     return record;
   }
 
-  Future<void> start() => outbox.start();
+  Future<void> start() async {
+    await outbox.start();
+    _storageReady = true;
+  }
 
   Future<void> activate({
     required String userId,
@@ -87,11 +94,24 @@ class BoardController extends ChangeNotifier {
   }) async {
     final generation = ++_generation;
     _refreshFuture = null;
-    await start();
-    await _cancelRealtime();
     _userId = userId;
     _productionId = productionId;
     _clearBoard();
+    _emit();
+    try {
+      await start();
+    } catch (_) {
+      if (_isCurrent(generation, userId, productionId)) {
+        _error =
+            'Recovery storage could not be read. Pending work is preserved; printing and capture are blocked.';
+        _boardUnavailableReason = _error;
+        _emit();
+      }
+      return;
+    }
+    if (!_isCurrent(generation, userId, productionId)) return;
+    await _cancelRealtime();
+    if (!_isCurrent(generation, userId, productionId)) return;
     _error = null;
     _emit();
 
@@ -103,6 +123,7 @@ class BoardController extends ChangeNotifier {
       if (!_isCurrent(generation, userId, productionId)) return;
       if (cached != null) {
         _serverBoard = cached.board;
+        _boardUnavailableReason = cached.unavailableReason;
         _lastSyncedAt = cached.syncedAt;
         _servingCachedBoard = true;
         _publishOverlay();
@@ -111,6 +132,7 @@ class BoardController extends ChangeNotifier {
       // A cache failure only degrades this cold start.
     }
 
+    if (!_isCurrent(generation, userId, productionId)) return;
     _subscribeToRealtime(generation, userId, productionId);
     await refresh(silent: true);
   }
@@ -128,6 +150,7 @@ class BoardController extends ChangeNotifier {
   }
 
   Future<void> refresh({bool silent = false}) {
+    if (_closing || !_storageReady) return Future<void>.value();
     final current = _refreshFuture;
     if (current != null) return current;
     final future = _refresh(silent: silent);
@@ -193,6 +216,8 @@ class BoardController extends ChangeNotifier {
       if (error.kind == WorkspaceFailureKind.notFound ||
           error.kind == WorkspaceFailureKind.unauthorized) {
         _boardUnavailableReason = error.message;
+        await _writeCache(userId, productionId);
+        if (!_isCurrent(generation, userId, productionId)) return;
       }
       _publishOverlay();
     } catch (error) {
@@ -209,9 +234,19 @@ class BoardController extends ChangeNotifier {
   }
 
   Future<bool> _replayActiveBoard(WorkspaceRepository repository) async {
+    final generation = _generation;
+    final userId = _userId!;
+    final productionId = _productionId!;
+    void checkCurrent() {
+      if (!_isCurrent(generation, userId, productionId)) {
+        throw StateError('Workspace changed during replay.');
+      }
+    }
+
     var changedServer = false;
     final records = List<OrderMutationRecord>.of(currentMutations);
     for (final initial in records) {
+      checkCurrent();
       var record = mutationFor(initial.orderId);
       if (record == null) continue;
 
@@ -224,11 +259,13 @@ class BoardController extends ChangeNotifier {
               observedUpdatedAt: record.observedUpdatedAt,
               patch: record.patch!,
             );
+            checkCurrent();
             switch (result.status) {
               case ConditionalWriteStatus.saved:
                 final saved = result.order!;
                 _serverBoard = _serverBoard?.replaceOrder(saved);
-                await outbox.markOrderApplied(record.orderId, saved);
+                await outbox.markOrderApplied(record.orderId, saved,
+                    expected: record);
                 changedServer = true;
                 break;
               case ConditionalWriteStatus.missing:
@@ -250,7 +287,8 @@ class BoardController extends ChangeNotifier {
                 };
                 if (OrderPatch.snapshotMatches(server, desired)) {
                   // The prior request committed but its response was lost.
-                  await outbox.markOrderApplied(record.orderId, server);
+                  await outbox.markOrderApplied(record.orderId, server,
+                      expected: record);
                 } else if (OrderPatch.snapshotMatches(
                   server,
                   record.baseValues,
@@ -258,16 +296,19 @@ class BoardController extends ChangeNotifier {
                   // Only a non-ordinary fact (normally label_printed) advanced
                   // updated_at. Rebase without hiding a semantic edit.
                   await outbox.rebasePendingOrder(record.orderId, server);
+                  checkCurrent();
                   final retried = await repository.updateOrderConditionally(
                     productionId: record.productionId,
                     orderId: record.orderId,
                     observedUpdatedAt: server.updatedAt,
                     patch: record.patch!,
                   );
+                  checkCurrent();
                   if (retried.status == ConditionalWriteStatus.saved) {
                     final saved = retried.order!;
                     _serverBoard = _serverBoard?.replaceOrder(saved);
-                    await outbox.markOrderApplied(record.orderId, saved);
+                    await outbox.markOrderApplied(record.orderId, saved,
+                        expected: record);
                     changedServer = true;
                   } else {
                     final current = retried.order;
@@ -299,6 +340,7 @@ class BoardController extends ChangeNotifier {
             }
           }
 
+          checkCurrent();
           record = mutationFor(initial.orderId);
           if (record != null &&
               record.orderApplied &&
@@ -309,12 +351,14 @@ class BoardController extends ChangeNotifier {
                 observedUsualOrder: record.observedUsualOrder,
                 desiredUsualOrder: record.desiredUsualOrder,
               );
+              checkCurrent();
               if (usual.status == ConditionalWriteStatus.saved) {
                 _serverBoard = _serverBoard?.replacePersonUsual(
                   record.personId,
                   usual.serverValue,
                 );
-                await outbox.discardOrdinaryIntent(record.orderId);
+                await outbox.discardOrdinaryIntent(record.orderId,
+                    expected: record, acknowledgedUsual: usual.serverValue);
                 changedServer = true;
               } else {
                 await outbox.markConflict(
@@ -331,16 +375,23 @@ class BoardController extends ChangeNotifier {
                 );
               }
             } else {
-              await outbox.discardOrdinaryIntent(record.orderId);
+              await outbox.discardOrdinaryIntent(record.orderId,
+                  expected: record);
             }
           }
         } on WorkspaceRepositoryException catch (error) {
+          checkCurrent();
+          if (error.kind == WorkspaceFailureKind.unauthorized ||
+              error.kind == WorkspaceFailureKind.notFound) {
+            rethrow;
+          }
           _error = error.message;
         }
       }
 
       // A confirmed physical print is independent from ordinary drink fields.
       // It still replays when those fields have stopped on a conflict.
+      checkCurrent();
       record = mutationFor(initial.orderId);
       if (record?.printState == PrintRecoveryState.printedNeedsSync) {
         try {
@@ -348,11 +399,17 @@ class BoardController extends ChangeNotifier {
             productionId: record!.productionId,
             orderId: record.orderId,
           );
+          checkCurrent();
           _serverBoard = _serverBoard?.replaceOrder(saved);
           await outbox.updateConflictServerOrder(record.orderId, saved);
           await outbox.clearPrintIntent(record.orderId);
           changedServer = true;
         } on WorkspaceRepositoryException catch (error) {
+          checkCurrent();
+          if (error.kind == WorkspaceFailureKind.unauthorized ||
+              error.kind == WorkspaceFailureKind.notFound) {
+            rethrow;
+          }
           _error = error.message;
         }
       }
@@ -366,6 +423,11 @@ class BoardController extends ChangeNotifier {
     required OrderPatch patch,
     required bool updateUsualOrder,
   }) async {
+    if (_closing ||
+        _boardUnavailableReason != null ||
+        _board?.production.isActive != true) {
+      throw StateError('Refresh an available Active day before editing.');
+    }
     final board = _board;
     final scope = scopeKey;
     final productionId = _productionId;
@@ -379,16 +441,77 @@ class BoardController extends ChangeNotifier {
     }
     final optimistic = patch.apply(entry.order!);
     final desiredUsual = formatDrink(optimistic);
-    await outbox.queueOrderPatch(
-      scopeKey: scope,
-      productionId: productionId,
-      entry: entry,
-      patch: patch,
-      updateUsualOrder: updateUsualOrder,
-      desiredUsualOrder: desiredUsual,
-    );
+    _pendingLocalWrites++;
+    try {
+      await outbox.queueOrderPatch(
+        scopeKey: scope,
+        productionId: productionId,
+        entry: entry,
+        patch: patch,
+        updateUsualOrder: updateUsualOrder,
+        desiredUsualOrder: desiredUsual,
+      );
+    } finally {
+      _pendingLocalWrites--;
+    }
     _publishOverlay();
     unawaited(refresh(silent: true));
+  }
+
+  /// The server owns final validation. Freeze this client's mutations while
+  /// its decision is outstanding, after draining any already-started replay.
+  Future<void> completeDay() async {
+    final userId = _userId;
+    final productionId = _productionId;
+    final generation = _generation;
+    if (_closing ||
+        userId == null ||
+        productionId == null ||
+        repository == null) {
+      throw StateError('No available day to complete.');
+    }
+    await _refreshFuture;
+    if (!_isCurrent(generation, userId, productionId) ||
+        _closing ||
+        _pendingLocalWrites > 0 ||
+        hasPendingMutations ||
+        _servingCachedBoard ||
+        _boardUnavailableReason != null ||
+        _board?.production.isActive != true) {
+      throw StateError(
+          'Refresh and resolve pending work before completing this day.');
+    }
+    _closing = true;
+    _emit();
+    try {
+      await repository!.completeDay(productionId: productionId);
+      if (!_isCurrent(generation, userId, productionId)) {
+        throw StateError(
+            'Workspace changed during closeout. Refresh its original day.');
+      }
+      // The RPC's validated acknowledgement is authoritative even if the next
+      // fetch fails. Never leave the old Active snapshot available for prints.
+      final current = _serverBoard!;
+      _serverBoard = ProductionBoard(
+        production: current.production.copyWith(status: 'complete'),
+        roster: current.roster,
+      );
+      _publishOverlay();
+      await _writeCache(userId, productionId);
+    } catch (_) {
+      if (_isCurrent(generation, userId, productionId)) {
+        _boardUnavailableReason =
+            'Closeout needs an online refresh before more work.';
+        _servingCachedBoard = true;
+        await _writeCache(userId, productionId);
+      }
+      rethrow;
+    } finally {
+      if (_isCurrent(generation, userId, productionId)) {
+        _closing = false;
+        _emit();
+      }
+    }
   }
 
   Future<void> acceptUsual(String orderId) async {
@@ -414,15 +537,27 @@ class BoardController extends ChangeNotifier {
       );
 
   Future<void> retryConflict(String orderId) async {
+    _requireCurrentMutation(orderId);
     await outbox.retryConflict(orderId);
     _publishOverlay();
     await refresh();
   }
 
   Future<void> keepServerVersion(String orderId) async {
+    _requireCurrentMutation(orderId);
     await outbox.discardOrdinaryIntent(orderId);
     _publishOverlay();
     await refresh();
+  }
+
+  void _requireCurrentMutation(String orderId) {
+    if (_closing ||
+        _boardUnavailableReason != null ||
+        _board?.production.isActive != true ||
+        mutationFor(orderId) == null) {
+      throw StateError(
+          'This pending change is not available in the selected day.');
+    }
   }
 
   /// Called after the printer has durably recorded printedNeedsSync.
@@ -432,6 +567,8 @@ class BoardController extends ChangeNotifier {
     if (repository == null || productionId == null) {
       throw StateError('No authenticated day is selected.');
     }
+    final generation = _generation;
+    final userId = _userId!;
     final record = mutationFor(orderId);
     if (record?.printState == PrintRecoveryState.printedNeedsSync) {
       await refresh();
@@ -440,11 +577,18 @@ class BoardController extends ChangeNotifier {
         productionId: productionId,
         orderId: orderId,
       );
+      if (!_isCurrent(generation, userId, productionId)) {
+        throw StateError('Workspace changed during print sync.');
+      }
       _serverBoard = _serverBoard?.replaceOrder(saved);
       _publishOverlay();
       await _writeCache(_userId!, productionId);
     }
-    if (!isPrintServerConfirmed(orderId)) {
+    if (!_isCurrent(generation, userId, productionId) ||
+        _servingCachedBoard ||
+        _boardUnavailableReason != null ||
+        mutationFor(orderId)?.printState != null ||
+        !isPrintServerConfirmed(orderId)) {
       throw const WorkspaceRepositoryException(
         'The physical print is still waiting to sync.',
         kind: WorkspaceFailureKind.unreachable,
@@ -504,6 +648,7 @@ class BoardController extends ChangeNotifier {
         productionId: productionId,
         syncedAt: syncedAt,
         board: serverBoard,
+        unavailableReason: _boardUnavailableReason,
       ));
     } catch (_) {
       // The durable outbox remains authoritative for local intent. A cache
@@ -549,6 +694,8 @@ class BoardController extends ChangeNotifier {
       _productionId == productionId;
 
   void _clearBoard() {
+    _closing = false;
+    _busy = false;
     _serverBoard = null;
     _board = null;
     _queue = null;
