@@ -70,7 +70,7 @@ test("Build 13 declarative templates are bounded and seeded from the canonical c
   ]);
   const sql = sqlValue.toLowerCase();
   const seedMatch = sqlValue.match(
-    /\$label_catalog\$(.*?)\$label_catalog\$/s,
+    /\$label_catalog\$([\s\S]*?)\$label_catalog\$/,
   );
   assert.ok(seedMatch, "migration must embed a generated canonical catalog");
   assert.equal(
